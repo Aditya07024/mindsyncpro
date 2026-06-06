@@ -34,6 +34,7 @@ export class BookingController {
             paid: b.payment.paid,
             videoRoomId: b.videoRoomId,
             journalShareState: b.journalShareState || "none",
+            prescription: b.prescription || null,
           };
         }),
       );
@@ -68,11 +69,18 @@ export class BookingController {
       if (slotDate < new Date())
         throw new AppError("Cannot book a past slot", 400);
 
-      // Check slot is not already booked
+      // Clean up old pending_payment bookings (older than 30 minutes)
+      const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+      await TherapistBooking.updateMany(
+        { status: "pending_payment", createdAt: { $lt: thirtyMinsAgo } },
+        { status: "cancelled" }
+      );
+
+      // Check slot is not already booked (exclude pending_payment bookings)
       const conflict = await TherapistBooking.findOne({
         therapistId,
         slot: slotDate,
-        status: { $in: ["pending", "confirmed"] },
+        status: { $in: ["confirmed", "completed", "pending"] },
       });
       if (conflict) throw new AppError("This slot is already booked", 409);
 
@@ -80,7 +88,7 @@ export class BookingController {
         userId: new mongoose.Types.ObjectId(req.user!.sub),
         therapistId: new mongoose.Types.ObjectId(therapistId),
         slot: slotDate,
-        status: "pending",
+        status: "pending_payment",
         payment: {
           amount: therapist.therapistProfile.sessionFee ?? 0,
           paid: false,
@@ -305,6 +313,7 @@ export class BookingController {
         paid: booking.payment.paid,
         videoRoomId: booking.videoRoomId,
         journalShareState: booking.journalShareState || "none",
+        prescription: booking.prescription || null,
       });
     },
   );
@@ -640,6 +649,40 @@ Write a therapist pre-session brief:`;
         .lean();
 
       res.json({ journals });
+    }
+  );
+
+  /** PATCH /bookings/:bookingId/prescription — Therapist saves prescription */
+  static savePrescription = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { bookingId } = req.params;
+      const { medicines, notes } = req.body as { medicines: string[]; notes: string };
+
+      if (bookingId === "demo-room") {
+        return res.json({ message: "Demo prescription saved" });
+      }
+
+      if (!Array.isArray(medicines)) {
+        throw new AppError("Medicines must be an array of strings", 400);
+      }
+
+      const booking = await TherapistBooking.findOneAndUpdate(
+        { _id: bookingId, therapistId: req.user!.sub },
+        {
+          prescription: {
+            medicines,
+            notes: notes || "",
+            writtenAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+
+      if (!booking) {
+        throw new AppError("Booking not found or not your session", 404);
+      }
+
+      res.json({ message: "Prescription saved successfully", prescription: booking.prescription });
     }
   );
 }

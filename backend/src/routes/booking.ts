@@ -12,6 +12,7 @@ router.get("/:bookingId/video-token", requireAuth, BookingController.getVideoTok
 router.post("/:bookingId/rate", requireAuth, BookingController.rateSession);
 router.get("/:bookingId/ai-brief", requireAuth, BookingController.getAiBrief);
 router.patch("/:bookingId/notes", requireAuth, BookingController.saveNotes);
+router.patch("/:bookingId/prescription", requireAuth, BookingController.savePrescription);
 
 // Journal Consent sharing
 router.post("/:bookingId/request-journal", requireAuth, BookingController.requestJournalReport);

@@ -328,6 +328,22 @@ const API = {
         body: JSON.stringify(data),
       }),
     getAiBrief: (id: string) => apiCall<any>(`/api/bookings/${id}/ai-brief`),
+    savePrescription: (
+      id: string,
+      data: {
+        medicines: {
+          name: string;
+          dosage: string;
+          frequency: string;
+          duration: string;
+        }[];
+        notes?: string;
+      },
+    ) =>
+      apiCall<any>(`/api/bookings/${id}/prescription`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
   },
 
   payment: {

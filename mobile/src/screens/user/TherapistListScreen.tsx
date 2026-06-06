@@ -13,29 +13,95 @@ interface TherapistListScreenProps {
 export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
-  
-  const specialtyFilters = ['All', 'CBT', 'Anxiety', 'Depression', 'Relationships', 'ADHD', 'Career', 'Others'];
+const [selectedLanguage, setSelectedLanguage] = useState('All');
+const [selectedGender, setSelectedGender] = useState('All');
+const [city, setCity] = useState('');
+const [state, setState] = useState('');
+const [showFilters, setShowFilters] = useState(false);
+const specialtyFilters = [
+  'All',
+  'CBT',
+  'Anxiety',
+  'Depression',
+  'Relationships',
+  'ADHD',
+  'Career',
+  'Others',
+];
+const languageFilters = [
+  'All',
+  'English',
+  'Hindi',
+  'Spanish',
+  'French',
+];
 
+const genderFilters = [
+  'All',
+  'Male',
+  'Female',
+  'Other',
+];
   // Query backend therapists
-  const { data: remoteTherapists, isLoading } = useQuery({
-    queryKey: ['therapistsList', selectedSpecialty],
-    queryFn: () => API.therapist.list(selectedSpecialty !== 'All' ? { specialty: selectedSpecialty } : undefined),
-    retry: false,
-  });
+const { data: remoteTherapists, isLoading } = useQuery({
+  queryKey: ['therapistsList'],
+  queryFn: () => API.therapist.list(),
+  retry: false,
+});
 
-  const [therapists, setTherapists] = useState<TherapistData[]>([]);
+const [therapists, setTherapists] = useState<TherapistData[]>([]);
 
   useEffect(() => {
-    if (remoteTherapists && Array.isArray(remoteTherapists)) {
-      setTherapists(remoteTherapists);
-    }
-  }, [remoteTherapists]);
+  console.log("Therapist API Response:", remoteTherapists);
+
+  if (Array.isArray(remoteTherapists)) {
+    setTherapists(remoteTherapists);
+  } else if (Array.isArray(remoteTherapists?.data)) {
+    setTherapists(remoteTherapists.data);
+  } else if (Array.isArray(remoteTherapists?.therapists)) {
+    setTherapists(remoteTherapists.therapists);
+  } else {
+    setTherapists([]);
+  }
+}, [remoteTherapists]);
 
   // Filter local state based on search query
-  const filteredTherapists = therapists.filter(t => 
-    t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.specialties?.some(s => s.toLowerCase().includes(search.toLowerCase()))
+  const filteredTherapists = therapists.filter((t) => {
+  const searchMatch =
+  t?.name?.toLowerCase()?.includes(search.toLowerCase()) ||
+  t?.specialty?.toLowerCase()?.includes(search.toLowerCase()) ||
+  t?.specialties?.some((s: string) =>
+    s.toLowerCase().includes(search.toLowerCase())
   );
+  const specialtyMatch =
+    selectedSpecialty === 'All' ||
+    t?.specialty === selectedSpecialty ||
+    t?.specialties?.includes(selectedSpecialty);
+
+  const languageMatch =
+    selectedLanguage === 'All' ||
+       t?.languages?.includes(selectedLanguage);
+  const genderMatch =
+    selectedGender === 'All' ||
+    t?.gender === selectedGender;
+
+  const cityMatch =
+    !city ||
+    t?.city?.toLowerCase().includes(city.toLowerCase());
+
+  const stateMatch =
+    !state ||
+    t?.state?.toLowerCase().includes(state.toLowerCase());
+
+  return (
+    searchMatch &&
+    specialtyMatch &&
+    languageMatch &&
+    genderMatch &&
+    cityMatch &&
+    stateMatch
+  );
+});
 
   return (
     <View style={styles.container}>
@@ -54,49 +120,118 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
             placeholderTextColor={Theme.colors.outline}
             style={styles.searchInput}
           />
-          <TouchableOpacity style={styles.filterBtn}>
-            <SlidersHorizontal size={18} color={Theme.colors.primary} />
-          </TouchableOpacity>
+          <TouchableOpacity
+  style={styles.filterBtn}
+  onPress={() => setShowFilters(!showFilters)}
+>
+  <SlidersHorizontal size={18} color={Theme.colors.primary} />
+</TouchableOpacity>
         </View>
       </View>
 
       {/* Specialty Filter Chips Row */}
-      <View style={styles.filterWrapper}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterContent}
-        >
-          {specialtyFilters.map(filter => {
-            const active = selectedSpecialty === filter;
-            return (
-              <TouchableOpacity
-                key={filter}
-                onPress={() => setSelectedSpecialty(filter)}
-                style={[
-                  styles.chip,
-                  active && styles.chipActive
-                ]}
-              >
-                <Text style={[
-                  styles.chipText,
-                  active && styles.chipTextActive
-                ]}>
-                  {filter}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+{showFilters && (
+  <>
+    <View style={styles.advancedFilters}>
+      <TextInput
+        placeholder="Filter by city (e.g. Mumbai)"
+        value={city}
+        onChangeText={setCity}
+        style={styles.filterInput}
+      />
 
+      <TextInput
+        placeholder="Filter by state (e.g. Maharashtra)"
+        value={state}
+        onChangeText={setState}
+        style={styles.filterInput}
+      />
+    </View>
+
+    <View style={{ marginVertical: 6 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {languageFilters.map(language => (
+          <TouchableOpacity
+            key={language}
+            onPress={() => setSelectedLanguage(language)}
+            style={[
+              styles.chip,
+              selectedLanguage === language && styles.chipActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                selectedLanguage === language && styles.chipTextActive,
+              ]}
+            >
+              {language}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+
+    <View style={{ marginVertical: 6 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {specialtyFilters.map(filter => (
+          <TouchableOpacity
+            key={filter}
+            onPress={() => setSelectedSpecialty(filter)}
+            style={[
+              styles.chip,
+              selectedSpecialty === filter && styles.chipActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                selectedSpecialty === filter && styles.chipTextActive,
+              ]}
+            >
+              {filter}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+
+    <View style={{ marginVertical: 6 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {genderFilters.map(gender => (
+          <TouchableOpacity
+            key={gender}
+            onPress={() => setSelectedGender(gender)}
+            style={[
+              styles.chip,
+              selectedGender === gender && styles.chipActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                selectedGender === gender && styles.chipTextActive,
+              ]}
+            >
+              {gender}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  </>
+)}
       {/* Therapist List */}
       {isLoading ? (
         <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
       ) : (
         <FlatList
           data={filteredTherapists}
-          keyExtractor={item => item._id}
+          keyExtractor={(item: any, index) =>
+  item?._id?.toString() ||
+  item?.id?.toString() ||
+  index.toString()
+}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <TherapistCard
@@ -172,6 +307,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.margin,
     gap: 8,
   },
+advancedFilters: {
+  paddingHorizontal: Theme.spacing.margin,
+  paddingVertical: 10,
+  gap: 10,
+},
+
+filterInput: {
+  height: 48,
+  borderWidth: 1,
+  borderColor: Theme.colors.surfaceHigh,
+  borderRadius: 12,
+  paddingHorizontal: 12,
+  backgroundColor: '#FFF',
+  color: Theme.colors.onSurface,
+},
   chip: {
     backgroundColor: '#FFF',
     paddingHorizontal: 16,
@@ -210,3 +360,4 @@ const styles = StyleSheet.create({
   },
 });
 export default TherapistListScreen;
+

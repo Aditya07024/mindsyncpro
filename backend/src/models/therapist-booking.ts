@@ -11,13 +11,18 @@ export interface ITherapistBooking extends Document {
   userId: Types.ObjectId;
   therapistId: Types.ObjectId;
   slot: Date;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
+  status: "pending" | "pending_payment" | "confirmed" | "completed" | "cancelled";
   payment: IPayment;
   videoRoomId?: string;
   therapistNotes?: string;
   rating?: number;
-  review?: string;
+    review?: string;
   aiBrief?: string;
+  prescription?: {
+    medicines: string[];
+    notes: string;
+    writtenAt: Date;
+  };
   journalShareState: "none" | "requested" | "approved" | "declined";
   payoutStatus?: "pending" | "paid";
   createdAt: Date;
@@ -31,8 +36,8 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
     slot: { type: Date, required: true },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "completed", "cancelled"],
-      default: "pending"
+      enum: ["pending", "pending_payment", "confirmed", "completed", "cancelled"],
+      default: "pending_payment"
     },
     payment: {
       razorpayOrderId: { type: String },
@@ -45,6 +50,11 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
     rating: { type: Number, min: 1, max: 5 },
     review: { type: String },
     aiBrief: { type: String },
+    prescription: {
+      medicines: { type: [String], default: [] },
+      notes: { type: String },
+      writtenAt: { type: Date }
+    },
     journalShareState: {
       type: String,
       enum: ["none", "requested", "approved", "declined"],

@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   Clock, MessageCircle, X, Send, LogOut,
-  AlertCircle, Brain, Star, FileText, Save,
+  AlertCircle, Brain, Star, FileText, Save, Pill,
 } from "lucide-react";
 
 
@@ -185,20 +185,49 @@ function RoomUI({
     enabled: !!sharedReportId && userRole === "therapist",
   });
 
+  const [prescriptionPanelOpen, setPrescriptionPanelOpen] = useState(false);
+
+  const togglePrescriptionPanel = () => {
+    setPrescriptionPanelOpen((v) => !v);
+    setNotesPanelOpen(false);
+    setReportPanelOpen(false);
+  };
+
   const toggleNotesPanel = () => {
     setNotesPanelOpen((v) => !v);
     setReportPanelOpen(false);
+    setPrescriptionPanelOpen(false);
   };
   
   const toggleReportPanel = () => {
     setReportPanelOpen((v) => !v);
     setNotesPanelOpen(false);
+    setPrescriptionPanelOpen(false);
   };
 
   /* Therapist notes */
   const notesKey = `therapist-notes-${bookingId}`;
   const [notes, setNotes] = useState(() => sessionStorage.getItem(notesKey) ?? "");
   const [notesPanelOpen, setNotesPanelOpen] = useState(false);
+
+  /* Prescription states */
+  const [medicines, setMedicines] = useState<string[]>([]);
+  const [currentMedName, setCurrentMedName] = useState("");
+  const [prescriptionNotes, setPrescriptionNotes] = useState("");
+
+  // Sync initial prescription if exists
+  useEffect(() => {
+    if (booking?.prescription) {
+      setMedicines(booking.prescription.medicines || []);
+      setPrescriptionNotes(booking.prescription.notes || "");
+    }
+  }, [booking?.prescription]);
+
+  const savePrescriptionMutation = useMutation({
+    mutationFn: () => API.booking.savePrescription(bookingId, { medicines, notes: prescriptionNotes }),
+    onSuccess: () => toast.success("Prescription saved successfully"),
+    onError: (e: Error) => toast.error(e.message || "Failed to save prescription"),
+  });
 
   const saveNotesMutation = useMutation({
     mutationFn: () =>
@@ -236,8 +265,11 @@ function RoomUI({
   });
 
   const handleLeave = () => {
-    if (userRole === "therapist" && notes.trim()) {
-      saveNotesMutation.mutate();
+    if (userRole === "therapist") {
+      if (notes.trim()) saveNotesMutation.mutate();
+      if (medicines.length > 0 || prescriptionNotes.trim()) {
+        savePrescriptionMutation.mutate();
+      }
     }
     if (userRole === "user") {
       setShowRating(true);
@@ -319,6 +351,28 @@ function RoomUI({
                 }`}
               >
                 <FileText className="size-4" /> Notes
+              </button>
+            )}
+
+            {userRole === "therapist" && (
+              <button
+                onClick={togglePrescriptionPanel}
+                className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700/80 transition ${
+                  prescriptionPanelOpen ? "bg-teal-600/90 text-white" : "bg-slate-800/80 text-white"
+                }`}
+              >
+                <Pill className="size-4" /> Prescription
+              </button>
+            )}
+
+            {userRole === "user" && booking?.prescription && (
+              <button
+                onClick={() => setPrescriptionPanelOpen((v) => !v)}
+                className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition hover:bg-slate-700/80 ${
+                  prescriptionPanelOpen ? "bg-teal-600/90 text-white" : "bg-slate-800/80 text-white"
+                }`}
+              >
+                <Pill className="size-4" /> View Prescription
               </button>
             )}
 
@@ -419,6 +473,153 @@ function RoomUI({
               placeholder="Clinical notes for this session…&#10;&#10;Auto-saved every 10s and submitted when you leave."
               className="flex-1 bg-transparent text-slate-100 placeholder-slate-500 p-4 text-sm resize-none focus:outline-none"
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Therapist Prescription panel */}
+      <AnimatePresence>
+        {prescriptionPanelOpen && userRole === "therapist" && (
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            className="absolute left-0 top-0 bottom-0 z-30 w-96 flex flex-col bg-slate-900/95 backdrop-blur-md shadow-2xl border-r border-slate-800"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-slate-900">
+              <div className="flex items-center gap-2">
+                <Pill className="size-4 text-teal-400" />
+                <span className="font-semibold text-white text-sm">Write Prescription</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => savePrescriptionMutation.mutate()}
+                  disabled={savePrescriptionMutation.isPending}
+                  className="flex items-center gap-1 text-xs text-teal-400 hover:text-teal-300 disabled:opacity-50">
+                  <Save className="size-3" /> Save
+                </button>
+                <button onClick={() => setPrescriptionPanelOpen(false)} className="text-slate-400 hover:text-white">
+                  <X className="size-4" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Medicines</label>
+                <div className="flex gap-2">
+                  <input
+                    value={currentMedName}
+                    onChange={(e) => setCurrentMedName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (currentMedName.trim()) {
+                          setMedicines([...medicines, currentMedName.trim()]);
+                          setCurrentMedName("");
+                        }
+                      }
+                    }}
+                    placeholder="Type medicine name and press Enter..."
+                    className="flex-1 bg-slate-800 text-slate-100 placeholder-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  />
+                  <Button
+                    onClick={() => {
+                      if (currentMedName.trim()) {
+                        setMedicines([...medicines, currentMedName.trim()]);
+                        setCurrentMedName("");
+                      }
+                    }}
+                    size="sm"
+                    className="rounded-xl px-3"
+                  >
+                    Add
+                  </Button>
+                </div>
+                
+                {/* Medicines List as Chips */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {medicines.length === 0 && (
+                    <p className="text-xs text-slate-500 italic">No medicines added yet.</p>
+                  )}
+                  {medicines.map((med, i) => (
+                    <div key={i} className="flex items-center gap-1.5 bg-slate-800 text-slate-200 text-xs px-2.5 py-1 rounded-full border border-slate-700">
+                      <span>{med}</span>
+                      <button
+                        onClick={() => setMedicines(medicines.filter((_, idx) => idx !== i))}
+                        className="text-slate-400 hover:text-red-400"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Prescription Notes</label>
+                <textarea
+                  value={prescriptionNotes}
+                  onChange={(e) => setPrescriptionNotes(e.target.value)}
+                  placeholder="Dosage instructions, duration, or general wellness advice..."
+                  className="w-full h-32 bg-slate-800 text-slate-100 placeholder-slate-500 rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-teal-500 resize-none"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Seeker Prescription View panel */}
+      <AnimatePresence>
+        {prescriptionPanelOpen && userRole === "user" && booking?.prescription && (
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            className="absolute left-0 top-0 bottom-0 z-30 w-96 flex flex-col bg-slate-900/95 backdrop-blur-md shadow-2xl border-r border-slate-800"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900">
+              <div className="flex items-center gap-2">
+                <Pill className="size-4 text-teal-400" />
+                <span className="font-semibold text-white text-sm">Prescription Details</span>
+              </div>
+              <button onClick={() => setPrescriptionPanelOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="size-4" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-5 text-slate-200">
+              <div className="space-y-2">
+                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Medicines</h5>
+                {(!booking.prescription.medicines || booking.prescription.medicines.length === 0) ? (
+                  <p className="text-xs text-slate-500 italic">No medicines prescribed.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {booking.prescription.medicines.map((med: string, i: number) => (
+                      <div key={i} className="flex items-center gap-2.5 bg-slate-850 rounded-xl p-3 border border-slate-800/40">
+                        <div className="size-2 rounded-full bg-teal-500" />
+                        <span className="text-sm font-semibold text-white">{med}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {booking.prescription.notes && (
+                <div className="space-y-2">
+                  <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Notes & Instructions</h5>
+                  <div className="bg-slate-850 rounded-xl p-4 border border-slate-800/40">
+                    <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{booking.prescription.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {booking.prescription.writtenAt && (
+                <p className="text-[10px] text-slate-500 text-right">
+                  Written on {new Date(booking.prescription.writtenAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                </p>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

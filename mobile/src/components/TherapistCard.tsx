@@ -5,6 +5,7 @@ import { Theme } from '../theme';
 
 export interface TherapistData {
   _id: string;
+  id?: string;
   userId?: string;
   name: string;
   specialties?: string[];

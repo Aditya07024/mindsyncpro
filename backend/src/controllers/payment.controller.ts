@@ -37,28 +37,39 @@ export class PaymentController {
         throw new AppError("User not found", 404);
       }
 
-      // Create Razorpay order
-      const order = await PaymentService.createOrder({
+      // Validate user.phoneMasked: if it contains "@", it's an email; if it is a valid 10-digit number, it's contact info.
+      const isEmail = user.phoneMasked?.includes("@");
+      const userEmail = isEmail ? user.phoneMasked : undefined;
+      const phoneRegex = /^\+?[1-9]\d{9,14}$/;
+      const userPhone = (!isEmail && phoneRegex.test(user.phoneMasked)) ? user.phoneMasked : undefined;
+
+      // Create Razorpay Payment Link (hosted page — works in mobile in-app browsers)
+      const callbackUrl = `${process.env.API_URL}/api/payment/${bookingId}/callback`;
+      const link = await PaymentService.createPaymentLink({
         amount: booking.payment.amount,
-        bookingId: bookingId,
-        userEmail: user.phoneHash, // Using phone hash as identifier
+        bookingId,
         userName: user.fullName,
+        userContact: userPhone,
+        userEmail: userEmail,
+        callbackUrl,
       });
 
-      // Update booking with Razorpay order ID
-      booking.payment.razorpayOrderId = order.orderId;
+      // Store payment link id on the booking for later verification
+      booking.payment.razorpayOrderId = link.paymentLinkId;
       await booking.save();
 
       res.json({
-        orderId: order.orderId,
-        amount: order.amount,
-        currency: order.currency,
+        paymentLinkId: link.paymentLinkId,
+        shortUrl: link.shortUrl,
+        amount: booking.payment.amount,
+        currency: "INR",
         keyId: process.env.RAZORPAY_KEY_ID,
         bookingId,
         userName: user.fullName,
       });
     },
   );
+
 
   /**
    * Verify payment and confirm booking
@@ -298,4 +309,104 @@ export class PaymentController {
       });
     },
   );
+
+  /**
+   * Handle Razorpay Payment Link callback after payment completes.
+   * Razorpay redirects to this URL with query params after the user pays.
+   */
+  static handleCallback = asyncHandler(
+    async (req: any, res: Response) => {
+      const { bookingId } = req.params;
+      const {
+        razorpay_payment_id,
+        razorpay_payment_link_id,
+        razorpay_payment_link_status,
+        razorpay_signature,
+      } = req.query as Record<string, string>;
+
+      const booking = await TherapistBooking.findById(bookingId);
+      if (!booking) {
+        return res.status(404).send("<h1>Booking not found</h1>");
+      }
+
+      // Mark as paid if Razorpay signals success
+      if (razorpay_payment_link_status === "paid" && razorpay_payment_id) {
+        if (!booking.payment.paid) {
+          booking.payment.paid = true;
+          booking.payment.razorpayPaymentId = razorpay_payment_id;
+          booking.status = "confirmed";
+          await booking.save();
+
+          // Send confirmation email to therapist
+          try {
+            const therapist = await User.findById(booking.therapistId)
+              .select("therapistProfile")
+              .lean();
+            const seeker = await User.findById(booking.userId)
+              .select("fullName")
+              .lean();
+            const therapistEmail = therapist?.therapistProfile?.email;
+            if (therapistEmail) {
+              const { sendPaymentConfirmedToTherapist } = await import(
+                "@/services/email.service"
+              );
+              sendPaymentConfirmedToTherapist({
+                therapistEmail,
+                therapistName:
+                  therapist?.therapistProfile?.name || "Therapist",
+                seekerName: seeker?.fullName || "Client",
+                slot: booking.slot,
+                fee: booking.payment.amount,
+                bookingId: booking._id.toString(),
+              }).catch((err: any) =>
+                console.error("[Email] Callback payment email failed:", err),
+              );
+            }
+          } catch (err) {
+            console.error("[Email] Could not send callback payment email:", err);
+          }
+        }
+      }
+
+      const paid = booking.payment.paid;
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mindsyncpro – Payment ${paid ? "Confirmed" : "Pending"}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh; margin: 0; background-color: #F8FBFB;
+      color: #2E6E65; padding: 20px; box-sizing: border-box; text-align: center;
+    }
+    .card {
+      background: white; padding: 30px; border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(46,110,101,0.08); max-width: 380px;
+      width: 100%; border: 1px solid #E6EFEF;
+    }
+    .icon { font-size: 48px; margin-bottom: 12px; }
+    h2 { margin: 0 0 12px; font-size: 22px; color: #2E6E65; }
+    p { color: #608F87; font-size: 14px; line-height: 1.5; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">${paid ? "✅" : "⏳"}</div>
+    <h2>${paid ? "Payment Confirmed!" : "Payment Pending"}</h2>
+    <p>${
+      paid
+        ? "Your therapy session has been booked successfully. Please close this window and return to the Mindsyncpro app to view your booking."
+        : "Your payment is being processed. Once confirmed, please sync in the app. You can close this window and return to Mindsyncpro."
+    }</p>
+  </div>
+</body>
+</html>
+      `;
+      res.send(html);
+    },
+  );
 }
+

@@ -15,7 +15,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mindsyncpro.app"
+      "bundleIdentifier": "com.mindsyncpro.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "MindSync Pro needs camera access to allow video call sessions with your therapist.",
+        "NSMicrophoneUsageDescription": "MindSync Pro needs microphone access to allow voice in video call sessions with your therapist."
+      }
     },
     "android": {
       "package": "com.mindsyncpro.app",
@@ -24,7 +28,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -9,9 +9,10 @@ import {
   Modal,
   TextInput,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Linking
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Video,
   VideoOff,
@@ -24,8 +25,11 @@ import {
   CheckCircle,
   Smile,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Pill,
+  ShieldAlert
 } from 'lucide-react-native';
+import { CameraView, useCameraPermissions, useMicrophonePermissions } from 'expo-camera';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 
@@ -36,6 +40,10 @@ interface SessionScreenProps {
 
 export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation }) => {
   const { bookingId, role } = route.params || {};
+  const queryClient = useQueryClient();
+
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [microphonePermission, requestMicrophonePermission] = useMicrophonePermissions();
 
   const [micActive, setMicActive] = useState(true);
   const [videoActive, setVideoActive] = useState(true);
@@ -50,6 +58,41 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
   const [reportPanelOpen, setReportPanelOpen] = useState(false);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
 
+  // Prescription state (for therapist & view-only seeker)
+  const [prescriptionNotes, setPrescriptionNotes] = useState('');
+  const [medicines, setMedicines] = useState<{ name: string; dosage: string; frequency: string; duration: string }[]>([]);
+  const [prescriptionModalOpen, setPrescriptionModalOpen] = useState(false);
+  
+  // Single medicine input form state
+  const [medName, setMedName] = useState('');
+  const [medDosage, setMedDosage] = useState('');
+  const [medFrequency, setMedFrequency] = useState('');
+  const [medDuration, setMedDuration] = useState('');
+
+  // Refs for background auto-saving on unmount
+  const medicinesRef = React.useRef(medicines);
+  const notesRef = React.useRef(prescriptionNotes);
+
+  useEffect(() => {
+    medicinesRef.current = medicines;
+  }, [medicines]);
+
+  useEffect(() => {
+    notesRef.current = prescriptionNotes;
+  }, [prescriptionNotes]);
+
+  // Request permissions on mount
+  useEffect(() => {
+    (async () => {
+      if (!cameraPermission?.granted) {
+        await requestCameraPermission();
+      }
+      if (!microphonePermission?.granted) {
+        await requestMicrophonePermission();
+      }
+    })();
+  }, []);
+
   // Fetch Booking Details
   const { data: booking, isLoading: isBookingLoading } = useQuery({
     queryKey: ['booking-detail', bookingId],
@@ -57,6 +100,30 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
     enabled: !!bookingId,
     retry: false
   });
+
+  // Pre-populate prescription if it exists
+  useEffect(() => {
+    if (booking?.prescription) {
+      if (booking.prescription.notes) {
+        setPrescriptionNotes(booking.prescription.notes);
+      }
+      if (Array.isArray(booking.prescription.medicines)) {
+        setMedicines(booking.prescription.medicines);
+      }
+    }
+  }, [booking]);
+
+  // Clean-up effect for background saving when unmounting
+  useEffect(() => {
+    return () => {
+      if (role === 'therapist') {
+        API.booking.savePrescription(bookingId, {
+          medicines: medicinesRef.current,
+          notes: notesRef.current.trim() || undefined
+        }).catch(err => console.warn("Background auto-save failed:", err));
+      }
+    };
+  }, [bookingId, role]);
 
   const clientId = role === 'therapist' ? booking?.clientId || booking?.userId?._id : null;
   const therapistId = role === 'user' ? booking?.therapistId : null;
@@ -131,66 +198,97 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
 
   // Hang up action
   const handleHangUp = () => {
-    Alert.alert(
-      'Leave Meeting',
-      'Are you sure you want to end this clinical session?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'End Session',
-          style: 'destructive',
-          onPress: () => {
-            if (role === 'user') {
-              // Seeker leaves call -> show rating popup
-              navigation.replace('UserTabs', { screen: 'Bookings' });
-              setTimeout(() => {
-                Alert.alert(
-                  'Rate Your Session',
-                  'Would you like to rate your consultation session now?',
+    if (role === 'user') {
+      // Seeker leaves call -> show rating popup immediately
+      navigation.replace('UserTabs', { screen: 'Bookings' });
+      setTimeout(() => {
+        Alert.alert(
+          'Rate Your Session',
+          'Would you like to rate your consultation session now?',
+          [
+            { text: 'Skip', style: 'cancel' },
+            {
+              text: 'Rate Now',
+              onPress: () => {
+                Alert.prompt(
+                  'Submit Rating',
+                  'Enter rating from 1 to 5',
                   [
-                    { text: 'Skip', style: 'cancel' },
+                    { text: 'Cancel', style: 'cancel' },
                     {
-                      text: 'Rate Now',
-                      onPress: () => {
-                        Alert.prompt(
-                          'Submit Rating',
-                          'Enter rating from 1 to 5',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            {
-                              text: 'Submit',
-                              onPress: async (rating) => {
-                                const ratingNum = Number(rating);
-                                if (ratingNum >= 1 && ratingNum <= 5) {
-                                  try {
-                                    await API.booking.rate(bookingId, { rating: ratingNum, feedback: 'Completed on mobile client' });
-                                    Alert.alert('Thank You', 'Your rating has been recorded.');
-                                  } catch (e: any) {
-                                    Alert.alert('Success', 'Rating synced successfully.');
-                                  }
-                                } else {
-                                  Alert.alert('Invalid Rating', 'Please choose a number between 1 and 5.');
-                                }
-                              }
-                            }
-                          ],
-                          'plain-text',
-                          '5'
-                        );
+                      text: 'Submit',
+                      onPress: async (rating) => {
+                        const ratingNum = Number(rating);
+                        if (ratingNum >= 1 && ratingNum <= 5) {
+                          try {
+                            await API.booking.rate(bookingId, { rating: ratingNum, feedback: 'Completed on mobile client' });
+                            Alert.alert('Thank You', 'Your rating has been recorded.');
+                          } catch (e: any) {
+                            Alert.alert('Success', 'Rating synced successfully.');
+                          }
+                        } else {
+                          Alert.alert('Invalid Rating', 'Please choose a number between 1 and 5.');
+                        }
                       }
                     }
-                  ]
+                  ],
+                  'plain-text',
+                  '5'
                 );
-              }, 600);
-            } else {
-              // Therapist leaves call
-              navigation.replace('TherapistTabs', { screen: 'Schedule' });
+              }
             }
-          }
+          ]
+        );
+      }, 600);
+    } else {
+      // Therapist leaves call -> auto save first, then navigate
+      (async () => {
+        try {
+          await API.booking.savePrescription(bookingId, {
+            medicines,
+            notes: prescriptionNotes.trim() || undefined
+          });
+        } catch (err) {
+          console.warn("Auto-save failed on leave:", err);
         }
-      ]
-    );
+        navigation.replace('TherapistTabs', { screen: 'Schedule' });
+      })();
+    }
   };
+
+  // Permission Checks & Renders
+  if (!cameraPermission || !microphonePermission) {
+    return (
+      <View style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color={Theme.colors.primary} />
+        <Text style={styles.loadingText}>Checking device permissions...</Text>
+      </View>
+    );
+  }
+
+  if (!cameraPermission.granted || !microphonePermission.granted) {
+    return (
+      <View style={styles.permissionErrorScreen}>
+        <ShieldAlert size={48} color="#EF4444" style={{ marginBottom: 16 }} />
+        <Text style={styles.permissionTitle}>Camera & Microphone Access Required</Text>
+        <Text style={styles.permissionDesc}>
+          To join the secure telehealth video session, you must enable camera and microphone permissions in your device settings.
+        </Text>
+        <TouchableOpacity
+          onPress={() => Linking.openSettings()}
+          style={styles.settingsBtn}
+        >
+          <Text style={styles.settingsBtnText}>Open Device Settings</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.cancelLink}
+        >
+          <Text style={styles.cancelLinkText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (isBookingLoading) {
     return (
@@ -215,19 +313,17 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
             <Text style={styles.avatarText}>{participantName.charAt(0).toUpperCase()}</Text>
           </View>
           <Text style={styles.remoteName}>{participantName}</Text>
-          {!videoActive && (
-            <View style={styles.mutedVideoOverlay}>
-              <VideoOff size={32} color="#FFF" />
-              <Text style={styles.mutedVideoText}>Participant video paused</Text>
-            </View>
-          )}
         </View>
 
         {/* Local Stream PIP */}
         <View style={styles.localStream}>
-          <View style={styles.localAvatar}>
-            <Text style={styles.localAvatarText}>{role === 'therapist' ? 'T' : 'S'}</Text>
-          </View>
+          {videoActive ? (
+            <CameraView style={StyleSheet.absoluteFillObject} facing="front" mute={!micActive} />
+          ) : (
+            <View style={styles.localAvatar}>
+              <Text style={styles.localAvatarText}>{role === 'therapist' ? 'T' : 'S'}</Text>
+            </View>
+          )}
           <Text style={styles.localName}>You</Text>
           {!videoActive && (
             <View style={styles.localMuteOverlay}>
@@ -278,6 +374,13 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
             <Share2 size={20} color="#FFF" />
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          onPress={() => setPrescriptionModalOpen(true)}
+          style={[styles.controlBtn, { backgroundColor: Theme.colors.secondary }]}
+        >
+          <Pill size={20} color="#FFF" />
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleHangUp}
@@ -457,6 +560,177 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
                 <Text style={styles.panelLoaderText}>Could not load shared report details.</Text>
               </View>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Prescription Modal (Therapist Editor & Seeker Viewer) */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={prescriptionModalOpen}
+        onRequestClose={() => setPrescriptionModalOpen(false)}
+      >
+        <View style={styles.modalBg}>
+          <View style={[styles.modalContent, { maxHeight: '85%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {role === 'therapist' ? 'Write Prescription' : 'View Prescription'}
+              </Text>
+              <TouchableOpacity onPress={() => setPrescriptionModalOpen(false)}>
+                <X size={20} color={Theme.colors.outline} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+              {role === 'therapist' ? (
+                // Therapist Editor Mode
+                <View style={styles.editorContainer}>
+                  <Text style={styles.sectionLabel}>Add Medicine</Text>
+                  <View style={styles.medicineInputForm}>
+                    <TextInput
+                      placeholder="Medicine Name (e.g., Paracetamol 650)"
+                      placeholderTextColor={Theme.colors.textMuted}
+                      value={medName}
+                      onChangeText={setMedName}
+                      style={styles.formInput}
+                    />
+                    <TextInput
+                      placeholder="Dosage (e.g., 1-0-1)"
+                      placeholderTextColor={Theme.colors.textMuted}
+                      value={medDosage}
+                      onChangeText={setMedDosage}
+                      style={styles.formInput}
+                    />
+                    <TextInput
+                      placeholder="Frequency (e.g., After Meals)"
+                      placeholderTextColor={Theme.colors.textMuted}
+                      value={medFrequency}
+                      onChangeText={setMedFrequency}
+                      style={styles.formInput}
+                    />
+                    <TextInput
+                      placeholder="Duration (e.g., 5 Days)"
+                      placeholderTextColor={Theme.colors.textMuted}
+                      value={medDuration}
+                      onChangeText={setMedDuration}
+                      style={styles.formInput}
+                    />
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (!medName.trim()) {
+                          Alert.alert('Required', 'Please enter a medicine name.');
+                          return;
+                        }
+                        setMedicines([
+                          ...medicines,
+                          {
+                            name: medName.trim(),
+                            dosage: medDosage.trim() || '1-0-1',
+                            frequency: medFrequency.trim() || 'After Meals',
+                            duration: medDuration.trim() || '5 Days'
+                          }
+                        ]);
+                        // Reset inputs
+                        setMedName('');
+                        setMedDosage('');
+                        setMedFrequency('');
+                        setMedDuration('');
+                      }}
+                      style={styles.addMedBtn}
+                    >
+                      <Text style={styles.addMedBtnText}>+ Add Medicine</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={[styles.sectionLabel, { marginTop: 16 }]}>Medicines List</Text>
+                  {medicines.length === 0 ? (
+                    <Text style={styles.emptyPrescriptionText}>No medicines added yet.</Text>
+                  ) : (
+                    medicines.map((med, index) => (
+                      <View key={index} style={styles.medCardItem}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.medNameText}>{med.name}</Text>
+                          <Text style={styles.medDetailText}>
+                            {med.dosage} • {med.frequency} • {med.duration}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setMedicines(medicines.filter((_, idx) => idx !== index));
+                          }}
+                          style={styles.removeMedBtn}
+                        >
+                          <Text style={styles.removeMedText}>Remove</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  )}
+
+                  <Text style={[styles.sectionLabel, { marginTop: 16 }]}>Prescription Notes & Advice</Text>
+                  <TextInput
+                    placeholder="Provide guidelines, diet suggestions or follow-up details..."
+                    placeholderTextColor={Theme.colors.textMuted}
+                    value={prescriptionNotes}
+                    onChangeText={setPrescriptionNotes}
+                    multiline
+                    numberOfLines={4}
+                    style={styles.notesInputArea}
+                  />
+
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        await API.booking.savePrescription(bookingId, {
+                          medicines,
+                          notes: prescriptionNotes.trim() || undefined
+                        });
+                        Alert.alert('Saved', 'Prescription saved successfully.');
+                        setPrescriptionModalOpen(false);
+                      } catch (err: any) {
+                        Alert.alert('Save Failed', err.message || 'Could not save prescription.');
+                      }
+                    }}
+                    style={styles.savePrescriptionBtn}
+                  >
+                    <Text style={styles.savePrescriptionBtnText}>Save Prescription</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                // Seeker Read-Only Mode
+                <View style={styles.viewerContainer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      queryClient.invalidateQueries({ queryKey: ['booking-detail', bookingId] });
+                    }}
+                    style={styles.refreshBtn}
+                  >
+                    <Text style={styles.refreshBtnText}>🔄 Refresh Prescription</Text>
+                  </TouchableOpacity>
+
+                  <Text style={styles.sectionLabel}>Prescribed Medicines</Text>
+                  {medicines.length === 0 ? (
+                    <Text style={styles.emptyPrescriptionText}>No medicines prescribed yet by therapist.</Text>
+                  ) : (
+                    medicines.map((med, index) => (
+                      <View key={index} style={styles.medCardItemViewOnly}>
+                        <Text style={styles.medNameText}>{med.name}</Text>
+                        <Text style={styles.medDetailText}>
+                          Dosage: {med.dosage} | Frequency: {med.frequency} | Duration: {med.duration}
+                        </Text>
+                      </View>
+                    ))
+                  )}
+
+                  <Text style={[styles.sectionLabel, { marginTop: 16 }]}>Therapist Advice / Notes</Text>
+                  <View style={styles.notesViewOnlyContainer}>
+                    <Text style={styles.notesViewOnlyText}>
+                      {prescriptionNotes.trim() || 'No notes provided yet.'}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -890,6 +1164,188 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fonts.bodyBold,
     fontSize: 13.5,
     color: '#FFF',
+  },
+  permissionErrorScreen: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Theme.spacing.lg,
+  },
+  permissionTitle: {
+    fontFamily: Theme.fonts.display,
+    fontSize: 20,
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: Theme.spacing.sm,
+  },
+  permissionDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 14,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: Theme.spacing.xl,
+  },
+  settingsBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: Theme.spacing.xl,
+    borderRadius: Theme.radius.full,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  settingsBtnText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 14,
+    color: '#FFF',
+  },
+  cancelLink: {
+    paddingVertical: 8,
+  },
+  cancelLinkText: {
+    fontFamily: Theme.fonts.bodyMedium,
+    fontSize: 13.5,
+    color: '#94A3B8',
+    textDecorationLine: 'underline',
+  },
+  editorContainer: {
+    gap: 12,
+  },
+  medicineInputForm: {
+    backgroundColor: Theme.colors.surfaceLow,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.lg,
+    padding: Theme.spacing.md,
+    gap: 8,
+  },
+  formInput: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: Theme.colors.onSurface,
+    fontFamily: Theme.fonts.body,
+  },
+  addMedBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingVertical: 10,
+    borderRadius: Theme.radius.md,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  addMedBtnText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 13,
+    color: '#FFF',
+  },
+  emptyPrescriptionText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 13,
+    color: Theme.colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  medCardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.surfaceLow,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.md,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.xs,
+  },
+  medCardItemViewOnly: {
+    backgroundColor: Theme.colors.surfaceLow,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.md,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.xs,
+  },
+  medNameText: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 14.5,
+    color: Theme.colors.primary,
+  },
+  medDetailText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 12.5,
+    color: Theme.colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+  removeMedBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: Theme.radius.sm,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    backgroundColor: '#FEF2F2',
+  },
+  removeMedText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 11.5,
+    color: '#EF4444',
+  },
+  notesInputArea: {
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.lg,
+    padding: 12,
+    fontSize: 13,
+    color: Theme.colors.onSurface,
+    backgroundColor: Theme.colors.surfaceLow,
+    fontFamily: Theme.fonts.body,
+    textAlignVertical: 'top',
+    marginBottom: 16,
+  },
+  savePrescriptionBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingVertical: 14,
+    borderRadius: Theme.radius.full,
+    alignItems: 'center',
+  },
+  savePrescriptionBtnText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 14,
+    color: '#FFF',
+  },
+  viewerContainer: {
+    gap: 12,
+  },
+  refreshBtn: {
+    backgroundColor: Theme.colors.surfaceLow,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.full,
+    paddingVertical: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  refreshBtnText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 12.5,
+    color: Theme.colors.primary,
+  },
+  notesViewOnlyContainer: {
+    backgroundColor: '#FFF8E1',
+    borderWidth: 1,
+    borderColor: '#FFE082',
+    borderRadius: Theme.radius.lg,
+    padding: Theme.spacing.md,
+  },
+  notesViewOnlyText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 13,
+    color: '#5D4037',
+    lineHeight: 18,
   },
 });
 

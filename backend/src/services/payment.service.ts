@@ -13,6 +13,15 @@ interface CreateOrderParams {
   userName?: string | null;
 }
 
+interface CreatePaymentLinkParams {
+  amount: number | string | null;
+  bookingId: string;
+  userName?: string | null;
+  userContact?: string | null;
+  userEmail?: string | null;
+  callbackUrl?: string;
+}
+
 interface RazorpayOrderResponse {
   id: string;
   amount: number;
@@ -54,6 +63,55 @@ export class PaymentService {
     } catch (error) {
       console.error("Razorpay order creation failed:", error);
       throw new Error("Failed to create payment order");
+    }
+  }
+
+  /**
+   * Create a Razorpay Payment Link for a booking.
+   * Returns a short_url (hosted on razorpay.com) that works in mobile in-app browsers.
+   */
+  static async createPaymentLink({
+    amount,
+    bookingId,
+    userName,
+    userContact,
+    userEmail,
+    callbackUrl,
+  }: CreatePaymentLinkParams) {
+    try {
+      const numAmount =
+        typeof amount === "string" ? parseFloat(amount) : amount || 0;
+
+      const linkPayload: any = {
+        amount: Math.round(numAmount * 100), // paise
+        currency: "INR",
+        description: "Therapy Session – Mindsyncpro",
+        notify: { sms: false, email: false },
+        reminder_enable: false,
+        notes: { bookingId },
+      };
+
+      if (userContact || userEmail) {
+        linkPayload.customer = {};
+        if (userName) linkPayload.customer.name = userName;
+        if (userContact) linkPayload.customer.contact = userContact;
+        if (userEmail) linkPayload.customer.email = userEmail;
+      }
+
+      if (callbackUrl) {
+        linkPayload.callback_url = callbackUrl;
+        linkPayload.callback_method = "get";
+      }
+
+      const link = await (razorpay as any).paymentLink.create(linkPayload);
+
+      return {
+        paymentLinkId: link.id as string,
+        shortUrl: link.short_url as string,
+      };
+    } catch (error) {
+      console.error("Razorpay payment link creation failed:", error);
+      throw new Error("Failed to create payment link");
     }
   }
 

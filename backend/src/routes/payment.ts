@@ -7,6 +7,10 @@ const router = Router();
 // POST /api/payment/webhook - Razorpay webhook (no auth required)
 router.post("/webhook", PaymentController.handleWebhook);
 
+// GET /api/payment/:bookingId/callback - Razorpay Payment Link redirect after payment
+router.get("/:bookingId/callback", PaymentController.handleCallback);
+
+
 // All payment routes below require authentication
 router.use(requireAuth);
 

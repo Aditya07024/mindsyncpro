@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar as CalendarIcon, Clock, CreditCard, ChevronRight } from 'lucide-react-native';
 import API from '../../lib/api';
+
 import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';
 
@@ -19,8 +20,15 @@ const formatSlotDisplay = (slot: string) => {
   return `${String(displayHour).padStart(2, '0')}:${minStr} ${ampm}`;
 };
 
+interface BookingScreenProps {
+  navigation: any;
+  route: any;
+}
+
 export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route }) => {
   const therapist: TherapistData = route.params?.therapist;
+
+  const therapistId = therapist?.id || therapist?._id;
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
@@ -49,16 +57,13 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
 
   // Fetch slot availability from backend API
   const { data: remoteSlots, isLoading: slotsLoading } = useQuery({
-    queryKey: ['availability', therapist?._id, selectedDate],
-    queryFn: () => API.therapist.availability(therapist?._id, { date: selectedDate }),
-    enabled: !!therapist?._id && !!selectedDate,
+    queryKey: ['availability', therapistId, selectedDate],
+    queryFn: () => API.therapist.availability(therapistId, { date: selectedDate }),
+    enabled: !!therapistId && !!selectedDate,
     retry: false,
   });
 
-  const defaultFallbackSlots = [
-    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
-  ];
-  const slots = remoteSlots?.slots || defaultFallbackSlots;
+  const slots = remoteSlots?.openSlots || [];
 
   const handleBooking = async () => {
     if (!selectedSlot) {
@@ -70,40 +75,48 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
     try {
       // 1. Create booking in backend
       const bookingRes = await API.booking.create({
-        therapistId: therapist._id,
+        therapistId: therapistId,
         slot: `${selectedDate} ${selectedSlot}`,
       });
 
-      const bookingId = bookingRes?.booking?._id || bookingRes?._id;
+      const bookingId = bookingRes?.booking?.id || bookingRes?.booking?._id || bookingRes?.id || bookingRes?._id;
 
       if (!bookingId) {
         throw new Error("Could not retrieve secure booking ID.");
       }
 
-      // 2. Initiate Razorpay Checkout
+      // 2. Initiate Razorpay Payment Link (returns short_url — hosted Razorpay page)
       const paymentRes = await API.payment.initiate({ bookingId });
-      const orderId = paymentRes?.orderId || paymentRes?.id;
+      const shortUrl = paymentRes?.shortUrl;
 
-      // 3. WebBrowser checkout flow (Smart Expo Go compatibility)
+      if (!shortUrl) {
+        throw new Error("Could not retrieve secure payment URL from Razorpay.");
+      }
+
+      // 3. Open Razorpay hosted page directly in the browser
+      //    short_url (rzp.io/...) works in mobile in-app browsers unlike checkout.js
       Alert.alert(
-        'Razorpay Checkout',
-        'Launching payment gateway. Tap complete after completing transaction.',
+        'Complete Payment',
+        `You will be redirected to Razorpay's secure payment page. Complete the payment and return to the app.`,
         [
+          { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Launch Gateway',
+            text: 'Pay Now',
             onPress: async () => {
-              // Open a simulated or live checkout in browser
-              const checkoutUrl = `https://api.mindsyncpro.online/api/payment/${bookingId}/checkout?orderId=${orderId}`;
-              await WebBrowser.openBrowserAsync(checkoutUrl);
+              await WebBrowser.openBrowserAsync(shortUrl);
 
-              // 4. Verify payment
+              // 4. After browser closes, verify & confirm booking
               try {
                 await API.payment.demoVerify({ bookingId });
-                Alert.alert('Session Confirmed!', 'Your booking has been verified and registered successfully.');
+                Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
                 navigation.replace('UserTabs', { screen: 'Bookings' });
               } catch (verifyErr) {
-                Alert.alert('Payment Verified', 'Booking verified successfully.');
-                navigation.replace('UserTabs', { screen: 'Bookings' });
+                // Booking may already be confirmed via webhook callback
+                Alert.alert(
+                  'Booking Registered',
+                  'Your payment is being verified. Your booking will be confirmed shortly.',
+                  [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
+                );
               }
             }
           }
@@ -111,27 +124,17 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
       );
 
     } catch (err: any) {
-      console.warn("Booking creation failed, using demo bypass:", err);
-      
-      // Developer Simulator Bypass Failsafe
+      console.warn("Booking/payment failed:", err);
       Alert.alert(
-        'Demo Verification',
-        'Backend connection simulation. Activate booking now?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Confirm Booking', 
-            onPress: () => {
-              Alert.alert('Confirmed!', 'Session registered successfully!');
-              navigation.replace('UserTabs', { screen: 'Bookings' });
-            } 
-          }
-        ]
+        'Payment Error',
+        err?.message || 'Could not initiate payment. Please check your connection and try again.',
+        [{ text: 'OK' }]
       );
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

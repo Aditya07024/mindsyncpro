@@ -122,7 +122,6 @@ function Onboarding() {
 
   const startFirstMessage = async (chosenNeed: NeedType) => {
     setNeed(chosenNeed);
-    setStep(6);
     completeOnboarding({ firstName: firstName.trim() || 'friend', mood, concerns, need: chosenNeed });
 
     // Save to database
@@ -141,59 +140,8 @@ function Onboarding() {
     } catch (e) {
       console.error('Failed to save onboarding state:', e);
     }
-
-    await new Promise((r) => setTimeout(r, 1500));
-    setStreaming(true);
-
-    const concernText = concerns.length
-      ? CONCERNS.filter((c) => concerns.includes(c.id)).map((c) => c.label.toLowerCase()).join(', ')
-      : 'whatever is on your mind';
-    const moodLabel = mood <= 3 ? 'pretty heavy' : mood <= 6 ? 'somewhere in the middle' : 'okay-ish';
-    const needText =
-      chosenNeed === 'talk'
-        ? 'just wants someone to talk to'
-        : chosenNeed === 'tools'
-        ? 'is looking for tools and exercises'
-        : 'just needs to express';
-
-    const userMsg = `Hi Manas. I'm ${firstName || 'a new friend'}. I'm feeling ${moodLabel} (${mood}/10) and dealing with ${concernText}. I ${needText}. Please greet me warmly in 2-3 sentences and ask one gentle opening question.`;
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: userMsg }] }),
-      });
-      if (!res.ok || !res.body) throw new Error('stream failed');
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      let acc = '';
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let idx;
-        while ((idx = buf.indexOf('\n')) !== -1) {
-          const line = buf.slice(0, idx).trim();
-          buf = buf.slice(idx + 1);
-          if (!line.startsWith('data: ')) continue;
-          const json = line.slice(6);
-          if (json === '[DONE]') continue;
-          try {
-            const p = JSON.parse(json);
-            const t = p?.choices?.[0]?.delta?.content;
-            if (t) { acc += t; setStreamed(acc); }
-          } catch {}
-        }
-      }
-    } catch {
-      setStreamed(
-        `Hi ${firstName || 'friend'}. I'm so glad you're here. Whatever you're carrying right now — you don't have to carry it alone. Would you like to tell me what's been weighing on you the most?`
-      );
-    } finally {
-      setStreaming(false);
-    }
+    window.location.href = '/dashboard';
+    return;
   };
 
   return (
@@ -539,15 +487,28 @@ function Onboarding() {
                 </div>
               </div>
               {!streaming && streamed && (
-                <motion.button
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  onClick={() => nav({ to: '/chat' })}
-                  className="mt-8 w-full rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:scale-[1.01]"
+                  className="mt-8 space-y-3"
                 >
-                  Continue talking with Manas
-                </motion.button>
+                  <button
+                    onClick={() => nav({ to: '/chat' })}
+                    className="w-full rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:scale-[1.01]"
+                  >
+                    Continue talking with Manas
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      window.location.href = '/dashboard';
+                    }}
+                    className="w-full rounded-full border border-border bg-card px-6 py-3 font-semibold text-foreground transition hover:scale-[1.01]"
+                  >
+                    Go to Dashboard
+                  </button>
+                </motion.div>
               )}
             </div>
           </motion.div>

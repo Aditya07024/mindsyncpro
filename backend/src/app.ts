@@ -23,7 +23,6 @@ export async function createApp() {
     "http://localhost:8082",
     "https://mindsyncpro.online",
     "https://www.mindsyncpro.online",
-    "https://mindsync-frontend-delta.vercel.app",
     env.CLIENT_ORIGIN, // keep any custom override from .env
   ];
 

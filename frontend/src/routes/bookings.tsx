@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarCheck, Clock, ChevronRight, Star, AlertCircle, Video } from 'lucide-react';
+import { CalendarCheck, Clock, ChevronRight, Star, AlertCircle, Video, Pill, X } from 'lucide-react';
 import API from '@/lib/api';
 import { AppShell } from '@/components/AppShell';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ function statusBadge(status: string) {
   const map: Record<string, { label: string; cls: string }> = {
     confirmed: { label: 'Confirmed', cls: 'bg-green-100 text-green-800' },
     pending:   { label: 'Pending',   cls: 'bg-amber-100 text-amber-800' },
+    pending_payment: { label: 'Payment Pending', cls: 'bg-amber-100 text-amber-800' },
     completed: { label: 'Completed', cls: 'bg-blue-100 text-blue-800' },
     cancelled: { label: 'Cancelled', cls: 'bg-slate-100 text-slate-500' },
   };
@@ -33,6 +34,7 @@ function MyBookings() {
   const [ratingBookingId, setRatingBookingId] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
+  const [viewPrescriptionBooking, setViewPrescriptionBooking] = useState<any | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['bookings'],
@@ -55,9 +57,9 @@ function MyBookings() {
   });
 
   const bookings: any[] = data?.bookings ?? [];
-  const upcoming = bookings.filter((b) => ['confirmed', 'pending'].includes(b.status) && new Date(b.slot) > new Date())
+  const upcoming = bookings.filter((b) => ['confirmed', 'pending', 'pending_payment'].includes(b.status) && new Date(b.slot) > new Date())
     .sort((a, b) => new Date(a.slot).getTime() - new Date(b.slot).getTime());
-  const past = bookings.filter((b) => b.status === 'completed' || new Date(b.slot) < new Date())
+  const past = bookings.filter((b) => b.status === 'completed' || b.status === 'cancelled' || new Date(b.slot) < new Date())
     .sort((a, b) => new Date(b.slot).getTime() - new Date(a.slot).getTime());
 
   return (
@@ -108,7 +110,7 @@ function MyBookings() {
                       </Button>
                     ) : (
                       <div className="flex-1 text-center text-xs text-muted-foreground py-2 bg-muted rounded-xl">
-                        {b.status === 'pending' ? 'Payment Pending' : 'Available 15 min before'}
+                        {['pending', 'pending_payment'].includes(b.status) ? 'Payment Pending' : 'Available 15 min before'}
                       </div>
                     )}
 
@@ -136,11 +138,17 @@ function MyBookings() {
                     </div>
                     {statusBadge(b.status)}
                   </div>
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-4 mt-3">
                     {b.status === 'completed' && (
                       <button onClick={() => setRatingBookingId(b.id)}
                         className="flex items-center gap-1 text-xs text-accent font-semibold">
                         <Star className="size-3" /> Rate session
+                      </button>
+                    )}
+                    {b.prescription && b.prescription.medicines?.length > 0 && (
+                      <button onClick={() => setViewPrescriptionBooking(b)}
+                        className="flex items-center gap-1 text-xs text-teal-600 font-semibold hover:text-teal-700 transition">
+                        <Pill className="size-3" /> View Prescription
                       </button>
                     )}
                     <Link to={`/booking/${b.therapistId}`} className="ml-auto text-xs text-primary font-semibold flex items-center gap-1">
@@ -189,6 +197,53 @@ function MyBookings() {
                 {rateMutation.isPending ? 'Submitting…' : 'Submit'}
               </Button>
               <button onClick={() => setRatingBookingId(null)} className="w-full text-sm text-muted-foreground">Cancel</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* View Prescription Modal */}
+      <AnimatePresence>
+        {viewPrescriptionBooking && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            onClick={() => setViewPrescriptionBooking(null)}>
+            <motion.div initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-card border border-border rounded-3xl p-6 shadow-2xl space-y-5">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-2 text-teal-600">
+                  <Pill className="size-5" />
+                  <h3 className="font-display text-lg font-bold">Prescription Details</h3>
+                </div>
+                <button onClick={() => setViewPrescriptionBooking(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="size-4" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Prescribed Medicines</h4>
+                  <div className="space-y-2">
+                    {viewPrescriptionBooking.prescription?.medicines?.map((med: string, idx: number) => (
+                      <div key={idx} className="flex items-center gap-2.5 bg-muted/50 rounded-xl p-3 border border-border/40">
+                        <div className="size-2 rounded-full bg-teal-500" />
+                        <span className="text-sm font-semibold text-foreground">{med}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {viewPrescriptionBooking.prescription?.notes && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Instructions</h4>
+                    <div className="bg-muted/30 rounded-xl p-3 border border-border/40 text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {viewPrescriptionBooking.prescription.notes}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <Button onClick={() => setViewPrescriptionBooking(null)} className="w-full rounded-xl">Close</Button>
             </motion.div>
           </motion.div>
         )}

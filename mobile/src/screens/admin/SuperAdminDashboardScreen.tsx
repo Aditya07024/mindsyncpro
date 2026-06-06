@@ -28,7 +28,7 @@ interface CrisisFlag {
 
 export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const [verifications, setVerifications] = useState<VerificationItem[]>([
-    { _id: 'v1', name: 'Dr. Sarah Jenkins', type: 'therapist', licenseNum: 'MCI-12849', status: 'pending' },
+    { _id: 'v1', name: 'Dr. Sarah Jenkins', type: 'therapist', licenseNum: 'MCI-12849', status: 'verified' },
     { _id: 'v2', name: 'IIT Bombay Counseling Cell', type: 'organization', status: 'pending' },
   ]);
 
@@ -51,6 +51,10 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
 
   const mrr = adminStats?.mrr || 45200;
   const userCount = adminStats?.totalUsers || 2420;
+  const therapistCount = adminStats?.totalTherapists || 320;
+  const organizationCount = adminStats?.totalOrganizations || 45;
+  const linkedTherapists = adminStats?.linkedTherapists || 210;
+  const linkedUsers = adminStats?.linkedUsers || 1540;
 
   const handleVerify = async (id: string, name: string) => {
     Alert.alert(
@@ -63,10 +67,10 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
           onPress: async () => {
             try {
               await API.admin.verify(id);
-              setVerifications(prev => prev.filter(v => v._id !== id));
+              setVerifications(prev => prev.map(v => v._id === id ? { ...v, status: 'verified' } : v));
               Alert.alert('Approved!', `${name} is now active.`);
             } catch (err) {
-              setVerifications(prev => prev.filter(v => v._id !== id));
+              setVerifications(prev => prev.map(v => v._id === id ? { ...v, status: 'verified' } : v));
               Alert.alert('Approved!', `${name} successfully verified.`);
             }
           } 
@@ -119,6 +123,41 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
             icon={<Users size={18} color={Theme.colors.secondary} />}
             color={Theme.colors.secondary}
           />
+          <StatCard
+            title="Therapists"
+            value={therapistCount}
+            icon={<Award size={18} color={Theme.colors.primary} />}
+            color={Theme.colors.primary}
+          />
+          <StatCard
+            title="Organizations"
+            value={organizationCount}
+            icon={<ShieldCheck size={18} color={Theme.colors.secondary} />}
+            color={Theme.colors.secondary}
+          />
+          <StatCard
+            title="Linked Therapists"
+            value={linkedTherapists}
+            icon={<Users size={18} color={Theme.colors.primary} />}
+            color={Theme.colors.primary}
+          />
+          <StatCard
+            title="Linked Users"
+            value={linkedUsers}
+            icon={<Users size={18} color={Theme.colors.secondary} />}
+            color={Theme.colors.secondary}
+          />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionHeader}>Platform Network Overview</Text>
+          <Text style={styles.sectionDesc}>Relationship visibility across users, therapists and organizations.</Text>
+
+          <Text style={styles.itemName}>Users: {userCount}</Text>
+          <Text style={styles.itemName}>Therapists: {therapistCount}</Text>
+          <Text style={styles.itemName}>Organizations: {organizationCount}</Text>
+          <Text style={styles.itemName}>Therapists Linked To Organizations: {linkedTherapists}</Text>
+          <Text style={styles.itemName}>Users Linked Through Organizations: {linkedUsers}</Text>
         </View>
 
         {/* Verification Approval Queue */}
@@ -135,13 +174,19 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
                     {item.type.toUpperCase()} {item.licenseNum ? `· Lic: ${item.licenseNum}` : ''}
                   </Text>
                 </View>
-                <TouchableOpacity 
-                  onPress={() => handleVerify(item._id, item.name)}
-                  style={styles.verifyBtn}
-                >
-                  <UserCheck size={14} color="#FFF" />
-                  <Text style={styles.verifyBtnText}>Approve</Text>
-                </TouchableOpacity>
+                {item.status === 'verified' ? (
+                  <View style={[styles.verifyBtn, { backgroundColor: '#16a34a' }]}>
+                    <Text style={styles.verifyBtnText}>Approved</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => handleVerify(item._id, item.name)}
+                    style={styles.verifyBtn}
+                  >
+                    <UserCheck size={14} color="#FFF" />
+                    <Text style={styles.verifyBtnText}>Approve</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
             {verifications.length === 0 && (

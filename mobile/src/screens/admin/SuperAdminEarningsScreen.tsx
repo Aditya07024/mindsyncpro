@@ -111,6 +111,9 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
                 <View style={{ flex: 1 }}>
                   <Text style={styles.therapistName}>{t.name}</Text>
                   <Text style={styles.therapistSub}>{t.email || 'No email'} · {t.sessionsGiven} paid sessions</Text>
+                  <Text style={styles.upiText}>
+                    UPI: {t.upiId || t.upi || t.paymentDetails?.upiId || 'Not Provided'}
+                  </Text>
                 </View>
                 {isExpanded ? <ChevronUp size={18} color={Theme.colors.textMuted} /> : <ChevronDown size={18} color={Theme.colors.textMuted} />}
               </TouchableOpacity>
@@ -131,6 +134,12 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
                   <Text style={styles.earningLabel}>Payout</Text>
                   <Text style={[styles.earningValWhite, { color: '#10b981' }]}>₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</Text>
                 </View>
+              </View>
+              <View style={styles.upiContainer}>
+                <Text style={styles.upiLabel}>Payout UPI ID</Text>
+                <Text style={styles.upiValue}>
+                  {t.upiId || t.upi || t.paymentDetails?.upiId || 'Not Provided'}
+                </Text>
               </View>
 
               {/* Mark paid button */}
@@ -275,6 +284,33 @@ const styles = StyleSheet.create({
   bookingFooterLabel: { fontFamily: Theme.fonts.headline, fontSize: 12, color: Theme.colors.onSurface, flex: 1 },
   bookingFooterGross: { fontFamily: Theme.fonts.display, fontSize: 13, fontWeight: '700', color: Theme.colors.onSurface },
   bookingFooterPayout: { fontFamily: Theme.fonts.display, fontSize: 13, fontWeight: '700', color: '#10b981', marginLeft: 8 },
+
+  upiText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 10,
+    color: '#10b981',
+    marginTop: 3,
+  },
+  upiContainer: {
+    marginHorizontal: Theme.spacing.md,
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: Theme.radius.lg,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  upiLabel: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 10,
+    color: '#065f46',
+  },
+  upiValue: {
+    fontFamily: Theme.fonts.display,
+    fontSize: 12,
+    color: '#047857',
+    marginTop: 2,
+  },
 
   emptyText: { fontFamily: Theme.fonts.body, fontSize: 13, color: Theme.colors.textMuted, textAlign: 'center', paddingVertical: 16 },
 });

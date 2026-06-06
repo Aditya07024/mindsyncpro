@@ -61,10 +61,14 @@ export class SubscriptionService {
   ) {
     const isEmail = userPhone.includes("@");
     const notify_info: any = {};
+    const phoneRegex = /^\+?[1-9]\d{9,14}$/;
+
     if (isEmail) {
       notify_info.notify_email = userPhone;
-    } else {
+    } else if (phoneRegex.test(userPhone)) {
       notify_info.notify_phone = userPhone;
+    } else {
+      notify_info.notify_email = "customer@Mindsyncpro.com";
     }
 
     try {
@@ -81,7 +85,7 @@ export class SubscriptionService {
 
       return {
         subscriptionId: subscription.id,
-        shortUrl: (subscription as any).short_url ?? null,
+        shortUrl: (subscription as any).short_url || `https://api.razorpay.com/v1/subscriptions/${subscription.id}/checkout`,
         status: subscription.status,
       };
     } catch (error) {
@@ -99,10 +103,14 @@ export class SubscriptionService {
 
     const isEmail = userPhone.includes("@");
     const notify_info: any = {};
+    const phoneRegex = /^\+?[1-9]\d{9,14}$/;
+
     if (isEmail) {
       notify_info.notify_email = userPhone;
-    } else {
+    } else if (phoneRegex.test(userPhone)) {
       notify_info.notify_phone = userPhone;
+    } else {
+      notify_info.notify_email = "customer@Mindsyncpro.com";
     }
 
     try {
@@ -119,7 +127,7 @@ export class SubscriptionService {
 
       return {
         subscriptionId: subscription.id,
-        shortUrl: (subscription as any).short_url ?? null,
+        shortUrl: (subscription as any).short_url || `https://api.razorpay.com/v1/subscriptions/${subscription.id}/checkout`,
         status: subscription.status,
       };
     } catch (error) {

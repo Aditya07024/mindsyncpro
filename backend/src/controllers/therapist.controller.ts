@@ -263,6 +263,13 @@ export class TherapistController {
     const dateObj = date ? new Date(String(date)) : new Date();
     const dayOfWeek = dateObj.getDay();
 
+    // Clean up old pending_payment bookings (older than 30 minutes)
+    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+    await TherapistBooking.updateMany(
+      { status: "pending_payment", createdAt: { $lt: thirtyMinsAgo } },
+      { status: "cancelled" }
+    );
+
     const bookedSlots = await TherapistBooking.find({
       therapistId: id,
       slot: {

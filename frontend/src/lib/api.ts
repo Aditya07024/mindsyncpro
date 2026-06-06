@@ -242,6 +242,11 @@ const API = {
       }),
     getSharedJournals: (id: string) =>
       apiCall<any>(`/api/bookings/${id}/shared-journals`),
+    savePrescription: (id: string, data: { medicines: string[]; notes: string }) =>
+      apiCall<any>(`/api/bookings/${id}/prescription`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
   },
 
   payment: {
