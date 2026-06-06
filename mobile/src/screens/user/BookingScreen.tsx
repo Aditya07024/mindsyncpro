@@ -65,75 +65,82 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
 
   const slots = remoteSlots?.openSlots || [];
 
-  const handleBooking = async () => {
-    if (!selectedSlot) {
-      Alert.alert('Slot Required', 'Please select an hour slot to book your session.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // 1. Create booking in backend
-      const bookingRes = await API.booking.create({
-        therapistId: therapistId,
-        slot: `${selectedDate} ${selectedSlot}`,
-      });
-
-      const bookingId = bookingRes?.booking?.id || bookingRes?.booking?._id || bookingRes?.id || bookingRes?._id;
-
-      if (!bookingId) {
-        throw new Error("Could not retrieve secure booking ID.");
+    const handleBooking = async () => {
+      if (!selectedSlot) {
+        Alert.alert('Slot Required', 'Please select an hour slot to book your session.');
+        return;
       }
 
-      // 2. Initiate Razorpay Payment Link (returns short_url — hosted Razorpay page)
-      const paymentRes = await API.payment.initiate({ bookingId });
-      const shortUrl = paymentRes?.shortUrl;
+      console.log("[Booking] Initiating booking for slot:", `${selectedDate} ${selectedSlot}`, "with therapist:", therapistId);
+      setLoading(true);
+      try {
+        // 1. Create booking in backend
+        const bookingPayload = {
+          therapistId: therapistId,
+          slot: `${selectedDate} ${selectedSlot}`,
+        };
+        console.log("[Booking] Sending booking payload:", JSON.stringify(bookingPayload));
+        const bookingRes = await API.booking.create(bookingPayload);
+        console.log("[Booking] Booking response received:", JSON.stringify(bookingRes, null, 2));
 
-      if (!shortUrl) {
-        throw new Error("Could not retrieve secure payment URL from Razorpay.");
+        const bookingId = bookingRes?.booking?.id || bookingRes?.booking?._id || bookingRes?.id || bookingRes?._id;
+        console.log("[Booking] Resolved bookingId:", bookingId);
+
+        if (!bookingId) {
+          console.error("[Booking] Error: No bookingId resolved!");
+          throw new Error("Could not retrieve secure booking ID.");
+        }
+
+        // 2. Initiate Razorpay Payment Link (returns short_url — hosted Razorpay page)
+        console.log("[Booking] Initiating payment link for bookingId:", bookingId);
+        const paymentRes = await API.payment.initiate({ bookingId });
+        console.log("[Booking] Payment link response received:", JSON.stringify(paymentRes, null, 2));
+        const shortUrl = paymentRes?.shortUrl;
+        console.log("[Booking] Extracted shortUrl:", shortUrl);
+
+        if (!shortUrl) {
+          console.error("[Booking] Error: No shortUrl found in payment link response!");
+          throw new Error("Could not retrieve secure payment URL from Razorpay.");
+        }
+
+        // 3. Open Razorpay hosted page directly in the browser (NO Alert wrapper — avoids async-in-Alert bug)
+        setLoading(false);
+        console.log("[Booking] Launching browser for shortUrl:", shortUrl);
+        await WebBrowser.openBrowserAsync(shortUrl);
+
+        // 4. After browser closes, verify & confirm booking
+        try {
+          setLoading(true);
+          console.log("[Booking] Syncing payment state via demoVerify...");
+          await API.payment.demoVerify({ bookingId });
+          Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
+          navigation.replace('UserTabs', { screen: 'Bookings' });
+        } catch (verifyErr) {
+          // Booking may already be confirmed via webhook callback
+          console.warn("[Booking] Payment verify error/callback pending:", verifyErr);
+          Alert.alert(
+            'Booking Registered',
+            'Your payment is being verified. Your booking will be confirmed shortly.',
+            [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
+          );
+        } finally {
+          setLoading(false);
+        }
+
+      } catch (err: any) {
+        console.error("[Booking] Booking flow failed with error:", err);
+        if (err instanceof Error) {
+          console.error("[Booking] Error details:", err.name, "|", err.message, "|", err.stack);
+        }
+        Alert.alert(
+          'Payment Error',
+          err?.message || 'Could not initiate payment. Please check your connection and try again.',
+          [{ text: 'OK' }]
+        );
+      } finally {
+        setLoading(false);
       }
-
-      // 3. Open Razorpay hosted page directly in the browser
-      //    short_url (rzp.io/...) works in mobile in-app browsers unlike checkout.js
-      Alert.alert(
-        'Complete Payment',
-        `You will be redirected to Razorpay's secure payment page. Complete the payment and return to the app.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Pay Now',
-            onPress: async () => {
-              await WebBrowser.openBrowserAsync(shortUrl);
-
-              // 4. After browser closes, verify & confirm booking
-              try {
-                await API.payment.demoVerify({ bookingId });
-                Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
-                navigation.replace('UserTabs', { screen: 'Bookings' });
-              } catch (verifyErr) {
-                // Booking may already be confirmed via webhook callback
-                Alert.alert(
-                  'Booking Registered',
-                  'Your payment is being verified. Your booking will be confirmed shortly.',
-                  [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
-                );
-              }
-            }
-          }
-        ]
-      );
-
-    } catch (err: any) {
-      console.warn("Booking/payment failed:", err);
-      Alert.alert(
-        'Payment Error',
-        err?.message || 'Could not initiate payment. Please check your connection and try again.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
 
   return (

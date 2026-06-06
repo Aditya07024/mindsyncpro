@@ -16,6 +16,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
   const { isSignedIn } = useAuth();
   const queryClient = useQueryClient();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [cancellingPending, setCancellingPending] = useState(false);
   const [plans, setPlans] = useState<PlanData[]>([
     {
       id: 'free',
@@ -94,7 +95,88 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
   const hasPendingSub = subscriptionData?.subscription?.status === 'pending';
   const pendingPlanName = hasPendingSub ? subscriptionData?.subscription?.plan : null;
 
-  const handleSelectPlan = async (plan: PlanData) => {
+  // ── Standalone cancel handler (NOT inside Alert callback) ──
+  const doCancelPending = async () => {
+    console.log('[CancelPending] Starting cancel...');
+    setCancellingPending(true);
+    try {
+      const res = await API.subscription.cancel();
+      console.log('[CancelPending] API response:', JSON.stringify(res));
+      Alert.alert('Cancelled', 'Pending subscription cancelled.');
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+    } catch (err: any) {
+      console.error('[CancelPending] Error:', err);
+      Alert.alert('Error', err?.message || 'Failed to cancel.');
+    } finally {
+      setCancellingPending(false);
+    }
+  };
+
+  // ── Standalone upgrade handler (NOT inside Alert callback) ──
+  const doUpgrade = async (plan: PlanData) => {
+    console.log('[Upgrade] Starting upgrade for plan:', JSON.stringify(plan, null, 2));
+    setCheckoutLoading(true);
+    try {
+      const payload = { tier: (plan.id || plan._id || '') as string };
+      console.log('[Upgrade] Sending upgrade request payload:', JSON.stringify(payload));
+
+      const res = await API.subscription.upgrade(payload);
+      console.log('[Upgrade] Received response:', JSON.stringify(res, null, 2));
+
+      const shortUrl = res?.shortUrl;
+      console.log('[Upgrade] Extracted shortUrl:', shortUrl);
+
+      if (!shortUrl) {
+        console.error('[Upgrade] Error: No shortUrl found in response!');
+        throw new Error('Could not retrieve secure payment URL.');
+      }
+
+      setCheckoutLoading(false);
+
+      // Open Razorpay Gateway in browser directly
+      console.log('[Upgrade] Launching browser for shortUrl:', shortUrl);
+      await WebBrowser.openBrowserAsync(shortUrl);
+
+      // Auto-sync status when they return to the app
+      try {
+        setCheckoutLoading(true);
+        console.log('[Upgrade] Syncing subscription status after browser session...');
+        const syncRes = await API.subscription.sync();
+        console.log('[Upgrade] Sync status response:', JSON.stringify(syncRes, null, 2));
+        if (syncRes.status === 'active') {
+          Alert.alert('Subscription Activated!', 'Your payment was verified. Premium features are now unlocked!');
+        } else {
+          Alert.alert(
+            'Payment Processing',
+            'Your payment is being processed. If you already completed the payment, click "Sync Status" on the plans page to update.'
+          );
+        }
+        queryClient.invalidateQueries({ queryKey: ['subscription'] });
+        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      } catch (syncErr) {
+        console.warn('[Upgrade] Auto-sync on return failed:', syncErr);
+        Alert.alert(
+          'Payment Processing',
+          'Your payment is being verified securely by Razorpay. Once done, click "Sync Status" to activate.'
+        );
+      } finally {
+        setCheckoutLoading(false);
+      }
+    } catch (err: any) {
+      console.error('[Upgrade] Error caught:', err);
+      Alert.alert(
+        'Checkout Error',
+        err?.message || 'We could not initiate the checkout gateway at this moment. Please check your network connection.'
+      );
+      setCheckoutLoading(false);
+    }
+  };
+
+  const handleSelectPlan = (plan: PlanData) => {
+    console.log('[handleSelectPlan] Tapped plan:', plan.name, 'id:', plan.id || plan._id);
+    console.log('[handleSelectPlan] isSignedIn:', isSignedIn, 'hasPendingSub:', hasPendingSub, 'currentTier:', currentTier);
+
     if (plan.price === 0) {
       Alert.alert('Free Activated', 'You are currently on the Free Tier!');
       return;
@@ -115,91 +197,14 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
     }
     
     if (!isSignedIn) {
-      // Redirect to login to upgrade
-      Alert.alert(
-        `Upgrade to ${plan.name}`,
-        `Would you like to subscribe to ${plan.name} for ₹${plan.price}/${plan.interval}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Proceed to Login', 
-            onPress: () => navigation.navigate('Login', { role: 'user', upgradePlan: plan.id || plan._id }) 
-          }
-        ]
-      );
+      // For non-signed-in users, just navigate directly to login
+      navigation.navigate('Login', { role: 'user', upgradePlan: plan.id || plan._id });
       return;
     }
 
-    // Process logged-in upgrade checkout
-    Alert.alert(
-      `Confirm Upgrade`,
-      `Would you like to subscribe to ${plan.name} for ₹${plan.price}/${plan.interval} via Razorpay?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Subscribe Now',
-          onPress: async () => {
-            setCheckoutLoading(true);
-            try {
-              // 1. Create Razorpay Subscription
-              const res = await API.subscription.upgrade({ tier: (plan.id || plan._id || '') as string });
-              const shortUrl = res?.shortUrl;
-
-              if (!shortUrl) {
-                throw new Error("Could not retrieve secure payment URL.");
-              }
-
-              // 2. Open Razorpay Gateway in browser
-              Alert.alert(
-                'Razorpay Gateway',
-                'Launching secure payment checkout. Please complete the subscription payment in the opened browser window.',
-                [
-                  {
-                    text: 'Open Checkout',
-                    onPress: async () => {
-                      await WebBrowser.openBrowserAsync(shortUrl);
-                      // Auto-sync status when they return to the app
-                      try {
-                        setCheckoutLoading(true);
-                        const syncRes = await API.subscription.sync();
-                        if (syncRes.status === 'active') {
-                          Alert.alert('Subscription Activated!', 'Your payment was verified. Premium features are now unlocked!');
-                        } else {
-                          Alert.alert(
-                            'Payment Processing',
-                            'Your payment is being processed. If you already completed the payment, click "Sync Status" on the plans page to update.'
-                          );
-                        }
-                        queryClient.invalidateQueries({ queryKey: ['subscription'] });
-                        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-                      } catch (err) {
-                        console.warn("Auto-sync on return failed:", err);
-                        Alert.alert(
-                          'Payment Processing',
-                          'Your payment is being verified securely by Razorpay. Once done, click "Sync Status" to activate.'
-                        );
-                      } finally {
-                        setCheckoutLoading(false);
-                        navigation.goBack();
-                      }
-                    }
-                  }
-                ]
-              );
-
-            } catch (err: any) {
-              console.warn("Upgrade checkout failed:", err);
-              Alert.alert(
-                'Checkout Error',
-                err?.message || 'We could not initiate the checkout gateway at this moment. Please check your network connection.'
-              );
-            } finally {
-              setCheckoutLoading(false);
-            }
-          }
-        }
-      ]
-    );
+    // Directly start upgrade — no Alert confirmation (Alert callbacks are broken on this device)
+    console.log('[handleSelectPlan] Calling doUpgrade directly for:', plan.name);
+    doUpgrade(plan);
   };
 
   // Corporate affiliate therapists are fully sponsored by their organizations
@@ -243,13 +248,16 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
           <View style={styles.pendingActions}>
             <TouchableOpacity 
               onPress={async () => {
+                console.log('[SyncStatus] Tapped');
                 try {
                   setCheckoutLoading(true);
                   const res = await API.subscription.sync();
+                  console.log('[SyncStatus] Response:', JSON.stringify(res));
                   Alert.alert("Sync Status", res.message || "Synced successfully!");
                   queryClient.invalidateQueries({ queryKey: ['subscription'] });
                   queryClient.invalidateQueries({ queryKey: ['userProfile'] });
                 } catch (err: any) {
+                  console.error('[SyncStatus] Error:', err);
                   Alert.alert("Sync Failed", err.message || "Failed to sync status.");
                 } finally {
                   setCheckoutLoading(false);
@@ -261,35 +269,16 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
             
             <TouchableOpacity 
-              onPress={async () => {
-                Alert.alert(
-                  "Cancel Pending",
-                  "Are you sure you want to cancel this pending subscription? You can then choose any plan to subscribe again.",
-                  [
-                    { text: "No", style: "cancel" },
-                    {
-                      text: "Yes, Cancel",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          setCheckoutLoading(true);
-                          await API.subscription.cancel();
-                          Alert.alert("Cancelled", "Pending subscription cancelled.");
-                          queryClient.invalidateQueries({ queryKey: ['subscription'] });
-                          queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-                        } catch (err: any) {
-                          Alert.alert("Error", err.message || "Failed to cancel.");
-                        } finally {
-                          setCheckoutLoading(false);
-                        }
-                      }
-                    }
-                  ]
-                );
+              onPress={() => {
+                console.log('[CancelPending] Tapped — calling cancel directly');
+                doCancelPending();
               }}
               style={[styles.actionBtn, styles.cancelBtn]}
+              disabled={cancellingPending}
             >
-              <Text style={[styles.actionBtnText, styles.cancelBtnText]}>Cancel Pending</Text>
+              <Text style={[styles.actionBtnText, styles.cancelBtnText]}>
+                {cancellingPending ? 'Cancelling...' : 'Cancel Pending'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
