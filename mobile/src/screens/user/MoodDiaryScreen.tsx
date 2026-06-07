@@ -26,7 +26,12 @@ function moodColor(score: number) {
 export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) => {
   const queryClient = useQueryClient();
   const { user } = useUser();
-  const firstName = user?.firstName || useStore(state => state.firstName) || 'Friend';
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => API.user.profile(),
+    retry: false,
+  });
+  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || useStore(state => state.firstName) || 'Friend';
   const [crisisOpen, setCrisisOpen] = useState(false);
 
   // Fetch mood logs

@@ -17,7 +17,7 @@ interface Message {
 }
 
 export const ChatScreen: React.FC = () => {
-  const firstName = useStore(state => state.firstName) || 'friend';
+  const [profileName, setProfileName] = useState(useStore.getState().firstName || 'friend');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
@@ -35,6 +35,10 @@ export const ChatScreen: React.FC = () => {
           const subInfo = await API.subscription.get().catch(() => null);
           setSubData(subInfo);
 
+          const profile = await API.user.profile().catch(() => null);
+          const resolvedFirstName = profile?.user?.fullName?.split(" ")[0] || useStore.getState().firstName || 'friend';
+          setProfileName(resolvedFirstName);
+
           const history = await API.chat.getMessages();
           if (history && Array.isArray(history.messages) && history.messages.length > 0) {
             const mapped: Message[] = history.messages.map((m: any) => ({
@@ -50,19 +54,20 @@ export const ChatScreen: React.FC = () => {
               {
                 id: 'initial',
                 role: 'assistant',
-                content: `Hi ${firstName}. I'm Manas. Whatever brought you here — let's just sit with it together. What's on your mind?`,
+                content: `Hi ${resolvedFirstName}. I'm Manas. Whatever brought you here — let's just sit with it together. What's on your mind?`,
                 timestamp: Date.now()
               }
             ]);
           }
         } catch (err) {
           console.warn("Failed to fetch conversation history:", err);
+          const resolvedFirstName = useStore.getState().firstName || 'friend';
           // Fallback to welcome message on error
           setMessages([
             {
               id: 'initial',
               role: 'assistant',
-              content: `Hi ${firstName}. I'm Manas. Whatever brought you here — let's just sit with it together. What's on your mind?`,
+              content: `Hi ${resolvedFirstName}. I'm Manas. Whatever brought you here — let's just sit with it together. What's on your mind?`,
               timestamp: Date.now()
             }
           ]);
@@ -76,7 +81,7 @@ export const ChatScreen: React.FC = () => {
       return () => {
         // Optional cleanup on unfocus
       };
-    }, [firstName])
+    }, [])
   );
 
   const todayStr = new Date().toLocaleDateString('en-CA');

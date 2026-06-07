@@ -33,13 +33,15 @@ function formatCountdown(slot: string) {
 function Dashboard() {
   const nav = useNavigate();
   const { user: clerkUser } = useUser();
-  const displayName = clerkUser?.firstName ?? clerkUser?.username ?? 'friend';
+  const [dbUser, setDbUser] = useState<any>(null);
+  const displayName = dbUser?.fullName?.split(" ")[0] || clerkUser?.firstName || 'friend';
   const [crisisMode, setCrisisMode] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
 
   // Auto-redirect therapists and admins based on existing role
   useEffect(() => {
     API.auth.me().then(async (me: any) => {
+      setDbUser(me);
       let role = me?.role ?? 'user';
       const intentRole = localStorage.getItem('Mindsyncpro_intent_role');
       

@@ -17,7 +17,12 @@ function Chat() {
   const { user: clerkUser } = useUser();
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  const firstName = clerkUser?.firstName ?? clerkUser?.username ?? 'friend';
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => API.auth.me(),
+    retry: false,
+  });
+  const firstName = me?.fullName?.split(" ")[0] || clerkUser?.firstName || 'friend';
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [crisis, setCrisis] = useState(false);

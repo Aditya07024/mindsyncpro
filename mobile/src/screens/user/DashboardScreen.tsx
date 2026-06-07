@@ -17,7 +17,7 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const { signOut } = useAuth();
   const { user } = useUser();
-  const firstName = user?.firstName || useStore(state => state.firstName) || 'Friend';
+  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || useStore(state => state.firstName) || 'Friend';
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [crisisOpen, setCrisisOpen] = useState(false);
 
