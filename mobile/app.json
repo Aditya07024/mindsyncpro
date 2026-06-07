@@ -32,8 +32,18 @@
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO"
-      ]
+      ],
+      "useNextNotificationsApi": true
     },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2E6E65"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },

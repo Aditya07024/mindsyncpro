@@ -17,32 +17,34 @@ const PLAN_LIMITS: Record<IUser["tier"], number> = {
   apna_therapist: Number.POSITIVE_INFINITY,
 };
 
-const MANAS_SYSTEM_PROMPT = `You are Manas AI.
-You are a compassionate emotional wellness companion.
-Your role is to:
-* Listen carefully.
-* Understand emotions.
-* Respond with empathy.
-* Help users reflect on situations.
-* Ask thoughtful questions.
-* Provide practical guidance.
+const MANAS_SYSTEM_PROMPT = `You are Manas — a warm, caring emotional wellness companion who feels like a close friend the user can always turn to.
 
-Response style:
-1. Acknowledge feelings.
-2. Understand the situation.
-3. Provide insights.
-4. Suggest practical actions.
-5. Ask a reflective follow-up question.
+Your personality:
+- You speak like a thoughtful, empathetic friend — not a robot or a textbook.
+- You use natural, conversational language. Say "I hear you" instead of "I acknowledge your feelings."
+- You show genuine warmth. Use phrases like "That sounds really tough," "I'm glad you shared that with me," "It makes total sense that you'd feel that way."
+- You remember what users have told you before and bring it up naturally. For example: "Last time you mentioned things were tough with your mom — how's that been going?"
+- You mirror the user's energy — if they're casual, be casual. If they're serious, match their depth.
+- You're okay with silence and short answers. You don't over-explain or lecture.
+- You occasionally share gentle observations, not prescriptions.
 
-Keep responses meaningful and personalized.
-Avoid:
-* Generic advice
-* Robotic wording
-* Repeating the same phrases
+How you respond:
+1. First, reflect back what you heard — show you truly listened.
+2. Validate their feelings without judgment. Make them feel seen.
+3. If appropriate, gently connect what they're saying to patterns you've noticed from previous chats.
+4. Offer one small, practical thought or reframe — never a list of 5 tips.
+5. End with a warm, open-ended question that invites them to go deeper — not a generic "How does that make you feel?"
 
-Never claim to be a licensed therapist.
-Never diagnose medical conditions.
-If the user is in severe distress or unsafe, suggest they call/text the crisis line 14416 / 1800891446.`;
+Rules:
+- Keep responses concise (3-5 sentences usually). Don't write essays.
+- Never sound clinical, robotic, or formulaic. Vary your phrasing every time.
+- Never start with "I understand" or "It sounds like" every single time — mix it up.
+- Never use bullet points or numbered lists in your replies to the user.
+- If you have context from past conversations, weave it in naturally — don't announce "Based on our previous conversation..."
+- Never claim to be a licensed therapist or diagnose conditions.
+- If the user seems in severe distress or mentions self-harm, gently suggest the crisis helpline: 14416 / 1800891446.
+- Always address the user by their first name when you know it — it makes the conversation feel personal.`;
+
 
 export class AIService {
   static detectCrisis(text: string): boolean {
@@ -197,9 +199,18 @@ export class AIService {
         .filter((w) => w.length > 3)
     );
 
-    const relevant: string[] = [];
+    // Always include the most recent memories (up to 5), then add keyword-matched ones
+    const recentMemories = memories
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 5)
+      .map((m: any) => `[${m.category.toUpperCase()}] ${m.content}`);
 
+    // Add keyword-matched memories that aren't already in the recent set
+    const keywordMatched: string[] = [];
     for (const memory of memories) {
+      const formatted = `[${memory.category.toUpperCase()}] ${memory.content}`;
+      if (recentMemories.includes(formatted)) continue;
+
       const memoryWords = memory.content
         .toLowerCase()
         .replace(/[^\w\s]/g, "")
@@ -221,11 +232,14 @@ export class AIService {
       );
 
       if (hasOverlap || categoryMatch) {
-        relevant.push(`[${memory.category.toUpperCase()}] ${memory.content}`);
+        keywordMatched.push(formatted);
       }
     }
 
-    return relevant.slice(0, 3); // inject maximum of 3 memories to optimize tokens
+    // Combine: recent memories + keyword-matched, deduplicated, max 8
+    const combined = [...recentMemories, ...keywordMatched];
+    const unique = [...new Set(combined)];
+    return unique.slice(0, 8);
   }
 
   // Rolling rolling summary generation
@@ -245,7 +259,7 @@ ${formattedHistory}
 Write a brief, cumulative summary of the whole conversation, focusing on user goals, recurring concerns, relationships, triggers, and events. Keep it under 100 words.`;
 
     try {
-      const summary = await this.queryBytez([
+      const summary = await this.queryHF([
         { role: "system", content: "You are a helpful assistant that summarizes conversations concisely." },
         { role: "user", content: prompt }
       ]);
@@ -283,7 +297,7 @@ Respond with a JSON array of extracted memories, or an empty array if nothing im
 Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event", "content": "..."}]`;
 
     try {
-      const resultText = await this.queryBytez([
+      const resultText = await this.queryHF([
         { role: "system", content: "You are a memory extractor. Reply only with valid JSON." },
         { role: "user", content: prompt }
       ]);
@@ -332,15 +346,15 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     }
   }
 
-  // Bytez API helpers with retry once on failure
-  private static async queryBytez(
+  // Hugging Face Inference API helpers with retry once on failure
+  private static async queryHF(
     messages: { role: string; content: string }[]
   ): Promise<string> {
-    const apiKey = process.env.BYTEZ_API_KEY;
-    const model = process.env.BYTEZ_MODEL || "Qwen/Qwen2.5-7B-Instruct";
+    const apiKey = process.env.HF_TOKEN;
+    const model = process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct";
 
     if (!apiKey) {
-      throw new Error("BYTEZ_API_KEY is not configured");
+      throw new Error("HF_TOKEN is not configured");
     }
 
     let attempt = 0;
@@ -349,7 +363,7 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
 
     while (attempt < maxAttempts) {
       try {
-        const response = await this.fetchWithTimeout("https://api.bytez.com/models/v2/openai/v1/chat/completions", {
+        const response = await this.fetchWithTimeout(`https://router.huggingface.co/v1/chat/completions`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${apiKey}`,
@@ -358,15 +372,15 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
           body: JSON.stringify({
             model,
             messages,
-            max_tokens: 220,
-            temperature: 0.6,
+            max_tokens: 500,
+            temperature: 0.75,
             stream: false,
           }),
-        }, 15000);
+        }, 30000);
 
         if (!response.ok) {
           const errText = await response.text().catch(() => "API Error");
-          throw new Error(`Bytez API error: ${response.status} - ${errText}`);
+          throw new Error(`HuggingFace API error: ${response.status} - ${errText}`);
         }
 
         const data = await response.json() as any;
@@ -375,23 +389,23 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
         lastError = err;
         attempt++;
         if (attempt < maxAttempts) {
-          console.warn(`Bytez API query failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
+          console.warn(`HuggingFace API query failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
           await new Promise((res) => setTimeout(res, 1000));
         }
       }
     }
 
-    throw lastError || new Error("Failed to query Bytez API");
+    throw lastError || new Error("Failed to query HuggingFace API");
   }
 
-  private static async *queryBytezStream(
+  private static async *queryHFStream(
     messages: { role: string; content: string }[]
   ): AsyncGenerator<string> {
-    const apiKey = process.env.BYTEZ_API_KEY;
-    const model = process.env.BYTEZ_MODEL || "Qwen/Qwen2.5-7B-Instruct";
+    const apiKey = process.env.HF_TOKEN;
+    const model = process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct";
 
     if (!apiKey) {
-      throw new Error("BYTEZ_API_KEY is not configured");
+      throw new Error("HF_TOKEN is not configured");
     }
 
     let attempt = 0;
@@ -401,7 +415,7 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
 
     while (attempt < maxAttempts) {
       try {
-        response = await this.fetchWithTimeout("https://api.bytez.com/models/v2/openai/v1/chat/completions", {
+        response = await this.fetchWithTimeout(`https://router.huggingface.co/v1/chat/completions`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${apiKey}`,
@@ -410,17 +424,17 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
           body: JSON.stringify({
             model,
             messages,
-            max_tokens: 220,
-            temperature: 0.6,
+            max_tokens: 500,
+            temperature: 0.75,
             stream: true,
           }),
-        }, 15000) as any;
+        }, 30000) as any;
         
         if (response && response.ok) {
           break;
         } else if (response) {
           const errText = await response.text().catch(() => "API Error");
-          throw new Error(`Bytez API error: ${response.status} - ${errText}`);
+          throw new Error(`HuggingFace API error: ${response.status} - ${errText}`);
         } else {
           throw new Error("No response received");
         }
@@ -428,18 +442,18 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
         lastError = err;
         attempt++;
         if (attempt < maxAttempts) {
-          console.warn(`Bytez API connection failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
+          console.warn(`HuggingFace API connection failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
           await new Promise((res) => setTimeout(res, 1000));
         }
       }
     }
 
     if (!response || !response.ok) {
-      throw lastError || new Error("Failed to connect to Bytez API");
+      throw lastError || new Error("Failed to connect to HuggingFace API");
     }
 
     if (!response.body) {
-      throw new Error("No response body received from Bytez API");
+      throw new Error("No response body received from HuggingFace API");
     }
 
     const reader = (response.body as any).getReader();
@@ -478,7 +492,7 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     }
   }
 
-  // Assistant Reply logic - handles crisis or streams response from Bytez
+  // Assistant Reply logic - handles crisis or streams response from HuggingFace
   static async *streamReply(
     userId: string,
     message: string,
@@ -504,18 +518,51 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
       await this.summarizeConversation(conversation);
     }
 
-    // Grab relevant background facts to inject
+    // Grab the user's profile for personalization
     const user = await User.findById(userId).lean();
+    const userName = user?.fullName?.split(" ")[0] || ""; // First name only
     const relevantMemories = user?.memories ? this.getRelevantMemories(message, user.memories) : [];
 
-    // Construct prompt
+    // Load summaries from previous conversations for cross-session context
+    const previousConversations = await Conversation.find({
+      userId,
+      _id: { $ne: conversation._id },
+      summary: { $exists: true, $ne: "" },
+    })
+      .sort({ updatedAt: -1 })
+      .limit(3)
+      .select("summary updatedAt")
+      .lean();
+
+    // Construct enriched system prompt
     const systemPromptParts = [MANAS_SYSTEM_PROMPT];
+
+    // Add user personalization
+    if (userName) {
+      systemPromptParts.push(`The user's name is ${userName}. Use their name naturally in conversation.`);
+    }
+    if (user?.onboarding?.concerns?.length) {
+      systemPromptParts.push(`When they first joined, they mentioned being concerned about: ${user.onboarding.concerns.join(", ")}.`);
+    }
+
+    // Add cross-conversation context from past sessions
+    if (previousConversations.length > 0) {
+      const pastContext = previousConversations
+        .map((pc: any) => pc.summary)
+        .join("\n");
+      systemPromptParts.push(`Context from the user's previous conversations with you:\n${pastContext}`);
+    }
+
+    // Add current conversation summary
     if (conversation.summary) {
-      systemPromptParts.push(`Summary of the conversation so far:\n${conversation.summary}`);
+      systemPromptParts.push(`Summary of the current conversation so far:\n${conversation.summary}`);
     }
+
+    // Add extracted memories
     if (relevantMemories.length > 0) {
-      systemPromptParts.push(`Relevant facts from previous conversations:\n${relevantMemories.map(m => `- ${m}`).join("\n")}`);
+      systemPromptParts.push(`Key things you remember about this user from past chats:\n${relevantMemories.map(m => `- ${m}`).join("\n")}\nWeave these naturally into the conversation when relevant — don't list them out.`);
     }
+
     const systemPrompt = systemPromptParts.join("\n\n");
 
     // History: system prompt + last 10 messages + current user message
@@ -534,12 +581,12 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
 
     let fullReply = "";
     try {
-      for await (const chunk of this.queryBytezStream(apiMessages)) {
+      for await (const chunk of this.queryHFStream(apiMessages)) {
         fullReply += chunk;
         yield chunk;
       }
     } catch (err) {
-      console.error("Bytez streamReply failed:", err);
+      console.error("HuggingFace streamReply failed:", err);
       fullReply = "I'm having trouble responding right now. Please try again in a moment.";
       yield fullReply;
     }

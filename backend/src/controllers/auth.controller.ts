@@ -154,4 +154,23 @@ export class AuthController {
     },
   );
 
+  /** POST /auth/push-token — register an Expo push token for this user */
+  static registerPushToken = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { token } = req.body;
+
+      if (!token || typeof token !== "string" || !token.startsWith("ExponentPushToken[")) {
+        return res.status(400).json({ error: "Invalid Expo push token" });
+      }
+
+      // $addToSet prevents duplicate tokens
+      await User.findByIdAndUpdate(req.user!.sub, {
+        $addToSet: { expoPushTokens: token },
+      });
+
+      console.log(`[Auth] Registered push token for user ${req.user!.sub}: ${token}`);
+      res.json({ success: true });
+    }
+  );
+
 }

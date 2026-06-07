@@ -27,6 +27,7 @@ export interface IUser extends Document {
   orgId?: Types.ObjectId;
   isAnonymous: boolean;
   verifiedPhoneAt?: Date;
+  expoPushTokens: string[];
   onboarding: IOnboardingState;
   therapistProfile?: {
     name: string;
@@ -107,6 +108,7 @@ const UserSchema = new Schema<IUser>(
     orgId: { type: Schema.Types.ObjectId, ref: "Organization" },
     isAnonymous: { type: Boolean, default: true },
     verifiedPhoneAt: { type: Date },
+    expoPushTokens: { type: [String], default: [] },
     onboarding: { type: OnboardingSchema, default: () => ({ concerns: [] }) },
     therapistProfile: {
       type: {

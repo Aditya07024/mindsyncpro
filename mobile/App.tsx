@@ -8,6 +8,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { ServerOff, RefreshCw, Mail } from 'lucide-react-native';
+import {
+  registerForPushNotificationsAsync,
+  sendTokenToBackend,
+  setupNotificationListeners,
+} from './src/lib/pushNotifications';
 
 // Complete the browser auth session on redirects
 WebBrowser.maybeCompleteAuthSession();
@@ -81,7 +86,7 @@ const queryClient = new QueryClient();
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_ZmFtb3VzLWNhaW1hbi02NC5jbGVyay5hY2NvdW50cy5kZXYk';
 
 function AuthBridge({ children }: { children: React.ReactNode }) {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
 
   useEffect(() => {
     // Inject active Clerk token getter into our API axios layer
@@ -93,6 +98,38 @@ function AuthBridge({ children }: { children: React.ReactNode }) {
       }
     });
   }, [getToken]);
+
+  // Register push notifications when user signs in
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    let cleanupListeners: (() => void) | undefined;
+
+    const initPush = async () => {
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await sendTokenToBackend(token);
+      }
+
+      // Set up foreground + tap listeners
+      cleanupListeners = setupNotificationListeners(
+        (notification) => {
+          // Foreground notification received — could update badge count, etc.
+          console.log('[App] Push received:', notification.request.content.title);
+        },
+        (response) => {
+          // User tapped notification — could navigate to relevant screen
+          console.log('[App] Push tapped:', response.notification.request.content.data);
+        }
+      );
+    };
+
+    initPush();
+
+    return () => {
+      cleanupListeners?.();
+    };
+  }, [isSignedIn]);
 
   return <>{children}</>;
 }

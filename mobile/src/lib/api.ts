@@ -96,6 +96,11 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    registerPushToken: (token: string) =>
+      apiCall<any>("/api/auth/push-token", {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      }),
     therapistOnboarding: (data: any) =>
       apiCall<any>("/api/auth/therapist/onboarding", {
         method: "POST",

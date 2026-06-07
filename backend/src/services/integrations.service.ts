@@ -8,7 +8,7 @@ export const providerRegistry = {
         key_secret: env.RAZORPAY_KEY_SECRET
       })
     : null,
-  groqConfigured: Boolean(env.GROQ_API_KEY),
+  hfConfigured: Boolean(env.HF_TOKEN),
   geminiConfigured: Boolean(env.GEMINI_API_KEY),
   livekitConfigured: Boolean(env.LIVEKIT_API_KEY && env.LIVEKIT_API_SECRET && env.LIVEKIT_URL),
   r2Configured: false

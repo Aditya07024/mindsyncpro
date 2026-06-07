@@ -440,7 +440,7 @@ export class BookingController {
 
       let groqSummary: string | null = null;
 
-      const apiKey = process.env.BYTEZ_API_KEY || process.env.GROQ_API_KEY;
+      const apiKey = process.env.HF_TOKEN;
       if (apiKey && (moods.length > 0 || journals.length > 0)) {
         try {
           const prompt = `You are a clinical psychologist assistant. Summarise the following client data for their therapist in 3-4 concise bullet points. Focus on: mood trend, key emotional themes, risk indicators, and suggested areas to explore in today's session. Be clinical but compassionate. Do not use the client's name.
@@ -456,13 +456,8 @@ Risk level: ${riskLevel}
 
 Write a therapist pre-session brief:`;
 
-          const url = process.env.BYTEZ_API_KEY 
-            ? "https://api.bytez.com/models/v2/openai/v1/chat/completions"
-            : "https://api.groq.com/openai/v1/chat/completions";
-
-          const model = process.env.BYTEZ_API_KEY
-            ? (process.env.BYTEZ_MODEL || "Qwen/Qwen2.5-7B-Instruct")
-            : "llama-3.3-70b-versatile";
+          const model = process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct";
+          const url = `https://router.huggingface.co/v1/chat/completions`;
 
           const resp = await fetch(url, {
             method: "POST",

@@ -3,9 +3,10 @@ import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
 import { AppError } from "@/lib/app-error";
 import { Notification } from "@/models/notification";
+import { PushService } from "@/services/push.service";
 
 export class NotificationController {
-  /** Helper to trigger notifications from backend events */
+  /** Helper to trigger notifications from backend events — also sends push */
   static createNotification = async (
     userId: string,
     title: string,
@@ -14,13 +15,24 @@ export class NotificationController {
     metadata?: Record<string, any>
   ) => {
     try {
-      return await Notification.create({
+      const notif = await Notification.create({
         userId,
         title,
         body,
         type,
         metadata
       });
+
+      // Fire push notification to user's registered devices
+      PushService.sendToUser(userId, title, body, {
+        type,
+        notificationId: notif._id?.toString(),
+        ...metadata,
+      }).catch((err) =>
+        console.error("[Notification] Push send failed (non-blocking):", err)
+      );
+
+      return notif;
     } catch (err) {
       console.error("[Notification] Error creating backend alert:", err);
     }
