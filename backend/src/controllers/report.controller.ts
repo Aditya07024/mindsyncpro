@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
-import { User, Mood, JournalEntry, Conversation, SharedReport } from "@/models";
+import { User, Mood, JournalEntry, Conversation, SharedReport, AIReport } from "@/models";
 import { AppError } from "@/lib/app-error";
 import mongoose from "mongoose";
 
@@ -83,6 +83,43 @@ export class ReportController {
 
     const reportData = await ReportController.fetchReportData(userId, startDate, endDate);
 
+    let normalSummary = "";
+    let aiReportInfo: any = null;
+
+    if (period === "week") {
+      const moodCount = reportData.moods?.length || 0;
+      const journalCount = reportData.journals?.length || 0;
+      const avgMoodVal = reportData.avgMood;
+      
+      if (moodCount === 0 && journalCount === 0) {
+        normalSummary = "You haven't logged any moods or journal entries this past week. Regular self-reflection can help you track emotional patterns and build mindfulness.";
+      } else {
+        const moodPart = moodCount > 0 
+          ? `logged ${moodCount} mood check-ins (average score of ${avgMoodVal}/10)`
+          : "no mood check-ins";
+        const journalPart = journalCount > 0 
+          ? `completed ${journalCount} journal entry reflections`
+          : "no journal entries";
+          
+        normalSummary = `Over the past week, you ${moodPart} and ${journalPart}. Reflecting on your daily thoughts and feelings is a powerful step toward understanding your emotional trends.`;
+      }
+
+      const latestReport = await AIReport.findOne({ userId }).sort({ createdAt: -1 });
+      if (latestReport) {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        if (latestReport.createdAt >= sevenDaysAgo) {
+          aiReportInfo = {
+            id: latestReport._id,
+            paid: latestReport.paid,
+            aiAnalysis: latestReport.aiAnalysis || null,
+            startDate: latestReport.startDate,
+            endDate: latestReport.endDate,
+          };
+        }
+      }
+    }
+
     res.json({
       user: {
         fullName: user.fullName || "Anonymous",
@@ -92,6 +129,8 @@ export class ReportController {
       period,
       startDate,
       endDate,
+      normalSummary: normalSummary || undefined,
+      aiReport: aiReportInfo || undefined,
       ...reportData
     });
   });

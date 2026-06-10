@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { AppError } from "@/lib/app-error";
-import { Conversation, User, type IUser } from "@/models";
+import { Conversation, User, type IUser, Mood, JournalEntry } from "@/models";
 
 const CRISIS_KEYWORDS = [
   "want to die",
@@ -626,5 +626,69 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
       escalated: conversation.escalated,
       messages: conversation.messages,
     };
+  }
+
+  static async generateAIReportAnalysis(userId: string, startDate: Date, endDate: Date): Promise<string> {
+    const user = await User.findById(userId).lean();
+    const userName = user?.fullName || "Seeker";
+
+    // Fetch mood logs
+    const moods = await Mood.find({
+      userId,
+      date: { $gte: startDate, $lte: endDate }
+    }).sort({ date: 1 }).lean();
+
+    // Fetch journal entries
+    const journals = await JournalEntry.find({
+      userId,
+      createdAt: { $gte: startDate, $lte: endDate }
+    }).sort({ createdAt: -1 }).lean();
+
+    // Fetch conversation summaries
+    const conversations = await Conversation.find({
+      userId,
+      updatedAt: { $gte: startDate, $lte: endDate }
+    }).sort({ updatedAt: -1 }).lean();
+
+    const avgMood = moods.length
+      ? (moods.reduce((a, b) => a + b.score, 0) / moods.length).toFixed(1)
+      : "No mood logged";
+
+    const moodDetails = moods.map(m => `- Date: ${new Date(m.date).toLocaleDateString("en-IN")}, Score: ${m.score}/10, Note: ${m.note || "N/A"}, Tags: ${m.tags?.join(", ") || "None"}`).join("\n");
+    const journalDetails = journals.map(j => `- Prompt: ${j.prompt}\n  Situation: ${j.situation}\n  Thought: ${j.thought}\n  Feeling: ${j.feeling}\n  Reframed Narrative: ${j.reframe}`).join("\n\n");
+    const chatSummaries = conversations.map(c => `- Chat Session Summary: ${c.summary || "N/A"}`).join("\n");
+
+    const systemPrompt = `You are a clinical psychologist and emotional counselor writing a weekly wellness report analysis.
+Your analysis must look professional, warm, empathetic, and clinical — as if it was written by the user's personal therapist, Dr. Manas, after reviewing their logs.
+
+Guidelines:
+1. Address the user directly as their therapist (e.g. "Dear ${userName}", or speaking directly in second person "you/your").
+2. Reflect on their week based on the mood logs, journal entries, and chats provided.
+3. Call out specific patterns, breakthroughs, or areas of concern. Be compassionate but clinical.
+4. Structurally, write:
+   - A warm opening greeting.
+   - Clinical observations on their emotional state, mood patterns, and journaling.
+   - Recommended focus areas or reflections.
+   - **Crucial**: Strongly encourage the user to book a 1-on-1 therapist consultation session on the platform to explore these areas deeper and receive personalized guidance. Make booking a therapist feel like a natural, positive next step for their healing journey.
+5. Keep the total length around 200 to 250 words. Do not use robotic markdown tables or long bullet lists. Keep it structured like a therapist's clinical note or letter.`;
+
+    const userPrompt = `Here is the user's emotional activity for the week (${startDate.toLocaleDateString("en-IN")} to ${endDate.toLocaleDateString("en-IN")}):
+Average Mood Score: ${avgMood}/10
+
+Mood Logs:
+${moodDetails || "No mood logs during this period."}
+
+Journal reflections:
+${journalDetails || "No journals during this period."}
+
+AI Chat Sessions:
+${chatSummaries || "No chat sessions during this period."}
+
+Please generate the therapist report analysis.`;
+
+    return await this.queryHF([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]);
   }
 }

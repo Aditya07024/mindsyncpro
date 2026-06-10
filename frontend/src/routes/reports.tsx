@@ -24,6 +24,47 @@ function ReportsPage() {
   const [selectedTherapist, setSelectedTherapist] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [unlocking, setUnlocking] = useState<boolean>(false);
+
+  const handleUnlockAIReport = async (useDemo: boolean) => {
+    if (!reportData?.startDate || !reportData?.endDate) {
+      toast.error("No report data loaded yet.");
+      return;
+    }
+    setUnlocking(true);
+    toast.info("Preparing your therapist analysis payment...");
+
+    try {
+      // 1. Initiate Report Payment
+      const initResp = await API.payment.initiateReport({
+        startDate: reportData.startDate,
+        endDate: reportData.endDate,
+      });
+
+      if (useDemo) {
+        // 2. Demo Bypass
+        toast.info("Simulating payment capture...");
+        await API.payment.demoVerifyReport({
+          reportId: initResp.reportId,
+        });
+        toast.success("AI Therapist Analysis unlocked successfully!");
+        refetchReport();
+      } else {
+        // 3. Razorpay Redirect
+        if (initResp.shortUrl) {
+          toast.success("Redirecting to Razorpay...");
+          window.location.href = initResp.shortUrl;
+        } else {
+          throw new Error("Razorpay link not received");
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to unlock therapist analysis");
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   // Queries
   const { data: reportData, isLoading: reportLoading, refetch: refetchReport } = useQuery({
@@ -242,6 +283,119 @@ function ReportsPage() {
             </div>
           </div>
         </div>
+
+        {/* AI Therapist Analysis & Weekly Summary (Only for Weekly Report) */}
+        {period === 'week' && reportData && (
+          <div className="rounded-3xl bg-card p-6 shadow-sm border border-border space-y-6">
+            <div className="flex items-center justify-between border-b border-border/85 pb-4">
+              <div>
+                <h2 className="font-display font-bold text-xl text-primary-deep flex items-center gap-2">
+                  <Sparkles className="size-5 text-accent" /> Weekly Clinical Summary
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Personalized emotional insights and patterns from the last 7 days.</p>
+              </div>
+              {reportData.aiReport?.paid && (
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <CheckCircle2 className="size-3" /> Unlocked
+                </span>
+              )}
+            </div>
+
+            {/* If Paid, show Therapist Clinical Report */}
+            {reportData.aiReport?.paid ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl bg-primary-soft/30 border border-primary/20 p-5 md:p-6 space-y-4 relative overflow-hidden">
+                  <div className="absolute right-4 top-4 opacity-5 pointer-events-none">
+                    <Sparkles className="size-24 text-primary" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm">
+                      DM
+                    </div>
+                    <div>
+                      <h3 className="font-display font-bold text-primary-deep text-sm">Therapist Clinical Analysis</h3>
+                      <p className="text-[10px] text-muted-foreground">Drafted by Dr. Manas • Emotional Wellness Specialist</p>
+                    </div>
+                  </div>
+                  
+                  {/* Analysis Text content formatted cleanly */}
+                  <div className="text-slate-700 text-sm leading-relaxed whitespace-pre-line border-l-2 border-accent/30 pl-4 py-1 italic">
+                    {reportData.aiReport.aiAnalysis}
+                  </div>
+                </div>
+
+                {/* Therapist Booking Recommendation Callout */}
+                <div className="rounded-2xl bg-secondary/30 border border-border p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <h4 className="font-display font-bold text-primary-deep text-sm flex items-center gap-1.5">
+                      <Heart className="size-4 text-accent" /> Ready for deeper guidance?
+                    </h4>
+                    <p className="text-xs text-muted-foreground max-w-xl">
+                      Based on Dr. Manas's analysis of your weekly logs, scheduling a direct 1-on-1 counseling session with a human therapist can help you build custom coping mechanisms.
+                    </p>
+                  </div>
+                  <Link
+                    to="/therapists"
+                    className="bg-accent hover:bg-accent/90 text-white font-bold text-xs py-3 px-5 rounded-xl text-center shadow-md transition whitespace-nowrap"
+                  >
+                    Find & Book a Therapist
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* If Unpaid, show Normal Summary + Unlock Card */
+              <div className="space-y-5">
+                {/* Normal Summary Section */}
+                <div className="p-4 bg-secondary/20 rounded-2xl border border-border/60">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block mb-1">Normal Summary</span>
+                  <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                    {reportData.normalSummary}
+                  </p>
+                </div>
+
+                {/* Premium Unlock CTA Card */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-deep to-primary-soft p-6 text-white border border-primary/20 space-y-4">
+                  <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-10 pointer-events-none">
+                    <Sparkles className="size-48" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="bg-white/20 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full inline-block">
+                      Dr. Manas Premium Insights
+                    </span>
+                    <h3 className="font-display font-bold text-lg">Unlock Personalized Therapist AI Analysis</h3>
+                    <p className="text-xs text-white/80 max-w-lg leading-relaxed">
+                      Get a comprehensive clinical-style evaluation of your emotional patterns, mood volatility, and reframing narratives. Designed by counselors to guide your healing journey.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/10">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-white/70 block uppercase tracking-wider font-semibold">Premium Report Fee</span>
+                      <span className="text-xl font-bold font-display">₹29.00 <span className="text-[10px] font-normal text-white/80">one-time payment</span></span>
+                    </div>
+                    
+                    <div className="flex gap-2 ml-auto">
+                      <button
+                        onClick={() => handleUnlockAIReport(true)}
+                        disabled={unlocking}
+                        className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-xs px-4 py-3 rounded-xl transition disabled:opacity-50"
+                      >
+                        Demo Bypass
+                      </button>
+                      <button
+                        onClick={() => handleUnlockAIReport(false)}
+                        disabled={unlocking}
+                        className="bg-accent hover:bg-accent/95 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        <Sparkles className="size-3.5 fill-current" /> {unlocking ? 'Processing...' : 'Unlock Insights (₹29)'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Download Action Widget */}
         <div className="flex items-center justify-between rounded-3xl bg-primary-soft/40 border border-primary/30 p-5">

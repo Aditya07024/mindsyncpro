@@ -256,6 +256,10 @@ const API = {
       apiCall<any>("/api/payment/verify", { method: "POST", body: JSON.stringify(data) }),
     demoVerify: (data: { bookingId: string }) =>
       apiCall<any>("/api/payment/demo-verify", { method: "POST", body: JSON.stringify(data) }),
+    initiateReport: (data: { startDate: string; endDate: string }) =>
+      apiCall<any>("/api/payment/report/initiate", { method: "POST", body: JSON.stringify(data) }),
+    demoVerifyReport: (data: { reportId: string }) =>
+      apiCall<any>("/api/payment/report/demo-verify", { method: "POST", body: JSON.stringify(data) }),
     status: (bookingId: string) => apiCall<any>(`/api/payment/${bookingId}`),
   },
 
