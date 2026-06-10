@@ -12,10 +12,10 @@ import { jsPDF } from 'jspdf';
 export const Route = createFileRoute('/reports')({ component: ReportsPage });
 
 function moodColor(score: number) {
-  if (score <= 3) return 'oklch(0.65 0.18 25)';
-  if (score <= 5) return 'oklch(0.78 0.14 70)';
-  if (score <= 7) return 'oklch(0.78 0.13 130)';
-  return 'oklch(0.68 0.14 160)';
+  if (score <= 3) return '#e11d48'; // Rose
+  if (score <= 5) return '#f59e0b'; // Amber
+  if (score <= 7) return '#10b981'; // Emerald
+  return '#0d9488'; // Teal
 }
 
 function ReportsPage() {
@@ -360,11 +360,11 @@ function ReportsPage() {
                   </div>
                   <div className="space-y-1.5">
                     <span className="bg-white/20 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full inline-block">
-                      Dr. Manas Premium Insights
+                      Clinical Therapist Report
                     </span>
-                    <h3 className="font-display font-bold text-lg">Unlock Personalized Therapist AI Analysis</h3>
+                    <h3 className="font-display font-bold text-lg">Unlock Weekly Therapist Clinical Evaluation</h3>
                     <p className="text-xs text-white/80 max-w-lg leading-relaxed">
-                      Get a comprehensive clinical-style evaluation of your emotional patterns, mood volatility, and reframing narratives. Designed by counselors to guide your healing journey.
+                      Get a comprehensive clinical evaluation of your weekly emotional patterns, mood trends, and journal reflections reviewed by our expert counselor to guide your healing journey.
                     </p>
                   </div>
 
@@ -387,7 +387,7 @@ function ReportsPage() {
                         disabled={unlocking}
                         className="bg-accent hover:bg-accent/95 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5"
                       >
-                        <Sparkles className="size-3.5 fill-current" /> {unlocking ? 'Processing...' : 'Unlock Insights (₹29)'}
+                        <Sparkles className="size-3.5 fill-current" /> {unlocking ? 'Processing...' : 'Unlock Evaluation (₹29)'}
                       </button>
                     </div>
                   </div>

@@ -433,9 +433,6 @@ export class PaymentController {
     },
   );
 
-  /**
-   * Initiate payment for 1-week premium AI report analysis
-   */
   static initiateReportPayment = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
       const { startDate, endDate } = req.body as {
@@ -456,13 +453,19 @@ export class PaymentController {
       const end = new Date(endDate);
 
       // Create a pending report purchase
-      const report = await AIReport.create({
-        userId: new mongoose.Types.ObjectId(req.user!.sub),
-        startDate: start,
-        endDate: end,
-        paid: false,
-        amount: 29,
-      });
+      let report;
+      try {
+        report = await AIReport.create({
+          userId: new mongoose.Types.ObjectId(req.user!.sub),
+          startDate: start,
+          endDate: end,
+          paid: false,
+          amount: 29,
+        });
+      } catch (err: any) {
+        console.error("AIReport creation failed:", err);
+        throw new AppError(`AIReport creation failed: ${err.message}`, 500);
+      }
 
       const isEmail = user.phoneMasked?.includes("@");
       const userEmail = isEmail ? user.phoneMasked : undefined;
@@ -471,17 +474,28 @@ export class PaymentController {
 
       const callbackUrl = `${process.env.API_URL}/api/payment/report/${report._id}/callback`;
       
-      const link = await PaymentService.createPaymentLink({
-        amount: 29,
-        bookingId: `report_${report._id}`,
-        userName: user.fullName,
-        userContact: userPhone,
-        userEmail: userEmail,
-        callbackUrl,
-      });
+      let link;
+      try {
+        link = await PaymentService.createPaymentLink({
+          amount: 29,
+          bookingId: `report_${report._id}`,
+          userName: user.fullName,
+          userContact: userPhone,
+          userEmail: userEmail,
+          callbackUrl,
+        });
+      } catch (err: any) {
+        console.error("PaymentService.createPaymentLink failed:", err);
+        throw new AppError(`PaymentService.createPaymentLink failed: ${err.message}`, 500);
+      }
 
-      report.razorpayPaymentLinkId = link.paymentLinkId;
-      await report.save();
+      try {
+        report.razorpayPaymentLinkId = link.paymentLinkId;
+        await report.save();
+      } catch (err: any) {
+        console.error("Saving AIReport after payment link failed:", err);
+        throw new AppError(`Saving AIReport after payment link failed: ${err.message}`, 500);
+      }
 
       res.json({
         paymentLinkId: link.paymentLinkId,

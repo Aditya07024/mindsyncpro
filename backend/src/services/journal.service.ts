@@ -26,8 +26,9 @@ export class JournalService {
       throw new Error("User not found");
     }
 
-    let weeklyLimit = this.getWeeklyLimit(user.tier);
-    let hasUnlimitedJournal = user.tier !== "free";
+    let journalLimitCount = 3;
+    let journalLimitDays = 7;
+    let hasUnlimitedJournal = false;
 
     const { Subscription } = await import("@/models");
     const activeSub = await Subscription.findOne({
@@ -36,15 +37,17 @@ export class JournalService {
     }).lean();
 
     if (activeSub) {
-      if (activeSub.planId) {
-        const { SubscriptionPlan } = await import("@/models");
-        const plan = await SubscriptionPlan.findById(activeSub.planId).lean();
-        if (plan?.config) {
-          weeklyLimit = plan.config.hasUnlimitedJournal ? Number.POSITIVE_INFINITY : 3;
-          hasUnlimitedJournal = plan.config.hasUnlimitedJournal;
-        }
+      if (activeSub.plan === "Apna Mann") {
+        journalLimitCount = 15;
+        journalLimitDays = 15;
+        hasUnlimitedJournal = true;
+      } else if (activeSub.plan === "Mann Shanti") {
+        journalLimitCount = Number.POSITIVE_INFINITY;
+        journalLimitDays = 1;
+        hasUnlimitedJournal = true;
       } else {
-        weeklyLimit = Number.POSITIVE_INFINITY;
+        journalLimitCount = Number.POSITIVE_INFINITY;
+        journalLimitDays = 1;
         hasUnlimitedJournal = true;
       }
     } else if (user.orgId) {
@@ -53,26 +56,18 @@ export class JournalService {
         status: "active",
       }).lean();
       if (activeOrgSub) {
-        if (activeOrgSub.planId) {
-          const { SubscriptionPlan } = await import("@/models");
-          const plan = await SubscriptionPlan.findById(activeOrgSub.planId).lean();
-          if (plan?.config) {
-            weeklyLimit = plan.config.hasUnlimitedJournal ? Number.POSITIVE_INFINITY : 3;
-            hasUnlimitedJournal = plan.config.hasUnlimitedJournal;
-          }
-        } else {
-          weeklyLimit = Number.POSITIVE_INFINITY;
-          hasUnlimitedJournal = true;
-        }
+        journalLimitCount = Number.POSITIVE_INFINITY;
+        journalLimitDays = 1;
+        hasUnlimitedJournal = true;
       }
     }
 
-    if (Number.isFinite(weeklyLimit)) {
+    if (Number.isFinite(journalLimitCount)) {
       const since = new Date();
-      since.setDate(since.getDate() - 7);
+      since.setDate(since.getDate() - journalLimitDays);
       const count = await JournalEntry.countDocuments({ userId, createdAt: { $gte: since } });
-      if (count >= weeklyLimit) {
-        throw new Error("Weekly journal limit reached");
+      if (count >= journalLimitCount) {
+        throw new Error(`Journal limit reached: Maximum ${journalLimitCount} entries allowed in ${journalLimitDays} days.`);
       }
     }
 

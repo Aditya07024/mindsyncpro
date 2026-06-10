@@ -20,16 +20,15 @@ const TIERS = [
     name: "Free",
     price: 0,
     period: "Forever",
-    description: "Start your mental wellness journey",
+    description: "Start your emotional wellness journey",
     icon: null,
     features: [
-      { text: "Unlimited AI messages (7 messages/day limit)", included: false },
-      { text: "Unlimited journal entries (3 entries/week limit)", included: false },
-      { text: "30-day mood calendar (7-day limit)", included: false },
-      { text: "All 5 breathing exercises", included: true },
-      { text: "20% therapist discount", included: false },
-      { text: "Priority booking + instant access", included: false },
-      { text: "Crisis line 24/7", included: true },
+      { text: "300 AI messages/day limit", included: true },
+      { text: "1 therapist recommendation in 15 days", included: true },
+      { text: "CBT journal (3 entries/week limit)", included: true },
+      { text: "All breathing exercises", included: true },
+      { text: "Mood calendar (7-day limit)", included: true },
+      { text: "Crisis line 24/7 support", included: true },
     ],
     cta: "Current Plan",
     recommended: false,
@@ -60,53 +59,22 @@ function SubscriptionPage() {
   });
 
   const dynamicPlans = (dynamicPlansData?.plans || []).map((p: any) => {
-    const config = p.config || {};
-    const dailyChatLimit = config.dailyChatLimit;
-    const hasUnlimitedJournal = config.hasUnlimitedJournal;
-    const enableMoodCheck = config.enableMoodCheck ?? true;
-    const enableBreathe = config.enableBreathe ?? true;
-    const therapistDiscount = config.therapistDiscount ?? 0;
-    const hasPriorityBooking = config.hasPriorityBooking;
-
     return {
       id: p._id,
       name: p.name,
       price: p.price,
       period: p.durationMonths && p.durationMonths > 1 ? `/ ${p.durationMonths} mo` : "/mo",
-      description: "Premium wellness plan",
+      description: p.name === "Apna Mann" ? "Most popular wellness plan" : "Deep mental wellness plan",
       icon: Sparkles,
-      features: [
-        {
-          text: "Unlimited AI messages",
-          included: dailyChatLimit === null || dailyChatLimit === 0
-        },
-        {
-          text: "Unlimited journal entries",
-          included: !!hasUnlimitedJournal
-        },
-        {
-          text: "30-day mood calendar",
-          included: !!enableMoodCheck
-        },
-        {
-          text: "All 5 breathing exercises",
-          included: !!enableBreathe
-        },
-        {
-          text: `${therapistDiscount}% therapist discount`,
-          included: therapistDiscount > 0
-        },
-        {
-          text: "Priority booking + instant access",
-          included: !!hasPriorityBooking
-        },
-        {
-          text: "Crisis line 24/7",
-          included: true
-        }
-      ],
+      features: p.features && p.features.length > 0
+        ? p.features.map((f: string) => ({ text: f, included: true }))
+        : [
+            { text: "Unlimited AI messages", included: p.config?.dailyChatLimit === null },
+            { text: "Priority booking + instant access", included: !!p.config?.hasPriorityBooking },
+            { text: "Crisis line 24/7", included: true }
+          ],
       cta: "Upgrade Now",
-      recommended: true,
+      recommended: p.name === "Apna Mann",
     };
   });
 

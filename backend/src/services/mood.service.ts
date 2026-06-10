@@ -20,8 +20,32 @@ export class MoodService {
   }
 
   static async getMoodHistory(userId: string, days = 30) {
+    const user = await User.findById(userId).lean();
+    if (!user) return [];
+
+    let limitDays = 7; // default for Free
+
+    const { Subscription } = await import("@/models");
+    const activeSub = await Subscription.findOne({
+      userId,
+      status: "active",
+    }).lean();
+
+    if (activeSub) {
+      if (activeSub.plan === "Apna Mann") {
+        limitDays = 25;
+      } else if (activeSub.plan === "Mann Shanti") {
+        limitDays = 30;
+      } else {
+        limitDays = 30;
+      }
+    } else if (user.orgId) {
+      limitDays = 30;
+    }
+
+    const queryDays = Math.min(days, limitDays);
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    startDate.setDate(startDate.getDate() - queryDays);
 
     return Mood.find({ userId, date: { $gte: startDate } }).sort({ date: -1 });
   }

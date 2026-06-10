@@ -20,29 +20,50 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
   const [plans, setPlans] = useState<PlanData[]>([
     {
       id: 'free',
-      name: 'Free Tier',
+      name: 'Free',
       price: 0,
       interval: 'month',
-      features: ['7 daily Manas AI chats', 'CBT mood checker', 'Basic statistics history'],
+      features: [
+        '300 AI messages/day limit',
+        '1 therapist recommendation in 15 days',
+        'CBT journal (3 entries/week limit)',
+        'All breathing exercises',
+        'Mood calendar (7-day limit)',
+        'Crisis line 24/7 support'
+      ],
       audience: 'user',
       highlighted: false,
     },
     {
       id: 'mann_shanti',
-      name: 'Mann Shanti',
+      name: 'Apna Mann',
       price: 199,
       interval: 'month',
-      features: ['100 daily Manas AI chats', 'Unlimited CBT journaling', 'Comprehensive wellness history', 'Direct Therapist booking'],
+      features: [
+        '1000 messages/day limit',
+        '3 therapist recommendations every week',
+        'CBT journal (15 entries in 15 days)',
+        '25-day mood calendar',
+        'Priority booking + instant access',
+        'Buy 1 booking, get 2 free bookings'
+      ],
       audience: 'user',
       highlighted: true,
     },
     {
-      id: 'enterprise',
-      name: 'Enterprise / Corporate',
+      id: 'apna_therapist',
+      name: 'Mann Shanti',
       price: 499,
       interval: 'month',
-      features: ['Full org seat allocation', 'Burnout predictive alerts', 'Anonymous team aggregate mood grids', 'Dedicated wellness support'],
-      audience: 'organization',
+      features: [
+        'Unlimited messages/day',
+        '1 therapist recommendation/day',
+        'Unlimited journal entries',
+        '10% therapist discount',
+        'Buy 2 bookings, get 5 free bookings',
+        'Unlimited mood calendar/monthly'
+      ],
+      audience: 'user',
       highlighted: false,
     }
   ]);
@@ -72,7 +93,35 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
         ? remotePlans 
         : (remotePlans.plans && Array.isArray(remotePlans.plans) ? remotePlans.plans : []);
       if (planList.length > 0) {
-        setPlans(planList);
+        const mappedRemotePlans = planList.map((p: any) => ({
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          interval: 'month',
+          features: p.features || [],
+          audience: p.audience,
+          highlighted: p.name === 'Apna Mann',
+        }));
+
+        setPlans([
+          {
+            id: 'free',
+            name: 'Free',
+            price: 0,
+            interval: 'month',
+            features: [
+              '300 AI messages/day limit',
+              '1 therapist recommendation in 15 days',
+              'CBT journal (3 entries/week limit)',
+              'All breathing exercises',
+              'Mood calendar (7-day limit)',
+              'Crisis line 24/7 support'
+            ],
+            audience: 'user',
+            highlighted: false,
+          },
+          ...mappedRemotePlans
+        ]);
       }
     }
   }, [remotePlans]);

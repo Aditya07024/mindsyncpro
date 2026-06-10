@@ -109,9 +109,10 @@ export class PaymentService {
         paymentLinkId: link.id as string,
         shortUrl: link.short_url as string,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Razorpay payment link creation failed:", error);
-      throw new Error("Failed to create payment link");
+      const errMsg = error.error?.description || error.message || error.description || JSON.stringify(error);
+      throw new Error(`Failed to create payment link: ${errMsg}`);
     }
   }
 
