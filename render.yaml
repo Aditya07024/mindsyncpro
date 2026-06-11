@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: Mindsyncpro-frontend
+    name: mymindtherapyfriend-frontend
     root_dir: frontend
     buildCommand: npm run build
     startCommand: npm run start:prod

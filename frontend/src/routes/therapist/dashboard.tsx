@@ -645,7 +645,7 @@ function TherapistDashboard() {
               ))}
             </div>
             {/* <div className="bg-amber-50/50 rounded-2xl border border-amber-200/50 p-5 text-sm font-medium text-amber-800">
-              Mindsyncpro retains 30% platform fee. Payouts are processed on the 1st of every month via NEFT.
+              mymindtherapyfriend retains 30% platform fee. Payouts are processed on the 1st of every month via NEFT.
             </div> */}
 
             {/* Customizable Revenue Chart Widget */}

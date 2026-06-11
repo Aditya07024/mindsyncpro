@@ -1,8 +1,8 @@
-import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useParams, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Calendar, Clock, AlertCircle, Star } from "lucide-react";
+import { ChevronLeft, Calendar, Clock, AlertCircle, Star, Wallet, Plus } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,28 @@ function BookingFlow() {
     "select",
   );
   const [bookingId, setBookingId] = useState<string>("");
+  const [bookingAmount, setBookingAmount] = useState<number>(0);
+
+  const { data: walletData } = useQuery({
+    queryKey: ["walletBalance"],
+    queryFn: () => API.payment.getWalletBalance(),
+  });
+  const walletBalance = walletData?.walletBalance ?? 0;
+
+  const payWithWalletMutation = useMutation({
+    mutationFn: (id: string) => API.payment.payBookingWallet(id),
+    onSuccess: async () => {
+      toast.success("Booking confirmed using wallet!");
+      await queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      await queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      await queryClient.invalidateQueries({ queryKey: ["userStats"] });
+      await queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+      setBookingStep("success");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Wallet payment failed");
+    }
+  });
 
   // Fetch therapist details
   const { data: therapist, isLoading: therapistLoading } = useQuery({
@@ -56,7 +78,12 @@ function BookingFlow() {
       }),
     onSuccess: (data) => {
       setBookingId(data.booking.id);
-      setBookingStep("confirm");
+      setBookingAmount(data.booking.amount);
+      if (data.booking.amount === 0 || data.booking.status === "confirmed") {
+        setBookingStep("success");
+      } else {
+        setBookingStep("confirm");
+      }
     },
   });
 
@@ -299,7 +326,7 @@ function BookingFlow() {
                     <strong>Date & Time:</strong> {selectedDate} at {formatTime(selectedSlot)}
                   </p>
                   <p>
-                    <strong>Session Fee:</strong> ₹{therapist.sessionFee}
+                    <strong>Session Fee:</strong> {bookingAmount > 0 ? `₹${bookingAmount}` : "FREE"}
                   </p>
                   <p className="text-sm text-slate-600">
                     Complete payment to confirm your booking. You'll receive confirmation SMS with
@@ -332,20 +359,63 @@ function BookingFlow() {
 
           {bookingStep === "payment" && bookingId && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-              <RazorpayCheckout
-                bookingId={bookingId}
-                amount={therapist.sessionFee}
-                userName={therapist.name}
-                onSuccess={async () => {
-                  toast.success("Payment verified! Redirecting to dashboard...");
-                  await queryClient.invalidateQueries({ queryKey: ["bookings"] });
-                  await queryClient.invalidateQueries({ queryKey: ["subscription"] });
-                  await queryClient.invalidateQueries({ queryKey: ["userStats"] });
-                  setTimeout(() => {
-                    navigate({ to: "/dashboard" });
-                  }, 1500);
-                }}
-              />
+              <Card className="p-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-4">Choose Payment Option</h2>
+                <div className="space-y-4">
+                  {/* Wallet Option */}
+                  <div className="p-4 rounded-xl border border-border bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                        <Wallet className="size-4 text-accent" /> Pay with Wallet
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Current Balance: ₹{walletBalance.toFixed(2)}
+                      </p>
+                    </div>
+                    {walletBalance >= bookingAmount ? (
+                      <Button
+                        onClick={() => payWithWalletMutation.mutate(bookingId)}
+                        disabled={payWithWalletMutation.isPending}
+                        className="rounded-xl h-10 px-4 bg-accent hover:bg-accent/90"
+                      >
+                        {payWithWalletMutation.isPending ? "Paying..." : `Pay ₹${bookingAmount}`}
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-amber-600 font-semibold">Insufficient Balance</span>
+                        <Link
+                          to="/wallet"
+                          className="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2.5 rounded-xl transition text-center"
+                        >
+                          Add Funds
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative text-center my-4">
+                    <span className="bg-white px-3 text-xs text-muted-foreground uppercase font-bold tracking-wider relative z-10">Or Pay Direct</span>
+                    <hr className="absolute top-2 w-full border-border/80" />
+                  </div>
+
+                  {/* Razorpay Option */}
+                  <RazorpayCheckout
+                    bookingId={bookingId}
+                    amount={bookingAmount}
+                    userName={therapist.name}
+                    onSuccess={async () => {
+                      toast.success("Payment verified! Redirecting to dashboard...");
+                      await queryClient.invalidateQueries({ queryKey: ["bookings"] });
+                      await queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                      await queryClient.invalidateQueries({ queryKey: ["userStats"] });
+                      setTimeout(() => {
+                        navigate({ to: "/dashboard" });
+                      }, 1500);
+                    }}
+                  />
+                </div>
+              </Card>
+
               <div className="pt-4 border-t border-slate-200">
                 <Button 
                   onClick={() => demoVerifyMutation.mutate(bookingId)} 

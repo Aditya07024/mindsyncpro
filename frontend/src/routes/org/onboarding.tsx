@@ -75,7 +75,7 @@ function OrgOnboarding() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const SUBMIT_GUARD_KEY = "Mindsyncpro_org_onboarding_submit_v1";
+  const SUBMIT_GUARD_KEY = "mymindtherapyfriend_org_onboarding_submit_v1";
 
   const submitOnboarding = async () => {
     // Prevent double-submit on refresh/back-forward while request is in-flight.
@@ -154,7 +154,7 @@ function OrgOnboarding() {
                     value={formData.name}
                     onChange={handleChange}
                     className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Mindsyncpro University"
+                    placeholder="mymindtherapyfriend University"
                   />
                 </div>
 

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useUser } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
@@ -43,10 +43,10 @@ function Dashboard() {
     API.auth.me().then(async (me: any) => {
       setDbUser(me);
       let role = me?.role ?? 'user';
-      const intentRole = localStorage.getItem('Mindsyncpro_intent_role');
+      const intentRole = localStorage.getItem('mymindtherapyfriend_intent_role');
       
       // Clean up intent immediately
-      if (intentRole) localStorage.removeItem('Mindsyncpro_intent_role');
+      if (intentRole) localStorage.removeItem('mymindtherapyfriend_intent_role');
 
       // Only attempt to set a role if they are currently a basic 'user'
       // This prevents an existing Org Admin from being redirected or changed if they click the wrong link
@@ -87,6 +87,14 @@ function Dashboard() {
     retry: false,
     enabled: !isCheckingRole,
   });
+
+  const { data: walletData } = useQuery({
+    queryKey: ['walletBalance'],
+    queryFn: () => API.payment.getWalletBalance(),
+    retry: false,
+    enabled: !isCheckingRole,
+  });
+  const walletBalance = walletData?.walletBalance ?? 0;
 
   const { data: userStats, refetch: refetchStats } = useQuery({
     queryKey: ['userStats'],
@@ -172,6 +180,10 @@ function Dashboard() {
               'bg-gold/30 text-gold-foreground'
             }`}>
               {tierLabel}
+            </Link>
+            <Link to="/wallet" className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold bg-accent-soft text-accent border border-accent/20">
+              <Wallet className="size-3.5" />
+              <span>₹{walletBalance.toFixed(2)}</span>
             </Link>
           </div>
         </div>
@@ -372,8 +384,8 @@ function Dashboard() {
                 <Sparkles className="size-6 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="font-display font-bold text-primary-deep">Unlock Mann Shanti</p>
-                <p className="text-xs text-muted-foreground mt-0.5">100 messages/day · ₹199/mo</p>
+                <p className="font-display font-bold text-primary-deep">Unlock Apna Mann</p>
+                <p className="text-xs text-muted-foreground mt-0.5">1000 messages/day · ₹199/mo</p>
               </div>
               <ChevronRight className="size-5 text-primary" />
             </div>

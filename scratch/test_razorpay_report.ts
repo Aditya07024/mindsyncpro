@@ -14,7 +14,7 @@ async function runTest() {
     const payload = {
       amount: 2900, // ₹29
       currency: "INR",
-      description: "Therapy Session – Mindsyncpro",
+      description: "Therapy Session – mymindtherapyfriend",
       notify: { sms: false, email: false },
       reminder_enable: false,
       notes: { bookingId: "report_test" },

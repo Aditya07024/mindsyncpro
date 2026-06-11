@@ -40,7 +40,7 @@ export class SubscriptionService {
           name: cfg.name,
           amount: cfg.amount,
           currency: "INR",
-          description: `Mindsyncpro ${cfg.name} subscription`,
+          description: `mymindtherapyfriend ${cfg.name} subscription`,
         },
       });
 
@@ -68,7 +68,7 @@ export class SubscriptionService {
     } else if (phoneRegex.test(userPhone)) {
       notify_info.notify_phone = userPhone;
     } else {
-      notify_info.notify_email = "customer@Mindsyncpro.com";
+      notify_info.notify_email = "customer@mymindtherapyfriend.com";
     }
 
     try {
@@ -79,7 +79,7 @@ export class SubscriptionService {
         notify_info,
         notes: {
           tier: tierName,
-          source: "Mindsyncpro_app",
+          source: "mymindtherapyfriend_app",
         },
       });
 
@@ -110,7 +110,7 @@ export class SubscriptionService {
     } else if (phoneRegex.test(userPhone)) {
       notify_info.notify_phone = userPhone;
     } else {
-      notify_info.notify_email = "customer@Mindsyncpro.com";
+      notify_info.notify_email = "customer@mymindtherapyfriend.com";
     }
 
     try {
@@ -121,7 +121,7 @@ export class SubscriptionService {
         notify_info,
         notes: {
           tier,
-          source: "Mindsyncpro_app",
+          source: "mymindtherapyfriend_app",
         },
       });
 
@@ -146,7 +146,7 @@ export class SubscriptionService {
           name: name,
           amount: amount * 100, // Convert to paise
           currency: "INR",
-          description: `Mindsyncpro ${name} subscription (${durationMonths} months)`,
+          description: `mymindtherapyfriend ${name} subscription (${durationMonths} months)`,
         },
       });
       console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name} (${durationMonths} months)`);

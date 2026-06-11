@@ -32,7 +32,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
         <Text style={styles.title}>Designed For Every Mind</Text>
         <Text style={styles.subtitle}>{"One Platform.\nMultiple Wellness Experiences."}</Text>
         <Text style={styles.description}>
-          Whether you need emotional support, therapy tools, organisation wellness insights, or platform administration — Mindsyncpro adapts to your role beautifully.
+          Whether you need emotional support, therapy tools, organisation wellness insights, or platform administration — mymindtherapyfriend adapts to your role beautifully.
         </Text>
       </View>
 

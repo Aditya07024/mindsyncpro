@@ -29,6 +29,7 @@ export interface IUser extends Document {
   verifiedPhoneAt?: Date;
   expoPushTokens: string[];
   onboarding: IOnboardingState;
+  walletBalance: number;
   therapistProfile?: {
     name: string;
     email?: string;
@@ -98,6 +99,10 @@ const UserSchema = new Schema<IUser>(
     tier: {
       type: String,
       default: "free"
+    },
+    walletBalance: {
+      type: Number,
+      default: 0
     },
     language: { type: String, default: "en-IN" },
     location: { type: String },

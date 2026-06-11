@@ -231,7 +231,7 @@ function RoomUI({
 
   const saveNotesMutation = useMutation({
     mutationFn: () =>
-      fetch(`${import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online"}/api/bookings/${bookingId}/notes`, {
+      fetch(`${import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.online"}/api/bookings/${bookingId}/notes`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

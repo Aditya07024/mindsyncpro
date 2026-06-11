@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'mindsyncpro-backend',
+      name: 'mymindtherapyfriend-backend',
       script: 'node',
       args: '-r ./register.js dist/server.js',
       cwd: './backend',
@@ -15,7 +15,7 @@ module.exports = {
       }
     },
     {
-      name: 'mindsyncpro-frontend',
+      name: 'mymindtherapyfriend-frontend',
       script: 'node',
       args: 'start.js',
       cwd: './frontend',

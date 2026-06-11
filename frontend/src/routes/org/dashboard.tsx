@@ -713,7 +713,7 @@ function OrgDashboard() {
           <div className="space-y-8">
             <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
               <h2 className="font-bold text-slate-900 text-xl mb-2">Invite Independent Therapists</h2>
-              <p className="text-sm text-slate-500 mb-6">Search for therapists on the Mindsyncpro platform and invite them to join your organization.</p>
+              <p className="text-sm text-slate-500 mb-6">Search for therapists on the mymindtherapyfriend platform and invite them to join your organization.</p>
               
               <div className="flex gap-3 max-w-xl">
                 <input 

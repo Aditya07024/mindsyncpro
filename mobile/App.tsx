@@ -38,7 +38,7 @@ import LoadingSpinner from './src/components/LoadingSpinner';
 // Deep Linking Setup for React Navigation
 const prefix = Linking.createURL('/');
 const linking = {
-  prefixes: [prefix, 'mindgod://'],
+  prefixes: [prefix, 'mymindtherapyfriend://'],
   config: {
     screens: {
       Landing: 'landing',
@@ -173,7 +173,7 @@ function MaintenanceScreen({ onRetry }: MaintenanceScreenProps) {
         <Text style={styles.title}>System Offline</Text>
         
         <Text style={styles.description}>
-          MindSync Pro is currently undergoing scheduled fine-tuning to improve backend databases. We will be back online shortly.
+          mymindtherapyfriend is currently undergoing scheduled fine-tuning to improve backend databases. We will be back online shortly.
         </Text>
 
         <View style={styles.infoBox}>
@@ -248,7 +248,7 @@ export default function App() {
   if (!fontsLoaded || isServerDown === null) {
     return (
       <View style={styles.splash}>
-        <LoadingSpinner message="Verifying secure connection to MindSync Pro…" />
+        <LoadingSpinner message="Verifying secure connection to mymindtherapyfriend…" />
       </View>
     );
   }

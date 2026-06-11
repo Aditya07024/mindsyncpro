@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Star, MapPin, Clock, MessageCircle, X, GraduationCap, HeartHandshake } from "lucide-react";
+import { Search, Filter, Star, MapPin, Clock, MessageCircle, X, GraduationCap, HeartHandshake, Sparkles } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const getYouTubeId = (url: string) => {
   if (!url) return null;
@@ -54,6 +55,18 @@ function TherapistMarketplace() {
   const [priceRange, setPriceRange] = useState<[number, number]>([500, 3500]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTherapist, setSelectedTherapist] = useState<TherapistCard | null>(null);
+  const [recommendedMatches, setRecommendedMatches] = useState<any[] | null>(null);
+
+  const recommendMutation = useMutation({
+    mutationFn: () => API.therapist.recommend(),
+    onSuccess: (data) => {
+      setRecommendedMatches(data.recommendations);
+      toast.success("We found matching therapists for you!");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to get recommendations");
+    }
+  });
 
   // Fetch all therapists' languages dynamically
   const { data: allTherapistsData } = useQuery({

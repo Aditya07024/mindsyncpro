@@ -91,7 +91,7 @@ function Chat() {
 
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online"}/api/chat`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.online"}/api/chat`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

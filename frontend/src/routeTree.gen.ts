@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TherapistsRouteImport } from './routes/therapists'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
@@ -33,6 +34,11 @@ import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
 import { Route as BookingTherapistIdRouteImport } from './routes/booking.$therapistId'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TherapistsRoute = TherapistsRouteImport.update({
   id: '/therapists',
   path: '/therapists',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
+  '/wallet': typeof WalletRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
+  '/wallet': typeof WalletRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/therapists': typeof TherapistsRoute
+  '/wallet': typeof WalletRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
   '/org/dashboard': typeof OrgDashboardRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/therapists'
+    | '/wallet'
     | '/admin/dashboard'
     | '/booking/$therapistId'
     | '/org/dashboard'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/therapists'
+    | '/wallet'
     | '/admin/dashboard'
     | '/booking/$therapistId'
     | '/org/dashboard'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/therapists'
+    | '/wallet'
     | '/admin/dashboard'
     | '/booking/$therapistId'
     | '/org/dashboard'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   TherapistsRoute: typeof TherapistsRoute
+  WalletRoute: typeof WalletRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   BookingTherapistIdRoute: typeof BookingTherapistIdRoute
   OrgDashboardRoute: typeof OrgDashboardRoute
@@ -331,6 +344,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/therapists': {
       id: '/therapists'
       path: '/therapists'
@@ -512,6 +532,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   TherapistsRoute: TherapistsRoute,
+  WalletRoute: WalletRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   BookingTherapistIdRoute: BookingTherapistIdRoute,
   OrgDashboardRoute: OrgDashboardRoute,

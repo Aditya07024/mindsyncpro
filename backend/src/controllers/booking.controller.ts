@@ -84,14 +84,49 @@ export class BookingController {
       });
       if (conflict) throw new AppError("This slot is already booked", 409);
 
+      // Calculate amount based on user subscription
+      let amount = therapist.therapistProfile.sessionFee ?? 0;
+
+      const { Subscription } = await import("@/models/subscription");
+      const activeSub = await Subscription.findOne({
+        userId: req.user!.sub,
+        status: "active",
+      }).sort({ createdAt: -1 });
+
+      if (activeSub) {
+        // Find non-cancelled bookings since subscription start date
+        const bookingCount = await TherapistBooking.countDocuments({
+          userId: req.user!.sub,
+          status: { $in: ["confirmed", "completed", "pending_payment"] },
+          createdAt: { $gte: activeSub.startDate },
+        });
+
+        if (activeSub.plan === "Apna Mann") {
+          // Buy 1, get 2 free -> Cycle of 3: 1 paid, 2 free
+          if (bookingCount % 3 !== 0) {
+            amount = 0;
+          }
+        } else if (activeSub.plan === "Mann Shanti") {
+          // Buy 2, get 5 free -> Cycle of 7: 2 paid, 5 free
+          if ((bookingCount % 7) >= 2) {
+            amount = 0;
+          } else {
+            // 10% therapist discount
+            amount = Math.round(amount * 0.9);
+          }
+        }
+      }
+
+      const isFree = amount === 0;
+
       const booking = await TherapistBooking.create({
         userId: new mongoose.Types.ObjectId(req.user!.sub),
         therapistId: new mongoose.Types.ObjectId(therapistId),
         slot: slotDate,
-        status: "pending_payment",
+        status: isFree ? "confirmed" : "pending_payment",
         payment: {
-          amount: therapist.therapistProfile.sessionFee ?? 0,
-          paid: false,
+          amount,
+          paid: isFree,
         },
         videoRoomId: `room-${Date.now()}`,
       });
@@ -105,8 +140,10 @@ export class BookingController {
         // Seeker confirmation notification
         await NotificationController.createNotification(
           req.user!.sub,
-          "Booking Reserved",
-          `Your appointment with Dr. ${therapist.therapistProfile.name} is reserved for ${formattedSlot}.`,
+          isFree ? "Booking Confirmed" : "Booking Reserved",
+          isFree 
+            ? `Your appointment with Dr. ${therapist.therapistProfile.name} is confirmed for ${formattedSlot}.`
+            : `Your appointment with Dr. ${therapist.therapistProfile.name} is reserved for ${formattedSlot}.`,
           "booking",
           { bookingId: booking._id.toString(), therapistId }
         );
@@ -114,8 +151,10 @@ export class BookingController {
         // Therapist notification alert
         await NotificationController.createNotification(
           therapistId,
-          "New Session Booked",
-          `${seekerName} has booked a counseling session with you for ${formattedSlot}.`,
+          isFree ? "New Session Booked & Confirmed" : "New Session Booked",
+          isFree 
+            ? `${seekerName} has booked and paid (Free Benefit) a session with you for ${formattedSlot}.`
+            : `${seekerName} has booked a counseling session with you for ${formattedSlot}.`,
           "booking",
           { bookingId: booking._id.toString(), seekerId: req.user!.sub }
         );
@@ -123,14 +162,26 @@ export class BookingController {
         // Send EMAIL to therapist if they have an email on file
         const therapistEmail = therapist.therapistProfile.email;
         if (therapistEmail) {
-          sendBookingNotificationToTherapist({
-            therapistEmail,
-            therapistName: therapist.therapistProfile.name || "Therapist",
-            seekerName,
-            slot: slotDate,
-            fee: therapist.therapistProfile.sessionFee ?? 0,
-            bookingId: booking._id.toString(),
-          }).catch(err => console.error("[Email] Therapist booking email failed:", err));
+          if (isFree) {
+            const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
+            sendPaymentConfirmedToTherapist({
+              therapistEmail,
+              therapistName: therapist.therapistProfile.name || "Therapist",
+              seekerName,
+              slot: slotDate,
+              fee: 0,
+              bookingId: booking._id.toString(),
+            }).catch(err => console.error("[Email] Free therapist booking email failed:", err));
+          } else {
+            sendBookingNotificationToTherapist({
+              therapistEmail,
+              therapistName: therapist.therapistProfile.name || "Therapist",
+              seekerName,
+              slot: slotDate,
+              fee: amount,
+              bookingId: booking._id.toString(),
+            }).catch(err => console.error("[Email] Therapist booking email failed:", err));
+          }
         }
 
       } catch (err) {

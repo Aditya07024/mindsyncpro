@@ -41,7 +41,7 @@ function PrivacyPage() {
             <div className="size-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg overflow-hidden">
               <img src={logoUrl} alt="Logo" className="size-full object-cover" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">Mindsyncpro</span>
+            <span className="font-display font-bold text-xl tracking-tight">mymindtherapyfriend</span>
           </Link>
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-teal-600 transition">
             <ArrowLeft className="size-4" /> Back to Home
@@ -84,7 +84,7 @@ function PrivacyPage() {
                 Digital Personal Data Protection Act (DPDPA) 2023
               </h2>
               <p className="text-slate-600 text-sm leading-relaxed">
-                MindSyncPro is fully certified and compliant with the DPDP Act 2023 of India. We uphold 
+                mymindtherapyfriend is fully certified and compliant with the DPDP Act 2023 of India. We uphold 
                 the highest standards of data principal rights, secure consent management, and localize all data residency 
                 within India.
               </p>
@@ -156,14 +156,14 @@ function PrivacyPage() {
         <section className="mt-20 p-8 bg-teal-900 rounded-3xl text-white">
           <h3 className="text-xl font-bold mb-4">Questions about your privacy?</h3>
           <p className="text-teal-100 mb-6">Our dedicated privacy team is here to help you understand how we protect your data.</p>
-          <a href="mailto:privacy@Mindsyncpro.com" className="inline-block font-bold border-b-2 border-teal-400 hover:text-teal-400 transition">
+          <a href="mailto:privacy@mymindtherapyfriend.com" className="inline-block font-bold border-b-2 border-teal-400 hover:text-teal-400 transition">
             Contact Privacy Team →
           </a>
         </section>
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 Mindsyncpro. All rights reserved.
+        © 2026 mymindtherapyfriend. All rights reserved.
       </footer>
     </div>
   );

@@ -21,7 +21,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     // Save role so that when Google OAuth redirects back to the root URL (LandingScreen),
     // the LandingScreen knows where to route the user.
     if (role && typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('mindsync_pending_role', role);
+      window.localStorage.setItem('mymindtherapyfriend_pending_role', role);
     }
   }, [role]);
 

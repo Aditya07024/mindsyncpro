@@ -389,7 +389,7 @@ export class OrgController {
       if (org.verificationStatus !== "verified") {
         return res
           .status(400)
-          .json({ error: "Organization is not yet verified on Mindsyncpro" });
+          .json({ error: "Organization is not yet verified on mymindtherapyfriend" });
       }
 
       // Check if already submitted a request

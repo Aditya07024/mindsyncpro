@@ -7,7 +7,7 @@ export const Route = createFileRoute('/support')({
   component: SupportPage,
 });
 
-const CONTACT_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "support@Mindsyncpro.com";
+const CONTACT_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "support@mymindtherapyfriend.com";
 
 function SupportPage() {
   const faqs = [
@@ -17,7 +17,7 @@ function SupportPage() {
     },
     {
       q: "Can I book sessions with real therapists?",
-      a: "Yes! Mindsyncpro allows you to browse and book sessions with verified RCI-registered therapists directly through the platform."
+      a: "Yes! mymindtherapyfriend allows you to browse and book sessions with verified RCI-registered therapists directly through the platform."
     },
     {
       q: "Is my data anonymous in the Organisation portal?",
@@ -37,7 +37,7 @@ function SupportPage() {
             <div className="size-10 rounded-md bg-white shadow-lg overflow-hidden">
               <img src={logoUrl} alt="Logo" className="size-full object-cover scale-125" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">Mindsyncpro</span>
+            <span className="font-display font-bold text-xl tracking-tight">mymindtherapyfriend</span>
           </Link>
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-teal-600 transition">
             <ArrowLeft className="size-4" /> Back to Home
@@ -93,7 +93,7 @@ function SupportPage() {
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 Mindsyncpro. All rights reserved.
+        © 2026 mymindtherapyfriend. All rights reserved.
       </footer>
     </div>
   );

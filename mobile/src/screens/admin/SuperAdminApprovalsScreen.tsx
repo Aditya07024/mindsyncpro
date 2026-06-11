@@ -38,7 +38,7 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
             setApprovalLoading(id);
             try {
               await API.admin.verifyTherapist(id, { verified: true });
-              Alert.alert('Success!', `${name} is now a verified Mindsync Practitioner.`);
+              Alert.alert('Success!', `${name} is now a verified mymindtherapyfriend Practitioner.`);
               refetchTherapists();
               queryClient.invalidateQueries({ queryKey: ['adminStats'] });
             } catch (err: any) {

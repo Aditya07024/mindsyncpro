@@ -42,7 +42,7 @@ export async function openSubscriptionCheckout({
   const options = {
     key: import.meta.env.VITE_RAZORPAY_KEY_ID,
     subscription_id: subscriptionId,
-    name: "MindGod",
+    name: "mymindtherapyfriend",
     description: `Subscription for ${planName}`,
     prefill: {
       email: userEmail || "",

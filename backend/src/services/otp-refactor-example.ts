@@ -76,7 +76,7 @@ export const authVerifyOTPExample = asyncHandler(async (req: Request, res: Respo
   const user = await AuthService.verifyOTP(phone, otp);
   const token = AuthService.generateToken(user);
 
-  res.cookie("Mindsyncpro_token", token, {
+  res.cookie("mymindtherapyfriend_token", token, {
     httpOnly: true,
     secure: true,
     sameSite: "none",

@@ -183,7 +183,7 @@ function SuperAdminDashboard() {
               <Shield className="size-4 text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-sm">Mindsyncpro Super Admin</p>
+              <p className="font-bold text-white text-sm">mymindtherapyfriend Super Admin</p>
               <p className="text-xs text-slate-400">Ops · Verification · Analytics</p>
             </div>
           </div>
@@ -635,7 +635,7 @@ function SuperAdminDashboard() {
                   label: 'Platform Commission (30%)',
                   value: `₹${therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}`,
                   color: 'text-red-400',
-                  sub: 'MindsyncPro retained',
+                  sub: 'mymindtherapyfriend retained',
                 },
                 {
                   label: 'Total Payout Due (70%)',

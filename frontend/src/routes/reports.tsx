@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/AppShell';
 import API from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Download, Share2, Calendar, ChevronRight, AlertCircle, Sparkles, Clock, Heart, Smile, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { FileText, Download, Share2, Calendar, ChevronRight, AlertCircle, Sparkles, Clock, Heart, Smile, CheckCircle2, ArrowLeft, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -20,44 +20,41 @@ function moodColor(score: number) {
 
 function ReportsPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [selectedTherapist, setSelectedTherapist] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [downloading, setDownloading] = useState<boolean>(false);
   const [unlocking, setUnlocking] = useState<boolean>(false);
 
-  const handleUnlockAIReport = async (useDemo: boolean) => {
+  const { data: walletData } = useQuery({
+    queryKey: ["walletBalance"],
+    queryFn: () => API.payment.getWalletBalance(),
+  });
+  const walletBalance = walletData?.walletBalance ?? 0;
+
+  const handleUnlockAIReport = async () => {
     if (!reportData?.startDate || !reportData?.endDate) {
       toast.error("No report data loaded yet.");
       return;
     }
+    if (walletBalance < 29) {
+      toast.error("Insufficient wallet balance (₹29 required). Please add funds to your wallet.");
+      navigate({ to: "/wallet" });
+      return;
+    }
+
     setUnlocking(true);
-    toast.info("Preparing your therapist analysis payment...");
+    toast.info("Processing wallet payment of ₹29...");
 
     try {
-      // 1. Initiate Report Payment
-      const initResp = await API.payment.initiateReport({
+      await API.payment.payReportWallet({
         startDate: reportData.startDate,
         endDate: reportData.endDate,
       });
-
-      if (useDemo) {
-        // 2. Demo Bypass
-        toast.info("Simulating payment capture...");
-        await API.payment.demoVerifyReport({
-          reportId: initResp.reportId,
-        });
-        toast.success("AI Therapist Analysis unlocked successfully!");
-        refetchReport();
-      } else {
-        // 3. Razorpay Redirect
-        if (initResp.shortUrl) {
-          toast.success("Redirecting to Razorpay...");
-          window.location.href = initResp.shortUrl;
-        } else {
-          throw new Error("Razorpay link not received");
-        }
-      }
+      toast.success("AI Therapist Analysis unlocked successfully using wallet!");
+      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+      refetchReport();
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Failed to unlock therapist analysis");
@@ -134,7 +131,7 @@ function ReportsPage() {
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-      pdf.save(`mindsyncpro_wellness_report_${period}.pdf`);
+      pdf.save(`mymindtherapyfriend_wellness_report_${period}.pdf`);
       toast.success("Report downloaded successfully!");
     } catch (e) {
       console.error(e);
@@ -371,24 +368,29 @@ function ReportsPage() {
                   <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/10">
                     <div className="space-y-0.5">
                       <span className="text-[10px] text-white/70 block uppercase tracking-wider font-semibold">Premium Report Fee</span>
-                      <span className="text-xl font-bold font-display">₹29.00 <span className="text-[10px] font-normal text-white/80">one-time payment</span></span>
+                      <span className="text-xl font-bold font-display">₹29.00 <span className="text-[10px] font-normal text-white/80">from wallet balance</span></span>
                     </div>
                     
                     <div className="flex gap-2 ml-auto">
-                      <button
-                        onClick={() => handleUnlockAIReport(true)}
-                        disabled={unlocking}
-                        className="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-xs px-4 py-3 rounded-xl transition disabled:opacity-50"
-                      >
-                        Demo Bypass
-                      </button>
-                      <button
-                        onClick={() => handleUnlockAIReport(false)}
-                        disabled={unlocking}
-                        className="bg-accent hover:bg-accent/95 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5"
-                      >
-                        <Sparkles className="size-3.5 fill-current" /> {unlocking ? 'Processing...' : 'Unlock Evaluation (₹29)'}
-                      </button>
+                      {walletBalance >= 29 ? (
+                        <button
+                          onClick={handleUnlockAIReport}
+                          disabled={unlocking}
+                          className="bg-accent hover:bg-accent/95 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Wallet className="size-3.5" /> {unlocking ? 'Unlocking...' : 'Pay ₹29 from Wallet'}
+                        </button>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row items-center gap-2">
+                          <span className="text-xs text-white/80 mr-1">Balance: ₹{walletBalance.toFixed(2)}</span>
+                          <Link
+                            to="/wallet"
+                            className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-5 py-3 rounded-xl transition shadow-lg flex items-center gap-1.5"
+                          >
+                            <Plus className="size-3.5" /> Add Funds
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -436,7 +438,7 @@ function ReportsPage() {
                 <div className="flex justify-between items-start border-b border-primary/20 pb-6">
                   <div>
                     <span className="font-display text-xs font-bold text-accent uppercase tracking-widest">Wellness Report</span>
-                    <h2 className="font-display text-3xl font-bold text-primary-deep mt-1">MindsyncPro</h2>
+                    <h2 className="font-display text-3xl font-bold text-primary-deep mt-1">mymindtherapyfriend</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">Emotional wellness & therapy companion</p>
                   </div>
                   <div className="text-right text-xs">
@@ -582,7 +584,7 @@ function ReportsPage() {
 
                 {/* Footer disclaimer */}
                 <div className="border-t border-border/30 pt-4 text-center text-[10px] text-muted-foreground">
-                  <p>MindsyncPro is an emotional wellness platform. This summary is intended to assist in personal reflection and therapy, and is not a clinical diagnosis.</p>
+                  <p>mymindtherapyfriend is an emotional wellness platform. This summary is intended to assist in personal reflection and therapy, and is not a clinical diagnosis.</p>
                 </div>
               </div>
             ) : (

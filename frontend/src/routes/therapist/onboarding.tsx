@@ -77,7 +77,7 @@ function TherapistOnboarding() {
     <div className="min-h-screen bg-canvas-gradient pb-20">
       <header className="px-6 py-5">
         <h1 className="font-display text-2xl font-bold text-primary-deep">Therapist Verification</h1>
-        <p className="text-sm text-muted-foreground mt-1">Join the Mindsyncpro network</p>
+        <p className="text-sm text-muted-foreground mt-1">Join the mymindtherapyfriend network</p>
       </header>
 
       <main className="mx-auto max-w-md px-6 mt-6">
@@ -353,7 +353,7 @@ function TherapistOnboarding() {
                 </div>
                 <h2 className="font-display text-2xl font-bold text-primary-deep">Application Under Review</h2>
                 <p className="text-muted-foreground">
-                  Thank you for submitting your details. The Mindsyncpro Super Admin team is carefully reviewing your documents and video.
+                  Thank you for submitting your details. The mymindtherapyfriend Super Admin team is carefully reviewing your documents and video.
                 </p>
                 <div className="bg-primary-soft/50 border border-primary/20 p-4 rounded-xl mt-4">
                   <p className="text-sm text-primary-deep font-medium">You will be notified once your profile is marked as <strong>"Verified"</strong>. Until then, your dashboard access is locked.</p>

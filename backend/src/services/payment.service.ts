@@ -85,7 +85,7 @@ export class PaymentService {
       const linkPayload: any = {
         amount: Math.round(numAmount * 100), // paise
         currency: "INR",
-        description: "Therapy Session – Mindsyncpro",
+        description: "Therapy Session – mymindtherapyfriend",
         notify: { sms: false, email: false },
         reminder_enable: false,
         notes: { bookingId },

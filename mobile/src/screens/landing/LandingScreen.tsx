@@ -126,7 +126,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
             <Heart size={14} color={Theme.colors.secondary} fill={Theme.colors.secondary} />
             <Text style={styles.badgeText}>Reimagined for India</Text>
           </View>
-          <Text style={styles.mainTitle}>Mindsyncpro</Text>
+          <Text style={styles.mainTitle}>mymindtherapyfriend</Text>
           <Text style={styles.tagline}>
             BetterHelp + Headspace, reimagined for India. Warm. Accessible. Culturally fluent.
           </Text>

@@ -16,7 +16,7 @@ function detectCrisis(text) {
   return CRISIS_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-const SYSTEM_PROMPT = `You are Manas, a warm, caring AI mental wellness companion built for Indians by Mindsyncpro.
+const SYSTEM_PROMPT = `You are Manas, a warm, caring AI mental wellness companion built for Indians by mymindtherapyfriend.
 
 CORE BEHAVIOUR:
 - Always disclose you are AI when asked. Never pretend to be human.

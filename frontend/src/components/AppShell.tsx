@@ -1,8 +1,9 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuth, UserButton } from '@clerk/clerk-react';
-import { Home, MessageCircle, Heart, Users, CalendarCheck } from 'lucide-react';
+import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';
-import { setTokenGetter } from '@/lib/api';
+import API from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
 
 import logoUrl from '@/assets/logo.png';
 
@@ -35,15 +36,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return null;
   }
 
+  const { data: walletData } = useQuery({
+    queryKey: ["walletBalance"],
+    queryFn: () => API.payment.getWalletBalance(),
+    enabled: isSignedIn,
+  });
+
   return (
     <div className="min-h-screen bg-canvas-gradient pb-24">
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logoUrl} alt="Mindsyncpro Logo" className="size-8 object-contain" />
-            <span className="font-display text-lg font-bold text-primary-deep">Mindsyncpro</span>
+            <img src={logoUrl} alt="mymindtherapyfriend Logo" className="size-8 object-contain" />
+            <span className="font-display text-lg font-bold text-primary-deep">mymindtherapyfriend</span>
           </Link>
           <div className="flex items-center gap-4">
+            <Link to="/wallet" className="flex items-center gap-1 text-xs font-semibold text-slate-800 hover:text-primary transition bg-secondary/80 border border-border px-2.5 py-1 rounded-full">
+              <Wallet className="size-3.5 text-accent" />
+              <span>₹{walletData?.walletBalance !== undefined ? walletData.walletBalance.toFixed(2) : "0.00"}</span>
+            </Link>
             <Link to="/subscription" className="text-xs font-semibold text-primary/80 hover:text-primary transition">
               Upgrade
             </Link>

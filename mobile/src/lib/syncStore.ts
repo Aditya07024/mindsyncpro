@@ -102,7 +102,7 @@ export const useSyncStore = create<SyncState>((set, get) => {
             set((state) => ({
               logs: [
                 ...state.logs,
-                `[TRANSACTION] Approved user "${req.fullName || 'Mindsync User'}" (${req.email || req.phoneMasked || 'contact'}).`
+                `[TRANSACTION] Approved user "${req.fullName || 'mymindtherapyfriend User'}" (${req.email || req.phoneMasked || 'contact'}).`
               ]
             }));
             await new Promise((r) => setTimeout(r, 400));

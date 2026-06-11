@@ -152,9 +152,9 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       if (upgradePlan) {
         await AsyncStorage.setItem('upgrade_plan', upgradePlan);
       }
-      console.log("[OAuthFlow] Initiating Google OAuth with scheme 'mindgod'");
+      console.log("[OAuthFlow] Initiating Google OAuth with scheme 'mymindtherapyfriend'");
       const { createdSessionId, signIn, signUp, setActive: setSessionActive } = await startGoogleFlow({
-        redirectUrl: Linking.createURL('clerk-auth', { scheme: 'mindgod' })
+        redirectUrl: Linking.createURL('clerk-auth', { scheme: 'mymindtherapyfriend' })
       });
 
       const activeSessionId = createdSessionId || signUp?.createdSessionId || signIn?.createdSessionId;
@@ -219,9 +219,9 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       if (upgradePlan) {
         await AsyncStorage.setItem('upgrade_plan', upgradePlan);
       }
-      console.log("[OAuthFlow] Initiating Apple OAuth with scheme 'mindgod'");
+      console.log("[OAuthFlow] Initiating Apple OAuth with scheme 'mymindtherapyfriend'");
       const { createdSessionId, signIn, signUp, setActive: setSessionActive } = await startAppleFlow({
-        redirectUrl: Linking.createURL('clerk-auth', { scheme: 'mindgod' })
+        redirectUrl: Linking.createURL('clerk-auth', { scheme: 'mymindtherapyfriend' })
       });
 
       const activeSessionId = createdSessionId || signUp?.createdSessionId || signIn?.createdSessionId;
@@ -384,14 +384,14 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       {/* Main Premium Widget Card */}
       <View style={styles.authCard}>
         <View style={styles.header}>
-          <Text style={styles.brandTitle}>mindsyncpro</Text>
+          <Text style={styles.brandTitle}>mymindtherapyfriend</Text>
           <Text style={styles.title}>
             {pendingVerification ? 'Enter OTP' : 'Sign in'}
           </Text>
           <Text style={styles.subtitle}>
             {pendingVerification 
               ? `We sent a code to ${email}`
-              : `to continue to Mindsyncpro ${role.toUpperCase().replace('_', ' ')} portal`
+              : `to continue to mymindtherapyfriend ${role.toUpperCase().replace('_', ' ')} portal`
             }
           </Text>
         </View>

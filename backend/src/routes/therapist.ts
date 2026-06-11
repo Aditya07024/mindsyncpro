@@ -6,6 +6,9 @@ import { ReportController } from "@/controllers/report.controller";
 
 const router = Router();
 
+// Recommend therapists (auth required)
+router.post("/recommend", requireAuth, TherapistController.recommend);
+
 // Public: list all therapists with search & filters
 router.get("/", TherapistController.list);
 

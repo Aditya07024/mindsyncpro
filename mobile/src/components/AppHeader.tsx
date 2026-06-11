@@ -73,7 +73,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   };
 
   const finalAvatarUrl = userImageUrl || user?.imageUrl;
-  const emailAddress = user?.primaryEmailAddress?.emailAddress || 'Mindsyncpro Member';
+  const emailAddress = user?.primaryEmailAddress?.emailAddress || 'mymindtherapyfriend Member';
   const displayName = user?.fullName || userFirstName;
 
   return (
@@ -83,7 +83,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           <HeartHandshake size={20} color={Theme.colors.primary} />
         </View>
         <View>
-          <Text style={styles.brandTitle}>Mindsyncpro</Text>
+          <Text style={styles.brandTitle}>mymindtherapyfriend</Text>
           {role !== 'user' && (
             <Text style={styles.roleBadge}>{role.toUpperCase().replace('_', ' ')}</Text>
           )}

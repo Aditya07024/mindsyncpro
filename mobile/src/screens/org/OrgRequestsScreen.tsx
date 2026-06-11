@@ -390,7 +390,7 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
             ) : (
               reqData.joinRequests.map((req: any) => {
                 const status = req.status || 'pending';
-                const name = req.fullName || 'Mindsync Pro User';
+                const name = req.fullName || 'mymindtherapyfriend User';
                 const emailText = req.email || req.phoneMasked || 'No Contact Info';
 
                 return (

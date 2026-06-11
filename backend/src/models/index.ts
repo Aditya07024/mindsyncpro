@@ -10,4 +10,6 @@ export { TherapistInvitation, type ITherapistInvitation } from "./therapist-invi
 export { Notification, type INotification } from "./notification";
 export { SharedReport, type ISharedReport } from "./shared-report";
 export { AIReport, type IAIReport } from "./ai-report";
+export { WalletTransaction, type IWalletTransaction } from "./wallet-transaction";
+export { TherapistRecommendation, type ITherapistRecommendation } from "./therapist-recommendation";
 

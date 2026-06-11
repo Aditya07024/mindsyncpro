@@ -4,7 +4,7 @@
  * Call setTokenGetter(fn) once from ClerkProvider to inject the token getter.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.mindsyncpro.online";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.online";
 
 // Token getter injected by ClerkProvider wrapper
 let _getToken: (() => Promise<string | null>) | null = null;
@@ -45,7 +45,7 @@ const API = {
     setRole: async (role: string) => {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       try {
-        const stashed = localStorage.getItem("Mindsyncpro_intent_role");
+        const stashed = localStorage.getItem("mymindtherapyfriend_intent_role");
         if (stashed) headers["x-intent-role"] = stashed;
       } catch (e) {
         // ignore
@@ -221,6 +221,7 @@ const API = {
       }),
     sharedReports: () => apiCall<any>("/api/therapists/me/shared-reports"),
     sharedReportDetail: (id: string) => apiCall<any>(`/api/therapists/me/shared-reports/${id}`),
+    recommend: () => apiCall<any>("/api/therapists/recommend", { method: "POST" }),
   },
 
   booking: {
@@ -261,6 +262,14 @@ const API = {
     demoVerifyReport: (data: { reportId: string }) =>
       apiCall<any>("/api/payment/report/demo-verify", { method: "POST", body: JSON.stringify(data) }),
     status: (bookingId: string) => apiCall<any>(`/api/payment/${bookingId}`),
+    getWalletBalance: () =>
+      apiCall<any>("/api/payment/wallet/balance"),
+    addWalletFunds: (amount: number) =>
+      apiCall<any>("/api/payment/wallet/add", { method: "POST", body: JSON.stringify({ amount }) }),
+    payBookingWallet: (bookingId: string) =>
+      apiCall<any>("/api/payment/wallet/pay-booking", { method: "POST", body: JSON.stringify({ bookingId }) }),
+    payReportWallet: (data: { startDate: string; endDate: string }) =>
+      apiCall<any>("/api/payment/report/initiate-wallet", { method: "POST", body: JSON.stringify(data) }),
   },
 
   chat: {

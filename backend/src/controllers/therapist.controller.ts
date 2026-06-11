@@ -526,4 +526,101 @@ export class TherapistController {
 
     res.json({ message: `Invitation ${action}`, status: action });
   });
+
+  /**
+   * POST /api/therapists/recommend — Recommend therapists to the user based on subscription limits
+   */
+  static recommend = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const userId = req.user!.sub;
+    const user = await User.findById(userId);
+    if (!user) throw new AppError("User not found", 404);
+
+    // Get active subscription
+    const { Subscription } = await import("@/models/subscription");
+    const activeSub = await Subscription.findOne({
+      userId,
+      status: "active",
+    }).lean();
+
+    const planName = activeSub ? activeSub.plan : (user.tier || "free");
+
+    // Enforce limits
+    const now = new Date();
+    const { TherapistRecommendation } = await import("@/models/therapist-recommendation");
+
+    if (planName === "free" || planName === "Free") {
+      // 1 recommendation in 15 days
+      const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
+      const count = await TherapistRecommendation.countDocuments({
+        userId,
+        createdAt: { $gte: fifteenDaysAgo },
+      });
+      if (count >= 1) {
+        throw new AppError("Recommendation limit reached. Free users can request 1 recommendation every 15 days. Upgrade your plan to get more recommendations!", 429);
+      }
+    } else if (planName === "Apna Mann") {
+      // 3 recommendations in every week
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const count = await TherapistRecommendation.countDocuments({
+        userId,
+        createdAt: { $gte: sevenDaysAgo },
+      });
+      if (count >= 3) {
+        throw new AppError("Recommendation limit reached. Apna Mann users can request 3 recommendations per week.", 429);
+      }
+    } else if (planName === "Mann Shanti") {
+      // 1 recommendation per day
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const count = await TherapistRecommendation.countDocuments({
+        userId,
+        createdAt: { $gte: oneDayAgo },
+      });
+      if (count >= 1) {
+        throw new AppError("Recommendation limit reached. Mann Shanti users can request 1 recommendation per day.", 429);
+      }
+    }
+
+    // Generate recommendations: select up to 3 verified therapists
+    const concerns = user.onboarding?.concerns || [];
+    let matchQuery: any = {
+      role: "therapist",
+      "therapistProfile.verified": true,
+      deletedAt: null,
+    };
+
+    let recommendedTherapists = await User.find({
+      ...matchQuery,
+      "therapistProfile.specializations": { $in: concerns }
+    }).limit(3).lean();
+
+    if (recommendedTherapists.length < 3) {
+      const remainingCount = 3 - recommendedTherapists.length;
+      const excludedIds = recommendedTherapists.map(t => t._id);
+      const backupTherapists = await User.find({
+        ...matchQuery,
+        _id: { $nin: excludedIds }
+      }).sort({ "therapistProfile.rating": -1 }).limit(remainingCount).lean();
+      
+      recommendedTherapists = [...recommendedTherapists, ...backupTherapists];
+    }
+
+    // Save recommendation log
+    await TherapistRecommendation.create({
+      userId,
+      therapistIds: recommendedTherapists.map(t => t._id),
+    });
+
+    res.json({
+      recommendations: recommendedTherapists.map((t) => ({
+        id: t._id,
+        name: t.therapistProfile?.name || "Therapist",
+        specializations: t.therapistProfile?.specializations ?? [],
+        languages: t.therapistProfile?.languages ?? [],
+        rating: t.therapistProfile?.rating ?? 5.0,
+        sessionCount: t.therapistProfile?.sessionCount ?? 0,
+        sessionFee: t.therapistProfile?.sessionFee ?? 1800,
+        bio: t.therapistProfile?.bio ?? "",
+      }))
+    });
+  });
 }

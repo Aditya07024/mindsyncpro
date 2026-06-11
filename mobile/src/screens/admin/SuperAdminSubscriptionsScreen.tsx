@@ -183,7 +183,7 @@ export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ 
           <ScrollView contentContainerStyle={styles.listScroll}>
             {filteredSubs.length > 0 ? (
               filteredSubs.map((s: any) => {
-                const subName = s.userId?.fullName || s.orgId?.name || 'Mindsync User';
+                const subName = s.userId?.fullName || s.orgId?.name || 'mymindtherapyfriend User';
                 const subEmail = s.userId?.email || s.orgId?.officialEmail || 'Not Provided';
                 const price = s.planId?.price || 0;
                 const renewDate = s.endDate ? new Date(s.endDate).toLocaleDateString() : 'N/A';

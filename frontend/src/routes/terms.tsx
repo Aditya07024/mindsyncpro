@@ -12,13 +12,13 @@ function TermsPage() {
     {
       title: "Acceptance of Terms",
       icon: Scale,
-      content: "By accessing or using Mindsyncpro, you agree to be bound by these Terms & Conditions. If you do not agree to all terms, you may not use our services."
+      content: "By accessing or using mymindtherapyfriend, you agree to be bound by these Terms & Conditions. If you do not agree to all terms, you may not use our services."
     },
     {
       title: "Not a Medical Emergency Service",
       icon: AlertCircle,
       iconColor: "text-rose-500",
-      content: "Mindsyncpro is a wellness platform, not a crisis intervention or medical emergency service. If you are experiencing a life-threatening emergency or thoughts of self-harm, please contact your local emergency services or a crisis hotline immediately."
+      content: "mymindtherapyfriend is a wellness platform, not a crisis intervention or medical emergency service. If you are experiencing a life-threatening emergency or thoughts of self-harm, please contact your local emergency services or a crisis hotline immediately."
     },
     {
       title: "User Conduct",
@@ -40,7 +40,7 @@ function TermsPage() {
             <div className="size-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 shadow-lg overflow-hidden">
               <img src={logoUrl} alt="Logo" className="size-full object-cover" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">Mindsyncpro</span>
+            <span className="font-display font-bold text-xl tracking-tight">mymindtherapyfriend</span>
           </Link>
           <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-teal-600 transition">
             <ArrowLeft className="size-4" /> Back to Home
@@ -78,7 +78,7 @@ function TermsPage() {
         <section className="mt-20 p-10 bg-slate-50 border border-slate-200 rounded-[2rem]">
           <h3 className="text-xl font-bold mb-4">Legal Notice</h3>
           <p className="text-sm text-slate-500 leading-relaxed">
-            These terms constitute a legally binding agreement between you and Mindsyncpro Wellness Platforms. 
+            These terms constitute a legally binding agreement between you and mymindtherapyfriend Wellness Platforms. 
             We reserve the right to modify these terms at any time. Continued use of the platform after 
             changes implies acceptance of the new terms.
           </p>
@@ -86,7 +86,7 @@ function TermsPage() {
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 Mindsyncpro. All rights reserved.
+        © 2026 mymindtherapyfriend. All rights reserved.
       </footer>
     </div>
   );
