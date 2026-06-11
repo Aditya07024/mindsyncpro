@@ -93,9 +93,14 @@
     }
     </script>
     <script>
-      // Automatically reload page if a new deployment/build makes old chunks 404
+      // Reload once when a new deployment invalidates old chunk hashes
       window.addEventListener('vite:preloadError', (event) => {
-        window.location.reload();
+        event.preventDefault();
+        var key = 'chunkErrReloaded_' + (event.payload?.message || '');
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          window.location.reload(true);
+        }
       });
     </script>
   </head>
