@@ -26,7 +26,7 @@ echo "✓ Code updated"
 echo ""
 echo "[2/5] Building backend..."
 cd "$APP_DIR/backend"
-npm install --omit=dev
+npm install          # include devDeps (tsc is a devDep)
 npm run build
 echo "✓ Backend built"
 
@@ -34,7 +34,7 @@ echo "✓ Backend built"
 echo ""
 echo "[3/5] Building frontend..."
 cd "$APP_DIR/frontend"
-npm install --omit=dev
+npm install          # include devDeps (@vitejs/plugin-react, vite, etc. are devDeps)
 npm run build
 echo "✓ Frontend built (new chunk hashes generated)"
 
