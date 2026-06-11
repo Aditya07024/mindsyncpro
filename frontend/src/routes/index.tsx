@@ -959,7 +959,7 @@ function Landing() {
               </a>
             </div>
 
-            <p className="mt-6 text-sm text-slate-500">© 2026 mymindtherapyfriend. All rights reserved.</p>
+            <p className="mt-6 text-sm text-slate-500">© 2026 mymindtherapyfriend™. All rights reserved.</p>
           </div>
         </div>
       </footer>

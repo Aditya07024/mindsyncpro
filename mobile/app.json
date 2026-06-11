@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mymindtherapyfriend.app",
+      "bundleIdentifier": "com.atulkumar.mymindtherapyfriend.com",
       "infoPlist": {
         "NSCameraUsageDescription": "mymindtherapyfriend needs camera access to allow video call sessions with your therapist.",
         "NSMicrophoneUsageDescription": "mymindtherapyfriend needs microphone access to allow voice in video call sessions with your therapist."
       }
     },
     "android": {
-      "package": "com.mymindtherapyfriend.app",
+      "package": "com.atulkumar.mymindtherapyfriend.com",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"

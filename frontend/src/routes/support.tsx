@@ -93,7 +93,7 @@ function SupportPage() {
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 mymindtherapyfriend. All rights reserved.
+        © 2026 mymindtherapyfriend™. All rights reserved.
       </footer>
     </div>
   );

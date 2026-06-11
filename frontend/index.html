@@ -92,6 +92,12 @@
       ]
     }
     </script>
+    <script>
+      // Automatically reload page if a new deployment/build makes old chunks 404
+      window.addEventListener('vite:preloadError', (event) => {
+        window.location.reload();
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
