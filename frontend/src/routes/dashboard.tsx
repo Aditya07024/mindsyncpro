@@ -238,6 +238,42 @@ function Dashboard() {
         <div className="grid lg:grid-cols-3 gap-6 items-start">
           {/* Left/Main Content Column (2/3 width on Widescreen) */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Upcoming Session Widget */}
+            {upcomingBooking && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-3xl bg-primary-deep p-5 text-primary-foreground shadow-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <CalendarCheck className="size-5" />
+                    <span className="font-display font-semibold text-sm">Upcoming Session</span>
+                  </div>
+                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-mono">
+                    {formatCountdown(upcomingBooking.slot)}
+                  </span>
+                </div>
+                <p className="font-display font-bold text-lg">{upcomingBooking.therapistName}</p>
+                <p className="text-primary-foreground/70 text-sm mt-1">
+                  {new Date(upcomingBooking.slot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  {' · '}
+                  {new Date(upcomingBooking.slot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                <div className="mt-4 flex gap-2">
+                  {canJoin ? (
+                    <Link to={`/session/${upcomingBooking.id}`}
+                      className="flex-1 text-center bg-white text-primary-deep font-bold py-2 rounded-xl text-sm">
+                      Join Session
+                    </Link>
+                  ) : (
+                    <div className="flex-1 text-center bg-white/20 text-primary-foreground/60 font-semibold py-2 rounded-xl text-sm">
+                      <Clock className="size-3 inline mr-1" />Available 15 min before
+                    </div>
+                  )}
+                  <Link to="/bookings" className="px-4 bg-white/10 text-primary-foreground font-semibold py-2 rounded-xl text-sm">
+                    All
+                  </Link>
+                </div>
+              </motion.div>
+            )}
             {/* Chat with Manas card */}
             <Link to="/chat" className="block">
               <div className="rounded-3xl bg-warm-gradient p-6 text-primary-foreground shadow-md transition-transform active:scale-[0.98] hover:shadow-lg">
@@ -308,42 +344,7 @@ function Dashboard() {
               <MessageCounter onCrisisMode={setCrisisMode} />
             )}
 
-            {/* Upcoming Session Widget */}
-            {upcomingBooking && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                className="rounded-3xl bg-primary-deep p-5 text-primary-foreground shadow-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <CalendarCheck className="size-5" />
-                    <span className="font-display font-semibold text-sm">Upcoming Session</span>
-                  </div>
-                  <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-mono">
-                    {formatCountdown(upcomingBooking.slot)}
-                  </span>
-                </div>
-                <p className="font-display font-bold text-lg">{upcomingBooking.therapistName}</p>
-                <p className="text-primary-foreground/70 text-sm mt-1">
-                  {new Date(upcomingBooking.slot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  {' · '}
-                  {new Date(upcomingBooking.slot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-                <div className="mt-4 flex gap-2">
-                  {canJoin ? (
-                    <Link to={`/session/${upcomingBooking.id}`}
-                      className="flex-1 text-center bg-white text-primary-deep font-bold py-2 rounded-xl text-sm">
-                      Join Session
-                    </Link>
-                  ) : (
-                    <div className="flex-1 text-center bg-white/20 text-primary-foreground/60 font-semibold py-2 rounded-xl text-sm">
-                      <Clock className="size-3 inline mr-1" />Available 15 min before
-                    </div>
-                  )}
-                  <Link to="/bookings" className="px-4 bg-white/10 text-primary-foreground font-semibold py-2 rounded-xl text-sm">
-                    All
-                  </Link>
-                </div>
-              </motion.div>
-            )}
+            
 
             {/* Mood Check-In Widget */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-card p-5 shadow-sm border border-border/50">
