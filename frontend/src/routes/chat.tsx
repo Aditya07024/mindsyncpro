@@ -160,7 +160,7 @@ function Chat() {
 
   return (
     <AppShell>
-      <div className="-mx-4 -mt-6 flex h-[calc(100vh-9rem)] flex-col">
+      <div className="-mx-4 -mt-6 flex h-[calc(100vh-9rem)] flex-col max-w-4xl mx-auto w-full bg-background/30 border-x border-border/10 shadow-sm">
         <div className="flex items-center justify-between border-b border-border/50 bg-card/60 px-4 py-3 backdrop-blur">
           <div className="flex items-center gap-3">
             <ManasAvatar size={36} />

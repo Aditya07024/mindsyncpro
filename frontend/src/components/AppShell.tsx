@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-canvas-gradient pb-24">
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
             <img src={logoUrl} alt="mymindtherapyfriend Logo" className="size-8 object-contain" />
             <span className="font-display text-lg font-bold text-primary-deep">mymindtherapyfriend</span>
@@ -70,10 +70,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-stretch justify-around">
+        <div className="mx-auto flex max-w-7xl items-stretch justify-around">
           {tabs.map((t) => {
             const active = loc.pathname === t.to || loc.pathname.startsWith(t.to + '/');
             const Icon = t.icon;
