@@ -15,4 +15,4 @@ const TherapistRecommendationSchema = new Schema<ITherapistRecommendation>(
   { timestamps: true }
 );
 
-export const TherapistRecommendation = mongoose.model<ITherapistRecommendation>("TherapistRecommendation", TherapistRecommendationSchema);
+export const TherapistRecommendation = mongoose.models.TherapistRecommendation || mongoose.model<ITherapistRecommendation>("TherapistRecommendation", TherapistRecommendationSchema);

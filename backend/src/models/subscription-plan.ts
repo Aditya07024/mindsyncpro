@@ -71,4 +71,4 @@ const SubscriptionPlanSchema = new Schema<ISubscriptionPlan>(
   { timestamps: true }
 );
 
-export const SubscriptionPlan = mongoose.model<ISubscriptionPlan>("SubscriptionPlan", SubscriptionPlanSchema);
+export const SubscriptionPlan = (mongoose.models.SubscriptionPlan as mongoose.Model<ISubscriptionPlan>) || mongoose.model<ISubscriptionPlan>("SubscriptionPlan", SubscriptionPlanSchema);

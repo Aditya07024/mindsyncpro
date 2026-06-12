@@ -40,4 +40,4 @@ const ConversationSchema = new Schema<IConversation>(
 
 ConversationSchema.index({ userId: 1, updatedAt: -1 });
 
-export const Conversation = mongoose.model<IConversation>("Conversation", ConversationSchema);
+export const Conversation = (mongoose.models.Conversation as mongoose.Model<IConversation>) || mongoose.model<IConversation>("Conversation", ConversationSchema);

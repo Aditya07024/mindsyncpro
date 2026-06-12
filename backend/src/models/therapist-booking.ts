@@ -73,4 +73,4 @@ const TherapistBookingSchema = new Schema<ITherapistBooking>(
 
 TherapistBookingSchema.index({ therapistId: 1, slot: 1 });
 
-export const TherapistBooking = mongoose.model<ITherapistBooking>("TherapistBooking", TherapistBookingSchema);
+export const TherapistBooking = (mongoose.models.TherapistBooking as mongoose.Model<ITherapistBooking>) || mongoose.model<ITherapistBooking>("TherapistBooking", TherapistBookingSchema);

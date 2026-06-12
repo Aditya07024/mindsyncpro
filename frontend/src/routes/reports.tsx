@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/AppShell';
 import API from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Download, Share2, Calendar, ChevronRight, AlertCircle, Sparkles, Clock, Heart, Smile, CheckCircle2, ArrowLeft, Wallet } from 'lucide-react';
+import { FileText, Download, Share2, Calendar, ChevronRight, AlertCircle, Sparkles, Clock, Heart, Smile, CheckCircle2, ArrowLeft, Wallet, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -113,6 +113,36 @@ function ReportsPage() {
         scale: 2,
         useCORS: true,
         backgroundColor: '#FCFAF7', // Canvas base color matching our theme
+        onclone: (clonedDoc) => {
+          const el = clonedDoc.getElementById('report-document');
+          if (el) {
+            const overrides = {
+              '--background': '#FCFAF7',
+              '--foreground': '#2D3748',
+              '--card': '#FFFFFF',
+              '--card-foreground': '#2D3748',
+              '--primary': '#2E6E65',
+              '--primary-foreground': '#FCFCFC',
+              '--primary-soft': '#EEF6F5',
+              '--primary-deep': '#1B4C46',
+              '--secondary': '#F0F4F4',
+              '--muted': '#F0F0F0',
+              '--muted-foreground': '#6B7280',
+              '--accent': '#F4845F',
+              '--accent-foreground': '#4A1D1A',
+              '--accent-soft': '#FCEEEA',
+              '--gold': '#F4C261',
+              '--gold-foreground': '#5A3D0A',
+              '--border': '#E2E8F0',
+              '--crisis': '#DC2626',
+              '--destructive': '#DC2626',
+              '--ring': '#2E6E65',
+            };
+            Object.entries(overrides).forEach(([key, val]) => {
+              el.style.setProperty(key, val);
+            });
+          }
+        }
       });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');

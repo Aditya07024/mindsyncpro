@@ -25,4 +25,4 @@ const SharedReportSchema = new Schema<ISharedReport>(
 
 SharedReportSchema.index({ userId: 1, therapistId: 1, createdAt: -1 });
 
-export const SharedReport = mongoose.model<ISharedReport>("SharedReport", SharedReportSchema);
+export const SharedReport = mongoose.models.SharedReport || mongoose.model<ISharedReport>("SharedReport", SharedReportSchema);

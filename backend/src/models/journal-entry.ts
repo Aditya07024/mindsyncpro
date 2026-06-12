@@ -34,7 +34,6 @@ const JournalEntrySchema = new Schema<IJournalEntry>(
 
 JournalEntrySchema.index({ userId: 1, createdAt: -1 });
 
-export const JournalEntry = mongoose.model<IJournalEntry>(
-  "JournalEntry",
-  JournalEntrySchema,
-);
+export const JournalEntry =
+  (mongoose.models.JournalEntry as mongoose.Model<IJournalEntry>) ||
+  mongoose.model<IJournalEntry>("JournalEntry", JournalEntrySchema);

@@ -31,4 +31,4 @@ const AIReportSchema = new Schema<IAIReport>(
 
 AIReportSchema.index({ userId: 1, startDate: -1, endDate: -1 });
 
-export const AIReport = mongoose.model<IAIReport>("AIReport", AIReportSchema);
+export const AIReport = mongoose.models.AIReport || mongoose.model<IAIReport>("AIReport", AIReportSchema);

@@ -20,6 +20,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
 
+  const { data: walletData } = useQuery({
+    queryKey: ["walletBalance"],
+    queryFn: () => API.payment.getWalletBalance(),
+    enabled: !!isLoaded && !!isSignedIn,
+  });
+
   // Still loading Clerk — show minimal spinner
   if (!isLoaded) {
     return (
@@ -35,12 +41,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     navigate({ to: '/sign-in', replace: true });
     return null;
   }
-
-  const { data: walletData } = useQuery({
-    queryKey: ["walletBalance"],
-    queryFn: () => API.payment.getWalletBalance(),
-    enabled: isSignedIn,
-  });
 
   return (
     <div className="min-h-screen bg-canvas-gradient pb-24">

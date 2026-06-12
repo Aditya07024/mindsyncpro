@@ -23,4 +23,4 @@ const MoodSchema = new Schema<IMood>(
 
 MoodSchema.index({ userId: 1, date: -1 });
 
-export const Mood = mongoose.model<IMood>("Mood", MoodSchema);
+export const Mood = (mongoose.models.Mood as mongoose.Model<IMood>) || mongoose.model<IMood>("Mood", MoodSchema);

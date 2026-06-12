@@ -27,4 +27,6 @@ const WalletTransactionSchema = new Schema<IWalletTransaction>(
   { timestamps: true }
 );
 
-export const WalletTransaction = mongoose.model<IWalletTransaction>("WalletTransaction", WalletTransactionSchema);
+export const WalletTransaction =
+  (mongoose.models.WalletTransaction as mongoose.Model<IWalletTransaction>) ||
+  mongoose.model<IWalletTransaction>("WalletTransaction", WalletTransactionSchema);
