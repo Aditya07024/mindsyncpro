@@ -11,6 +11,15 @@ import { jsPDF } from 'jspdf';
 
 export const Route = createFileRoute('/reports')({ component: ReportsPage });
 
+const AI_DOCTORS = [
+  { name: "Dr. Manas", role: "AI Emotional Wellness Specialist", initials: "DM", avatarBg: "bg-teal-600" },
+  { name: "Dr. Amy Reid", role: "AI CBT Specialist", initials: "AR", avatarBg: "bg-blue-600" },
+  { name: "Dr. Soniya", role: "AI Mindfulness Specialist", initials: "DS", avatarBg: "bg-purple-600" },
+  { name: "Dr. Lisa", role: "AI Trauma-Informed Specialist", initials: "DL", avatarBg: "bg-rose-600" },
+  { name: "Dr. Mohan", role: "AI Positive Psychology Expert", initials: "DM", avatarBg: "bg-amber-600" },
+  { name: "Dr. Ram", role: "AI Clinical Wellness Counselor", initials: "DR", avatarBg: "bg-emerald-600" }
+];
+
 function moodColor(score: number) {
   if (score <= 3) return '#e11d48'; // Rose
   if (score <= 5) return '#f59e0b'; // Amber
@@ -34,6 +43,7 @@ function ReportsPage() {
   const [notes, setNotes] = useState<string>('');
   const [downloading, setDownloading] = useState<boolean>(false);
   const [unlocking, setUnlocking] = useState<boolean>(false);
+  const [selectedAIDoctor, setSelectedAIDoctor] = useState<string>('Dr. Manas');
 
   useEffect(() => {
     if (currentTier === "free") {
@@ -246,6 +256,7 @@ function ReportsPage() {
   };
 
   const shares = sharesData?.shares || [];
+  const sortedMoods = [...(reportData?.moods || [])].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <AppShell>
@@ -284,6 +295,36 @@ function ReportsPage() {
                     }`}
                   >
                     {p === 'fortnight' ? '15 Days' : p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Doctor Selector Card */}
+            <div className="rounded-3xl bg-card p-6 shadow-sm border border-border space-y-4">
+              <h2 className="font-display font-bold text-lg text-primary-deep flex items-center gap-2">
+                <Sparkles className="size-5 text-accent" /> Select AI Doctor Reviewer
+              </h2>
+              <p className="text-xs text-muted-foreground">Choose which AI companion evaluates your patterns and signs the clinical analysis.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {AI_DOCTORS.map((doc) => (
+                  <button
+                    key={doc.name}
+                    type="button"
+                    onClick={() => setSelectedAIDoctor(doc.name)}
+                    className={`p-3.5 rounded-2xl border text-left transition flex flex-col justify-between h-28 cursor-pointer ${
+                      selectedAIDoctor === doc.name
+                        ? 'border-primary bg-primary-soft/30 ring-2 ring-primary/20'
+                        : 'border-border/60 hover:bg-secondary/35 bg-secondary/10'
+                    }`}
+                  >
+                    <div className={`size-8 rounded-full ${doc.avatarBg} text-white flex items-center justify-center font-bold text-[10px] shadow-sm`}>
+                      {doc.initials}
+                    </div>
+                    <div className="mt-1">
+                      <h4 className="font-bold text-[11px] text-slate-800 line-clamp-1">{doc.name}</h4>
+                      <p className="text-[9px] text-muted-foreground leading-tight line-clamp-1">{doc.role}</p>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -397,18 +438,18 @@ function ReportsPage() {
                     <Sparkles className="size-24 text-primary" />
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm">
-                      DM
+                    <div className={`size-10 rounded-full ${AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.avatarBg || 'bg-accent'} text-white flex items-center justify-center font-bold text-sm`}>
+                      {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.initials || 'DM'}
                     </div>
                     <div>
                       <h3 className="font-display font-bold text-primary-deep text-sm">Therapist Clinical Analysis</h3>
-                      <p className="text-[10px] text-muted-foreground">Drafted by Dr. Manas • Emotional Wellness Specialist</p>
+                      <p className="text-[10px] text-muted-foreground">Drafted by {selectedAIDoctor} • {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.role || 'Emotional Wellness Specialist'}</p>
                     </div>
                   </div>
                   
                   {/* Analysis Text content formatted cleanly */}
                   <div className="text-slate-700 text-sm leading-relaxed whitespace-pre-line border-l-2 border-accent/30 pl-4 py-1 italic">
-                    {reportData.aiReport.aiAnalysis}
+                    {reportData.aiReport.aiAnalysis.replaceAll("Dr. Manas", selectedAIDoctor)}
                   </div>
                 </div>
 
@@ -419,7 +460,7 @@ function ReportsPage() {
                       <Heart className="size-4 text-accent" /> Ready for deeper guidance?
                     </h4>
                     <p className="text-xs text-muted-foreground max-w-xl">
-                      Based on Dr. Manas's analysis of your {period === 'week' ? 'weekly' : '15-day'} logs, scheduling a direct 1-on-1 counseling session with a human therapist can help you build custom coping mechanisms.
+                      Based on {selectedAIDoctor}'s analysis of your {period === 'week' ? 'weekly' : '15-day'} logs, scheduling a direct 1-on-1 counseling session with a professional therapist can help you build custom coping mechanisms.
                     </p>
                   </div>
                   <Link
@@ -558,6 +599,89 @@ function ReportsPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Clinical Therapist Analysis (If Paid) */}
+                {reportData.aiReport?.paid && (
+                  <div className="bg-white p-5 rounded-2xl border border-primary/20 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`size-8 rounded-full ${AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.avatarBg || 'bg-accent'} text-white flex items-center justify-center font-bold text-[10px]`}>
+                        {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.initials || 'DM'}
+                      </div>
+                      <div>
+                        <h4 className="font-display font-bold text-primary-deep text-xs">Therapist Clinical Evaluation</h4>
+                        <p className="text-[9px] text-muted-foreground">Drafted by {selectedAIDoctor} • {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.role || 'Emotional Wellness Specialist'}</p>
+                      </div>
+                    </div>
+                    <div className="text-slate-700 text-xs leading-relaxed whitespace-pre-line border-l-2 border-accent/30 pl-4 py-1 italic">
+                      {reportData.aiReport.aiAnalysis.replaceAll("Dr. Manas", selectedAIDoctor)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mood Trend Visualization */}
+                {sortedMoods.length > 0 && (
+                  <div className="bg-white p-5 rounded-2xl border border-border/40 space-y-3 animate-fade-in">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Mood Trend Graph</span>
+                    <div className="relative w-full h-[150px] bg-[#EEF6F5]/20 rounded-xl p-3 border border-border/30">
+                      <svg className="w-full h-full" viewBox="0 0 600 120" preserveAspectRatio="none">
+                        {/* Area Gradient Definitions */}
+                        <defs>
+                          <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#2E6E65" stopOpacity="0.25" />
+                            <stop offset="100%" stopColor="#2E6E65" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Level lines (2, 4, 6, 8, 10) */}
+                        {[2, 4, 6, 8, 10].map((level) => {
+                          const y = 100 - (level / 10) * 80;
+                          return (
+                            <g key={level}>
+                              <line x1="25" y1={y} x2="580" y2={y} stroke="#E2E8F0" strokeWidth="0.75" strokeDasharray="3,3" />
+                              <text x="5" y={y + 3} fill="#94A3B8" fontSize="8" fontWeight="bold">{level}</text>
+                            </g>
+                          );
+                        })}
+
+                        {/* Gradient area under line */}
+                        {sortedMoods.length > 1 && (
+                          <path
+                            d={`M 30 100 L ${sortedMoods.map((m, i) => `${(i / (sortedMoods.length - 1)) * 530 + 30} ${100 - (m.score / 10) * 80}`).join(' L ')} L ${(sortedMoods.length - 1) / (sortedMoods.length - 1) * 530 + 30} 100 Z`}
+                            fill="url(#moodGradient)"
+                          />
+                        )}
+
+                        {/* Trend line */}
+                        {sortedMoods.length > 1 && (
+                          <polyline
+                            fill="none"
+                            stroke="#2E6E65"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            points={sortedMoods.map((m, i) => `${(i / (sortedMoods.length - 1)) * 530 + 30},${100 - (m.score / 10) * 80}`).join(' ')}
+                          />
+                        )}
+
+                        {/* Circles & Labels */}
+                        {sortedMoods.map((m, i) => {
+                          const x = sortedMoods.length > 1 ? (i / (sortedMoods.length - 1)) * 530 + 30 : 305;
+                          const y = 100 - (m.score / 10) * 80;
+                          return (
+                            <g key={m.id || i}>
+                              <circle cx={x} cy={y} r="5" fill="#FFFFFF" stroke="#2E6E65" strokeWidth="2.5" />
+                              <circle cx={x} cy={y} r="2.5" fill="#F4845F" />
+                              <text x={x} y={y - 8} fill="#1B4C46" fontSize="8" fontWeight="extrabold" textAnchor="middle">{m.score}</text>
+                              <text x={x} y="112" fill="#64748B" fontSize="8" fontWeight="semibold" textAnchor="middle">
+                                {new Date(m.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              </text>
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+                  </div>
+                )}
 
                 {/* Mood Tracker Summary */}
                 <div className="space-y-3">
