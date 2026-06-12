@@ -86,6 +86,14 @@ function RoomUI({
   const navigate = useNavigate();
   const qc = useQueryClient();
 
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: () => API.subscription.get(),
+    enabled: userRole === "user",
+    retry: false,
+  });
+  const currentTier = subscription?.tier ?? "free";
+
   /* Auto-hide controls */
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -174,9 +182,15 @@ function RoomUI({
 
   /* User report share modal states */
   const [reportShareModalOpen, setReportShareModalOpen] = useState(false);
-  const [sharePeriod, setSharePeriod] = useState<"day" | "week" | "month">("week");
+  const [sharePeriod, setSharePeriod] = useState<"day" | "week" | "fortnight" | "month">("fortnight");
   const [shareNotes, setShareNotes] = useState("");
   const [isSharingReport, setIsSharingReport] = useState(false);
+
+  useEffect(() => {
+    if (userRole === "user") {
+      setSharePeriod(currentTier === "free" ? "fortnight" : "week");
+    }
+  }, [currentTier, userRole]);
 
   /* Query for shared report details */
   const { data: sharedReport, isLoading: loadingReport } = useQuery({
@@ -834,7 +848,7 @@ function RoomUI({
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-400 uppercase">Report Period</label>
                   <div className="grid grid-cols-3 gap-2">
-                    {(['day', 'week', 'month'] as const).map((p) => (
+                    {(currentTier === "free" ? (['day', 'fortnight', 'month'] as const) : (['day', 'week', 'month'] as const)).map((p) => (
                       <button
                         key={p}
                         type="button"
@@ -845,7 +859,7 @@ function RoomUI({
                             : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
                         }`}
                       >
-                        {p}
+                        {p === 'fortnight' ? '15 Days' : p}
                       </button>
                     ))}
                   </div>

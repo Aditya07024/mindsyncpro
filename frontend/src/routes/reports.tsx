@@ -12,7 +12,7 @@ import { jsPDF } from 'jspdf';
 export const Route = createFileRoute('/reports')({ component: ReportsPage });
 
 const AI_DOCTORS = [
-  { name: "Dr. Manas", role: "AI Emotional Wellness Specialist", initials: "DM", avatarBg: "bg-teal-600" },
+  // { name: "Dr. Manas", role: "AI Emotional Wellness Specialist", initials: "DM", avatarBg: "bg-teal-600" },
   { name: "Dr. Amy Reid", role: "AI CBT Specialist", initials: "AR", avatarBg: "bg-blue-600" },
   { name: "Dr. Soniya", role: "AI Mindfulness Specialist", initials: "DS", avatarBg: "bg-purple-600" },
   { name: "Dr. Lisa", role: "AI Trauma-Informed Specialist", initials: "DL", avatarBg: "bg-rose-600" },
@@ -186,6 +186,18 @@ function ReportsPage() {
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('report-document');
           if (el) {
+            // Force fixed desktop dimensions for standard A4 aspect/capture layout
+            el.style.width = '800px';
+            el.style.minWidth = '800px';
+            el.style.maxWidth = '800px';
+            el.style.padding = '32px';
+
+            // Inject Google fonts directly to ensure correct font rendering inside the iframe
+            const link = clonedDoc.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap';
+            clonedDoc.head.appendChild(link);
+
             const overrides = {
               '--background': '#FCFAF7',
               '--foreground': '#2D3748',
@@ -303,7 +315,7 @@ function ReportsPage() {
             {/* AI Doctor Selector Card */}
             <div className="rounded-3xl bg-card p-6 shadow-sm border border-border space-y-4">
               <h2 className="font-display font-bold text-lg text-primary-deep flex items-center gap-2">
-                <Sparkles className="size-5 text-accent" /> Select AI Doctor Reviewer
+                <Sparkles className="size-5 text-accent" /> Select Doctor Reviewer
               </h2>
               <p className="text-xs text-muted-foreground">Choose which AI companion evaluates your patterns and signs the clinical analysis.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -686,7 +698,7 @@ function ReportsPage() {
                 {/* Mood Tracker Summary */}
                 <div className="space-y-3">
                   <h3 className="font-display font-bold text-lg text-primary-deep border-b border-border/50 pb-1.5 flex items-center gap-2">
-                    <Heart className="size-4 text-accent" /> Mood Logs ({reportData.moods?.length || 0})
+                    <Heart className="text-accent" size={16} /> Mood Logs ({reportData.moods?.length || 0})
                   </h3>
                   {reportData.moods?.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic">No mood check-ins recorded in this timeframe.</p>
@@ -719,7 +731,7 @@ function ReportsPage() {
                 {/* CBT Journal Logs */}
                 <div className="space-y-4">
                   <h3 className="font-display font-bold text-lg text-primary-deep border-b border-border/50 pb-1.5 flex items-center gap-2">
-                    <Smile className="size-4 text-accent" /> CBT Journal Entries ({reportData.journals?.length || 0})
+                    <Smile className="text-accent" size={16} /> CBT Journal Entries ({reportData.journals?.length || 0})
                   </h3>
                   {reportData.journals?.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic">No CBT journal reflections added in this timeframe.</p>
@@ -754,7 +766,7 @@ function ReportsPage() {
                           {j.aiResponse && (
                             <div className="mt-2.5 p-3 rounded-xl bg-[#FCFAF7] border border-primary/10">
                               <span className="font-bold uppercase text-[9px] tracking-wider text-accent flex items-center gap-1 mb-1">
-                                <Sparkles className="size-3" /> Manas AI Reflection
+                                <Sparkles className="text-accent" size={12} /> Manas AI Reflection
                               </span>
                               <p className="text-slate-600 italic">"{j.aiResponse}"</p>
                             </div>
@@ -768,7 +780,7 @@ function ReportsPage() {
                 {/* AI Chat Activity summaries */}
                 <div className="space-y-3">
                   <h3 className="font-display font-bold text-lg text-primary-deep border-b border-border/50 pb-1.5 flex items-center gap-2">
-                    <Sparkles className="size-4 text-accent" /> Manas AI Chat Activity ({reportData.chats?.length || 0})
+                    <Sparkles className="text-accent" size={16} /> Manas AI Chat Activity ({reportData.chats?.length || 0})
                   </h3>
                   {reportData.chats?.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic">No conversation logs logged in this timeframe.</p>

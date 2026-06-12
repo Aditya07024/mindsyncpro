@@ -3,7 +3,7 @@ import mongoose, { Schema, type Document, type Types } from "mongoose";
 export interface ISharedReport extends Document {
   userId: Types.ObjectId;
   therapistId: Types.ObjectId;
-  period: "day" | "week" | "month";
+  period: "day" | "week" | "fortnight" | "month";
   startDate: Date;
   endDate: Date;
   notes?: string;
@@ -15,7 +15,7 @@ const SharedReportSchema = new Schema<ISharedReport>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     therapistId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    period: { type: String, enum: ["day", "week", "month"], required: true },
+    period: { type: String, enum: ["day", "week", "fortnight", "month"], required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     notes: { type: String }
