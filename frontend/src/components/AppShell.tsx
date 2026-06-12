@@ -51,10 +51,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="font-display text-lg font-bold text-primary-deep">mymindtherapyfriend</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/wallet" className="flex items-center gap-1 text-xs font-semibold text-slate-800 hover:text-primary transition bg-secondary/80 border border-border px-2.5 py-1 rounded-full">
+            {/* <Link to="/wallet" className="flex items-center gap-1 text-xs font-semibold text-slate-800 hover:text-primary transition bg-secondary/80 border border-border px-2.5 py-1 rounded-full">
               <Wallet className="size-3.5 text-accent" />
               <span>₹{walletData?.walletBalance !== undefined ? walletData.walletBalance.toFixed(2) : "0.00"}</span>
-            </Link>
+            </Link> */}
             <Link to="/subscription" className="text-xs font-semibold text-primary/80 hover:text-primary transition">
               Upgrade
             </Link>
