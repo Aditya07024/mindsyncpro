@@ -247,7 +247,7 @@ export class ReportController {
     const therapistId = req.user!.sub;
     const { id } = req.params;
 
-    const sharedReport = await SharedReport.findById(id).lean();
+    const sharedReport = (await SharedReport.findById(id).lean()) as any;
     if (!sharedReport) {
       throw new AppError("Shared report not found", 404);
     }
