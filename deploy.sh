@@ -19,7 +19,8 @@ echo ""
 # Step 1: Pull latest code
 echo "[1/5] Pulling latest code from GitHub..."
 cd "$APP_DIR"
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 echo "✓ Code updated"
 
 # Step 2: Install backend dependencies & build
