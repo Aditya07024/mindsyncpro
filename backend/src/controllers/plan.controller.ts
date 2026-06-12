@@ -48,7 +48,7 @@ export class PlanController {
       audience,
       durationMonths: finalDuration,
       config: config || {
-        dailyChatLimit: 7,
+        dailyChatLimit: 300,
         hasPriorityBooking: false,
         therapistDiscount: 0,
         hasUnlimitedJournal: false

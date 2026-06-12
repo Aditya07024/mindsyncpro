@@ -35,7 +35,7 @@ function SuperAdminDashboard() {
     isActive: true,
     durationMonths: 1,
     config: {
-      dailyChatLimit: 7,
+      dailyChatLimit: 300,
       hasPriorityBooking: false,
       therapistDiscount: 0,
       hasUnlimitedJournal: false,
@@ -508,7 +508,7 @@ function SuperAdminDashboard() {
                     name: '', price: 0, audience: 'therapist', features: '', isActive: true,
                     durationMonths: 1,
                     config: { 
-                      dailyChatLimit: 7, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false,
+                      dailyChatLimit: 300, hasPriorityBooking: false, therapistDiscount: 0, hasUnlimitedJournal: false,
                       enableChat: true, enableTherapistAccess: true, enableJournaling: true, enableMoodCheck: true, enableBreathe: true,
                       enableScheduling: true, enableBookings: true, enableEarnings: true, enableProfileControl: true,
                       enableRosterManagement: true, enableTherapistAffiliation: true, enableAnalytics: true
@@ -552,7 +552,7 @@ function SuperAdminDashboard() {
                           isActive: p.isActive,
                           durationMonths: p.durationMonths ?? 1,
                           config: {
-                            dailyChatLimit: p.config?.dailyChatLimit ?? 7,
+                            dailyChatLimit: p.config?.dailyChatLimit ?? 300,
                             hasPriorityBooking: p.config?.hasPriorityBooking ?? false,
                             therapistDiscount: p.config?.therapistDiscount ?? 0,
                             hasUnlimitedJournal: p.config?.hasUnlimitedJournal ?? false,

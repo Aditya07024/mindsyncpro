@@ -72,10 +72,12 @@ export class ReportController {
       startDate.setDate(now.getDate() - 1);
     } else if (period === "week") {
       startDate.setDate(now.getDate() - 7);
+    } else if (period === "fortnight" || period === "15day") {
+      startDate.setDate(now.getDate() - 15);
     } else if (period === "month") {
       startDate.setDate(now.getDate() - 30);
     } else {
-      throw new AppError("Invalid period. Must be day, week, or month", 400);
+      throw new AppError("Invalid period. Must be day, week, fortnight, or month", 400);
     }
 
     const user = await User.findById(userId).select("fullName tier streak").lean();
@@ -86,13 +88,15 @@ export class ReportController {
     let normalSummary = "";
     let aiReportInfo: any = null;
 
-    if (period === "week") {
+    if (period === "week" || period === "fortnight" || period === "15day") {
       const moodCount = reportData.moods?.length || 0;
       const journalCount = reportData.journals?.length || 0;
       const avgMoodVal = reportData.avgMood;
       
+      const periodLabel = period === "week" ? "week" : "15 days";
+      
       if (moodCount === 0 && journalCount === 0) {
-        normalSummary = "You haven't logged any moods or journal entries this past week. Regular self-reflection can help you track emotional patterns and build mindfulness.";
+        normalSummary = `You haven't logged any moods or journal entries this past ${periodLabel}. Regular self-reflection can help you track emotional patterns and build mindfulness.`;
       } else {
         const moodPart = moodCount > 0 
           ? `logged ${moodCount} mood check-ins (average score of ${avgMoodVal}/10)`
@@ -101,14 +105,15 @@ export class ReportController {
           ? `completed ${journalCount} journal entry reflections`
           : "no journal entries";
           
-        normalSummary = `Over the past week, you ${moodPart} and ${journalPart}. Reflecting on your daily thoughts and feelings is a powerful step toward understanding your emotional trends.`;
+        normalSummary = `Over the past ${periodLabel}, you ${moodPart} and ${journalPart}. Reflecting on your daily thoughts and feelings is a powerful step toward understanding your emotional trends.`;
       }
 
       const latestReport = await AIReport.findOne({ userId }).sort({ createdAt: -1 });
       if (latestReport) {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        if (latestReport.createdAt >= sevenDaysAgo) {
+        const checkDays = period === "week" ? 7 : 15;
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - checkDays);
+        if (latestReport.createdAt >= cutoffDate) {
           aiReportInfo = {
             id: latestReport._id,
             paid: latestReport.paid,
@@ -140,7 +145,7 @@ export class ReportController {
     const userId = req.user!.sub;
     const { therapistId, period, notes } = req.body as {
       therapistId: string;
-      period: "day" | "week" | "month";
+      period: "day" | "week" | "fortnight" | "month";
       notes?: string;
     };
 
@@ -162,10 +167,12 @@ export class ReportController {
       startDate.setDate(now.getDate() - 1);
     } else if (period === "week") {
       startDate.setDate(now.getDate() - 7);
+    } else if (period === "fortnight") {
+      startDate.setDate(now.getDate() - 15);
     } else if (period === "month") {
       startDate.setDate(now.getDate() - 30);
     } else {
-      throw new AppError("Invalid period. Must be day, week, or month", 400);
+      throw new AppError("Invalid period. Must be day, week, fortnight, or month", 400);
     }
 
     const sharedReport = await SharedReport.create({

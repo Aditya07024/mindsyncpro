@@ -46,7 +46,7 @@ const SubscriptionPlanSchema = new Schema<ISubscriptionPlan>(
     isActive: { type: Boolean, default: true },
     durationMonths: { type: Number, default: 1 },
     config: {
-      dailyChatLimit: { type: Number, default: 7 },
+      dailyChatLimit: { type: Number, default: 300 },
       hasPriorityBooking: { type: Boolean, default: false },
       therapistDiscount: { type: Number, default: 0 },
       hasUnlimitedJournal: { type: Boolean, default: false },

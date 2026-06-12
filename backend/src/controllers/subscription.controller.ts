@@ -75,7 +75,7 @@ export class SubscriptionController {
         therapistDiscount: number;
         hasUnlimitedJournal: boolean;
       } = {
-        dailyChatLimit: 7,
+        dailyChatLimit: 300,
         hasPriorityBooking: false,
         therapistDiscount: 0,
         hasUnlimitedJournal: false

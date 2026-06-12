@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/AppShell';
 import API from '@/lib/api';
@@ -21,11 +21,27 @@ function moodColor(score: number) {
 function ReportsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
+
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: () => API.subscription.get(),
+    retry: false,
+  });
+  const currentTier = subscription?.tier ?? "free";
+
+  const [period, setPeriod] = useState<'day' | 'week' | 'fortnight' | 'month'>('fortnight');
   const [selectedTherapist, setSelectedTherapist] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [downloading, setDownloading] = useState<boolean>(false);
   const [unlocking, setUnlocking] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (currentTier === "free") {
+      setPeriod("fortnight");
+    } else {
+      setPeriod("week");
+    }
+  }, [currentTier]);
 
   const { data: walletData } = useQuery({
     queryKey: ["walletBalance"],
@@ -108,7 +124,51 @@ function ReportsPage() {
     setDownloading(true);
     toast.info("Generating PDF report...");
 
+    const originalGetComputedStyle = window.getComputedStyle;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 1;
+    tempCanvas.height = 1;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    const oklchToRgb = (oklchStr: string) => {
+      if (!tempCtx) return 'rgb(0,0,0)';
+      try {
+        tempCtx.clearRect(0, 0, 1, 1);
+        tempCtx.fillStyle = oklchStr;
+        tempCtx.fillRect(0, 0, 1, 1);
+        const data = tempCtx.getImageData(0, 0, 1, 1).data;
+        return `rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3] / 255})`;
+      } catch (err) {
+        return 'rgb(0,0,0)';
+      }
+    };
+
     try {
+      window.getComputedStyle = function (el, pseudoElt) {
+        const style = originalGetComputedStyle(el, pseudoElt);
+        return new Proxy(style, {
+          get(target, prop) {
+            const value = target[prop as keyof CSSStyleDeclaration];
+            if (prop === 'getPropertyValue') {
+              return function(name: string) {
+                const val = target.getPropertyValue(name);
+                if (typeof val === 'string' && val.includes('okl')) {
+                  return val.replace(/okl(ch|ab)\([^)]+\)/g, (match) => oklchToRgb(match));
+                }
+                return val;
+              };
+            }
+            if (typeof value === 'string' && value.includes('okl')) {
+              return value.replace(/okl(ch|ab)\([^)]+\)/g, (match) => oklchToRgb(match));
+            }
+            if (typeof value === 'function') {
+              return value.bind(target);
+            }
+            return value;
+          },
+        });
+      };
+
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -167,6 +227,7 @@ function ReportsPage() {
       console.error(e);
       toast.error("Failed to generate PDF");
     } finally {
+      window.getComputedStyle = originalGetComputedStyle;
       setDownloading(false);
     }
   };
@@ -212,17 +273,17 @@ function ReportsPage() {
                 <Calendar className="size-5 text-accent" /> Choose Report Timeframe
               </h2>
               <div className="flex gap-2">
-                {(['day', 'week', 'month'] as const).map((p) => (
+                {(currentTier === "free" ? (['day', 'fortnight', 'month'] as const) : (['day', 'week', 'month'] as const)).map((p) => (
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
-                    className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm capitalize transition ${
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm capitalize transition cursor-pointer ${
                       period === p
                         ? 'bg-primary text-primary-foreground shadow-md'
                         : 'bg-secondary/40 text-muted-foreground hover:bg-secondary/70'
                     }`}
                   >
-                    {p}
+                    {p === 'fortnight' ? '15 Days' : p}
                   </button>
                 ))}
               </div>
@@ -311,15 +372,15 @@ function ReportsPage() {
           </div>
         </div>
 
-        {/* AI Therapist Analysis & Weekly Summary (Only for Weekly Report) */}
-        {period === 'week' && reportData && (
+        {/* AI Therapist Analysis & Summary (Only for Weekly or 15-Day Report) */}
+        {(period === 'week' || period === 'fortnight') && reportData && (
           <div className="rounded-3xl bg-card p-6 shadow-sm border border-border space-y-6">
             <div className="flex items-center justify-between border-b border-border/85 pb-4">
               <div>
                 <h2 className="font-display font-bold text-xl text-primary-deep flex items-center gap-2">
-                  <Sparkles className="size-5 text-accent" /> Weekly Clinical Summary
+                  <Sparkles className="size-5 text-accent" /> {period === 'week' ? 'Weekly' : '15-Day'} Clinical Summary
                 </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Personalized emotional insights and patterns from the last 7 days.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Personalized emotional insights and patterns from the last {period === 'week' ? '7' : '15'} days.</p>
               </div>
               {reportData.aiReport?.paid && (
                 <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1">
@@ -358,7 +419,7 @@ function ReportsPage() {
                       <Heart className="size-4 text-accent" /> Ready for deeper guidance?
                     </h4>
                     <p className="text-xs text-muted-foreground max-w-xl">
-                      Based on Dr. Manas's analysis of your weekly logs, scheduling a direct 1-on-1 counseling session with a human therapist can help you build custom coping mechanisms.
+                      Based on Dr. Manas's analysis of your {period === 'week' ? 'weekly' : '15-day'} logs, scheduling a direct 1-on-1 counseling session with a human therapist can help you build custom coping mechanisms.
                     </p>
                   </div>
                   <Link
@@ -389,9 +450,9 @@ function ReportsPage() {
                     <span className="bg-white/20 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full inline-block">
                       Clinical Therapist Report
                     </span>
-                    <h3 className="font-display font-bold text-lg">Unlock Weekly Therapist Clinical Evaluation</h3>
+                    <h3 className="font-display font-bold text-lg">Unlock {period === 'week' ? 'Weekly' : '15-Day'} Therapist Clinical Evaluation</h3>
                     <p className="text-xs text-white/80 max-w-lg leading-relaxed">
-                      Get a comprehensive clinical evaluation of your weekly emotional patterns, mood trends, and journal reflections reviewed by our expert counselor to guide your healing journey.
+                      Get a comprehensive clinical evaluation of your {period === 'week' ? 'weekly' : '15-day'} emotional patterns, mood trends, and journal reflections reviewed by our expert counselor to guide your healing journey.
                     </p>
                   </div>
 
@@ -463,6 +524,7 @@ function ReportsPage() {
               <div
                 id="report-document"
                 className="w-full max-w-[700px] bg-[#FCFAF7] border border-border/40 shadow-lg p-8 text-slate-800 space-y-8 font-sans rounded-xl relative"
+                style={{ fontFamily: '"Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}
               >
                 {/* Logo & Header */}
                 <div className="flex justify-between items-start border-b border-primary/20 pb-6">
@@ -473,24 +535,24 @@ function ReportsPage() {
                   </div>
                   <div className="text-right text-xs">
                     <p className="font-bold text-primary-deep">Date Generated</p>
-                    <p className="text-muted-foreground">{new Date(reportData.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    <p className="text-slate-600 font-semibold">{new Date(reportData.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     <p className="font-bold text-primary-deep mt-2">Coverage Period</p>
-                    <p className="text-muted-foreground capitalize">{reportData.period} ({new Date(reportData.startDate).toLocaleDateString('en-IN')} - {new Date(reportData.endDate).toLocaleDateString('en-IN')})</p>
+                    <p className="text-slate-600 font-semibold capitalize">{reportData.period} ({new Date(reportData.startDate).toLocaleDateString('en-IN')} - {new Date(reportData.endDate).toLocaleDateString('en-IN')})</p>
                   </div>
                 </div>
 
                 {/* Patient Summary */}
                 <div className="grid grid-cols-3 gap-4 bg-white/50 border border-border/40 p-4 rounded-2xl">
                   <div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Patient Profile</span>
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Patient Profile</span>
                     <span className="font-bold text-primary-deep text-sm">{reportData.user?.fullName || 'Anonymous Patient'}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Streak Days</span>
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Streak Days</span>
                     <span className="font-bold text-primary-deep text-sm">{reportData.user?.streak || 0} Days</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Average Mood</span>
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Average Mood</span>
                     <span className="font-bold text-primary-deep text-sm">
                       {reportData.avgMood !== null ? `${reportData.avgMood} / 10` : 'No mood logged'}
                     </span>
@@ -590,19 +652,19 @@ function ReportsPage() {
                     <div className="space-y-2">
                       {reportData.chats.map((c: any, idx: number) => (
                         <div key={c.sessionId || idx} className="flex justify-between items-center bg-white p-3.5 rounded-xl border border-border/40 text-xs">
-                          <div className="space-y-0.5 max-w-[80%]">
-                            <span className="text-[10px] font-bold text-muted-foreground">Session ID: #{c.sessionId?.slice(-6) || 'N/A'}</span>
-                            <p className="text-slate-700 font-medium line-clamp-1">{c.summary}</p>
+                          <div className="space-y-1.5 flex-1 pr-4">
+                            <span className="text-xs font-bold text-slate-500">Session ID: #{c.sessionId?.slice(-6) || 'N/A'}</span>
+                            <p className="text-slate-800 font-semibold text-sm whitespace-pre-wrap break-words">{c.summary}</p>
                           </div>
-                          <div className="text-right text-[10px]">
-                            <span className={`px-2 py-0.5 rounded-full font-bold tracking-wider uppercase text-[8px] ${
+                          <div className="text-right shrink-0">
+                            <span className={`px-2 py-0.5 rounded-full font-bold tracking-wider uppercase text-[10px] ${
                               c.riskLevel === 'high' ? 'bg-red-100 text-red-700' :
                               c.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' :
                               'bg-green-100 text-green-700'
                             }`}>
                               Risk: {c.riskLevel}
                             </span>
-                            <p className="text-muted-foreground mt-1.5 font-medium">
+                            <p className="text-slate-600 mt-1 font-semibold text-xs">
                               {new Date(c.updatedAt).toLocaleDateString('en-IN')}
                             </p>
                           </div>
@@ -623,6 +685,44 @@ function ReportsPage() {
           </div>
         </div>
       </div>
+      
+      {/* Downloading PDF Animation Overlay */}
+      <AnimatePresence>
+        {downloading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md text-white"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full mx-4 text-center space-y-6 shadow-2xl"
+            >
+              {/* Custom animated loader */}
+              <div className="relative flex justify-center">
+                <div className="size-20 rounded-full border-4 border-accent/20 border-t-accent animate-spin" />
+                <FileText className="size-8 text-accent absolute top-6 left-6 animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-display font-bold text-lg text-white">Generating PDF Report</h3>
+                <p className="text-xs text-slate-400">Please wait while Manas structures your emotional logs and formats your download...</p>
+              </div>
+              {/* Visual progress bar */}
+              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <motion.div
+                  className="bg-accent h-full rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 3, ease: "easeInOut" }}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AppShell>
   );
 }

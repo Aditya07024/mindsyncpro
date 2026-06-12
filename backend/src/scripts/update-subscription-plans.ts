@@ -21,6 +21,7 @@ async function run() {
     apnaMann.features = [
       "1000 messages/day limit",
       "3 therapist recommendations every week",
+      "Weekly therapist clinical evaluation",
       "CBT journal (15 entries in 15 days)",
       "25-day mood calendar",
       "Priority booking + instant access",
@@ -43,6 +44,7 @@ async function run() {
       features: [
         "1000 messages/day limit",
         "3 therapist recommendations every week",
+        "Weekly therapist clinical evaluation",
         "CBT journal (15 entries in 15 days)",
         "25-day mood calendar",
         "Priority booking + instant access",
@@ -79,6 +81,7 @@ async function run() {
     mannShanti.features = [
       "Unlimited messages/day",
       "1 therapist recommendation/day",
+      "Weekly therapist clinical evaluation",
       "Unlimited journal entries",
       "10% therapist discount",
       "Buy 2 bookings, get 5 free bookings",
@@ -101,6 +104,7 @@ async function run() {
       features: [
         "Unlimited messages/day",
         "1 therapist recommendation/day",
+        "Weekly therapist clinical evaluation",
         "Unlimited journal entries",
         "10% therapist discount",
         "Buy 2 bookings, get 5 free bookings",

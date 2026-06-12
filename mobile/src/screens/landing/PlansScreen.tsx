@@ -26,6 +26,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
       features: [
         '300 AI messages/day limit',
         '1 therapist recommendation in 15 days',
+        'Clinical therapy evaluation in 15 days',
         'CBT journal (3 entries/week limit)',
         'All breathing exercises',
         'Mood calendar (7-day limit)',
@@ -42,6 +43,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
       features: [
         '1000 messages/day limit',
         '3 therapist recommendations every week',
+        'Weekly therapist clinical evaluation',
         'CBT journal (15 entries in 15 days)',
         '25-day mood calendar',
         'Priority booking + instant access',
@@ -58,6 +60,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
       features: [
         'Unlimited messages/day',
         '1 therapist recommendation/day',
+        'Weekly therapist clinical evaluation',
         'Unlimited journal entries',
         '10% therapist discount',
         'Buy 2 bookings, get 5 free bookings',

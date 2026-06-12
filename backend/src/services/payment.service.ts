@@ -82,6 +82,12 @@ export class PaymentService {
       const numAmount =
         typeof amount === "string" ? parseFloat(amount) : amount || 0;
 
+      let contact = userContact;
+      let email = userEmail;
+      if (!contact && !email) {
+        email = "customer@mymindtherapyfriend.com";
+      }
+
       const linkPayload: any = {
         amount: Math.round(numAmount * 100), // paise
         currency: "INR",
@@ -91,11 +97,11 @@ export class PaymentService {
         notes: { bookingId },
       };
 
-      if (userContact || userEmail) {
+      if (contact || email) {
         linkPayload.customer = {};
         if (userName) linkPayload.customer.name = userName;
-        if (userContact) linkPayload.customer.contact = userContact;
-        if (userEmail) linkPayload.customer.email = userEmail;
+        if (contact) linkPayload.customer.contact = contact;
+        if (email) linkPayload.customer.email = email;
       }
 
       if (callbackUrl) {

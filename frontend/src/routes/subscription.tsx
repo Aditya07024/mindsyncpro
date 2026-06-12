@@ -25,6 +25,7 @@ const TIERS = [
     features: [
       { text: "300 AI messages/day limit", included: true },
       { text: "1 therapist recommendation in 15 days", included: true },
+      { text: "Clinical therapy evaluation in 15 days", included: true },
       { text: "CBT journal (3 entries/week limit)", included: true },
       { text: "All breathing exercises", included: true },
       { text: "Mood calendar (7-day limit)", included: true },
