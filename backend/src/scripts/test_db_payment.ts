@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
+import '../config/env';
 import mongoose from 'mongoose';
 import { User } from '../models';
 import PaymentService from '../services/payment.service';

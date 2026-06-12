@@ -49,6 +49,14 @@ const resolvedEnv = {
   LIVEKIT_URL: getEnvVar("LIVEKIT_URL"),
 };
 
+// Set resolved values back on process.env so that external modules/libraries
+// reading process.env directly get the correctly resolved environment values.
+Object.entries(resolvedEnv).forEach(([key, val]) => {
+  if (val !== undefined) {
+    process.env[key] = val;
+  }
+});
+
 const envSchema = z.object({
   PORT: z.string().default("8080"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
