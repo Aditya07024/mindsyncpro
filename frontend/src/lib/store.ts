@@ -46,4 +46,4 @@ export const useStore = create<State>()(
   )
 );
 
-export const FREE_DAILY_LIMIT = 300;
+export const FREE_DAILY_LIMIT = 500;

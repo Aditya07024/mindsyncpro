@@ -35,7 +35,7 @@ function SuperAdminDashboard() {
     isActive: true,
     durationMonths: 1,
     config: {
-      dailyChatLimit: 300,
+      dailyChatLimit: 500,
       hasPriorityBooking: false,
       therapistDiscount: 0,
       hasUnlimitedJournal: false,

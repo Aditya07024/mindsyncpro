@@ -24,7 +24,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
       price: 0,
       interval: 'month',
       features: [
-        '300 AI messages/day limit',
+        '500 AI messages/day limit',
         '1 therapist recommendation in 15 days',
         'Clinical therapy evaluation in 15 days',
         'CBT journal (3 entries/week limit)',
@@ -113,7 +113,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
             price: 0,
             interval: 'month',
             features: [
-              '300 AI messages/day limit',
+              '500 AI messages/day limit',
               '1 therapist recommendation in 15 days',
               'CBT journal (3 entries/week limit)',
               'All breathing exercises',

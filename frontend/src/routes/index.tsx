@@ -43,7 +43,7 @@ const PRICING_PLANS = [
     price: "₹0",
     period: "/mo",
     description: "Perfect for starting your mental wellness journey.",
-    features: ["7 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Therapist Listing"],
+    features: ["500 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Therapist Listing"],
     buttonText: "Get Started",
     portalId: "user",
     color: "bg-white",
