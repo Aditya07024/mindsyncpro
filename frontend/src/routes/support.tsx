@@ -58,10 +58,10 @@ function SupportPage() {
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 mb-20">
+        <div className="grid gap-8 md:grid-cols-1 mb-20">
           {[
             { icon: Mail, title: "Email Us", contact: CONTACT_EMAIL, desc: "Get a response within 24 hours" },
-            { icon: MessageSquare, title: "Live Chat", contact: "Start Chat", desc: "Available 10 AM - 8 PM IST" }
+            // { icon: MessageSquare, title: "Live Chat", contact: "Start Chat", desc: "Available 10 AM - 8 PM IST" }
           ].map((item) => (
             <div key={item.title} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center">
               <div className="size-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-6">

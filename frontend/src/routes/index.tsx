@@ -134,7 +134,7 @@ const PORTALS = [
 const FAQ_ITEMS = [
   {
     q: "Is mymindtherapyfriend free to use?",
-    a: "Yes. mymindtherapyfriend is a free mental health app for students and everyone else, offering a free plan with 7 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking."
+    a: "Yes. mymindtherapyfriend is a free mental health app for students and everyone else, offering a free plan with 500 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking."
   },
   {
     q: "How does Manas AI work?",
@@ -905,12 +905,12 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600 flex flex-col items-start">
-              <a href="/ai-mental-health-platform-india" className="hover:text-teal-600 transition text-left">Manas AI Companion</a>
-              <a href="/cbt-tools-online" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</a>
-              <a href="/mood-tracking-app" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</a>
-              <a href="/book-therapist-india" className="hover:text-teal-600 transition text-left">Book RCI-Verified Therapist</a>
-              <a href="/employee-wellness-platform" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</a>
-              <a href="/free-mental-health-support" className="hover:text-teal-600 transition text-left">Free Crisis Support India</a>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Manas AI Companion</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book RCI-Verified Therapist</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Free Crisis Support India</Link>
             </div>
           </div>
 

@@ -15,6 +15,99 @@ function getCallbackUrl(req: any, path: string): string {
   return `${baseUrl}${path}`;
 }
 
+function getClientOrigin(req: any): string {
+  const envOrigin = process.env.CLIENT_ORIGIN;
+  const isLocal = req.get("host")?.includes("localhost") || req.get("host")?.includes("127.0.0.1");
+
+  if (isLocal) {
+    return envOrigin || "http://localhost:5173";
+  }
+
+  if (envOrigin && envOrigin !== "undefined" && envOrigin.trim() !== "" && !envOrigin.includes("localhost")) {
+    return envOrigin.replace(/\/$/, "");
+  }
+
+  const host = req.get("host") || "";
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  if (host.startsWith("api.")) {
+    return `${protocol}://${host.substring(4)}`;
+  }
+  return `${protocol}://${host}`;
+}
+
+function sendCallbackResponse(
+  res: Response,
+  req: any,
+  title: string,
+  header: string,
+  message: string,
+  redirectPath: string,
+  isSuccess: boolean
+) {
+  const clientOrigin = getClientOrigin(req);
+  const redirectUrl = `${clientOrigin}${redirectPath}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>${title}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="3;url=${redirectUrl}">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh; margin: 0; background-color: #F8FBFB;
+      color: #2E6E65; padding: 20px; box-sizing: border-box; text-align: center;
+    }
+    .card {
+      background: white; padding: 40px 30px; border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(46,110,101,0.05); max-width: 400px;
+      width: 100%; border: 1px solid #E6EFEF;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .icon { font-size: 56px; margin-bottom: 16px; }
+    h2 { margin: 0 0 12px; font-size: 24px; color: #1E4E47; font-weight: 700; }
+    p { color: #608F87; font-size: 15px; line-height: 1.6; margin: 0 0 24px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      background-color: #2E6E65; color: white; font-weight: 600; font-size: 14px;
+      padding: 12px 24px; border-radius: 12px; text-decoration: none;
+      transition: all 0.2s ease; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(46,110,101,0.15);
+    }
+    .btn:hover {
+      background-color: #23544D;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(46,110,101,0.2);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .redirect-text {
+      font-size: 12px; color: #8AAEA9; margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">${isSuccess ? "✅" : "⏳"}</div>
+    <h2>${header}</h2>
+    <p>${message}</p>
+    <a href="${redirectUrl}" class="btn">Return to App</a>
+    <div class="redirect-text">Redirecting automatically in 3 seconds...</div>
+  </div>
+  <script>
+    setTimeout(function() {
+      window.location.href = "${redirectUrl}";
+    }, 3000);
+  </script>
+</body>
+</html>
+  `;
+  res.send(html);
+}
+
 export class PaymentController {
   /**
    * Initiate a payment for a booking
@@ -414,43 +507,17 @@ export class PaymentController {
       }
 
       const paid = booking.payment.paid;
-      const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>mymindtherapyfriend – Payment ${paid ? "Confirmed" : "Pending"}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh; margin: 0; background-color: #F8FBFB;
-      color: #2E6E65; padding: 20px; box-sizing: border-box; text-align: center;
-    }
-    .card {
-      background: white; padding: 30px; border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(46,110,101,0.08); max-width: 380px;
-      width: 100%; border: 1px solid #E6EFEF;
-    }
-    .icon { font-size: 48px; margin-bottom: 12px; }
-    h2 { margin: 0 0 12px; font-size: 22px; color: #2E6E65; }
-    p { color: #608F87; font-size: 14px; line-height: 1.5; margin: 0; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">${paid ? "✅" : "⏳"}</div>
-    <h2>${paid ? "Payment Confirmed!" : "Payment Pending"}</h2>
-    <p>${
-      paid
-        ? "Your therapy session has been booked successfully. Please close this window and return to the mymindtherapyfriend app to view your booking."
-        : "Your payment is being processed. Once confirmed, please sync in the app. You can close this window and return to mymindtherapyfriend."
-    }</p>
-  </div>
-</body>
-</html>
-      `;
-      res.send(html);
+      sendCallbackResponse(
+        res,
+        req,
+        `mymindtherapyfriend – Payment ${paid ? "Confirmed" : "Pending"}`,
+        paid ? "Payment Confirmed!" : "Payment Pending",
+        paid
+          ? "Your therapy session has been booked successfully."
+          : "Your payment is being processed. Once confirmed, please check your status in the app.",
+        "/bookings",
+        paid
+      );
     },
   );
 
@@ -612,43 +679,17 @@ export class PaymentController {
       }
 
       const paid = report.paid;
-      const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>mymindtherapyfriend – Report Payment ${paid ? "Confirmed" : "Pending"}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh; margin: 0; background-color: #F8FBFB;
-      color: #2E6E65; padding: 20px; box-sizing: border-box; text-align: center;
-    }
-    .card {
-      background: white; padding: 30px; border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(46,110,101,0.08); max-width: 380px;
-      width: 100%; border: 1px solid #E6EFEF;
-    }
-    .icon { font-size: 48px; margin-bottom: 12px; }
-    h2 { margin: 0 0 12px; font-size: 22px; color: #2E6E65; }
-    p { color: #608F87; font-size: 14px; line-height: 1.5; margin: 0; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">${paid ? "✅" : "⏳"}</div>
-    <h2>${paid ? "Payment Confirmed!" : "Payment Pending"}</h2>
-    <p>${
-      paid
-        ? "Your premium AI Therapist analysis has been unlocked successfully. Please close this window and return to the mymindtherapyfriend app to view your analysis."
-        : "Your payment is being processed. Once confirmed, your report will be generated. You can close this window and return to mymindtherapyfriend."
-    }</p>
-  </div>
-</body>
-</html>
-      `;
-      res.send(html);
+      sendCallbackResponse(
+        res,
+        req,
+        `mymindtherapyfriend – Report Payment ${paid ? "Confirmed" : "Pending"}`,
+        paid ? "Payment Confirmed!" : "Payment Pending",
+        paid
+          ? "Your premium AI Therapist analysis has been unlocked successfully."
+          : "Your payment is being processed. Once confirmed, your report will be generated.",
+        "/reports",
+        paid
+      );
     }
   );
 
@@ -928,43 +969,17 @@ export class PaymentController {
       }
 
       const success = tx.status === "success" || razorpay_payment_link_status === "paid";
-      const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>mymindtherapyfriend – Wallet Deposit ${success ? "Success" : "Pending"}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh; margin: 0; background-color: #F8FBFB;
-      color: #2E6E65; padding: 20px; box-sizing: border-box; text-align: center;
-    }
-    .card {
-      background: white; padding: 30px; border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(46,110,101,0.08); max-width: 380px;
-      width: 100%; border: 1px solid #E6EFEF;
-    }
-    .icon { font-size: 48px; margin-bottom: 12px; }
-    h2 { margin: 0 0 12px; font-size: 22px; color: #2E6E65; }
-    p { color: #608F87; font-size: 14px; line-height: 1.5; margin: 0; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">${success ? "✅" : "⏳"}</div>
-    <h2>${success ? "Funds Added Successfully!" : "Deposit Pending"}</h2>
-    <p>${
-      success
-        ? `₹${tx.amount.toFixed(2)} has been added to your wallet balance. Please return to the mymindtherapyfriend app to view your updated balance.`
-        : "Your deposit is being processed. Once confirmed, your balance will be updated automatically."
-    }</p>
-  </div>
-</body>
-</html>
-      `;
-      res.send(html);
+      sendCallbackResponse(
+        res,
+        req,
+        `mymindtherapyfriend – Wallet Deposit ${success ? "Success" : "Pending"}`,
+        success ? "Funds Added Successfully!" : "Deposit Pending",
+        success
+          ? `₹${tx.amount.toFixed(2)} has been added to your wallet balance.`
+          : "Your deposit is being processed. Once confirmed, your balance will be updated automatically.",
+        "/wallet",
+        success
+      );
     }
   );
 }
