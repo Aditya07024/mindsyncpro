@@ -45,6 +45,7 @@ echo "[4/5] Restarting PM2 processes..."
 cd "$APP_DIR"
 pm2 restart mymindtherapyfriend-backend  2>/dev/null || pm2 start ecosystem.config.js --only mymindtherapyfriend-backend
 pm2 restart mymindtherapyfriend-frontend 2>/dev/null || pm2 start ecosystem.config.js --only mymindtherapyfriend-frontend
+pm2 restart all
 pm2 save
 echo "✓ PM2 processes restarted"
 

@@ -8,6 +8,13 @@ import mongoose from "mongoose";
 import { sendPaymentConfirmedToTherapist } from "@/services/email.service";
 import { AIService } from "@/services/ai.service";
 
+function getCallbackUrl(req: any, path: string): string {
+  const baseUrl = (process.env.API_URL && process.env.API_URL !== "undefined" && process.env.API_URL.trim() !== "" && process.env.API_URL.startsWith("http"))
+    ? process.env.API_URL.replace(/\/$/, "")
+    : `${req.protocol}://${req.get("host")}`;
+  return `${baseUrl}${path}`;
+}
+
 export class PaymentController {
   /**
    * Initiate a payment for a booking
@@ -45,7 +52,7 @@ export class PaymentController {
       const userPhone = (!isEmail && phoneRegex.test(user.phoneMasked)) ? user.phoneMasked : undefined;
 
       // Create Razorpay Payment Link (hosted page — works in mobile in-app browsers)
-      const callbackUrl = `${process.env.API_URL}/api/payment/${bookingId}/callback`;
+      const callbackUrl = getCallbackUrl(req, `/api/payment/${bookingId}/callback`);
       const link = await PaymentService.createPaymentLink({
         amount: booking.payment.amount,
         bookingId,
@@ -486,7 +493,7 @@ export class PaymentController {
       const phoneRegex = /^\+?[1-9]\d{9,14}$/;
       const userPhone = (!isEmail && phoneRegex.test(user.phoneMasked)) ? user.phoneMasked : undefined;
 
-      const callbackUrl = `${process.env.API_URL}/api/payment/report/${report._id}/callback`;
+      const callbackUrl = getCallbackUrl(req, `/api/payment/report/${report._id}/callback`);
       
       let link;
       try {
@@ -696,7 +703,7 @@ export class PaymentController {
       const phoneRegex = /^\+?[1-9]\d{9,14}$/;
       const userPhone = (!isEmail && phoneRegex.test(user.phoneMasked)) ? user.phoneMasked : undefined;
 
-      const callbackUrl = `${process.env.API_URL}/api/payment/wallet/callback/${tx._id}`;
+      const callbackUrl = getCallbackUrl(req, `/api/payment/wallet/callback/${tx._id}`);
 
       // Create Razorpay payment link for adding funds
       let link;
