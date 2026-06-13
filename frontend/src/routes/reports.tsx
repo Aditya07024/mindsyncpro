@@ -45,6 +45,22 @@ function ReportsPage() {
   const [unlocking, setUnlocking] = useState<boolean>(false);
   const [selectedAIDoctor, setSelectedAIDoctor] = useState<string>('Dr. Amy Reid');
 
+  // Queries
+  const { data: reportData, isLoading: reportLoading, refetch: refetchReport } = useQuery({
+    queryKey: ['report', period],
+    queryFn: () => API.user.getReport(period),
+  });
+
+  const { data: bookingsData } = useQuery({
+    queryKey: ['bookings'],
+    queryFn: () => API.booking.list(),
+  });
+
+  const { data: sharesData, isLoading: sharesLoading } = useQuery({
+    queryKey: ['reportShares'],
+    queryFn: () => API.user.getShares(),
+  });
+
   const calculateUrgency = () => {
     if (!reportData) return { score: 5, label: 'Moderate', color: '#f59e0b', bgClass: 'bg-amber-100', textClass: 'text-amber-700' };
     let score = 5;
@@ -165,21 +181,6 @@ function ReportsPage() {
     }
   };
 
-  // Queries
-  const { data: reportData, isLoading: reportLoading, refetch: refetchReport } = useQuery({
-    queryKey: ['report', period],
-    queryFn: () => API.user.getReport(period),
-  });
-
-  const { data: bookingsData } = useQuery({
-    queryKey: ['bookings'],
-    queryFn: () => API.booking.list(),
-  });
-
-  const { data: sharesData, isLoading: sharesLoading } = useQuery({
-    queryKey: ['reportShares'],
-    queryFn: () => API.user.getShares(),
-  });
 
   const shareMutation = useMutation({
     mutationFn: (data: { therapistId: string; period: string; notes?: string }) =>

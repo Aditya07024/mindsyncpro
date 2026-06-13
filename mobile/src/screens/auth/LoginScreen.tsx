@@ -12,6 +12,7 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) => {
   const [gateOpen, setGateOpen] = useState(false);
   const selectedUpgrade = route.params?.upgradePlan;
+  const hideUser = route.params?.hideUser;
 
   const handleRoleSelect = (role: string) => {
     if (role === 'super_admin') {
@@ -38,23 +39,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
 
       <View style={styles.cardList}>
         {/* User Card */}
-        <TouchableOpacity 
-          onPress={() => handleRoleSelect('user')} 
-          style={styles.card}
-          activeOpacity={0.9}
-        >
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: Theme.colors.primaryContainer + '15' }]}>
-              <User size={22} color={Theme.colors.primaryContainer} />
+        {!hideUser && (
+          <TouchableOpacity 
+            onPress={() => handleRoleSelect('user')} 
+            style={styles.card}
+            activeOpacity={0.9}
+          >
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconCircle, { backgroundColor: Theme.colors.primaryContainer + '15' }]}>
+                <User size={22} color={Theme.colors.primaryContainer} />
+              </View>
+              <Text style={styles.cardName}>For Patient/User</Text>
             </View>
-            <Text style={styles.cardName}>I need support</Text>
-          </View>
-          <Text style={styles.cardDesc}>Chat with Manas AI, track mood, book therapists</Text>
-          <View style={styles.enterPortalBtn}>
-            <Text style={styles.enterPortalText}>Enter Portal</Text>
-            <ChevronRight size={14} color={Theme.colors.primary} />
-          </View>
-        </TouchableOpacity>
+            <Text style={styles.cardDesc}>For people: Chat with AI, use mood tools, and book real therapists</Text>
+            <View style={styles.enterPortalBtn}>
+              <Text style={styles.enterPortalText}>Enter Portal</Text>
+              <ChevronRight size={14} color={Theme.colors.primary} />
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* Therapist Card */}
         <TouchableOpacity 
@@ -66,9 +69,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
             <View style={[styles.iconCircle, { backgroundColor: Theme.colors.secondaryContainer + '20' }]}>
               <Briefcase size={22} color={Theme.colors.secondary} />
             </View>
-            <Text style={styles.cardName}>I am a Therapist</Text>
+            <Text style={styles.cardName}>Sign in for Therapist</Text>
           </View>
-          <Text style={styles.cardDesc}>Manage sessions, view AI briefs, join WebRTC calls</Text>
+          <Text style={styles.cardDesc}>Sign in for therapists: Manage client bookings, read notes, and do video calls</Text>
           <View style={[styles.enterPortalBtn, styles.therapistEnterPortalBtn]}>
             <Text style={[styles.enterPortalText, styles.therapistEnterPortalText]}>Enter Portal</Text>
             <ChevronRight size={14} color={Theme.colors.secondary} />

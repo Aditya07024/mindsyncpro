@@ -148,20 +148,20 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
       {/* Premium CTA Actions */}
       <View style={styles.actionSection}>
         <TouchableOpacity 
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('ClerkAuth', { role: 'user' })}
           style={styles.signUpButton}
           activeOpacity={0.85}
         >
-          <Text style={styles.signUpText}>Get Started for Free</Text>
+          <Text style={styles.signUpText}>User & Supporting Members</Text>
           <ArrowRight size={18} color="#FFF" />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('Login', { hideUser: true })}
           style={styles.signInButton}
           activeOpacity={0.85}
         >
-          <Text style={styles.signInText}>Sign In to Your Account</Text>
+          <Text style={styles.signInText}>Therapist, Organisation, Admin</Text>
         </TouchableOpacity>
       </View>
 
@@ -171,6 +171,17 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
       >
         <Text style={styles.aboutTriggerText}>Learn more about our mission</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+
+  onPress={() => Linking.openURL('https://mindsyncpro.online/')}
+
+  style={styles.aboutTrigger}
+
+>
+
+  <Text style={styles.aboutTriggerText}>Visit Our Website</Text>
+
+</TouchableOpacity>
     </ScrollView>
   );
 };
@@ -183,7 +194,7 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'space-between',
-    paddingBottom: Theme.spacing.xl,
+    // paddingBottom: Theme.spacing.xl,
   },
   heroGradient: {
     // marginTop: Theme.spacing.sm,
@@ -262,7 +273,7 @@ const styles = StyleSheet.create({
   },
   actionSection: {
     paddingHorizontal: Theme.spacing.margin,
-    marginTop: Theme.spacing.lg,
+    // marginTop: Theme.spacing.lg,
     gap: Theme.spacing.sm,
   },
   signUpButton: {

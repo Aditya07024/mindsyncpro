@@ -43,7 +43,7 @@ const PRICING_PLANS = [
     price: "₹0",
     period: "/mo",
     description: "Perfect for starting your mental wellness journey.",
-    features: ["500 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Therapist Listing"],
+    features: ["300 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Therapist Listing"],
     buttonText: "Get Started",
     portalId: "user",
     color: "bg-white",
@@ -96,8 +96,8 @@ const PORTALS = [
   {
     id: "user",
     icon: MessageCircle,
-    title: "I need support",
-    subtitle: "Chat with Manas AI companion, use CBT tools, track daily mood, book RCI-verified therapists online",
+    title: "Sign in for User/Patient",
+    subtitle: "For people who want to chat with Manas AI, use mental health tools, track mood, or talk to real therapists.",
     color: "from-teal-500/10 to-teal-600/5 border-teal-200 hover:border-teal-400",
     iconBg: "bg-teal-100 text-teal-700",
     dest: "/sign-in",
@@ -105,8 +105,8 @@ const PORTALS = [
   {
     id: "therapist",
     icon: Users,
-    title: "I am a Therapist",
-    subtitle: "Manage online therapy sessions, view AI pre-session briefs, conduct video calls via WebRTC",
+    title: "Sign in for Therapists",
+    subtitle: "For professional therapists to manage bookings, read AI summary notes, and do video calls with clients.",
     color: "from-blue-500/10 to-blue-600/5 border-blue-200 hover:border-blue-400",
     iconBg: "bg-blue-100 text-blue-700",
     dest: "/sign-in",
@@ -134,7 +134,7 @@ const PORTALS = [
 const FAQ_ITEMS = [
   {
     q: "Is mymindtherapyfriend free to use?",
-    a: "Yes. mymindtherapyfriend is a free mental health app for students and everyone else, offering a free plan with 500 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking."
+    a: "Yes. mymindtherapyfriend is a free mental health app for students and everyone else, offering a free plan with 300 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking."
   },
   {
     q: "How does Manas AI work?",
@@ -227,6 +227,12 @@ function Landing() {
     }
   };
 
+  const handleGetStarted = (e: React.MouseEvent) => {
+    e.preventDefault();
+    localStorage.setItem("mymindtherapyfriend_intent_role", "user");
+    navigate({ to: "/sign-in" });
+  };
+
   const verifyAdminPassword = async () => {
     setIsVerifying(true);
     setError("");
@@ -277,12 +283,12 @@ function Landing() {
             Pricing
           </a>
 
-          <a
-            href="#portals-section"
-            className="rounded-full bg-[#004038] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03]"
+          <button
+            onClick={handleGetStarted}
+            className="rounded-full bg-[#004038] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer"
           >
             Get Started
-          </a>
+          </button>
         </div>
       </header>
 
@@ -334,12 +340,12 @@ function Landing() {
                 Request a demo →
               </a>
 
-              <a
-                href="#portals-section"
-                className="rounded-2xl bg-[#004038] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03]"
+              <button
+                onClick={handleGetStarted}
+                className="rounded-2xl bg-[#004038] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer"
               >
                 Start a free trial →
-              </a>
+              </button>
             </div>
 
             <div className="mt-10 flex flex-wrap gap-6 text-sm text-slate-500">

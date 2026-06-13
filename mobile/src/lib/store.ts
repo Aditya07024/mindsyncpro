@@ -50,6 +50,6 @@ export const useStore = create<State>()(
   )
 );
 
-export const FREE_DAILY_LIMIT = 500;
+export const FREE_DAILY_LIMIT = 300;
 export const ADMIN_PASSWORD = process.env.EXPO_PUBLIC_ADMIN_PASSWORD || 'admin'; // For Admin Portal protection
 export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.mymindtherapyfriend.online';

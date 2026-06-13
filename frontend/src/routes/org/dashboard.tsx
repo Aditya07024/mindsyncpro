@@ -18,7 +18,7 @@ export const Route = createFileRoute('/org/dashboard')({ component: OrgDashboard
 
 // All data is loaded live from the API — no hardcoded mock data.
 
-function DepartmentHeatmap({ data }: { data: typeof DEPARTMENTS }) {
+function DepartmentHeatmap({ data }: { data: any[] }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -144,6 +144,9 @@ function OrgDashboard() {
     queryFn: () => API.subscription.get(),
     retry: false,
   });
+
+  const hasActiveOrgSub = subscription?.subscription?.status === 'active';
+  const orgSubRequired = !hasActiveOrgSub;
   const [extSearch, setExtSearch] = useState('');
   const [extTherapists, setExtTherapists] = useState<any[]>([]);
   const [isExtSearching, setIsExtSearching] = useState(false);
@@ -185,9 +188,6 @@ function OrgDashboard() {
       setIsExtSearching(false);
     }
   };
-
-  const hasActiveOrgSub = subscription?.subscription?.status === 'active';
-  const orgSubRequired = !hasActiveOrgSub;
 
   // Verification Gate
   useEffect(() => {
@@ -239,6 +239,22 @@ function OrgDashboard() {
       refetchTherapists();
     } catch (e: any) {
       toast.error(e.message || 'Failed to verify therapist');
+    }
+  };
+
+  const handleJoinAction = async (userId: string, approved: boolean) => {
+    try {
+      if (approved) {
+        await API.org.approveJoinRequest(userId);
+        toast.success('Join request approved');
+      } else {
+        await API.org.rejectJoinRequest(userId);
+        toast.success('Join request rejected');
+      }
+      refetchJoinReqs();
+      refetchMembers();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to update join request');
     }
   };
 

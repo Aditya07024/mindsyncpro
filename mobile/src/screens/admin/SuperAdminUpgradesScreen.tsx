@@ -17,7 +17,7 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
 
   // Custom configuration toggles
   const [customConfig, setCustomConfig] = useState({
-    dailyChatLimit: 500 as number | null,
+    dailyChatLimit: 300 as number | null,
     hasPriorityBooking: false,
     therapistDiscount: 0,
     hasUnlimitedJournal: false,
@@ -327,7 +327,7 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
                 <Text style={styles.switchLabel}>Unlimited daily message limit (Manas AI)</Text>
                 <Switch
                   value={customConfig.dailyChatLimit === null}
-                  onValueChange={(val) => setCustomConfig(prev => ({ ...prev, dailyChatLimit: val ? null : 500 }))}
+                  onValueChange={(val) => setCustomConfig(prev => ({ ...prev, dailyChatLimit: val ? null : 300 }))}
                   trackColor={{ true: Theme.colors.primary }}
                 />
               </View>
