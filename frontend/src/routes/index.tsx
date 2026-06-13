@@ -265,7 +265,7 @@ function Landing() {
           </div>
 
           <div>
-            <p className="font-display text-lg font-bold text-[#012620]">mymindtherapyfriend</p>
+            <p className="font-display text-lg font-bold text-[#012620]">MyMindTherapyFriend</p>
           </div>
         </div>
 
