@@ -377,7 +377,7 @@ function Landing() {
             className="relative flex items-center justify-center"
           >
             <div className="relative h-[560px] w-full max-w-xl">
-              <div className="absolute top-10 left-8 rounded-3xl bg-[#87c8ff] p-3 shadow-xl">
+              <div className="absolute top-8 left-8 rounded-3xl bg-[#87c8ff] p-3 shadow-xl">
                 <div className="h-36 w-36 rounded-2xl bg-white/40 backdrop-blur flex items-center justify-center text-5xl">
                   <img
                   src={user}
@@ -390,8 +390,7 @@ function Landing() {
                 </div>
               </div>
 
-              <div className="absolute top-36 right-4 rounded-3xl bg-[#e8c1b0] p-3 shadow-xl">
-                <div className="h-32 w-32 rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
+<div className="absolute top-25 right-5 z-30 rounded-3xl bg-[#e8c1b0] p-3 shadow-xl">                <div className="h-32 w-32 rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
                   <img
                   src={therapist}
                   alt="mymindtherapyfriend"
