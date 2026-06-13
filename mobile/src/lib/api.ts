@@ -373,6 +373,13 @@ const API = {
         body: JSON.stringify(data),
       }),
     status: (bookingId: string) => apiCall<any>(`/api/payment/${bookingId}`),
+    getWalletBalance: () => apiCall<any>("/api/payment/wallet/balance"),
+    addWalletFunds: (amount: number) =>
+      apiCall<any>("/api/payment/wallet/add", { method: "POST", body: JSON.stringify({ amount }) }),
+    payBookingWallet: (bookingId: string) =>
+      apiCall<any>("/api/payment/wallet/pay-booking", { method: "POST", body: JSON.stringify({ bookingId }) }),
+    payReportWallet: (data: { startDate: string; endDate: string }) =>
+      apiCall<any>("/api/payment/report/initiate-wallet", { method: "POST", body: JSON.stringify(data) }),
   },
 
   chat: {

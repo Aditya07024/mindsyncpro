@@ -43,7 +43,83 @@ function ReportsPage() {
   const [notes, setNotes] = useState<string>('');
   const [downloading, setDownloading] = useState<boolean>(false);
   const [unlocking, setUnlocking] = useState<boolean>(false);
-  const [selectedAIDoctor, setSelectedAIDoctor] = useState<string>('Dr. Manas');
+  const [selectedAIDoctor, setSelectedAIDoctor] = useState<string>('Dr. Amy Reid');
+
+  const calculateUrgency = () => {
+    if (!reportData) return { score: 5, label: 'Moderate', color: '#f59e0b', bgClass: 'bg-amber-100', textClass: 'text-amber-700' };
+    let score = 5;
+    
+    if (reportData.avgMood !== null) {
+      const avg = reportData.avgMood;
+      if (avg <= 3) score += 3.5;
+      else if (avg <= 5) score += 2.0;
+      else if (avg >= 8) score -= 2.0;
+      else if (avg >= 7) score -= 1.0;
+    }
+    
+    const hasHighRiskChat = (reportData.chats || []).some((c: any) => c.riskLevel === 'high');
+    const hasMedRiskChat = (reportData.chats || []).some((c: any) => c.riskLevel === 'medium');
+    if (hasHighRiskChat) score += 2.5;
+    else if (hasMedRiskChat) score += 1.2;
+    
+    const journalCount = reportData.journals?.length || 0;
+    if (journalCount > 2) score += 1.0;
+    
+    const finalScore = Math.max(1, Math.min(10, Number(score.toFixed(1))));
+    
+    let label = 'Moderate';
+    let color = '#f59e0b'; // Amber
+    let bgClass = 'bg-amber-50';
+    let textClass = 'text-amber-700';
+    
+    if (finalScore <= 4.0) {
+      label = 'Low Need';
+      color = '#10b981'; // Green/Emerald
+      bgClass = 'bg-emerald-50';
+      textClass = 'text-emerald-700';
+    } else if (finalScore >= 7.5) {
+      label = 'High Need';
+      color = '#e11d48'; // Rose/Red
+      bgClass = 'bg-rose-50';
+      textClass = 'text-rose-700';
+    }
+    
+    return { score: finalScore, label, color, bgClass, textClass };
+  };
+
+  const getDoctorRecommendation = () => {
+    switch (selectedAIDoctor) {
+      case 'Dr. Amy Reid':
+        return {
+          endorsement: "Endorsement & Analysis: I have carefully reviewed your emotional log trends. Your automated thought patterns show active cognitive distortions (like catastrophizing or all-or-nothing thinking).",
+          therapyNeed: "Why Therapy is Recommended: Engaging in structured CBT sessions with a professional therapist will help you build systematic tools to challenge and restructure these negative thoughts, preventing emotional spiral cycles."
+        };
+      case 'Dr. Soniya':
+        return {
+          endorsement: "Endorsement & Analysis: I have analyzed your mood logs and daily reflections. There is significant variation in your daily stress indicators and tension loops.",
+          therapyNeed: "Why Therapy is Recommended: Taking therapy is highly recommended to build professional mindfulness and grounding practices. A therapist will guide you to observe thoughts without judgment and stabilize emotional reactivity."
+        };
+      case 'Dr. Lisa':
+        return {
+          endorsement: "Endorsement & Analysis: Looking at your journaling and chat summaries, there are repeated emotional triggers and deep-seated distress points.",
+          therapyNeed: "Why Therapy is Recommended: Working with a trauma-informed professional therapist is crucial. Therapy provides a structured, safe environment to address core emotional wounds, process triggers, and develop somatic healing strategies."
+        };
+      case 'Dr. Mohan':
+        return {
+          endorsement: "Endorsement & Analysis: Reviewing your coverage period logs shows a tendency to focus on adverse outcomes and self-critical narratives.",
+          therapyNeed: "Why Therapy is Recommended: I recommend taking positive psychology-informed therapy to cultivate optimism, identify character strengths, and build self-compassion. A therapist will help shift your default focus to growth."
+        };
+      case 'Dr. Ram':
+      default:
+        return {
+          endorsement: "Endorsement & Analysis: Based on the density of your logs and average mood tracking, you are managing considerable day-to-day anxiety and mental workload.",
+          therapyNeed: "Why Therapy is Recommended: Regular clinical therapy is highly recommended. A licensed counselor can provide objective support, validate your experiences, and help you design tailored wellness action plans for sustained recovery."
+        };
+    }
+  };
+
+  const urgency = calculateUrgency();
+  const doctorRec = getDoctorRecommendation();
 
   useEffect(() => {
     if (currentTier === "free") {
@@ -610,6 +686,37 @@ function ReportsPage() {
                       {reportData.avgMood !== null ? `${reportData.avgMood} / 10` : 'No mood logged'}
                     </span>
                   </div>
+                </div>
+
+                {/* Therapy Urgency Visualization */}
+                <div className="bg-white p-5 rounded-2xl border border-border/40 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Therapy Urgency Index</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${urgency.bgClass} ${urgency.textClass}`}>
+                      {urgency.label} ({urgency.score} / 10)
+                    </span>
+                  </div>
+                  <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${urgency.score * 10}%`, backgroundColor: urgency.color }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Computed from your average mood of {reportData.avgMood !== null ? `${reportData.avgMood}/10` : 'None'} over {reportData.moods?.length || 0} check-ins and recent activity indicators.
+                  </p>
+                </div>
+
+                {/* Doctor Clinical Endorsement & Recommendation */}
+                <div className="bg-white p-5 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-primary">
+                    <Sparkles className="size-4 text-accent" />
+                    <h4 className="font-display font-bold text-sm text-primary-deep">Doctor Recommendation & Referral</h4>
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-medium">Endorsed & Signed by: <strong className="text-slate-800">{selectedAIDoctor}</strong></p>
+                  <hr className="border-border/40" />
+                  <p className="text-slate-700 text-xs leading-relaxed">{doctorRec.endorsement}</p>
+                  <p className="text-primary-deep font-semibold text-xs leading-relaxed mt-1">{doctorRec.therapyNeed}</p>
                 </div>
 
                 {/* Clinical Therapist Analysis (If Paid) */}

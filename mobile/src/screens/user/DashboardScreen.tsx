@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles } from 'lucide-react-native';
+import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles, Wallet, FileText } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { useStore } from '../../lib/store';
@@ -17,7 +17,6 @@ import { useAuth, useUser } from '@clerk/clerk-expo';
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const { signOut } = useAuth();
   const { user } = useUser();
-  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || useStore(state => state.firstName) || 'Friend';
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [crisisOpen, setCrisisOpen] = useState(false);
 
@@ -34,6 +33,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     queryFn: () => API.user.profile(),
     retry: false,
   });
+
+  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || useStore(state => state.firstName) || 'Friend';
 
   // Fetch bookings dynamically
   const { data: bookingsData } = useQuery({
@@ -178,6 +179,29 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <Search size={22} color={Theme.colors.primary} />
             </View>
             <Text style={styles.quickLabel}>Find Therapist</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Wallet & Reports Row */}
+        <View style={styles.quickGrid}>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Wallet')}
+            style={styles.quickBtn}
+          >
+            <View style={[styles.quickIconBox, { backgroundColor: Theme.colors.primary + '10' }]}>
+              <Wallet size={22} color={Theme.colors.primary} />
+            </View>
+            <Text style={styles.quickLabel}>My Wallet</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Reports')}
+            style={styles.quickBtn}
+          >
+            <View style={[styles.quickIconBox, { backgroundColor: Theme.colors.primary + '10' }]}>
+              <FileText size={22} color={Theme.colors.primary} />
+            </View>
+            <Text style={styles.quickLabel}>Reports</Text>
           </TouchableOpacity>
         </View>
 

@@ -24,6 +24,12 @@ Notifications.setNotificationHandler({
  * Returns the token string or null if permissions denied / not a physical device.
  */
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  // Push notifications not supported/needed on web
+  if (Platform.OS === 'web') {
+    console.log('[Push] Web platform detected — skipping push registration');
+    return null;
+  }
+
   // Push notifications only work on physical devices
   if (!Device.isDevice) {
     console.log('[Push] Not a physical device — skipping push registration');

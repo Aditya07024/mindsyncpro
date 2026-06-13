@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Image, Modal, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HeartHandshake, LogOut, X, Bell, Sparkles } from 'lucide-react-native';
+import { HeartHandshake, LogOut, X, Bell, Sparkles, Wallet, FileText } from 'lucide-react-native';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { useNavigation } from '@react-navigation/native';
 import { Theme } from '../theme';
@@ -185,16 +185,40 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {/* Actions */}
             <View style={styles.modalActions}>
               {role === 'user' && (
-                <TouchableOpacity 
-                  style={styles.upgradeActionBtn}
-                  onPress={() => {
-                    setModalVisible(false);
-                    activeNavigation.navigate('Plans');
-                  }}
-                >
-                  <Sparkles size={18} color="#FFF" />
-                  <Text style={styles.upgradeActionText}>Upgrade Plan</Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity 
+                    style={styles.upgradeActionBtn}
+                    onPress={() => {
+                      setModalVisible(false);
+                      activeNavigation.navigate('Plans');
+                    }}
+                  >
+                    <Sparkles size={18} color="#FFF" />
+                    <Text style={styles.upgradeActionText}>Upgrade Plan</Text>
+                  </TouchableOpacity>
+
+                  {/* <TouchableOpacity 
+                    style={[styles.upgradeActionBtn, { backgroundColor: Theme.colors.primaryContainer }]}
+                    onPress={() => {
+                      setModalVisible(false);
+                      activeNavigation.navigate('Wallet');
+                    }}
+                  >
+                    <Wallet size={18} color="#FFF" />
+                    <Text style={styles.upgradeActionText}>My Wallet</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={[styles.upgradeActionBtn, { backgroundColor: Theme.colors.secondary }]}
+                    onPress={() => {
+                      setModalVisible(false);
+                      activeNavigation.navigate('Reports');
+                    }}
+                  >
+                    <FileText size={18} color="#FFF" />
+                    <Text style={styles.upgradeActionText}>Wellness Reports</Text>
+                  </TouchableOpacity> */}
+                </>
               )}
 
               <TouchableOpacity 

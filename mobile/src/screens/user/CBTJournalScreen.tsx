@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, BookOpen, Sparkles, Check } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
@@ -10,10 +9,27 @@ interface CBTJournalScreenProps {
 }
 
 export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }) => {
+  const [todayPrompt, setTodayPrompt] = useState('What thought has been on a loop today?');
+  const [situation, setSituation] = useState('');
   const [thought, setThought] = useState('');
+  const [feeling, setFeeling] = useState('');
   const [reframed, setReframed] = useState('');
   const [selectedDistortions, setSelectedDistortions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    API.journal.prompt()
+      .then((res: any) => {
+        if (active && res && res.prompt) {
+          setTodayPrompt(res.prompt);
+        }
+      })
+      .catch((err: any) => {
+        console.warn("Failed to fetch random prompt from backend:", err);
+      });
+    return () => { active = false; };
+  }, []);
 
   const distortionsList = [
     { id: 'all_or_nothing', label: 'All-or-Nothing', desc: 'Thinking in black-and-white' },
@@ -32,25 +48,31 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
   };
 
   const handleSave = async () => {
-    if (!thought.trim()) {
-      Alert.alert('Thought Required', 'Please write your automated thought first.');
+    if (!situation.trim()) {
+      Alert.alert('Situation Required', 'Please describe what happened.');
       return;
     }
-    if (selectedDistortions.length === 0) {
-      Alert.alert('Distortions Required', 'Please select at least one cognitive bias matching your thought.');
+    if (!thought.trim()) {
+      Alert.alert('Thought Required', 'Please write your automated negative thought.');
+      return;
+    }
+    if (!feeling.trim()) {
+      Alert.alert('Feeling Required', 'Please record your emotional feeling (e.g. anxious, sad).');
       return;
     }
     if (!reframed.trim()) {
-      Alert.alert('Reframed Thought Required', 'Please try reframing the thought objectively.');
+      Alert.alert('Reframed Narrative Required', 'Please try reframing the thought objectively.');
       return;
     }
 
     setLoading(true);
     try {
       await API.journal.create({
+        prompt: todayPrompt,
+        situation,
         thought,
-        distortions: selectedDistortions,
-        reframed,
+        feeling,
+        reframe: reframed,
       });
 
       Alert.alert(
@@ -59,12 +81,11 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
         [{ text: 'Great', onPress: () => navigation.goBack() }]
       );
     } catch (err: any) {
-      console.warn("Failed to save journal to backend, simulating save success locally:", err);
-      
+      console.warn("Failed to save journal to backend:", err);
       Alert.alert(
-        'Practice Logged',
-        'Cognitive thought sheet successfully recorded!',
-        [{ text: 'Done', onPress: () => navigation.goBack() }]
+        'Error',
+        err.message || 'Failed to save thought sheet to server. Please try again.',
+        [{ text: 'OK' }]
       );
     } finally {
       setLoading(false);
@@ -89,12 +110,36 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
         </Text>
       </View>
 
-      {/* Step 1: Automated Negative Thought */}
+      {/* Today Prompt Section */}
+      <View style={styles.promptCard}>
+        <Text style={styles.promptSub}>TODAY'S PROMPT</Text>
+        <Text style={styles.promptTitle}>{todayPrompt}</Text>
+      </View>
+
+      {/* Step 1: Situation */}
       <View style={styles.section}>
         <Text style={styles.secNum}>STEP 1</Text>
+        <Text style={styles.secTitle}>The Situation</Text>
+        <Text style={styles.secDesc}>
+          What happened? Describe the trigger event objectively.
+        </Text>
+        <TextInput
+          multiline
+          numberOfLines={2}
+          value={situation}
+          onChangeText={setSituation}
+          placeholder="e.g. 'Receiving a brief feedback email from my project supervisor...'"
+          placeholderTextColor={Theme.colors.outline}
+          style={[styles.textInput, { height: 60 }]}
+        />
+      </View>
+
+      {/* Step 2: Automated Negative Thought */}
+      <View style={styles.section}>
+        <Text style={styles.secNum}>STEP 2</Text>
         <Text style={styles.secTitle}>Automated Negative Thought</Text>
         <Text style={styles.secDesc}>
-          What absolute, distressing thought are you experiencing right now?
+          What absolute, distressing thought went through your mind?
         </Text>
         <TextInput
           multiline
@@ -103,13 +148,13 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           onChangeText={setThought}
           placeholder="e.g. 'I will stumble during this team presentation, and everyone will think I am incompetent…'"
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 80 }]}
+          style={[styles.textInput, { height: 75 }]}
         />
       </View>
 
-      {/* Step 2: Cognitive Distortions */}
+      {/* Step 3: Cognitive Distortions */}
       <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 2</Text>
+        <Text style={styles.secNum}>STEP 3</Text>
         <Text style={styles.secTitle}>Identify Cognitive Distortions</Text>
         <Text style={styles.secDesc}>
           Which emotional traps or biases are active in this thought? (Select multiple)
@@ -142,9 +187,25 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
         </View>
       </View>
 
-      {/* Step 3: Logical Reframing */}
+      {/* Step 4: Emotional Feeling */}
       <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 3</Text>
+        <Text style={styles.secNum}>STEP 4</Text>
+        <Text style={styles.secTitle}>Emotional Feeling</Text>
+        <Text style={styles.secDesc}>
+          What emotion did you experience, and how intensely?
+        </Text>
+        <TextInput
+          value={feeling}
+          onChangeText={setFeeling}
+          placeholder="e.g. 'Anxious and insecure (8/10)'"
+          placeholderTextColor={Theme.colors.outline}
+          style={styles.textInput}
+        />
+      </View>
+
+      {/* Step 5: Logical Reframing */}
+      <View style={styles.section}>
+        <Text style={styles.secNum}>STEP 5</Text>
         <Text style={styles.secTitle}>Objective Fact-Based Reframe</Text>
         <Text style={styles.secDesc}>
           Now challenge that thought. What would a supportive, neutral observer say is the realistic truth?
@@ -156,7 +217,7 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           onChangeText={setReframed}
           placeholder="e.g. 'I may feel nervous, but I have prepared my slides thoroughly. Stumbling slightly is normal, and it does not make me incompetent.'"
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 80 }]}
+          style={[styles.textInput, { height: 75 }]}
         />
       </View>
 
@@ -224,6 +285,25 @@ const styles = StyleSheet.create({
     color: Theme.colors.primaryContainer,
     flex: 1,
     lineHeight: 16,
+  },
+  promptCard: {
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    gap: 4,
+  },
+  promptSub: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 9,
+    color: Theme.colors.primary,
+    letterSpacing: 0.5,
+  },
+  promptTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 16,
+    color: Theme.colors.onSurface,
   },
   section: {
     backgroundColor: '#FFF',

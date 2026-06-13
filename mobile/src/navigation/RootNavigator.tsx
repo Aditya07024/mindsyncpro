@@ -26,6 +26,8 @@ import CBTJournalScreen from '../screens/user/CBTJournalScreen';
 import MoodDiaryScreen from '../screens/user/MoodDiaryScreen';
 import NotificationInboxScreen from '../screens/user/NotificationInboxScreen';
 import SessionScreen from '../screens/user/SessionScreen';
+import WalletScreen from '../screens/user/WalletScreen';
+import ReportsScreen from '../screens/user/ReportsScreen';
 
 // Therapist screens
 import TherapistDashboardScreen from '../screens/therapist/TherapistDashboardScreen';
@@ -338,6 +340,8 @@ export const RootNavigator = () => {
       <Stack.Screen name="Booking" component={BookingScreen} />
       <Stack.Screen name="Breathe" component={BreatheScreen} />
       <Stack.Screen name="Journal" component={CBTJournalScreen} />
+      <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="Reports" component={ReportsScreen} />
 
       {/* Practitioner specialized overlays */}
       <Stack.Screen name="TherapistBrief" component={TherapistBriefScreen} />
