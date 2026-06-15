@@ -126,7 +126,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
             <Heart size={14} color={Theme.colors.secondary} fill={Theme.colors.secondary} />
             <Text style={styles.badgeText}>Reimagined for India</Text>
           </View>
-          <Text style={styles.mainTitle}>mymindtherapyfriend</Text>
+          <Text style={styles.mainTitle}>MyMindTherapyFriend</Text>
           <Text style={styles.tagline}>
             BetterHelp + Headspace, reimagined for India. Warm. Accessible. Culturally fluent.
           </Text>
@@ -152,7 +152,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
           style={styles.signUpButton}
           activeOpacity={0.85}
         >
-          <Text style={styles.signUpText}>User & Supporting Members</Text>
+          <Text style={styles.signUpText}>For User</Text>
           <ArrowRight size={18} color="#FFF" />
         </TouchableOpacity>
 
@@ -161,27 +161,29 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
           style={styles.signInButton}
           activeOpacity={0.85}
         >
-          <Text style={styles.signInText}>Therapist, Organisation, Admin</Text>
+          <Text style={styles.signInText}>For Therapist, Organisation</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('About')}
-        style={styles.aboutTrigger}
-      >
-        <Text style={styles.aboutTriggerText}>Learn more about our mission</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
+     <View style={styles.buttonContainer}>
+  <TouchableOpacity
+    onPress={() => navigation.navigate('About')}
+    style={styles.aboutTrigger}
+  >
+    <Text style={styles.aboutTriggerText}>
+      Learn more about our mission
+    </Text>
+  </TouchableOpacity>
 
-  onPress={() => Linking.openURL('https://mindsyncpro.online/')}
-
-  style={styles.aboutTrigger}
-
->
-
-  <Text style={styles.aboutTriggerText}>Visit Our Website</Text>
-
-</TouchableOpacity>
+  <TouchableOpacity
+    onPress={() => Linking.openURL('https://mindsyncpro.online/')}
+    style={styles.aboutTrigger}
+  >
+    <Text style={styles.aboutTriggerText}>
+      Visit Our Website
+    </Text>
+  </TouchableOpacity>
+</View>
     </ScrollView>
   );
 };
@@ -238,11 +240,14 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontFamily: Theme.fonts.display,
-    fontSize: 34,
+    fontSize: 31,
     color: Theme.colors.primary,
     letterSpacing: -1,
     textAlign: 'center',
   },
+  buttonContainer: {
+  gap:1
+},
   tagline: {
     fontFamily: Theme.fonts.bodyMedium,
     fontSize: 15,

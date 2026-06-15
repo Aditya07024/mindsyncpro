@@ -39,14 +39,14 @@ function SignInPage() {
       <div className="min-h-screen bg-canvas-gradient flex flex-col items-center justify-center px-4 text-center">
         <img
           src={logoUrl}
-          alt="mymindtherapyfriend Logo"
+          alt="MyMindTherapyFriend Logo"
           className="size-20 mb-6 object-contain opacity-50 grayscale"
         />
         <h1 className="font-display text-3xl font-bold text-primary-deep mb-2">
           Service Unavailable
         </h1>
         <p className="text-muted-foreground max-w-sm">
-          mymindtherapyfriend is currently undergoing maintenance. Please try again in a few minutes.
+          MyMindTherapyFriend is currently undergoing maintenance. Please try again in a few minutes.
         </p>
       </div>
     );
@@ -57,8 +57,8 @@ function SignInPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center space-y-2">
-          <img src={logoUrl} alt="mymindtherapyfriend Logo" className="mx-auto size-16 object-contain" />
-          <h1 className="font-display text-3xl font-bold text-primary-deep">mymindtherapyfriend</h1>
+          <img src={logoUrl} alt="MyMindTherapyFriend Logo" className="mx-auto size-16 object-contain" />
+          <h1 className="font-display text-3xl font-bold text-primary-deep">MyMindTherapyFriend</h1>
           <p className="text-muted-foreground text-sm">Apna Dil Kholo</p>
         </div>
 

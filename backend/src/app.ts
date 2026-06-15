@@ -23,6 +23,8 @@ export async function createApp() {
     "http://localhost:8082",
     "https://mymindtherapyfriend.online",
     "https://www.mymindtherapyfriend.online",
+    "https://mymindtherapyfriend.com",
+    "https://www.mymindtherapyfriend.com",
     env.CLIENT_ORIGIN, // keep any custom override from .env
   ];
 

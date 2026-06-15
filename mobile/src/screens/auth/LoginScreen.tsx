@@ -33,7 +33,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
         <Text style={styles.title}>Designed For Every Mind</Text>
         <Text style={styles.subtitle}>{"One Platform.\nMultiple Wellness Experiences."}</Text>
         <Text style={styles.description}>
-          Whether you need emotional support, therapy tools, organisation wellness insights, or platform administration — mymindtherapyfriend adapts to your role beautifully.
+          Whether you need emotional support, therapy tools, organisation wellness insights, or platform administration — MyMindTherapyFriend adapts to your role beautifully.
         </Text>
       </View>
 
@@ -98,7 +98,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
         </TouchableOpacity>
 
         {/* Super Admin Card */}
-        <TouchableOpacity 
+        {/* <TouchableOpacity 
           onPress={() => handleRoleSelect('super_admin')} 
           style={[styles.card, styles.adminCard]}
           activeOpacity={0.9}
@@ -114,7 +114,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
             <Text style={[styles.enterPortalText, styles.adminEnterPortalText]}>Enter Portal</Text>
             <ChevronRight size={14} color={Theme.colors.error} />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <PasswordModal

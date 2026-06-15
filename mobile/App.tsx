@@ -173,7 +173,7 @@ function MaintenanceScreen({ onRetry }: MaintenanceScreenProps) {
         <Text style={styles.title}>System Offline</Text>
         
         <Text style={styles.description}>
-          mymindtherapyfriend is currently undergoing scheduled fine-tuning to improve backend databases. We will be back online shortly.
+          MyMindTherapyFriend is currently undergoing scheduled fine-tuning to improve backend databases. We will be back online shortly.
         </Text>
 
         <View style={styles.infoBox}>
@@ -248,7 +248,7 @@ export default function App() {
   if (!fontsLoaded || isServerDown === null) {
     return (
       <View style={styles.splash}>
-        <LoadingSpinner message="Verifying secure connection to mymindtherapyfriend…" />
+        <LoadingSpinner message="Verifying secure connection to MyMindTherapyFriend…" />
       </View>
     );
   }

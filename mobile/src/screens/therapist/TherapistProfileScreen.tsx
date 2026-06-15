@@ -62,7 +62,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
   const handleCancelPlan = () => {
     Alert.alert(
       'Cancel Subscription',
-      'Are you sure you want to cancel your mymindtherapyfriend subscription? You will lose access to your schedule and bookings at end of billing period.',
+      'Are you sure you want to cancel your MyMindTherapyFriend subscription? You will lose access to your schedule and bookings at end of billing period.',
       [
         { text: 'Keep Plan', style: 'cancel' },
         {
@@ -241,7 +241,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
             </View>
             <View style={styles.infoBox}>
               <Text style={styles.infoKey}>Clinic Suite:</Text>
-              <Text style={styles.infoVal}>{userProfile?.therapistProfile?.clinicDetails || 'mymindtherapyfriend Executive Suite'}</Text>
+              <Text style={styles.infoVal}>{userProfile?.therapistProfile?.clinicDetails || 'MyMindTherapyFriend Executive Suite'}</Text>
             </View>
             <View style={styles.infoBox}>
               <Text style={styles.infoKey}>Specializations:</Text>

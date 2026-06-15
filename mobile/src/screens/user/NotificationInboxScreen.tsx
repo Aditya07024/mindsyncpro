@@ -201,7 +201,7 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
           <View style={styles.emptyIconCircle}>
             <Bell size={40} color={Theme.colors.primary} style={{ opacity: 0.6 }} />
           </View>
-          <Text style={styles.emptyTitle}>Your mymindtherapyfriend is quiet</Text>
+          <Text style={styles.emptyTitle}>Your MyMindTherapyFriend is quiet</Text>
           <Text style={styles.emptyDesc}>
             All caught up! Dynamic alerts related to therapists, booking confirmations, subscription payments, and clinical updates will display here.
           </Text>

@@ -114,7 +114,7 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
       await API.org.invite({ email });
       Alert.alert(
         'Seat Allocated!',
-        `We have successfully emailed a mymindtherapyfriend connection invite link to ${email}.`,
+        `We have successfully emailed a MyMindTherapyFriend connection invite link to ${email}.`,
         [{ text: 'Excellent', onPress: () => { setEmail(''); refetchStats(); } }]
       );
     } catch (err: any) {

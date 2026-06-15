@@ -384,14 +384,14 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       {/* Main Premium Widget Card */}
       <View style={styles.authCard}>
         <View style={styles.header}>
-          <Text style={styles.brandTitle}>mymindtherapyfriend</Text>
+          <Text style={styles.brandTitle}>MyMindTherapyFriend</Text>
           <Text style={styles.title}>
             {pendingVerification ? 'Enter OTP' : 'Sign in'}
           </Text>
           <Text style={styles.subtitle}>
             {pendingVerification 
               ? `We sent a code to ${email}`
-              : `to continue to mymindtherapyfriend ${role.toUpperCase().replace('_', ' ')} portal`
+              : `to continue to MyMindTherapyFriend ${role.toUpperCase().replace('_', ' ')} portal`
             }
           </Text>
         </View>

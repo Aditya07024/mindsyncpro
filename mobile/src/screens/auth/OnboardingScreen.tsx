@@ -49,7 +49,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
       setStep(3);
     } else if (step === 3) {
       if (selectedConcerns.length === 0) {
-        Alert.alert('Select Concerns', 'Please select at least one concern that brought you to mymindtherapyfriend.');
+        Alert.alert('Select Concerns', 'Please select at least one concern that brought you to MyMindTherapyFriend.');
         return;
       }
       setStep(4);

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mymindtherapyfriend",
+    "name": "MyMindTherapyFriend",
     "slug": "mymindtherapyfriend",
     "scheme": "mymindtherapyfriend",
     "version": "1.0.0",
@@ -17,8 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.atulkumar.mymindtherapyfriend.com",
       "infoPlist": {
-        "NSCameraUsageDescription": "mymindtherapyfriend needs camera access to allow video call sessions with your therapist.",
-        "NSMicrophoneUsageDescription": "mymindtherapyfriend needs microphone access to allow voice in video call sessions with your therapist."
+        "NSCameraUsageDescription": "MyMindTherapyFriend needs camera access to allow video call sessions with your therapist.",
+        "NSMicrophoneUsageDescription": "MyMindTherapyFriend needs microphone access to allow voice in video call sessions with your therapist."
       }
     },
     "android": {
@@ -47,16 +47,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "3cae8930-face-4ad3-ba2c-f71df9827295"
-      }
-    },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/3cae8930-face-4ad3-ba2c-f71df9827295"
-    }
+    "extra": {
+      "eas": {
+        "projectId": "0cd99998-b9bb-430f-8fe2-5e0e44ff80e1"
+      }
+    },
+    "owner": "aditya106"
   }
 }

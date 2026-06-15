@@ -4,7 +4,7 @@ import { createApp } from "@/app";
 createApp()
   .then((app) => {
     app.listen(Number(env.PORT), () => {
-      console.log(`mymindtherapyfriend API running on ${env.PORT}`);
+      console.log(`MyMindTherapyFriend API running on ${env.PORT}`);
     });
   })
   .catch((error) => {

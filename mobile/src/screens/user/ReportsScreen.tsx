@@ -222,7 +222,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         <html>
         <head>
           <meta charset="utf-8">
-          <title>Wellness Report - mymindtherapyfriend</title>
+          <title>Wellness Report - MyMindTherapyFriend</title>
           <style>
             body {
               font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -435,7 +435,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
           <div class="header">
             <div>
               <p>WELLNESS REPORT</p>
-              <h1>mymindtherapyfriend</h1>
+              <h1>MyMindTherapyFriend</h1>
               <p>Your emotional wellness & therapy companion</p>
             </div>
             <div class="meta">
@@ -495,7 +495,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
           </div>
 
           <div class="footer">
-            <p>mymindtherapyfriend is an emotional wellness platform. This summary is intended to assist in personal reflection and therapy, and is not a clinical diagnosis.</p>
+            <p>MyMindTherapyFriend is an emotional wellness platform. This summary is intended to assist in personal reflection and therapy, and is not a clinical diagnosis.</p>
           </div>
         </body>
         </html>
@@ -915,7 +915,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         <View style={styles.previewHeader}>
           <View>
             <Text style={styles.previewSubtitle}>Previewing Wellness Report</Text>
-            <Text style={styles.previewBrand}>mymindtherapyfriend</Text>
+            <Text style={styles.previewBrand}>MyMindTherapyFriend</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={styles.previewDate}>

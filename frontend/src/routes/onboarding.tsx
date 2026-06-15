@@ -154,7 +154,7 @@ function Onboarding() {
             <div className="relative mb-12 size-48 flex items-center justify-center">
               <div className="absolute inset-0 animate-breathe rounded-full bg-white/20" />
               <div className="absolute inset-4 animate-breathe rounded-full bg-white/30" style={{ animationDelay: '0.4s' }} />
-              <img src={logoUrl} alt="mymindtherapyfriend Logo" className="relative z-10 size-24 object-contain" />
+              <img src={logoUrl} alt="MyMindTherapyFriend Logo" className="relative z-10 size-24 object-contain" />
             </div>
             <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2 }} className="font-display text-5xl font-bold md:text-6xl">
               Apna Dil Kholo
@@ -253,7 +253,7 @@ function Onboarding() {
                   </div>
                   <div>
                     <h2 className="font-display text-xl font-bold text-primary-deep">Find Your Organisation</h2>
-                    <p className="text-xs text-muted-foreground">Search from verified organisations on mymindtherapyfriend</p>
+                    <p className="text-xs text-muted-foreground">Search from verified organisations on MyMindTherapyFriend</p>
                   </div>
                 </div>
 

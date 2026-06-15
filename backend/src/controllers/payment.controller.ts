@@ -510,7 +510,7 @@ export class PaymentController {
       sendCallbackResponse(
         res,
         req,
-        `mymindtherapyfriend – Payment ${paid ? "Confirmed" : "Pending"}`,
+        `MyMindTherapyFriend – Payment ${paid ? "Confirmed" : "Pending"}`,
         paid ? "Payment Confirmed!" : "Payment Pending",
         paid
           ? "Your therapy session has been booked successfully."
@@ -682,7 +682,7 @@ export class PaymentController {
       sendCallbackResponse(
         res,
         req,
-        `mymindtherapyfriend – Report Payment ${paid ? "Confirmed" : "Pending"}`,
+        `MyMindTherapyFriend – Report Payment ${paid ? "Confirmed" : "Pending"}`,
         paid ? "Payment Confirmed!" : "Payment Pending",
         paid
           ? "Your premium AI Therapist analysis has been unlocked successfully."
@@ -972,7 +972,7 @@ export class PaymentController {
       sendCallbackResponse(
         res,
         req,
-        `mymindtherapyfriend – Wallet Deposit ${success ? "Success" : "Pending"}`,
+        `MyMindTherapyFriend – Wallet Deposit ${success ? "Success" : "Pending"}`,
         success ? "Funds Added Successfully!" : "Deposit Pending",
         success
           ? `₹${tx.amount.toFixed(2)} has been added to your wallet balance.`

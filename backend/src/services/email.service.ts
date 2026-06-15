@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = `"mymindtherapyfriend" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`;
+const FROM = `"MyMindTherapyFriend" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`;
 
 /** Shared styled HTML wrapper */
 function htmlWrap(title: string, body: string): string {
@@ -33,7 +33,7 @@ function htmlWrap(title: string, body: string): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">🧠 mymindtherapyfriend</span>
+                    <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">🧠 MyMindTherapyFriend</span>
                   </td>
                 </tr>
               </table>
@@ -49,7 +49,7 @@ function htmlWrap(title: string, body: string): string {
           <tr>
             <td style="background:#f1f5f9;padding:20px 36px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
-                © 2025 mymindtherapyfriend · Mental Wellness Platform<br/>
+                © 2025 MyMindTherapyFriend · Mental Wellness Platform<br/>
                 This is an automated notification. Please do not reply to this email.
               </p>
             </td>
@@ -86,7 +86,7 @@ export async function sendBookingNotificationToTherapist(opts: {
 
   const body = `
     <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0f172a;">New Session Booked! 🎉</h2>
-    <p style="margin:0 0 24px;color:#64748b;font-size:15px;">You have a new appointment request on mymindtherapyfriend.</p>
+    <p style="margin:0 0 24px;color:#64748b;font-size:15px;">You have a new appointment request on MyMindTherapyFriend.</p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:24px;">
       <tr>
@@ -122,7 +122,7 @@ export async function sendBookingNotificationToTherapist(opts: {
     </div>
 
     <p style="margin:0 0 20px;font-size:14px;color:#64748b;">
-      Log in to your mymindtherapyfriend dashboard to view details, prepare AI briefs, and manage your schedule.
+      Log in to your MyMindTherapyFriend dashboard to view details, prepare AI briefs, and manage your schedule.
     </p>
 
     <a href="https://mymindtherapyfriend.online/therapist/dashboard"
@@ -136,7 +136,7 @@ export async function sendBookingNotificationToTherapist(opts: {
   await transporter.sendMail({
     from: FROM,
     to: therapistEmail,
-    subject: `📅 New Booking from ${seekerName} — mymindtherapyfriend`,
+    subject: `📅 New Booking from ${seekerName} — MyMindTherapyFriend`,
     html: htmlWrap("New Booking Notification", body),
   });
 }
@@ -211,7 +211,7 @@ export async function sendBookingConfirmationToSeeker(opts: {
   await transporter.sendMail({
     from: FROM,
     to: seekerEmail,
-    subject: `✅ Your session with Dr. ${therapistName} is reserved — mymindtherapyfriend`,
+    subject: `✅ Your session with Dr. ${therapistName} is reserved — MyMindTherapyFriend`,
     html: htmlWrap("Booking Confirmation", body),
   });
 }
@@ -286,7 +286,7 @@ export async function sendPaymentConfirmedToTherapist(opts: {
   await transporter.sendMail({
     from: FROM,
     to: therapistEmail,
-    subject: `💰 Payment Confirmed — Session with ${seekerName} · mymindtherapyfriend`,
+    subject: `💰 Payment Confirmed — Session with ${seekerName} · MyMindTherapyFriend`,
     html: htmlWrap("Payment Confirmed", body),
   });
 }

@@ -534,7 +534,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                         </View>
                         <View style={styles.infoBox}>
                           <Text style={styles.infoKey}>Clinic Name:</Text>
-                          <Text style={styles.infoVal}>{userProfile?.therapistProfile?.clinicDetails || 'mymindtherapyfriend Executive Suite'}</Text>
+                          <Text style={styles.infoVal}>{userProfile?.therapistProfile?.clinicDetails || 'MyMindTherapyFriend Executive Suite'}</Text>
                         </View>
                         <View style={styles.infoBox}>
                           <Text style={styles.infoKey}>Specializations:</Text>

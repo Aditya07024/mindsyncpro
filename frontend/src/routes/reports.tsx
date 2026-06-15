@@ -320,7 +320,7 @@ function ReportsPage() {
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-      pdf.save(`mymindtherapyfriend_wellness_report_${period}.pdf`);
+      pdf.save(`MyMindTherapyFriend_wellness_report_${period}.pdf`);
       toast.success("Report downloaded successfully!");
     } catch (e) {
       console.error(e);
@@ -660,7 +660,7 @@ function ReportsPage() {
                 <div className="flex justify-between items-start border-b border-primary/20 pb-6">
                   <div>
                     <span className="font-display text-xs font-bold text-accent uppercase tracking-widest">Wellness Report</span>
-                    <h2 className="font-display text-3xl font-bold text-primary-deep mt-1">mymindtherapyfriend</h2>
+                    <h2 className="font-display text-3xl font-bold text-primary-deep mt-1">MyMindTherapyFriend</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">Emotional wellness & therapy companion</p>
                   </div>
                   <div className="text-right text-xs">
@@ -920,7 +920,7 @@ function ReportsPage() {
 
                 {/* Footer disclaimer */}
                 <div className="border-t border-border/30 pt-4 text-center text-[10px] text-muted-foreground">
-                  <p>mymindtherapyfriend is an emotional wellness platform. This summary is intended to assist in personal reflection and therapy, and is not a clinical diagnosis.</p>
+                  <p>MyMindTherapyFriend is an emotional wellness platform. This summary is intended to assist in personal reflection and therapy, and is not a clinical diagnosis.</p>
                 </div>
               </div>
             ) : (

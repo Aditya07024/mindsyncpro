@@ -333,7 +333,7 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Invite Independent Therapists</Text>
               <Text style={styles.sectionDesc}>
-                Search for external certified practitioners on mymindtherapyfriend and link them to your network.
+                Search for external certified practitioners on MyMindTherapyFriend and link them to your network.
               </Text>
 
               <View style={styles.searchBar}>

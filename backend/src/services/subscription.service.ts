@@ -40,7 +40,7 @@ export class SubscriptionService {
           name: cfg.name,
           amount: cfg.amount,
           currency: "INR",
-          description: `mymindtherapyfriend ${cfg.name} subscription`,
+          description: `MyMindTherapyFriend ${cfg.name} subscription`,
         },
       });
 
@@ -146,7 +146,7 @@ export class SubscriptionService {
           name: name,
           amount: amount * 100, // Convert to paise
           currency: "INR",
-          description: `mymindtherapyfriend ${name} subscription (${durationMonths} months)`,
+          description: `MyMindTherapyFriend ${name} subscription (${durationMonths} months)`,
         },
       });
       console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name} (${durationMonths} months)`);
