@@ -43,7 +43,10 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
     for (let i = 1; i <= 7; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const dayVal = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${dayVal}`;
       list.push({
         dateStr,
         dayName: weekdays[d.getDay()],
@@ -63,7 +66,20 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
     retry: false,
   });
 
-  const slots = remoteSlots?.openSlots || [];
+  const todayStr = (() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  })();
+  const isToday = selectedDate === todayStr;
+
+  const slots = (remoteSlots?.openSlots || []).filter((s: string) => {
+    if (!isToday) return true;
+    const [hours, minutes] = s.split(':');
+    const now = new Date();
+    const slotTime = new Date();
+    slotTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    return slotTime > now;
+  });
 
     const handleBooking = async () => {
       if (!selectedSlot) {
@@ -71,13 +87,17 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
         return;
       }
 
-      console.log("[Booking] Initiating booking for slot:", `${selectedDate} ${selectedSlot}`, "with therapist:", therapistId);
+      const [hours, minutes] = selectedSlot.split(':');
+      const dateTime = new Date(selectedDate);
+      dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+      console.log("[Booking] Initiating booking for slot:", dateTime.toISOString(), "with therapist:", therapistId);
       setLoading(true);
       try {
         // 1. Create booking in backend
         const bookingPayload = {
           therapistId: therapistId,
-          slot: `${selectedDate} ${selectedSlot}`,
+          slot: dateTime.toISOString(),
         };
         console.log("[Booking] Sending booking payload:", JSON.stringify(bookingPayload));
         const bookingRes = await API.booking.create(bookingPayload);
@@ -111,16 +131,26 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
         // 4. After browser closes, verify & confirm booking
         try {
           setLoading(true);
-          console.log("[Booking] Syncing payment state via demoVerify...");
-          await API.payment.demoVerify({ bookingId });
-          Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
-          navigation.replace('UserTabs', { screen: 'Bookings' });
+          console.log("[Booking] Checking payment status...");
+          const statusRes = await API.payment.status(bookingId);
+          console.log("[Booking] Payment status response:", JSON.stringify(statusRes, null, 2));
+
+          if (statusRes?.paid) {
+            Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
+            navigation.replace('UserTabs', { screen: 'Bookings' });
+          } else {
+            Alert.alert(
+              'Payment Pending',
+              'We could not verify your payment. Please complete the payment to confirm your booking.',
+              [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
+            );
+          }
         } catch (verifyErr) {
-          // Booking may already be confirmed via webhook callback
-          console.warn("[Booking] Payment verify error/callback pending:", verifyErr);
+          // Booking status check failed
+          console.warn("[Booking] Payment status check failed:", verifyErr);
           Alert.alert(
             'Booking Registered',
-            'Your payment is being verified. Your booking will be confirmed shortly.',
+            'Your payment status is being verified. Please check the Bookings tab for updates.',
             [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
           );
         } finally {

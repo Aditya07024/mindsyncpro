@@ -4,7 +4,7 @@
  * Call setTokenGetter(fn) once from ClerkProvider to inject the token getter.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.online";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
 
 // Token getter injected by ClerkProvider wrapper
 let _getToken: (() => Promise<string | null>) | null = null;
@@ -247,6 +247,11 @@ const API = {
       apiCall<any>(`/api/bookings/${id}/prescription`, {
         method: "PATCH",
         body: JSON.stringify(data),
+      }),
+    saveNotes: (id: string, notes: string) =>
+      apiCall<any>(`/api/bookings/${id}/notes`, {
+        method: "PATCH",
+        body: JSON.stringify({ notes }),
       }),
   },
 

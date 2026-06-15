@@ -244,15 +244,9 @@ function RoomUI({
   });
 
   const saveNotesMutation = useMutation({
-    mutationFn: () =>
-      fetch(`${import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.online"}/api/bookings/${bookingId}/notes`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes }),
-      }).then((r) => r.json()),
+    mutationFn: () => API.booking.saveNotes(bookingId, notes),
     onSuccess: () => toast.success("Notes saved"),
-    onError: () => toast.error("Failed to save notes"),
+    onError: (e: Error) => toast.error(e.message || "Failed to save notes"),
   });
 
   const autoSaveNotes = useCallback(() => {

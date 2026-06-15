@@ -125,7 +125,7 @@ export async function sendBookingNotificationToTherapist(opts: {
       Log in to your MyMindTherapyFriend dashboard to view details, prepare AI briefs, and manage your schedule.
     </p>
 
-    <a href="https://mymindtherapyfriend.online/therapist/dashboard"
+    <a href="https://mymindtherapyfriend.com/therapist/dashboard"
        style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;">
       View Dashboard →
     </a>
@@ -200,7 +200,7 @@ export async function sendBookingConfirmationToSeeker(opts: {
       </p>
     </div>
 
-    <a href="https://mymindtherapyfriend.online/user/dashboard"
+    <a href="https://mymindtherapyfriend.com/user/dashboard"
        style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;">
       Complete Payment →
     </a>
@@ -275,7 +275,7 @@ export async function sendPaymentConfirmedToTherapist(opts: {
       </p>
     </div>
 
-    <a href="https://mymindtherapyfriend.online/therapist/dashboard"
+    <a href="https://mymindtherapyfriend.com/therapist/dashboard"
        style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:10px;">
       Go to Dashboard →
     </a>

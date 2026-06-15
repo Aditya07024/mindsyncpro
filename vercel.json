@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.mymindtherapyfriend.online/:path*"
+      "destination": "https://api.mymindtherapyfriend.com/:path*"
     },
     {
       "source": "/(.*)",

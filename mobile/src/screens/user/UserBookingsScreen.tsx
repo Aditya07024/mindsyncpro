@@ -171,11 +171,15 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
                                 onPress: async () => {
                                   await WebBrowser.openBrowserAsync(shortUrl);
                                   try {
-                                    await API.payment.demoVerify({ bookingId });
-                                    Alert.alert('Success', 'Payment verified successfully!');
+                                    const statusRes = await API.payment.status(bookingId);
+                                    if (statusRes?.paid) {
+                                      Alert.alert('Success', 'Payment verified and session confirmed!');
+                                    } else {
+                                      Alert.alert('Payment Pending', 'We could not verify your payment. Please complete the payment to confirm your booking.');
+                                    }
                                     queryClient.invalidateQueries({ queryKey: ['userBookings'] });
                                   } catch (e) {
-                                    Alert.alert('Payment Processing', 'Your payment is being verified.');
+                                    Alert.alert('Payment Processing', 'Your payment status is being verified.');
                                     queryClient.invalidateQueries({ queryKey: ['userBookings'] });
                                   }
                                 }

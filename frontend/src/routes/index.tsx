@@ -34,7 +34,7 @@ import app from "@/assets/app.png";
 import play from "@/assets/play.webp";
 
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.online";
+const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
 const ENTERPRISE_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "mymindtherapyfriend@outlook.com";
 
 const PRICING_PLANS = [

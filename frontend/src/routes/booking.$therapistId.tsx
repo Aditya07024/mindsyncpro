@@ -260,7 +260,10 @@ function BookingFlow() {
                       setSelectedDate(e.target.value);
                       setSelectedSlot("");
                     }}
-                    min={new Date().toISOString().split("T")[0]}
+                    min={(() => {
+                      const d = new Date();
+                      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    })()}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -275,28 +278,43 @@ function BookingFlow() {
 
                     {slotsLoading ? (
                       <div className="text-slate-500">Loading available slots...</div>
-                    ) : availability?.openSlots && availability.openSlots.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2">
-                        {availability.openSlots.map((slot: string) => (
-                          <button
-                            key={slot}
-                            onClick={() => handleSelectSlot(slot)}
-                            className={`py-2 px-3 rounded-lg font-medium transition-colors ${
-                              selectedSlot === slot
-                                ? "bg-blue-600 text-white"
-                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                            }`}
-                          >
-                            {formatTime(slot)}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
-                        <AlertCircle className="w-5 h-5" />
-                        <span>No slots available for this date. Please select another date.</span>
-                      </div>
-                    )}
+                    ) : (() => {
+                      const localToday = (() => {
+                        const d = new Date();
+                        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                      })();
+                      const filteredSlots = (availability?.openSlots ?? []).filter((slot: string) => {
+                        if (selectedDate !== localToday) return true;
+                        const [hours, minutes] = slot.split(":");
+                        const now = new Date();
+                        const slotTime = new Date();
+                        slotTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+                        return slotTime > now;
+                      });
+
+                      return filteredSlots.length > 0 ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {filteredSlots.map((slot: string) => (
+                            <button
+                              key={slot}
+                              onClick={() => handleSelectSlot(slot)}
+                              className={`py-2 px-3 rounded-lg font-medium transition-colors ${
+                                selectedSlot === slot
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              }`}
+                            >
+                              {formatTime(slot)}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                          <AlertCircle className="w-5 h-5" />
+                          <span>No slots available for this date. Please select another date.</span>
+                        </div>
+                      );
+                    })()}
                   </motion.div>
                 )}
               </Card>

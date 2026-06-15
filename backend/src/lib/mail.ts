@@ -78,7 +78,7 @@ export async function sendInviteEmail(email: string, orgName: string, originUrl?
     return false;
   }
 
-  const joinUrl = originUrl || process.env.FRONTEND_URL || "https://mymindtherapyfriend.online";
+  const joinUrl = originUrl || process.env.FRONTEND_URL || "https://mymindtherapyfriend.com";
   const mailOptions = {
     from: process.env.EMAIL_USER || process.env.SMTP_USER || "noreply@mymindtherapyfriend.com",
     to: email,

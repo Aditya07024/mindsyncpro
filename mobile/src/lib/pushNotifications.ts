@@ -43,7 +43,15 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
 
     // Request permission if not already granted
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowDisplayInCarPlay: true,
+          allowCriticalAlerts: true,
+        },
+      });
       finalStatus = status;
     }
 
@@ -69,6 +77,8 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#2E6E65',
         sound: 'default',
+        showBadge: true,
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       });
     }
 
