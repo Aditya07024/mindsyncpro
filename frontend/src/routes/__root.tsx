@@ -36,6 +36,12 @@ function RootComponent() {
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
       afterSignOutUrl="/"
+      allowedRedirectOrigins={[
+        "https://mymindtherapyfriend.com",
+        "https://api.mymindtherapyfriend.com",
+        "http://localhost:5173",
+        "http://localhost:8080"
+      ]}
     >
       <QueryClientProvider client={queryClient}>
         <ClerkTokenWirer />
