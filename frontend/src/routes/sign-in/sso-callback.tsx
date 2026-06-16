@@ -17,7 +17,10 @@ function SSOCallbackPage() {
           Please wait while we sync your session.
         </p>
       </div>
-      <AuthenticateWithRedirectCallback />
+      <AuthenticateWithRedirectCallback
+        signInFallbackRedirectUrl="/dashboard"
+        signUpFallbackRedirectUrl="/onboarding"
+      />
     </div>
   );
 }
