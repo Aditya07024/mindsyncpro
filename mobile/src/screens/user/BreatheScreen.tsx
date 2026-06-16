@@ -1,160 +1,371 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Animated, Easing } from 'react-native';
-import { ArrowLeft, Play, Pause, RefreshCw } from 'lucide-react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import { ArrowLeft, Play, Pause, RefreshCw, Wind, Square, Hand, User, Zap, ChevronRight } from 'lucide-react-native';
 import { Theme } from '../../theme';
 
 interface BreatheScreenProps {
   navigation: any;
 }
 
-type BreathState = 'idle' | 'inhale' | 'hold' | 'exhale';
+type Phase = { label: string; seconds: number };
+
+interface Exercise {
+  id: string;
+  title: string;
+  desc: string;
+  icon: any;
+  phases: Phase[];
+  cycles: number;
+  emergency?: boolean;
+}
+
+const EXERCISES: Exercise[] = [
+  {
+    id: '478',
+    title: '4-7-8 Breath',
+    desc: 'Calms a racing mind. Best before sleep.',
+    icon: Wind,
+    phases: [
+      { label: 'Inhale', seconds: 4 },
+      { label: 'Hold', seconds: 7 },
+      { label: 'Exhale', seconds: 8 },
+    ],
+    cycles: 4,
+  },
+  {
+    id: 'box',
+    title: 'Box Breathing',
+    desc: 'Used by Navy SEALs. Resets your nervous system.',
+    icon: Square,
+    phases: [
+      { label: 'Inhale', seconds: 4 },
+      { label: 'Hold', seconds: 4 },
+      { label: 'Exhale', seconds: 4 },
+      { label: 'Hold', seconds: 4 },
+    ],
+    cycles: 5,
+  },
+  {
+    id: 'grounding',
+    title: '5-4-3-2-1 Grounding',
+    desc: 'Pull yourself back to the present.',
+    icon: Hand,
+    phases: [
+      { label: 'Notice 5 things you SEE', seconds: 15 },
+      { label: 'Notice 4 things you can TOUCH', seconds: 12 },
+      { label: 'Notice 3 things you HEAR', seconds: 10 },
+      { label: 'Notice 2 things you SMELL', seconds: 8 },
+      { label: 'Notice 1 thing you TASTE', seconds: 5 },
+    ],
+    cycles: 1,
+  },
+  {
+    id: 'scan',
+    title: 'Body Scan',
+    desc: 'Release tension you didn\'t know you held.',
+    icon: User,
+    phases: [
+      { label: 'Soften your forehead', seconds: 8 },
+      { label: 'Relax your jaw', seconds: 8 },
+      { label: 'Drop your shoulders', seconds: 8 },
+      { label: 'Unclench your hands', seconds: 8 },
+      { label: 'Feel your feet', seconds: 8 },
+    ],
+    cycles: 1,
+  },
+  {
+    id: 'emergency',
+    title: 'Emergency Calm',
+    desc: '3 cycles. For when you need it now.',
+    icon: Zap,
+    emergency: true,
+    phases: [
+      { label: 'Inhale slowly', seconds: 4 },
+      { label: 'Hold', seconds: 2 },
+      { label: 'Long exhale', seconds: 6 },
+    ],
+    cycles: 3,
+  },
+];
 
 export const BreatheScreen: React.FC<BreatheScreenProps> = ({ navigation }) => {
-  const [breathState, setBreathState] = useState<BreathState>('idle');
-  const [timer, setTimer] = useState(4);
-  const [cycleCount, setCycleCount] = useState(0);
+  const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
 
-  // Animated scale for the expanding circle
-  const circleScale = useRef(new Animated.Value(1)).current;
-  const stateRef = useRef<BreathState>('idle');
+  // Player state
+  const [phaseIdx, setPhaseIdx] = useState(0);
+  const [cycle, setCycle] = useState(1);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isDone, setIsDone] = useState(false);
 
+  const circleScale = useRef(new Animated.Value(1.0)).current;
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Set up details for active exercise
   useEffect(() => {
-    stateRef.current = breathState;
-  }, [breathState]);
-
-  // Main breathing pacing loop
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (breathState !== 'idle') {
-      interval = setInterval(() => {
-        setTimer(prev => {
-          if (prev <= 1) {
-            // Transition state
-            triggerStateTransition();
-            return 4; // Reset timer to 4s
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (activeExercise) {
+      setPhaseIdx(0);
+      setCycle(1);
+      setSecondsLeft(activeExercise.phases[0].seconds);
+      setIsPlaying(false);
+      setIsDone(false);
+      circleScale.setValue(1.0);
     }
-    return () => clearInterval(interval);
-  }, [breathState]);
+  }, [activeExercise]);
 
-  const triggerStateTransition = () => {
-    const current = stateRef.current;
-    if (current === 'inhale') {
-      setBreathState('hold');
-      animateCircle(2.0, 4000); // Keep size expanded
-    } else if (current === 'hold') {
-      setBreathState('exhale');
-      animateCircle(1.0, 4000); // Scale back down
-    } else if (current === 'exhale') {
-      setBreathState('inhale');
-      setCycleCount(c => c + 1);
-      animateCircle(2.0, 4000); // Scale up
-    }
+  const getPhaseScale = (idx: number) => {
+    if (!activeExercise) return 1.0;
+    const label = activeExercise.phases[idx].label.toLowerCase();
+    const isInhale = label.includes('inhale') || label.includes('notice');
+    const isExhale =
+      label.includes('exhale') ||
+      label.includes('relax') ||
+      label.includes('soften') ||
+      label.includes('drop') ||
+      label.includes('unclench');
+    
+    return isInhale ? 2.0 : isExhale ? 0.8 : 1.3;
   };
 
-  const animateCircle = (toValue: number, duration: number) => {
+  const startPhaseAnimation = (durationMs: number) => {
+    if (!activeExercise) return;
+    const targetScale = getPhaseScale(phaseIdx);
+
     Animated.timing(circleScale, {
-      toValue,
-      duration,
-      easing: Easing.out(Easing.ease),
+      toValue: targetScale,
+      duration: durationMs,
+      easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start();
   };
 
+  const triggerAnimationForPhase = (idx: number) => {
+    if (!activeExercise) return;
+    const targetScale = getPhaseScale(idx);
+    const duration = activeExercise.phases[idx].seconds * 1000;
+
+    Animated.timing(circleScale, {
+      toValue: targetScale,
+      duration: duration,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // Main ticking interval
+  useEffect(() => {
+    if (!activeExercise || isDone || !isPlaying) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      return;
+    }
+
+    // Start circle animation for current phase with remaining time
+    startPhaseAnimation(secondsLeft * 1000);
+
+    intervalRef.current = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s > 1) {
+          return s - 1;
+        }
+
+        // Advance phase
+        let nextPhaseIdx = phaseIdx + 1;
+        if (nextPhaseIdx < activeExercise.phases.length) {
+          setPhaseIdx(nextPhaseIdx);
+          const nextSecs = activeExercise.phases[nextPhaseIdx].seconds;
+          triggerAnimationForPhase(nextPhaseIdx);
+          return nextSecs;
+        } else {
+          // Advance cycle
+          const nextCycle = cycle + 1;
+          if (nextCycle <= activeExercise.cycles) {
+            setCycle(nextCycle);
+            setPhaseIdx(0);
+            const firstSecs = activeExercise.phases[0].seconds;
+            triggerAnimationForPhase(0);
+            return firstSecs;
+          } else {
+            // Exercise complete
+            setIsDone(true);
+            setIsPlaying(false);
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            return 0;
+          }
+        }
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [activeExercise, isPlaying, phaseIdx, cycle, isDone]);
+
   const handleStart = () => {
-    setBreathState('inhale');
-    setTimer(4);
-    animateCircle(2.0, 4000);
+    setIsPlaying(true);
   };
 
   const handlePause = () => {
-    setBreathState('idle');
-    circleScale.setValue(1);
+    setIsPlaying(false);
+    circleScale.stopAnimation();
   };
 
-  const getInstruction = () => {
-    switch (breathState) {
-      case 'inhale': return 'Inhale slowly…';
-      case 'hold': return 'Hold your breath…';
-      case 'exhale': return 'Exhale completely…';
-      default: return 'Ready to relax?';
+  const handleReset = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setIsPlaying(false);
+    setIsDone(false);
+    if (activeExercise) {
+      setPhaseIdx(0);
+      setCycle(1);
+      setSecondsLeft(activeExercise.phases[0].seconds);
+    }
+    circleScale.setValue(1.0);
+  };
+
+  const handleBack = () => {
+    if (activeExercise) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setActiveExercise(null);
+    } else {
+      navigation.goBack();
     }
   };
 
-  const getInstructionSub = () => {
-    switch (breathState) {
-      case 'inhale': return 'Feel the clean energy filling your chest';
-      case 'hold': return 'Let the quiet settle inside you';
-      case 'exhale': return 'Release all lingering tensions';
-      default: return 'Press start to begin 4-4-4 Box Breathing';
-    }
-  };
+  // Rendering selection list
+  if (!activeExercise) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.backRow}>
+          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+            <ArrowLeft size={20} color={Theme.colors.onSurface} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Breathe & Ground</Text>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.listContainer}>
+          <View style={styles.introHeader}>
+            <Text style={styles.introTitle}>Guided Exercises</Text>
+            <Text style={styles.introSubtitle}>Choose a practice to calm your mind and body.</Text>
+          </View>
+
+          {EXERCISES.map((ex) => {
+            const Icon = ex.icon;
+            return (
+              <TouchableOpacity
+                key={ex.id}
+                onPress={() => setActiveExercise(ex)}
+                style={[
+                  styles.exerciseCard,
+                  ex.emergency && styles.emergencyCard,
+                ]}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    styles.iconCircle,
+                    ex.emergency ? styles.iconCircleEmergency : styles.iconCircleNormal,
+                  ]}
+                >
+                  <Icon size={22} color={ex.emergency ? '#FFF' : Theme.colors.primary} />
+                </View>
+
+                <View style={styles.cardInfo}>
+                  <Text style={[styles.cardTitle, ex.emergency && styles.emergencyText]}>
+                    {ex.title}
+                  </Text>
+                  <Text style={styles.cardDesc}>{ex.desc}</Text>
+                </View>
+
+                <ChevronRight size={18} color={ex.emergency ? Theme.colors.error : Theme.colors.outline} />
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Rendering Player
+  const currentPhase = activeExercise.phases[phaseIdx];
+  const isHolding = currentPhase.label.toLowerCase().includes('hold');
+  const ringColor = isHolding
+    ? Theme.colors.gold + '25'
+    : currentPhase.label.toLowerCase().includes('inhale') || currentPhase.label.toLowerCase().includes('notice')
+    ? Theme.colors.primary + '30'
+    : Theme.colors.secondaryContainer + '30';
 
   return (
     <View style={styles.container}>
-      {/* Back row */}
       <View style={styles.backRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
           <ArrowLeft size={20} color={Theme.colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Breathing Guide</Text>
+        <Text style={styles.headerTitle}>{activeExercise.title}</Text>
       </View>
 
       <View style={styles.mainArea}>
-        {/* Cycle count indicator */}
-        <Text style={styles.cycleText}>Cycle: {cycleCount}</Text>
+        {!isDone ? (
+          <>
+            <Text style={styles.cycleText}>
+              Cycle {cycle}/{activeExercise.cycles}
+            </Text>
 
-        {/* Breathing Circle Ring Container */}
-        <View style={styles.circleContainer}>
-          <Animated.View style={[
-            styles.breathingOuterRing,
-            { transform: [{ scale: circleScale }] },
-            breathState === 'inhale' && styles.ringInhale,
-            breathState === 'hold' && styles.ringHold,
-            breathState === 'exhale' && styles.ringExhale,
-          ]} />
-          
-          <View style={styles.breathingCenterBubble}>
-            <Text style={styles.timerText}>{timer}s</Text>
-            <Text style={styles.stateLabelText}>{breathState.toUpperCase()}</Text>
+            <View style={styles.circleContainer}>
+              <Animated.View
+                style={[
+                  styles.breathingOuterRing,
+                  {
+                    transform: [{ scale: circleScale }],
+                    backgroundColor: ringColor,
+                  },
+                ]}
+              />
+
+              <View style={styles.breathingCenterBubble}>
+                <Text style={styles.timerText}>{secondsLeft}s</Text>
+                <Text style={styles.stateLabelText}>
+                  {isPlaying ? currentPhase.label.toUpperCase() : 'PAUSED'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.instructionCard}>
+              <Text style={styles.instructionTitle}>{currentPhase.label}</Text>
+              <Text style={styles.instructionDesc}>
+                {isPlaying ? 'Follow the pacing circle...' : 'Tap start to begin'}
+              </Text>
+            </View>
+
+            <View style={styles.controlRow}>
+              {isPlaying ? (
+                <TouchableOpacity onPress={handlePause} style={styles.pauseBtn}>
+                  <Pause size={22} color={Theme.colors.primary} />
+                  <Text style={styles.pauseBtnText}>Pause</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={handleStart} style={styles.startBtn}>
+                  <Play size={22} color="#FFF" fill="#FFF" />
+                  <Text style={styles.startBtnText}>Start Practice</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity onPress={handleReset} style={styles.resetBtn}>
+                <RefreshCw size={18} color={Theme.colors.outline} />
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <View style={styles.completeContainer}>
+            <View style={[styles.iconCircle, styles.iconCircleNormal, { width: 72, height: 72, borderRadius: 36, marginBottom: 20 }]}>
+              <Wind size={36} color={Theme.colors.primary} />
+            </View>
+            <Text style={styles.completeTitle}>Well done.</Text>
+            <Text style={styles.completeDesc}>Notice how your body and mind feel right now.</Text>
+            
+            <TouchableOpacity onPress={handleBack} style={styles.completeBtn}>
+              <Text style={styles.completeBtnText}>Close Practice</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Text Instruction panel */}
-        <View style={styles.instructionCard}>
-          <Text style={styles.instructionTitle}>{getInstruction()}</Text>
-          <Text style={styles.instructionDesc}>{getInstructionSub()}</Text>
-        </View>
-
-        {/* Controls */}
-        <View style={styles.controlRow}>
-          {breathState === 'idle' ? (
-            <TouchableOpacity onPress={handleStart} style={styles.startBtn}>
-              <Play size={22} color="#FFF" fill="#FFF" />
-              <Text style={styles.startBtnText}>Start Practice</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handlePause} style={styles.pauseBtn}>
-              <Pause size={22} color={Theme.colors.primary} />
-              <Text style={styles.pauseBtnText}>Pause</Text>
-            </TouchableOpacity>
-          )}
-
-          {cycleCount > 0 && (
-            <TouchableOpacity 
-              onPress={() => {
-                handlePause();
-                setCycleCount(0);
-              }} 
-              style={styles.resetBtn}
-            >
-              <RefreshCw size={18} color={Theme.colors.outline} />
-            </TouchableOpacity>
-          )}
-        </View>
+        )}
       </View>
     </View>
   );
@@ -187,6 +398,76 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Theme.colors.onSurface,
   },
+  listContainer: {
+    paddingHorizontal: Theme.spacing.margin,
+    paddingTop: Theme.spacing.md,
+    paddingBottom: Theme.spacing.xl,
+    gap: 12,
+  },
+  introHeader: {
+    marginBottom: Theme.spacing.xs,
+  },
+  introTitle: {
+    fontFamily: Theme.fonts.display,
+    fontSize: 28,
+    color: Theme.colors.primary,
+  },
+  introSubtitle: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 14,
+    color: Theme.colors.textMuted,
+    marginTop: 4,
+  },
+  exerciseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: Theme.radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    shadowColor: '#2E6E65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  emergencyCard: {
+    backgroundColor: '#FFF5F5',
+    borderColor: Theme.colors.error + '25',
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  iconCircleNormal: {
+    backgroundColor: Theme.colors.primary + '10',
+  },
+  iconCircleEmergency: {
+    backgroundColor: Theme.colors.error,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 16,
+    color: Theme.colors.onSurface,
+    marginBottom: 4,
+  },
+  emergencyText: {
+    color: Theme.colors.error,
+  },
+  cardDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 12,
+    color: Theme.colors.textMuted,
+    lineHeight: 16,
+  },
   mainArea: {
     flex: 1,
     justifyContent: 'center',
@@ -215,16 +496,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Theme.colors.primary + '20',
-  },
-  ringInhale: {
-    backgroundColor: Theme.colors.primary + '30',
-  },
-  ringHold: {
-    backgroundColor: Theme.colors.gold + '25',
-  },
-  ringExhale: {
-    backgroundColor: Theme.colors.secondaryContainer + '30',
   },
   breathingCenterBubble: {
     width: 120,
@@ -252,10 +523,10 @@ const styles = StyleSheet.create({
     color: Theme.colors.textMuted,
     letterSpacing: 0.5,
     marginTop: 2,
+    textAlign: 'center',
   },
   instructionCard: {
     alignItems: 'center',
-    textAlign: 'center',
     paddingHorizontal: Theme.spacing.sm,
   },
   instructionTitle: {
@@ -316,5 +587,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFF',
   },
+  completeContainer: {
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.md,
+  },
+  completeTitle: {
+    fontFamily: Theme.fonts.display,
+    fontSize: 28,
+    color: Theme.colors.primary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  completeDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 15,
+    color: Theme.colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  completeBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: Theme.radius.full,
+  },
+  completeBtnText: {
+    color: '#FFF',
+    fontFamily: Theme.fonts.headline,
+    fontSize: 15,
+  },
 });
+
 export default BreatheScreen;

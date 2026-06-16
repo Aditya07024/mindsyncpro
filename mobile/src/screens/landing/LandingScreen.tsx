@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions, Image, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Heart, ArrowRight } from 'lucide-react-native';
 import { useAuth } from '@clerk/clerk-expo';
@@ -246,8 +246,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   buttonContainer: {
-  gap:1
-},
+    // marginTop: Theme.spacing.lg,
+    gap: 10,
+  },
   tagline: {
     fontFamily: Theme.fonts.bodyMedium,
     fontSize: 15,
@@ -320,9 +321,8 @@ const styles = StyleSheet.create({
     color: Theme.colors.primary,
   },
   aboutTrigger: {
-    marginTop: Theme.spacing.lg,
     alignSelf: 'center',
-    paddingVertical: 10,
+    paddingVertical: 0,
   },
   aboutTriggerText: {
     fontFamily: Theme.fonts.headline,

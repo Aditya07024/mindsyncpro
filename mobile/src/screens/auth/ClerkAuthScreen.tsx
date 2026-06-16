@@ -42,6 +42,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [isSignUpFlow, setIsSignUpFlow] = useState(false);
   const redirectingRef = React.useRef(false);
 
   // Monitor Clerk global authentication state to catch deep-linked browser return successes!
@@ -280,6 +281,9 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     }
   }, [startAppleFlow, role, upgradePlan]);
 
+  const isDevKey = (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "").startsWith("pk_test_") ||
+                   (process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "") === "";
+
   const handleSendCode = async () => {
     if (!email || !email.includes('@')) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
@@ -288,7 +292,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
 
     setLoading(true);
     try {
-      if (!signInLoaded || !signUpLoaded) {
+      if (!signInLoaded || !signUpLoaded || !signIn) {
         // Fallback for development without active Clerk API keys in simulator
         console.warn("Clerk hooks not fully loaded. Simulating code sent.");
         setPendingVerification(true);
@@ -297,9 +301,24 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       }
 
       // Start signIn flow with email OTP
-      await signIn.create({
+      const signInAttempt = await signIn.create({
         identifier: email,
       });
+      const emailCodeFactor = signInAttempt.supportedFirstFactors?.find(
+        (factor) => factor.strategy === 'email_code'
+      ) as any;
+      if (!emailCodeFactor) {
+        let errMsg = "Email OTP is not supported on your Clerk instance.";
+        if (isDevKey) {
+          errMsg += "\n\nPlease ensure 'Email verification code' is enabled under 'Authentication Factors' in your Clerk Dashboard.";
+        }
+        throw new Error(errMsg);
+      }
+      await signIn.prepareFirstFactor({
+        strategy: 'email_code',
+        emailAddressId: emailCodeFactor.emailAddressId,
+      });
+      setIsSignUpFlow(false);
       setPendingVerification(true);
     } catch (err: any) {
       console.warn("Clerk SignIn error, trying SignUp:", err.message);
@@ -312,9 +331,14 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         await signUp.prepareEmailAddressVerification({
           strategy: 'email_code',
         });
+        setIsSignUpFlow(true);
         setPendingVerification(true);
       } catch (signUpErr: any) {
-        Alert.alert('Authentication Failed', signUpErr.message || 'Could not send verification code.');
+        let errorMsg = signUpErr.message || 'Could not send verification code.';
+        if (isDevKey) {
+          errorMsg += "\n\nNote: In Clerk Development Mode, OTP emails only send to verified test accounts in your Clerk Dashboard.";
+        }
+        Alert.alert('Authentication Failed', errorMsg);
       }
     } finally {
       setLoading(false);
@@ -336,7 +360,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         return;
       }
 
-      if (signIn.status === 'needs_first_factor') {
+      if (!isSignUpFlow) {
         const result = await signIn.attemptFirstFactor({
           strategy: 'email_code',
           code,
@@ -445,6 +469,12 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
                 placeholderTextColor={Theme.colors.outline}
               />
             </View>
+
+            {isDevKey && (
+              <Text style={{ color: '#D97706', fontSize: 11, fontFamily: Theme.fonts.bodyMedium, marginTop: 4, lineHeight: 16, paddingHorizontal: 4 }}>
+                ⚠️ Clerk is in Development Mode. OTP emails will only send to the instance owner and test accounts defined in the Clerk Dashboard.
+              </Text>
+            )}
 
             <TouchableOpacity 
               onPress={handleSendCode} 

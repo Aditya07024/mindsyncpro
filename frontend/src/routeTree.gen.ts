@@ -28,6 +28,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TherapistOnboardingRouteImport } from './routes/therapist/onboarding'
 import { Route as TherapistDashboardRouteImport } from './routes/therapist/dashboard'
+import { Route as SignInSsoCallbackRouteImport } from './routes/sign-in/sso-callback'
 import { Route as SessionBookingIdRouteImport } from './routes/session.$bookingId'
 import { Route as OrgOnboardingRouteImport } from './routes/org/onboarding'
 import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
@@ -129,6 +130,11 @@ const TherapistDashboardRoute = TherapistDashboardRouteImport.update({
   path: '/therapist/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignInSsoCallbackRoute = SignInSsoCallbackRouteImport.update({
+  id: '/sso-callback',
+  path: '/sso-callback',
+  getParentRoute: () => SignInRoute,
+} as any)
 const SessionBookingIdRoute = SessionBookingIdRouteImport.update({
   id: '/session/$bookingId',
   path: '/session/$bookingId',
@@ -167,7 +173,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
-  '/sign-in': typeof SignInRoute
+  '/sign-in': typeof SignInRouteWithChildren
   '/subscription': typeof SubscriptionRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
+  '/sign-in/sso-callback': typeof SignInSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
 }
@@ -193,7 +200,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
-  '/sign-in': typeof SignInRoute
+  '/sign-in': typeof SignInRouteWithChildren
   '/subscription': typeof SubscriptionRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
+  '/sign-in/sso-callback': typeof SignInSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
 }
@@ -220,7 +228,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
-  '/sign-in': typeof SignInRoute
+  '/sign-in': typeof SignInRouteWithChildren
   '/subscription': typeof SubscriptionRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -231,6 +239,7 @@ export interface FileRoutesById {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
+  '/sign-in/sso-callback': typeof SignInSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
 }
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/onboarding'
     | '/session/$bookingId'
+    | '/sign-in/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
   fileRoutesByTo: FileRoutesByTo
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/onboarding'
     | '/session/$bookingId'
+    | '/sign-in/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
   id:
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/onboarding'
     | '/session/$bookingId'
+    | '/sign-in/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
   fileRoutesById: FileRoutesById
@@ -327,7 +339,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
-  SignInRoute: typeof SignInRoute
+  SignInRoute: typeof SignInRouteWithChildren
   SubscriptionRoute: typeof SubscriptionRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
@@ -477,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TherapistDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-in/sso-callback': {
+      id: '/sign-in/sso-callback'
+      path: '/sso-callback'
+      fullPath: '/sign-in/sso-callback'
+      preLoaderRoute: typeof SignInSsoCallbackRouteImport
+      parentRoute: typeof SignInRoute
+    }
     '/session/$bookingId': {
       id: '/session/$bookingId'
       path: '/session/$bookingId'
@@ -515,6 +534,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface SignInRouteChildren {
+  SignInSsoCallbackRoute: typeof SignInSsoCallbackRoute
+}
+
+const SignInRouteChildren: SignInRouteChildren = {
+  SignInSsoCallbackRoute: SignInSsoCallbackRoute,
+}
+
+const SignInRouteWithChildren =
+  SignInRoute._addFileChildren(SignInRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -527,7 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
-  SignInRoute: SignInRoute,
+  SignInRoute: SignInRouteWithChildren,
   SubscriptionRoute: SubscriptionRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
