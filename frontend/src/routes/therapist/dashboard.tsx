@@ -413,7 +413,7 @@ function TherapistDashboard() {
               <div className="flex items-center gap-2">
                 <Star className="size-3 text-amber-400 fill-amber-400" />
                 <span className="text-xs text-slate-500">{profile?.rating?.toFixed(1) ?? '–'} · {stats?.completedSessions ?? 0} sessions</span>
-                {profile?.verified && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">RCI ✓</span>}
+                {profile?.verified && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">Therapist ✓</span>}
               </div>
             </div>
           </div>

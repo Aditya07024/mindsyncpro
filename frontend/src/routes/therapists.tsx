@@ -340,7 +340,7 @@ function TherapistMarketplace() {
                         <h3 className="font-bold text-lg text-slate-900">{therapist.name}</h3>
                         {therapist.verified && (
                           <span className="inline-block mt-1 text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            ✓ RCI Verified
+                            ✓ Therapist Verified
                           </span>
                         )}
                       </div>
@@ -468,7 +468,7 @@ function TherapistMarketplace() {
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                       {selectedTherapist.verified && (
                         <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
-                          ✓ RCI Verified
+                          ✓ Therapist Verified
                         </span>
                       )}
                       <div className="flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">

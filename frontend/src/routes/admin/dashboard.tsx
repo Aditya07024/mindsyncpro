@@ -238,7 +238,7 @@ function SuperAdminDashboard() {
             {/* Secondary stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { label: 'RCI Verified Therapists', value: platformStats.verified, color: 'text-green-400' },
+                { label: 'Therapist Verified Therapists', value: platformStats.verified, color: 'text-green-400' },
                 { label: 'Pending Review', value: platformStats.pending, color: 'text-amber-400' },
                 { label: 'Total Gross Revenue', value: `₹${therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`, color: 'text-violet-400' },
               ].map((s) => (
@@ -270,7 +270,7 @@ function SuperAdminDashboard() {
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
                 <input value={search} onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name or RCI…"
+                  placeholder="Search by name"
                   className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500" />
               </div>
             </div>
@@ -289,7 +289,7 @@ function SuperAdminDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white">{t.name}</p>
-                    <p className="text-xs text-slate-400">RCI: {t.rciNumber || 'Not provided'}</p>
+                    {/* <p className="text-xs text-slate-400">RCI: {t.rciNumber || 'Not provided'}</p> */}
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(t.specializations ?? []).slice(0, 3).map((s: string) => (
                         <span key={s} className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{s}</span>
@@ -319,7 +319,7 @@ function SuperAdminDashboard() {
                         <p className="text-xs font-bold text-emerald-450 text-emerald-400">Payout Due (70%): ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
                         <div className="flex flex-col gap-1 mt-1">
                           {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
-                          {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License / RCI ↗</a>}
+                          {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License ↗</a>}
                           {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Government ID ↗</a>}
                           {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-[11px] text-blue-400 hover:underline">Intro Video ↗</a>}
                         </div>

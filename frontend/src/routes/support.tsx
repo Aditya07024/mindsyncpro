@@ -17,7 +17,7 @@ function SupportPage() {
     },
     {
       q: "Can I book sessions with real therapists?",
-      a: "Yes! mymindtherapyfriend allows you to browse and book sessions with verified RCI-registered therapists directly through the platform."
+      a: "Yes! mymindtherapyfriend allows you to browse and book sessions with verified registered therapists directly through the platform."
     },
     {
       q: "Is my data anonymous in the Organisation portal?",

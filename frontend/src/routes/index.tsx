@@ -64,7 +64,7 @@ const PRICING_PLANS = [
     price: "₹999",
     period: "/6 mo",
     description: "Manage your practice with AI-powered insights.",
-    features: ["Live Video Sessions", "AI Pre-Session Briefs", "Earnings Dashboard", "RCI Verified Badge"],
+    features: ["Live Video Sessions", "AI Pre-Session Briefs", "Earnings Dashboard", "Therapist Verified Badge"],
     buttonText: "Join as Therapist",
     portalId: "therapist",
     color: "bg-white",
@@ -87,7 +87,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "mymindtherapyfriend AI Mental Health Platform India" },
-      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and RCI-verified therapists. Private, affordable, and free to start." },
+      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and verified therapists. Private, affordable, and free to start." },
     ],
   }),
 });
@@ -142,7 +142,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Are the therapists on mymindtherapyfriend verified?",
-    a: "Yes. Every therapist on our platform is verified against RCI (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking."
+    a: "Yes. Every therapist on our platform is verified against (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking."
   },
   {
     q: "Is my data private and safe?",
@@ -329,7 +329,7 @@ function Landing() {
               transition={{ delay: 0.3, duration: 0.7 }}
               className="mt-7 max-w-xl text-lg leading-relaxed text-[#333942]"
             >
-              mymindtherapyfriend is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and RCI-verified online therapist booking into one private, affordable wellness experience. Starting free.
+              mymindtherapyfriend is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and verified online therapist booking into one private, affordable wellness experience. Starting free.
             </motion.p>
 
             <div className="mt-8 flex flex-wrap gap-4 items-center">
@@ -679,7 +679,7 @@ function Landing() {
             </h2>
 
             <div className="mt-6 space-y-4 text-left text-base leading-relaxed text-slate-600 sm:text-lg">
-              <p>mymindtherapyfriend is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of RCI-verified online therapists.</p>
+              <p>mymindtherapyfriend is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of verified online therapists.</p>
               <p>Whether you are a student managing exam stress, a professional dealing with burnout, or an organisation looking to support employee mental health - mymindtherapyfriend offers affordable, private, and always-available mental health support starting at ₹0/month.</p>
               <p>We are DPDPA-compliant, store all data in India, and your conversations are always private.</p>
             </div>
@@ -913,7 +913,7 @@ function Landing() {
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Manas AI Companion</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</Link>
-              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book RCI-Verified Therapist</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book Verified Therapist</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Free Crisis Support India</Link>
             </div>

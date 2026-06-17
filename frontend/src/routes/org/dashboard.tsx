@@ -736,7 +736,7 @@ function OrgDashboard() {
                   value={extSearch}
                   onChange={(e) => setExtSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchExternalTherapists()}
-                  placeholder="Search by name, qualification, or RCI..."
+                  placeholder="Search by name, qualification, or Therapist Varification..."
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
                 />
                 <button 
