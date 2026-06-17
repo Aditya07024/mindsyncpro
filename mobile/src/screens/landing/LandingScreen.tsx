@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Heart, ArrowRight } from 'lucide-react-native';
 import { useAuth } from '@clerk/clerk-expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 
 import API from '../../lib/api';
@@ -15,6 +16,7 @@ interface LandingScreenProps {
 export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
   const { width } = Dimensions.get('window');
   const { isSignedIn, isLoaded } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Handle auto-redirection based on confirmed user profile role from MongoDB
   React.useEffect(() => {
@@ -115,7 +117,10 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
   }, [isLoaded, isSignedIn, navigation]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, 24) }]}
+    >
       {/* Hero Header Gradient */}
       <LinearGradient
         colors={['#E6F0EE', '#F9F5E9']}
@@ -176,7 +181,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
   </TouchableOpacity>
 
   <TouchableOpacity
-    onPress={() => Linking.openURL('https://mindsyncpro.online/')}
+    onPress={() => Linking.openURL('https://mymindtherapyfriend.com/')}
     style={styles.aboutTrigger}
   >
     <Text style={styles.aboutTriggerText}>

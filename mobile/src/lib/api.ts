@@ -400,8 +400,9 @@ const API = {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers,
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, stream: false }),
       });
+
 
       if (!response.ok) {
         let errMessage = `HTTP ${response.status}`;

@@ -88,16 +88,14 @@ const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '
 function AuthBridge({ children }: { children: React.ReactNode }) {
   const { getToken, isSignedIn } = useAuth();
 
-  useEffect(() => {
-    // Inject active Clerk token getter into our API axios layer
-    setTokenGetter(async () => {
-      try {
-        return await getToken();
-      } catch (err) {
-        return null;
-      }
-    });
-  }, [getToken]);
+  // Inject active Clerk token getter into our API layer synchronously during render
+  setTokenGetter(async () => {
+    try {
+      return await getToken();
+    } catch (err) {
+      return null;
+    }
+  });
 
   // Register push notifications when user signs in
   useEffect(() => {

@@ -216,7 +216,7 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
             setRefreshing(true);
             fetchNotifications();
           }}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom, Theme.spacing.margin) }]}
           showsVerticalScrollIndicator={false}
         />
       )}

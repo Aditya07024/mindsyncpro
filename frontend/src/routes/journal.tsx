@@ -7,6 +7,8 @@ import { BookOpen, AlertTriangle, Sparkles, Lock, ChevronDown, ChevronUp } from 
 import API from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { toast } from 'sonner';
+
 export const Route = createFileRoute('/journal')({ component: JournalPage });
 
 function JournalPage() {
@@ -55,8 +57,12 @@ function JournalPage() {
       queryClient.invalidateQueries({ queryKey: ['journals'] });
       setSituation(''); setThought(''); setFeeling(''); setReframe('');
       setSubmitting(false);
+      toast.success("Journal entry saved successfully! ✨");
     },
-    onError: () => setSubmitting(false),
+    onError: (err: any) => {
+      setSubmitting(false);
+      toast.error(err.message || "Failed to save journal entry. Please try again.");
+    },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

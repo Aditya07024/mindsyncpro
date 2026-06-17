@@ -31,7 +31,8 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
     queryFn: () => API.user.profile(),
     retry: false,
   });
-  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || useStore(state => state.firstName) || 'Friend';
+  const storeFirstName = useStore(state => state.firstName);
+  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || storeFirstName || 'Friend';
   const [crisisOpen, setCrisisOpen] = useState(false);
 
   // Fetch mood logs

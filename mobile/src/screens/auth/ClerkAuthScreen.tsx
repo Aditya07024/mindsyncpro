@@ -5,6 +5,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Mail, ArrowRight, ShieldCheck, ArrowLeft, Lock, Apple } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -28,6 +29,7 @@ interface ClerkAuthScreenProps {
 export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, route }) => {
   const role = route.params?.role || 'user';
   const upgradePlan = route.params?.upgradePlan;
+  const insets = useSafeAreaInsets();
 
   const { signIn, setActive, isLoaded: signInLoaded } = useSignIn();
   const { signUp, isLoaded: signUpLoaded } = useSignUp();
@@ -44,6 +46,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
   const [redirecting, setRedirecting] = useState(false);
   const [isSignUpFlow, setIsSignUpFlow] = useState(false);
   const redirectingRef = React.useRef(false);
+  const verifyingRef = React.useRef(false);
 
   // Monitor Clerk global authentication state to catch deep-linked browser return successes!
   React.useEffect(() => {
@@ -65,14 +68,14 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     try {
       // Instantly bootstrap our API token layer to prevent parent component race conditions!
       if (isSignedIn && getToken) {
-        console.log("[AuthRedirect] Fetching active Clerk session token...");
-        const token = await getToken();
-        if (token) {
-          console.log("[AuthRedirect] Token retrieved successfully. Injecting into API client.");
-          setTokenGetter(async () => token);
-        } else {
-          console.warn("[AuthRedirect] Retrieved token was empty/null.");
-        }
+        console.log("[AuthRedirect] Injecting active Clerk token getter into API client.");
+        setTokenGetter(async () => {
+          try {
+            return await getToken();
+          } catch (err) {
+            return null;
+          }
+        });
       }
     } catch (tokenErr) {
       console.error("[AuthRedirect] Failed to retrieve token inside ClerkAuthScreen:", tokenErr);
@@ -163,7 +166,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       if (activeSessionId && setSessionActive) {
         console.log("[OAuthFlow] Activating session:", activeSessionId);
         await setSessionActive({ session: activeSessionId });
-        completeAuthProcess(activeSessionId);
       } else {
         console.warn("[OAuthFlow] No active session ID returned. New user state details:", {
           createdSessionId,
@@ -193,7 +195,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
               if (newSessionId && setSessionActive) {
                 console.log("[OAuthFlow] Auto-resolution successful! Activating session:", newSessionId);
                 await setSessionActive({ session: newSessionId });
-                completeAuthProcess(newSessionId);
                 return;
               }
             } catch (autoErr) {
@@ -230,7 +231,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       if (activeSessionId && setSessionActive) {
         console.log("[OAuthFlow] Activating session:", activeSessionId);
         await setSessionActive({ session: activeSessionId });
-        completeAuthProcess(activeSessionId);
       } else {
         console.warn("[OAuthFlow] No active session ID returned. New user state details:", {
           createdSessionId,
@@ -260,7 +260,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
               if (newSessionId && setSessionActive) {
                 console.log("[OAuthFlow] Auto-resolution successful! Activating session:", newSessionId);
                 await setSessionActive({ session: newSessionId });
-                completeAuthProcess(newSessionId);
                 return;
               }
             } catch (autoErr) {
@@ -294,9 +293,30 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     try {
       if (!signInLoaded || !signUpLoaded || !signIn) {
         // Fallback for development without active Clerk API keys in simulator
-        console.warn("Clerk hooks not fully loaded. Simulating code sent.");
+        console.log("Clerk hooks not fully loaded. Simulating code sent.");
         setPendingVerification(true);
         setLoading(false);
+        return;
+      }
+
+      // If user explicitly chose SignUp flow, jump directly to signUp.create
+      if (isSignUpFlow) {
+        try {
+          if (!signUp) return;
+          await signUp.create({
+            emailAddress: email,
+          });
+          await signUp.prepareEmailAddressVerification({
+            strategy: 'email_code',
+          });
+          setPendingVerification(true);
+        } catch (signUpErr: any) {
+          let errorMsg = signUpErr.message || 'Could not send verification code.';
+          if (isDevKey) {
+            errorMsg += "\n\nNote: In Clerk Development Mode, OTP emails only send to verified test accounts in your Clerk Dashboard.";
+          }
+          Alert.alert('Registration Failed', errorMsg);
+        }
         return;
       }
 
@@ -321,24 +341,26 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       setIsSignUpFlow(false);
       setPendingVerification(true);
     } catch (err: any) {
-      console.warn("Clerk SignIn error, trying SignUp:", err.message);
-      try {
-        if (!signUp) return;
-        // If user doesn't exist, start signUp flow
-        await signUp.create({
-          emailAddress: email,
-        });
-        await signUp.prepareEmailAddressVerification({
-          strategy: 'email_code',
-        });
-        setIsSignUpFlow(true);
-        setPendingVerification(true);
-      } catch (signUpErr: any) {
-        let errorMsg = signUpErr.message || 'Could not send verification code.';
-        if (isDevKey) {
-          errorMsg += "\n\nNote: In Clerk Development Mode, OTP emails only send to verified test accounts in your Clerk Dashboard.";
-        }
-        Alert.alert('Authentication Failed', errorMsg);
+      console.log("Clerk SignIn error:", err.message || err);
+      const isUserNotFound = err.message?.toLowerCase().includes("couldn't find your account") ||
+                             err.errors?.[0]?.code === 'form_identifier_not_found';
+                             
+      if (isUserNotFound) {
+        Alert.alert(
+          'Account Not Found',
+          "You don't have an account. Please sign up first.",
+          [
+            { 
+              text: 'OK', 
+              onPress: () => {
+                // Automatically switch UI to sign up mode
+                setIsSignUpFlow(true);
+              } 
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Sign In Failed', err.message || 'Could not initiate sign in.');
       }
     } finally {
       setLoading(false);
@@ -346,17 +368,23 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
   };
 
   const handleVerifyCode = async () => {
+    if (verifyingRef.current) {
+      console.log("[Verification] Already verifying code, ignoring duplicate call.");
+      return;
+    }
     if (!code || code.length < 4) {
       Alert.alert('Invalid OTP', 'Please enter the verification code sent to your email.');
       return;
     }
 
+    verifyingRef.current = true;
     setLoading(true);
     try {
       if (!signInLoaded || !signUpLoaded || !signIn || !signUp) {
         // Mock success bypass for local simulator
         completeAuthProcess('user_mock_123');
         setLoading(false);
+        verifyingRef.current = false;
         return;
       }
 
@@ -366,22 +394,116 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
           code,
         });
         if (result.status === 'complete') {
+          console.log("[Verification] SignIn successful. Activating session...");
           await setActive({ session: result.createdSessionId });
-          completeAuthProcess(result.createdSessionId || 'session_completed');
+          // Redirection will be handled automatically by the React.useEffect on isSignedIn
         }
       } else {
         const result = await signUp.attemptEmailAddressVerification({
           code,
         });
         if (result.status === 'complete') {
+          console.log("[Verification] SignUp successful. Activating session...");
           await setActive({ session: result.createdSessionId });
-          completeAuthProcess(result.createdSessionId || 'session_completed');
+        } else if (result.status === 'missing_requirements') {
+          const missing = result.missingFields || [];
+          const hasUsername = missing.includes('username');
+          const hasPassword = missing.includes('password');
+
+          if (hasUsername || hasPassword) {
+            try {
+              const updateData: any = {};
+              if (hasUsername) {
+                console.log("[Verification] Username is required but missing. Automatically generating username...");
+                const emailPrefix = email 
+                  ? email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')
+                  : 'user';
+                const randomSuffix = Math.random().toString(36).substring(2, 7);
+                updateData.username = `${emailPrefix}_${randomSuffix}`.toLowerCase().substring(0, 15);
+              }
+              if (hasPassword) {
+                console.log("[Verification] Password is required but missing. Automatically generating random password...");
+                const randomPassword = Math.random().toString(36).substring(2, 15) + 
+                                       Math.random().toString(36).substring(2, 15).toUpperCase() + 
+                                       "!@#$";
+                updateData.password = randomPassword;
+              }
+
+              console.log("[Verification] Updating signup with required fields:", Object.keys(updateData));
+              await signUp.update(updateData);
+              
+              const newSessionId = signUp.createdSessionId;
+              if (newSessionId && signUp.status === 'complete') {
+                console.log("[Verification] Auto-resolution successful! Activating session:", newSessionId);
+                await setActive({ session: newSessionId });
+              }
+            } catch (autoErr) {
+              console.error("[Verification] Failed to auto-resolve missing fields:", autoErr);
+              throw autoErr;
+            }
+          } else {
+            throw new Error(`Registration incomplete. Missing fields: ${missing.join(', ')}`);
+          }
         }
       }
     } catch (err: any) {
+      console.log("[Verification] Error during code verification:", err);
+      
+      const errorMsg = err.message || '';
+      const isAlreadyVerified = errorMsg.toLowerCase().includes('already been verified') || 
+                                errorMsg.toLowerCase().includes('already verified') ||
+                                JSON.stringify(err).toLowerCase().includes('already verified');
+
+      if (isAlreadyVerified) {
+        console.log("[Verification] Code was already verified. Attempting to activate session.");
+        try {
+          const sessionId = !isSignUpFlow ? signIn?.createdSessionId : signUp?.createdSessionId;
+          const currentStatus = !isSignUpFlow ? signIn?.status : signUp?.status;
+
+          if (currentStatus === 'complete' && sessionId) {
+            await setActive({ session: sessionId });
+            return;
+          } else if (isSignUpFlow && currentStatus === 'missing_requirements' && signUp) {
+            const missing = signUp.missingFields || [];
+            const hasUsername = missing.includes('username');
+            const hasPassword = missing.includes('password');
+
+            if (hasUsername || hasPassword) {
+              console.log("[Verification] Auto-resolving missing credentials on already-verified signup...");
+              const updateData: any = {};
+              if (hasUsername) {
+                const emailPrefix = email 
+                  ? email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')
+                  : 'user';
+                const randomSuffix = Math.random().toString(36).substring(2, 7);
+                updateData.username = `${emailPrefix}_${randomSuffix}`.toLowerCase().substring(0, 15);
+              }
+              if (hasPassword) {
+                const randomPassword = Math.random().toString(36).substring(2, 15) + 
+                                       Math.random().toString(36).substring(2, 15).toUpperCase() + 
+                                       "!@#$";
+                updateData.password = randomPassword;
+              }
+
+              await signUp.update(updateData);
+              if (signUp.status === 'complete' && signUp.createdSessionId) {
+                await setActive({ session: signUp.createdSessionId });
+                return;
+              }
+            }
+          } else if (isSignedIn) {
+            // Already signed in, let useEffect handle redirect
+            return;
+          }
+        } catch (activeErr) {
+          console.error("[Verification] Failed to auto-activate already-verified session:", activeErr);
+        }
+      }
+
       Alert.alert('Verification Failed', err.message || 'Incorrect OTP code. Please try again.');
     } finally {
       setLoading(false);
+      verifyingRef.current = false;
     }
   };
 
@@ -410,7 +532,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         <View style={styles.header}>
           <Text style={styles.brandTitle}>MyMindTherapyFriend</Text>
           <Text style={styles.title}>
-            {pendingVerification ? 'Enter OTP' : 'Sign in'}
+            {pendingVerification ? 'Enter OTP' : (isSignUpFlow ? 'Sign up' : 'Sign in')}
           </Text>
           <Text style={styles.subtitle}>
             {pendingVerification 
@@ -452,7 +574,9 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
 
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or sign in with email</Text>
+              <Text style={styles.dividerText}>
+                {isSignUpFlow ? 'or sign up with email' : 'or sign in with email'}
+              </Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -470,11 +594,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
               />
             </View>
 
-            {isDevKey && (
-              <Text style={{ color: '#D97706', fontSize: 11, fontFamily: Theme.fonts.bodyMedium, marginTop: 4, lineHeight: 16, paddingHorizontal: 4 }}>
-                ⚠️ Clerk is in Development Mode. OTP emails will only send to the instance owner and test accounts defined in the Clerk Dashboard.
-              </Text>
-            )}
 
             <TouchableOpacity 
               onPress={handleSendCode} 
@@ -490,6 +609,17 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
                 </>
               )}
             </TouchableOpacity>
+
+            <View style={styles.toggleContainer}>
+              <Text style={styles.toggleText}>
+                {isSignUpFlow ? "Already have an account?" : "Don't have an account?"}
+              </Text>
+              <TouchableOpacity onPress={() => setIsSignUpFlow(!isSignUpFlow)}>
+                <Text style={styles.toggleLink}>
+                  {isSignUpFlow ? "Sign in" : "Sign up"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           <View style={styles.form}>
@@ -525,7 +655,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         )}
       </View>
 
-      <Text style={styles.gdprFootnote}>
+      <Text style={[styles.gdprFootnote, { bottom: Math.max(insets.bottom, 16) + 16 }]}>
         🔒 GDPR Compliant • HIPAA Secure • End-to-end encrypted session
       </Text>
     </View>
@@ -758,6 +888,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#A8A29E',
     textAlign: 'center',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  toggleText: {
+    fontFamily: Theme.fonts.bodyMedium,
+    fontSize: 13,
+    color: '#78716C',
+  },
+  toggleLink: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 13,
+    color: Theme.colors.primary,
+    marginLeft: 4,
   },
 });
 export default ClerkAuthScreen;

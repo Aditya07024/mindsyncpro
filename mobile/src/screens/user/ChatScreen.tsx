@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Send, AlertTriangle, Sparkles } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Theme } from '../../theme';
@@ -17,6 +18,7 @@ interface Message {
 }
 
 export const ChatScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [profileName, setProfileName] = useState(useStore.getState().firstName || 'friend');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -278,7 +280,7 @@ export const ChatScreen: React.FC = () => {
       )}
 
       {/* Input container */}
-      <View style={styles.inputArea}>
+      <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, Theme.spacing.sm) }]}>
         <TextInput
           value={input}
           onChangeText={setInput}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { ArrowLeft, BookOpen, Sparkles, Check } from 'lucide-react-native';
+import { View, StyleSheet, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { ArrowLeft, BookOpen, Sparkles, Check, AlertTriangle } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 
@@ -16,6 +16,10 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
   const [reframed, setReframed] = useState('');
   const [selectedDistortions, setSelectedDistortions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tier, setTier] = useState('free');
+  const [weekEntries, setWeekEntries] = useState(0);
+  const [limitHit, setLimitHit] = useState(false);
+  const [checkingLimit, setCheckingLimit] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -28,6 +32,30 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
       .catch((err: any) => {
         console.warn("Failed to fetch random prompt from backend:", err);
       });
+
+    Promise.all([
+      API.subscription.get().catch(() => ({ tier: 'free' })),
+      API.journal.list().catch(() => ({ entries: [] }))
+    ]).then(([subRes, journalRes]: any) => {
+      if (!active) return;
+      const userTier = subRes?.tier ?? 'free';
+      const journalsList = journalRes?.entries ?? [];
+      
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentCount = journalsList.filter((j: any) => {
+        const d = j.createdAt || j.date;
+        return d && new Date(d) >= oneWeekAgo;
+      }).length;
+      
+      setTier(userTier);
+      setWeekEntries(recentCount);
+      setLimitHit(userTier === 'free' && recentCount >= 3);
+      setCheckingLimit(false);
+    }).catch(err => {
+      console.warn("Failed to load limit status:", err);
+      if (active) setCheckingLimit(false);
+    });
+
     return () => { active = false; };
   }, []);
 
@@ -47,21 +75,30 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
     }
   };
 
+  const showAlert = (title: string, message: string, buttonText: string = 'OK', onPress?: () => void) => {
+    if (Platform.OS === 'web') {
+      alert(`${title}\n\n${message}`);
+      if (onPress) onPress();
+    } else {
+      Alert.alert(title, message, [{ text: buttonText, onPress }]);
+    }
+  };
+
   const handleSave = async () => {
     if (!situation.trim()) {
-      Alert.alert('Situation Required', 'Please describe what happened.');
+      showAlert('Situation Required', 'Please describe what happened.');
       return;
     }
     if (!thought.trim()) {
-      Alert.alert('Thought Required', 'Please write your automated negative thought.');
+      showAlert('Thought Required', 'Please write your automated negative thought.');
       return;
     }
     if (!feeling.trim()) {
-      Alert.alert('Feeling Required', 'Please record your emotional feeling (e.g. anxious, sad).');
+      showAlert('Feeling Required', 'Please record your emotional feeling (e.g. anxious, sad).');
       return;
     }
     if (!reframed.trim()) {
-      Alert.alert('Reframed Narrative Required', 'Please try reframing the thought objectively.');
+      showAlert('Reframed Narrative Required', 'Please try reframing the thought objectively.');
       return;
     }
 
@@ -75,22 +112,23 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
         reframe: reframed,
       });
 
-      Alert.alert(
+      showAlert(
         'Reframed & Saved!',
         'Excellent cognitive restructuring. Practice this skill daily to build emotional resilience.',
-        [{ text: 'Great', onPress: () => navigation.goBack() }]
+        'Great',
+        () => navigation.goBack()
       );
     } catch (err: any) {
       console.warn("Failed to save journal to backend:", err);
-      Alert.alert(
+      showAlert(
         'Error',
-        err.message || 'Failed to save thought sheet to server. Please try again.',
-        [{ text: 'OK' }]
+        err.message || 'Failed to save thought sheet to server. Please try again.'
       );
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -110,6 +148,19 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
         </Text>
       </View>
 
+      {/* Limit warning banner */}
+      {limitHit && (
+        <View style={styles.limitBanner}>
+          <AlertTriangle size={18} color="#DE4E37" style={{ marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.limitBannerTitle}>Weekly Limit Reached</Text>
+            <Text style={styles.limitBannerText}>
+              You've used your {weekEntries} / 3 free journal entries for this week. Please upgrade to unlock unlimited journaling and AI insights.
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Today Prompt Section */}
       <View style={styles.promptCard}>
         <Text style={styles.promptSub}>TODAY'S PROMPT</Text>
@@ -128,9 +179,10 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           numberOfLines={2}
           value={situation}
           onChangeText={setSituation}
-          placeholder="e.g. 'Receiving a brief feedback email from my project supervisor...'"
+          editable={!limitHit}
+          placeholder={limitHit ? "Journaling is locked" : "e.g. 'Receiving a brief feedback email from my project supervisor...'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 60 }]}
+          style={[styles.textInput, { height: 60 }, limitHit && { opacity: 0.6 }]}
         />
       </View>
 
@@ -146,9 +198,10 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           numberOfLines={3}
           value={thought}
           onChangeText={setThought}
-          placeholder="e.g. 'I will stumble during this team presentation, and everyone will think I am incompetent…'"
+          editable={!limitHit}
+          placeholder={limitHit ? "Journaling is locked" : "e.g. 'I will stumble during this team presentation, and everyone will think I am incompetent…'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 75 }]}
+          style={[styles.textInput, { height: 75 }, limitHit && { opacity: 0.6 }]}
         />
       </View>
 
@@ -166,10 +219,12 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
             return (
               <TouchableOpacity
                 key={dist.id}
+                disabled={limitHit}
                 onPress={() => handleToggleDistortion(dist.id)}
                 style={[
                   styles.distCard,
-                  active && styles.distCardActive
+                  active && styles.distCardActive,
+                  limitHit && { opacity: 0.6 }
                 ]}
               >
                 <View style={styles.distCardLeft}>
@@ -197,9 +252,10 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
         <TextInput
           value={feeling}
           onChangeText={setFeeling}
-          placeholder="e.g. 'Anxious and insecure (8/10)'"
+          editable={!limitHit}
+          placeholder={limitHit ? "Journaling is locked" : "e.g. 'Anxious and insecure (8/10)'"}
           placeholderTextColor={Theme.colors.outline}
-          style={styles.textInput}
+          style={[styles.textInput, limitHit && { opacity: 0.6 }]}
         />
       </View>
 
@@ -215,27 +271,38 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           numberOfLines={3}
           value={reframed}
           onChangeText={setReframed}
-          placeholder="e.g. 'I may feel nervous, but I have prepared my slides thoroughly. Stumbling slightly is normal, and it does not make me incompetent.'"
+          editable={!limitHit}
+          placeholder={limitHit ? "Journaling is locked" : "e.g. 'I may feel nervous, but I have prepared my slides thoroughly. Stumbling slightly is normal, and it does not make me incompetent.'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 75 }]}
+          style={[styles.textInput, { height: 75 }, limitHit && { opacity: 0.6 }]}
         />
       </View>
 
       {/* Action btn */}
-      <TouchableOpacity 
-        onPress={handleSave} 
-        disabled={loading}
-        style={styles.saveBtn}
-      >
-        {loading ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <>
-            <BookOpen size={18} color="#FFF" />
-            <Text style={styles.saveBtnText}>Record Thought Sheet</Text>
-          </>
-        )}
-      </TouchableOpacity>
+      {limitHit ? (
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Plans')} 
+          style={[styles.saveBtn, { backgroundColor: Theme.colors.secondary }]}
+        >
+          <Sparkles size={18} color="#FFF" />
+          <Text style={styles.saveBtnText}>Upgrade to Unlimited Journaling</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity 
+          onPress={handleSave} 
+          disabled={loading || checkingLimit}
+          style={styles.saveBtn}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <>
+              <BookOpen size={18} color="#FFF" />
+              <Text style={styles.saveBtnText}>Record Thought Sheet</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };
@@ -397,6 +464,29 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontFamily: Theme.fonts.headline,
     fontSize: 14,
+  },
+  limitBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FDF2F2',
+    borderColor: '#F8D7DA',
+    borderWidth: 1,
+    padding: Theme.spacing.md,
+    borderRadius: Theme.radius.lg,
+    gap: 12,
+  },
+  limitBannerTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 14,
+    color: '#842029',
+    fontWeight: 'bold',
+  },
+  limitBannerText: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 12,
+    color: '#842029',
+    lineHeight: 16,
+    marginTop: 2,
   },
 });
 export default CBTJournalScreen;

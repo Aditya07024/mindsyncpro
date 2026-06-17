@@ -6,7 +6,8 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, Alert, Linking } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from './api';
 
 // Configure how notifications appear when app is in foreground
@@ -130,4 +131,121 @@ export function setupNotificationListeners(
     receivedSubscription.remove();
     responseSubscription.remove();
   };
+}
+
+/**
+ * Check if the system has granted notifications permission.
+ */
+export async function checkNotificationPermissionStatus(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === 'granted';
+  } catch (err) {
+    console.error('[Push] Error checking permissions status:', err);
+    return false;
+  }
+}
+
+/**
+ * Synchronize and get the notification preference status (combines storage and system permission)
+ */
+export async function getNotificationsPreference(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+  try {
+    const storageVal = await AsyncStorage.getItem('notifications_enabled');
+    const isStorageEnabled = storageVal === 'true';
+    const hasSystemPermission = await checkNotificationPermissionStatus();
+    
+    if (isStorageEnabled && !hasSystemPermission) {
+      await AsyncStorage.setItem('notifications_enabled', 'false');
+      return false;
+    }
+    return isStorageEnabled && hasSystemPermission;
+  } catch (err) {
+    console.error('[Push] Error getting notifications preference:', err);
+    return false;
+  }
+}
+
+/**
+ * Handle toggling the notification settings.
+ * If enabling and permission is denied in system settings, it redirects the user to system settings.
+ */
+export async function handleNotificationToggle(
+  enable: boolean,
+  setNotificationsEnabledState: (val: boolean) => void
+): Promise<void> {
+  if (Platform.OS === 'web') {
+    Alert.alert('Not Supported', 'Push notifications are not supported on web.');
+    setNotificationsEnabledState(false);
+    return;
+  }
+
+  if (enable) {
+    try {
+      const { status: currentStatus } = await Notifications.getPermissionsAsync();
+
+      if (currentStatus === 'denied') {
+        Alert.alert(
+          'Notifications Off',
+          'You have disabled notifications in system settings. Please enable them in settings first.',
+          [
+            { 
+              text: 'Cancel', 
+              style: 'cancel', 
+              onPress: () => setNotificationsEnabledState(false) 
+            },
+            { 
+              text: 'Go to Settings', 
+              onPress: () => {
+                Linking.openSettings();
+                setNotificationsEnabledState(false);
+              } 
+            }
+          ]
+        );
+        return;
+      }
+
+      let finalStatus: any = currentStatus;
+      if (currentStatus === 'undetermined') {
+        const { status } = await Notifications.requestPermissionsAsync({
+          ios: {
+            allowAlert: true,
+            allowBadge: true,
+            allowSound: true,
+          },
+        });
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        Alert.alert('Permission Denied', 'Notifications permission was not granted.');
+        setNotificationsEnabledState(false);
+        return;
+      }
+
+      // If granted, save preference and register push token
+      setNotificationsEnabledState(true);
+      await AsyncStorage.setItem('notifications_enabled', 'true');
+      
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await sendTokenToBackend(token);
+      }
+      Alert.alert('Notifications Enabled', 'You will now receive push notification alerts.');
+    } catch (err) {
+      console.error('[Push] Error enabling notifications:', err);
+      setNotificationsEnabledState(false);
+    }
+  } else {
+    try {
+      setNotificationsEnabledState(false);
+      await AsyncStorage.setItem('notifications_enabled', 'false');
+      Alert.alert('Notifications Disabled', 'Push notifications have been disabled.');
+    } catch (err) {
+      console.error('[Push] Error disabling notifications:', err);
+    }
+  }
 }

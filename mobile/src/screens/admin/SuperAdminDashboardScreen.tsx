@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldCheck, UserCheck, ShieldAlert, Award, Star, DollarSign, Users } from 'lucide-react-native';
+import { ShieldCheck, UserCheck, ShieldAlert, Award, Star, DollarSign, Users, Bell, BellOff } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import { StatCard } from '../../components/StatCard';
+import { getNotificationsPreference, handleNotificationToggle } from '../../lib/pushNotifications';
 
 interface VerificationItem {
   _id: string;
@@ -27,6 +28,12 @@ interface CrisisFlag {
 }
 
 export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    getNotificationsPreference().then(setNotificationsEnabled);
+  }, []);
+
   const [verifications, setVerifications] = useState<VerificationItem[]>([
     { _id: 'v1', name: 'Dr. Sarah Jenkins', type: 'therapist', licenseNum: 'MCI-12849', status: 'verified' },
     { _id: 'v2', name: 'IIT Bombay Counseling Cell', type: 'organization', status: 'pending' },
@@ -105,6 +112,30 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Notification Toggle Card */}
+        <View style={styles.notificationCard}>
+          <View style={styles.notificationLeft}>
+            <View style={[styles.notificationIconBox, notificationsEnabled ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+              {notificationsEnabled ? (
+                <Bell size={18} color={Theme.colors.primary} />
+              ) : (
+                <BellOff size={18} color={Theme.colors.outline} />
+              )}
+            </View>
+            <View>
+              <Text style={styles.notificationTitle}>Alerts & Notifications</Text>
+              <Text style={styles.notificationDesc}>
+                {notificationsEnabled ? 'Instant updates are turned on' : 'Notifications are paused'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={(val) => handleNotificationToggle(val, setNotificationsEnabled)}
+            trackColor={{ false: '#E0E0E0', true: Theme.colors.primary + '50' }}
+            thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
+          />
+        </View>
         {/* MRR & Stats Bento */}
         <View style={styles.statsGrid}>
           <StatCard
@@ -380,6 +411,51 @@ const styles = StyleSheet.create({
     color: Theme.colors.textMuted,
     textAlign: 'center',
     paddingVertical: Theme.spacing.xs,
+  },
+  notificationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    shadowColor: '#2E6E65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+    marginBottom: Theme.spacing.xs,
+  },
+  notificationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  notificationIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationActiveIcon: {
+    backgroundColor: Theme.colors.primary + '12',
+  },
+  notificationInactiveIcon: {
+    backgroundColor: Theme.colors.surfaceLow,
+  },
+  notificationTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 14.5,
+    color: Theme.colors.onSurface,
+  },
+  notificationDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11.5,
+    color: Theme.colors.textMuted,
+    marginTop: 1,
   },
 });
 export default SuperAdminDashboardScreen;

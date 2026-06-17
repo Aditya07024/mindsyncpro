@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase, FileText } from 'lucide-react-native';
+import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase, FileText, Bell, BellOff } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import { useWorkspaceStore } from '../../lib/workspaceStore';
+import { getNotificationsPreference, handleNotificationToggle } from '../../lib/pushNotifications';
 
 const ALL_24H_SLOTS = [
   '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -45,6 +46,11 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [activationLoading, setActivationLoading] = useState(false);
   const [blinkToggle, setBlinkToggle] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    getNotificationsPreference().then(setNotificationsEnabled);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,7 +77,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   const isSubscribed = 
     !!(userProfile?.orgId) || 
     !!(userProfile?.tier && userProfile.tier !== 'free') || 
-    (subData && subData.subscription?.status === 'active');
+    !!(subData && subData.subscription?.status === 'active');
 
   // 3. Fetch Therapist Statistics (Only if subscribed)
   const { data: therapistStats, refetch: refetchStats } = useQuery({
@@ -251,6 +257,30 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Notification Toggle Card */}
+        <View style={styles.notificationCard}>
+          <View style={styles.notificationLeft}>
+            <View style={[styles.notificationIconBox, notificationsEnabled ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+              {notificationsEnabled ? (
+                <Bell size={18} color={Theme.colors.primary} />
+              ) : (
+                <BellOff size={18} color={Theme.colors.outline} />
+              )}
+            </View>
+            <View>
+              <Text style={styles.notificationTitle}>Alerts & Notifications</Text>
+              <Text style={styles.notificationDesc}>
+                {notificationsEnabled ? 'Instant updates are turned on' : 'Notifications are paused'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={(val) => handleNotificationToggle(val, setNotificationsEnabled)}
+            trackColor={{ false: '#E0E0E0', true: Theme.colors.primary + '50' }}
+            thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
+          />
+        </View>
         
         {/* Custom High-Fidelity Profile Header Card */}
         {/* <View style={styles.profileHeaderCard}>
@@ -1336,6 +1366,50 @@ const styles = StyleSheet.create({
   },
   switcherBtnTextActive: {
     color: '#FFF',
+  },
+  notificationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    shadowColor: '#2E6E65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  notificationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  notificationIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationActiveIcon: {
+    backgroundColor: Theme.colors.primary + '12',
+  },
+  notificationInactiveIcon: {
+    backgroundColor: Theme.colors.surfaceLow,
+  },
+  notificationTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 14.5,
+    color: Theme.colors.onSurface,
+  },
+  notificationDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11.5,
+    color: Theme.colors.textMuted,
+    marginTop: 1,
   },
 });
 

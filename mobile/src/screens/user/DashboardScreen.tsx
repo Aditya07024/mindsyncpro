@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Alert, Switch } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles, Wallet, FileText } from 'lucide-react-native';
+import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles, Wallet, FileText, Bell, BellOff } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { useStore } from '../../lib/store';
 import { AppHeader } from '../../components/AppHeader';
 import { SOSButton } from '../../components/SOSButton';
 import { CrisisOverlay } from '../../components/CrisisOverlay';
+import { getNotificationsPreference, handleNotificationToggle } from '../../lib/pushNotifications';
 
 interface DashboardScreenProps {
   navigation: any;
@@ -19,6 +20,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   const { user } = useUser();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [crisisOpen, setCrisisOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    getNotificationsPreference().then(setNotificationsEnabled);
+  }, []);
 
   // Fetch stats from backend API
   const { data: userStats } = useQuery({
@@ -34,7 +40,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     retry: false,
   });
 
-  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || useStore(state => state.firstName) || 'Friend';
+  const storeFirstName = useStore(state => state.firstName);
+  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || storeFirstName || 'Friend';
 
   // Fetch bookings dynamically
   const { data: bookingsData } = useQuery({
@@ -105,6 +112,31 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <View style={styles.verticalDivider} />
             <Text style={styles.tierText}>{tier}</Text>
           </View>
+        </View>
+
+        {/* Notification Toggle Card */}
+        <View style={styles.notificationCard}>
+          <View style={styles.notificationLeft}>
+            <View style={[styles.notificationIconBox, notificationsEnabled ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+              {notificationsEnabled ? (
+                <Bell size={18} color={Theme.colors.primary} />
+              ) : (
+                <BellOff size={18} color={Theme.colors.outline} />
+              )}
+            </View>
+            <View>
+              <Text style={styles.notificationTitle}>Alerts & Notifications</Text>
+              <Text style={styles.notificationDesc}>
+                {notificationsEnabled ? 'Instant updates are turned on' : 'Notifications are paused'}
+              </Text>
+            </View>
+          </View>
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={(val) => handleNotificationToggle(val, setNotificationsEnabled)}
+            trackColor={{ false: '#E0E0E0', true: Theme.colors.primary + '50' }}
+            thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
+          />
         </View>
 
         {/* Manas Chat Hero Card */}
@@ -668,6 +700,50 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fonts.headline,
     fontSize: 15,
     color: Theme.colors.error,
-  }
+  },
+  notificationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.surfaceHigh,
+    shadowColor: '#2E6E65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  notificationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.sm,
+  },
+  notificationIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationActiveIcon: {
+    backgroundColor: Theme.colors.primary + '12',
+  },
+  notificationInactiveIcon: {
+    backgroundColor: Theme.colors.surfaceLow,
+  },
+  notificationTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 14.5,
+    color: Theme.colors.onSurface,
+  },
+  notificationDesc: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11.5,
+    color: Theme.colors.textMuted,
+    marginTop: 1,
+  },
 });
 export default DashboardScreen;

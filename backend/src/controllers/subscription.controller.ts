@@ -237,18 +237,42 @@ export class SubscriptionController {
         userId,
         status: "active",
         plan: { $ne: "free" },
-      });
+      }).sort({ createdAt: -1 });
 
-      // Fallback to pending subscription if no active one exists
+      // Fallback to pending subscriptions if no active one exists
       if (!sub) {
-        sub = await Subscription.findOne({
+        const pendingSubs = await Subscription.find({
           userId,
           status: "pending",
           plan: { $ne: "free" },
         });
-      }
 
-      if (!sub) throw new AppError("No active or pending subscription found", 404);
+        if (pendingSubs.length === 0) {
+          throw new AppError("No active or pending subscription found", 404);
+        }
+
+        for (const pendingSub of pendingSubs) {
+          if (pendingSub.razorpaySubscriptionId) {
+            try {
+              await SubscriptionService.cancelSubscription(
+                pendingSub.razorpaySubscriptionId,
+              );
+            } catch (err) {
+              console.warn(
+                `[Cancel] Failed to cancel subscription ${pendingSub.razorpaySubscriptionId} on Razorpay (might be unpaid/pending):`,
+                err
+              );
+            }
+          }
+          pendingSub.status = "cancelled";
+          await pendingSub.save();
+        }
+
+        // Downgrade user tier to free
+        await User.findByIdAndUpdate(userId, { tier: "free" });
+
+        return res.json({ message: "Subscription cancelled successfully." });
+      }
 
       if (sub.razorpaySubscriptionId) {
         try {
@@ -256,7 +280,10 @@ export class SubscriptionController {
             sub.razorpaySubscriptionId,
           );
         } catch (err) {
-          console.warn("[Cancel] Failed to cancel subscription on Razorpay (might be unpaid/pending):", err);
+          console.warn(
+            `[Cancel] Failed to cancel subscription ${sub.razorpaySubscriptionId} on Razorpay (might be unpaid/pending):`,
+            err
+          );
         }
       }
 

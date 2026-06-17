@@ -46,7 +46,7 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   const isSubscribed =
     !!(userProfile?.orgId) ||
     !!(userProfile?.tier && userProfile.tier !== 'free') ||
-    (subData && subData.subscription?.status === 'active');
+    !!(subData && subData.subscription?.status === 'active');
 
   const { data: therapistStats, refetch: refetchStats } = useQuery({
     queryKey: ['therapistStats'],

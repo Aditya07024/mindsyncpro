@@ -5,8 +5,17 @@ import { AIService } from "@/services/ai.service";
 
 export class ChatController {
   static sendMessage = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const { message } = req.body;
+    const { message, stream } = req.body;
     const quota = await AIService.ensureChatQuota(req.user!.sub);
+
+    // If client explicitly requests non-streaming response (e.g., mobile client with fetch constraints)
+    if (stream === false) {
+      let fullReply = "";
+      for await (const chunk of AIService.streamReply(req.user!.sub, message)) {
+        fullReply += chunk;
+      }
+      return res.json({ reply: fullReply, remaining: quota.remaining });
+    }
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -19,6 +28,7 @@ export class ChatController {
     res.write("data: {\"done\":true}\n\n");
     res.end();
   });
+
 
   static getConversationHistory = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const history = await AIService.getConversationHistory(req.user!.sub);

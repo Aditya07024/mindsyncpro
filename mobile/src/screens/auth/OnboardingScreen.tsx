@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useStore, Concern, NeedType } from '../../lib/store';
 import { Theme } from '../../theme';
 import { ArrowRight, Check } from 'lucide-react-native';
@@ -10,6 +11,7 @@ interface OnboardingScreenProps {
 }
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const completeOnboarding = useStore(state => state.completeOnboarding);
 
   const [step, setStep] = useState(1);
@@ -221,11 +223,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 84 }]}>
         {renderStep()}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { bottom: Math.max(insets.bottom, 16) + 16 }]}>
         <TouchableOpacity onPress={handleNext} disabled={loading} style={styles.nextBtn}>
           {loading ? (
             <ActivityIndicator color="#FFF" />
