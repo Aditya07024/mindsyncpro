@@ -939,7 +939,7 @@ function Landing() {
 
             <div className="mt-5 flex items-center gap-3">
               <a 
-                href="https://www.instagram.com/mymindtherapyfriendindia/" 
+                href="https://www.instagram.com/mymindtherapyfriend/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
