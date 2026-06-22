@@ -28,6 +28,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "adjustResize",
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "CAMERA",
@@ -50,11 +51,11 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
+    "owner": "adityagla",
     "extra": {
       "eas": {
-        "projectId": "0cd99998-b9bb-430f-8fe2-5e0e44ff80e1"
+        "projectId": "cf4bb4a6-65b1-4029-bd9c-988c990cf2d8"
       }
-    },
-    "owner": "aditya106"
+    }
   }
 }

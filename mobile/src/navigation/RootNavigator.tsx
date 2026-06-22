@@ -63,6 +63,7 @@ const UserTabNavigator = () => {
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
         tabBarInactiveTintColor: Theme.colors.outline,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: '#FFF',
           borderTopWidth: 1,

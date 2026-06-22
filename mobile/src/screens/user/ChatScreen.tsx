@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Send, AlertTriangle, Sparkles } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -190,8 +190,8 @@ export const ChatScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView 
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      behavior="padding"
+      keyboardVerticalOffset={0}
     >
       {/* Dynamic top bar */}
       <View style={styles.topBar}>
@@ -224,6 +224,7 @@ export const ChatScreen: React.FC = () => {
         style={styles.feed}
         contentContainerStyle={styles.feedContent}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+        keyboardShouldPersistTaps="handled"
       >
         {messages.map(m => {
           const isUser = m.role === 'user';
@@ -280,7 +281,7 @@ export const ChatScreen: React.FC = () => {
       )}
 
       {/* Input container */}
-      <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, Theme.spacing.sm) }]}>
+      <View style={[styles.inputArea]}>
         <TextInput
           value={input}
           onChangeText={setInput}
@@ -288,6 +289,9 @@ export const ChatScreen: React.FC = () => {
           placeholder={limitHit ? 'Daily limit reached' : 'Type what you feel…'}
           placeholderTextColor={Theme.colors.outline}
           style={styles.chatInput}
+          onFocus={() => {
+            setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
+          }}
         />
         <TouchableOpacity
           onPress={handleSend}
@@ -477,7 +481,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderTopWidth: 1,
     borderTopColor: Theme.colors.surfaceHigh,
-    paddingBottom: Platform.OS === 'ios' ? 24 : Theme.spacing.sm,
+
   },
   chatInput: {
     flex: 1,
