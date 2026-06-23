@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.atulkumar.mymindtherapyfriend.com",
+      "bundleIdentifier": "com.atul.mymindtherapyfriend",
       "infoPlist": {
         "NSCameraUsageDescription": "MyMindTherapyFriend needs camera access to allow video call sessions with your therapist.",
         "NSMicrophoneUsageDescription": "MyMindTherapyFriend needs microphone access to allow voice in video call sessions with your therapist."
