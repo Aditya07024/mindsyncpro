@@ -216,6 +216,31 @@ export class AdminController {
     res.json({ therapists: therapistStats });
   });
 
+  /** GET /admin/users — Super admin: list all platform users */
+  static listAllUsers = asyncHandler(async (_req: AuthedRequest, res: Response) => {
+    const users = await User.find({
+      role: "user",
+      deletedAt: null,
+    })
+      .populate("orgId", "name")
+      .select("fullName phoneMasked tier streak lastActiveAt orgId createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      users: users.map((u) => ({
+        id: u._id,
+        name: u.fullName || "Unnamed User",
+        phone: u.phoneMasked,
+        tier: u.tier || "free",
+        streak: u.streak || 0,
+        orgName: (u.orgId as any)?.name || "Independent",
+        lastActiveAt: u.lastActiveAt,
+        createdAt: u.createdAt,
+      })),
+    });
+  });
+
   /** PATCH /admin/therapist/:id/verify — Super admin: verify or revoke therapist */
   static verifyTherapist = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const id = req.params.id as string;

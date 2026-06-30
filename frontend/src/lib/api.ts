@@ -83,6 +83,7 @@ const API = {
 
   admin: {
     pendingTherapists: () => apiCall<any>("/api/admin/therapists"),
+    users: () => apiCall<any>("/api/admin/users"),
     verifyTherapist: (id: string, data: { verified: boolean; password?: string }) =>
       apiCall<any>(`/api/admin/therapist/${id}/verify`, {
         method: "PATCH",

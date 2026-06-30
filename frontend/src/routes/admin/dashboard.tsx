@@ -20,7 +20,7 @@ export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdmin
 function SuperAdminDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings'>('overview');
   const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
@@ -76,6 +76,12 @@ function SuperAdminDashboard() {
     queryKey: ['admin-plans'],
     queryFn: () => API.plan.getAll(),
     enabled: tab === 'plans',
+  });
+
+  const { data: usersData, isLoading: usersLoading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => API.admin.users(),
+    enabled: tab === 'users',
   });
 
   const { data: countsData } = useQuery({
@@ -153,6 +159,13 @@ function SuperAdminDashboard() {
 
   const plans: any[] = plansData?.plans ?? [];
 
+  const users: any[] = usersData?.users ?? [];
+  const filteredUsers = users.filter((u) =>
+    u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.phone?.toLowerCase().includes(search.toLowerCase()) ||
+    u.orgName?.toLowerCase().includes(search.toLowerCase())
+  );
+
   const platformStats = {
     totalTherapists: therapists.length,
     verified: therapists.filter((t) => t.verified).length,
@@ -199,7 +212,7 @@ function SuperAdminDashboard() {
       {/* Tab Nav */}
       <div className="bg-slate-900 border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 flex gap-1">
-          {(['overview', 'therapists', 'organizations', 'subscriptions', 'plans', 'earnings'] as const).map((t) => (
+          {(['overview', 'users', 'therapists', 'organizations', 'subscriptions', 'plans', 'earnings'] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-3 text-sm font-semibold capitalize transition border-b-2 ${
                 tab === t ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -259,6 +272,94 @@ function SuperAdminDashboard() {
                 Payout due (70%): ₹{therapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')} · Commission (30%): ₹{therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* USERS TAB */}
+        {tab === 'users' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-bold text-white flex-1">All Platform Users</h2>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, phone or org..."
+                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500" />
+              </div>
+            </div>
+
+            {usersLoading && (
+              <div className="space-y-3">
+                {[1,2,3,4,5].map(i => <div key={i} className="h-16 rounded-xl bg-slate-800 animate-pulse" />)}
+              </div>
+            )}
+
+            {!usersLoading && (
+              <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-700 bg-slate-900/40 text-slate-400 font-semibold text-xs uppercase tracking-wider">
+                      <th className="text-left px-5 py-3.5">User</th>
+                      <th className="text-left px-5 py-3.5">Subscription Tier</th>
+                      <th className="text-left px-5 py-3.5">Daily Streak</th>
+                      <th className="text-left px-5 py-3.5">Organization</th>
+                      <th className="text-left px-5 py-3.5">Joined Date</th>
+                      <th className="text-left px-5 py-3.5">Last Active</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {filteredUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-750 transition-colors">
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="grid size-9 place-items-center rounded-full bg-slate-700 text-slate-200 font-bold text-sm">
+                              {u.name?.charAt(0) ?? '?'}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-white">{u.name}</p>
+                              <p className="text-xs text-slate-400">{u.phone}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                            u.tier === 'apna_therapist' ? 'bg-violet-900/50 text-violet-300 border border-violet-800' :
+                            u.tier === 'mann_shanti' ? 'bg-blue-900/50 text-blue-300 border border-blue-800' :
+                            'bg-slate-750 text-slate-400 border border-slate-700'
+                          }`}>{u.tier.replace('_', ' ')}</span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-amber-500 text-lg">🔥</span>
+                            <span className="font-semibold text-slate-200">{u.streak} days</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${
+                            u.orgName !== 'Independent' 
+                              ? 'bg-indigo-950 text-indigo-300 border border-indigo-900' 
+                              : 'bg-slate-750 text-slate-400 border border-slate-700'
+                          }`}>{u.orgName}</span>
+                        </td>
+                        <td className="px-5 py-4 text-slate-300 text-xs">
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                        </td>
+                        <td className="px-5 py-4 text-slate-400 text-xs">
+                          {u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Never'}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-5 py-8 text-center text-slate-500">
+                          No users found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 

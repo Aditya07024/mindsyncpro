@@ -62,8 +62,10 @@ export class TherapistController {
       $lte: Number(maxFee),
     };
 
-    // Filter by verification status
-    if (verified === "true") {
+    // Filter by verification status: default to verified: true, unless verified is explicitly passed as "false" or "all"
+    if (verified === "false") {
+      filter["therapistProfile.verified"] = false;
+    } else if (verified !== "all") {
       filter["therapistProfile.verified"] = true;
     }
 

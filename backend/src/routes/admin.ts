@@ -8,6 +8,7 @@ const router = Router();
 router.get("/stats", requireAuth, requireRole(["super_admin"]), AdminController.platformStats);
 router.get("/org-stats", requireAuth, AdminController.orgStats);
 router.get("/therapists", requireAuth, requireRole(["super_admin"]), AdminController.pendingTherapists);
+router.get("/users", requireAuth, requireRole(["super_admin"]), AdminController.listAllUsers);
 router.patch("/therapist/:id/verify", requireAuth, requireRole(["super_admin"]), AdminController.verifyTherapist);
 
 router.post("/verify-password-public", AdminController.verifyPasswordPublic);
