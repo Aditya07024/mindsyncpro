@@ -444,17 +444,26 @@ function SuperAdminDashboard() {
                       <Star className="size-3 text-amber-400 fill-amber-400" />
                       <span className="text-xs text-slate-300">{t.rating?.toFixed(1) ?? '—'}</span>
                     </div>
-                    {t.verified ? (
-                      <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
-                        className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-900/30 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/50 transition">
-                        <XCircle className="size-3.5" /> Revoke
-                      </button>
-                    ) : (
+                    <div className="flex items-center gap-2">
                       <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
-                        className="flex items-center gap-1 text-xs font-semibold text-green-400 bg-green-900/30 border border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-900/50 transition">
+                        className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
+                          t.verified 
+                            ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
+                            : 'text-green-400 bg-green-900/30 border-green-800 hover:bg-green-900/50'
+                        }`}
+                        disabled={t.verified}>
                         <CheckCircle className="size-3.5" /> Verify
                       </button>
-                    )}
+                      <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
+                        className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
+                          !t.verified 
+                            ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
+                            : 'text-red-400 bg-red-900/30 border-red-800 hover:bg-red-900/50'
+                        }`}
+                        disabled={!t.verified}>
+                        <XCircle className="size-3.5" /> Revoke
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
