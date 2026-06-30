@@ -436,5 +436,39 @@ export class AdminController {
       message: `Payout marked for ${result.modifiedCount} bookings`,
     });
   });
+
+  /** DELETE /admin/user/:id — Super admin: delete/soft-delete a user */
+  static deleteUser = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { password } = req.body as { password?: string };
+
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Soft delete in MongoDB
+    user.deletedAt = new Date();
+    await user.save();
+
+    // Delete from Clerk if clerkId exists
+    if (user.clerkId) {
+      try {
+        const { clerkClient } = await import("@clerk/express");
+        await clerkClient.users.deleteUser(user.clerkId);
+      } catch (err: any) {
+        console.error(`[Admin] Failed to delete user ${id} from Clerk:`, err.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  });
 }
 

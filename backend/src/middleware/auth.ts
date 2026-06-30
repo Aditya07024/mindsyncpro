@@ -30,6 +30,10 @@ export async function requireAuth(
       $or: [{ clerkId: clerkUserId }, { phoneHash: clerkUserId }],
     }).lean();
 
+    if (user && user.deletedAt) {
+      return next(new AppError("This account has been deleted", 401));
+    }
+
     if (user && !user.clerkId) {
       await User.updateOne(
         { _id: user._id },

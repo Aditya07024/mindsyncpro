@@ -24,5 +24,6 @@ router.delete("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanContr
 
 router.get("/platform-counts", requireAuth, requireRole(["super_admin"]), AdminController.platformCounts);
 router.patch("/therapist/:id/mark-paid", requireAuth, requireRole(["super_admin"]), AdminController.markTherapistPaid);
+router.delete("/user/:id", requireAuth, requireRole(["super_admin"]), AdminController.deleteUser);
 
 export default router;

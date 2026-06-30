@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Users, BarChart2, CheckCircle, XCircle, Search,
   TrendingUp, LogOut, AlertTriangle, Star, Eye, EyeOff, Building2,
-  DollarSign, CreditCard, ArrowUpRight, BadgeCheck, Banknote
+  DollarSign, CreditCard, ArrowUpRight, BadgeCheck, Banknote,
+  Trash2
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ function SuperAdminDashboard() {
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
   const [verifyModal, setVerifyModal] = useState<{ open: boolean; id: string; name: string; verify: boolean, type: 'therapist' | 'org' } | null>(null);
   const [toggleModal, setToggleModal] = useState<{ open: boolean; id: string; name: string; allow: boolean } | null>(null);
+  const [deleteUserModal, setDeleteUserModal] = useState<{ open: boolean; id: string; name: string } | null>(null);
   const [planModal, setPlanModal] = useState<{ open: boolean, plan?: any } | null>(null);
   const [planForm, setPlanForm] = useState({ 
     name: '', 
@@ -141,6 +143,19 @@ function SuperAdminDashboard() {
       toast.success(data.message || 'Payout marked successfully ✓');
       setAdminPassword('');
       qc.invalidateQueries({ queryKey: ['admin-therapists'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: ({ userId, password }: { userId: string; password?: string }) =>
+      API.admin.deleteUser(userId, { password }),
+    onSuccess: (data) => {
+      toast.success(data.message || 'User deleted successfully ✓');
+      setDeleteUserModal(null);
+      setAdminPassword('');
+      qc.invalidateQueries({ queryKey: ['admin-users'] });
+      qc.invalidateQueries({ queryKey: ['admin-platform-counts'] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -305,6 +320,7 @@ function SuperAdminDashboard() {
                       <th className="text-left px-5 py-3.5">Organization</th>
                       <th className="text-left px-5 py-3.5">Joined Date</th>
                       <th className="text-left px-5 py-3.5">Last Active</th>
+                      <th className="text-right px-5 py-3.5">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -347,11 +363,20 @@ function SuperAdminDashboard() {
                         <td className="px-5 py-4 text-slate-400 text-xs">
                           {u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Never'}
                         </td>
+                        <td className="px-5 py-4 text-right">
+                          <button
+                            onClick={() => setDeleteUserModal({ open: true, id: u.id, name: u.name })}
+                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-lg transition-colors"
+                            title="Delete User"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                     {filteredUsers.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-5 py-8 text-center text-slate-500">
+                        <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
                           No users found
                         </td>
                       </tr>
@@ -883,6 +908,48 @@ function SuperAdminDashboard() {
         )}
 
       </div>
+
+      {/* Delete User Modal */}
+      <AnimatePresence>
+        {deleteUserModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-800 bg-slate-800/50 flex items-center gap-2 text-red-500">
+                <AlertTriangle className="size-5" />
+                <h3 className="font-bold text-white">Delete User Account</h3>
+              </div>
+              <div className="p-5">
+                <p className="text-sm text-slate-400 mb-4">
+                  Are you sure you want to delete <strong>{deleteUserModal.name}</strong>? This will permanently disable their login and soft-delete their profile. This action cannot be undone.
+                </p>
+                
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Admin Action Password</label>
+                <input 
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white focus:ring-1 focus:ring-violet-500 outline-none"
+                />
+              </div>
+              <div className="px-5 py-4 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
+                <button 
+                  onClick={() => { setDeleteUserModal(null); setAdminPassword(''); }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white transition">
+                  Cancel
+                </button>
+                <button 
+                  disabled={!adminPassword || deleteUserMutation.isPending}
+                  onClick={() => deleteUserModal && deleteUserMutation.mutate({ userId: deleteUserModal.id, password: adminPassword })}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-50">
+                  {deleteUserMutation.isPending ? 'Deleting...' : 'Delete User'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Verify Password Modal */}
       <AnimatePresence>

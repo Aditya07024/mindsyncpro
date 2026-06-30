@@ -103,6 +103,8 @@ const API = {
       apiCall<any>(`/api/admin/plans/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     deletePlan: (id: string, data: any) =>
       apiCall<any>(`/api/admin/plans/${id}`, { method: "DELETE", body: JSON.stringify(data) }),
+    deleteUser: (id: string, data: { password?: string }) =>
+      apiCall<any>(`/api/admin/user/${id}`, { method: "DELETE", body: JSON.stringify(data) }),
     platformCounts: () => apiCall<any>("/api/admin/platform-counts"),
     markTherapistPaid: (id: string, data: { password: string }) =>
       apiCall<any>(`/api/admin/therapist/${id}/mark-paid`, {
