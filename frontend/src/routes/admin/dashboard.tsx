@@ -383,90 +383,93 @@ function SuperAdminDashboard() {
             )}
 
             <div className="space-y-3">
-              {filteredTherapists.map((t) => (
-                <div key={t.id} className="bg-slate-800 rounded-xl border border-slate-700 p-4 flex items-center gap-4">
-                  <div className="grid size-12 place-items-center rounded-full bg-slate-700 text-white font-bold text-lg flex-shrink-0">
-                    {t.name?.charAt(0) ?? '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white">{t.name}</p>
-                    {/* <p className="text-xs text-slate-400">RCI: {t.rciNumber || 'Not provided'}</p> */}
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {(t.specializations ?? []).slice(0, 3).map((s: string) => (
-                        <span key={s} className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{s}</span>
-                      ))}
+              {filteredTherapists.map((t) => {
+                const isVerified = t.verified === true || t.verificationStatus === 'verified';
+                return (
+                  <div key={t.id} className="bg-slate-800 rounded-xl border border-slate-700 p-4 flex items-center gap-4">
+                    <div className="grid size-12 place-items-center rounded-full bg-slate-700 text-white font-bold text-lg flex-shrink-0">
+                      {t.name?.charAt(0) ?? '?'}
                     </div>
-                    {/* Expanded details */}
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-700 pt-3">
-                      <div>
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Professional Details</p>
-                        <p className="text-xs text-slate-300">Tier: {t.experienceCategory}</p>
-                        <p className="text-xs text-slate-300">Fee: ₹{t.sessionFee}</p>
-                        <p className="text-xs text-slate-300">Qual: {t.qualification}</p>
-                        <p className="text-xs text-slate-300 line-clamp-1" title={t.clinicDetails}>Clinic: {t.clinicDetails}</p>
-                        {t.email && <p className="text-xs text-slate-300">Email: {t.email}</p>}
-                        {t.website && (
-                          <p className="text-xs text-slate-300 line-clamp-1" title={t.website}>
-                            Website: <a href={t.website} target="_blank" rel="noreferrer" className="text-violet-450 text-violet-400 hover:underline">{t.website} ↗</a>
-                          </p>
-                        )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white">{t.name}</p>
+                      {/* <p className="text-xs text-slate-400">RCI: {t.rciNumber || 'Not provided'}</p> */}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {(t.specializations ?? []).slice(0, 3).map((s: string) => (
+                          <span key={s} className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{s}</span>
+                        ))}
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Earnings & Payouts</p>
-                        <p className="text-xs text-slate-300">Total Bookings: {t.totalBookings}</p>
-                        <p className="text-xs text-slate-300">Sessions Given: {t.sessionsGiven}</p>
-                        <p className="text-xs text-slate-300">Gross Earned (100%): ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
-                        <p className="text-xs text-red-400">Platform Fee (30%): -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
-                        <p className="text-xs font-bold text-emerald-450 text-emerald-400">Payout Due (70%): ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
-                        <div className="flex flex-col gap-1 mt-1">
-                          {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
-                          {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License ↗</a>}
-                          {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Government ID ↗</a>}
-                          {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-[11px] text-blue-400 hover:underline">Intro Video ↗</a>}
+                      {/* Expanded details */}
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-700 pt-3">
+                        <div>
+                          <p className="text-xs text-slate-400 font-semibold mb-1">Professional Details</p>
+                          <p className="text-xs text-slate-300">Tier: {t.experienceCategory}</p>
+                          <p className="text-xs text-slate-300">Fee: ₹{t.sessionFee}</p>
+                          <p className="text-xs text-slate-300">Qual: {t.qualification}</p>
+                          <p className="text-xs text-slate-300 line-clamp-1" title={t.clinicDetails}>Clinic: {t.clinicDetails}</p>
+                          {t.email && <p className="text-xs text-slate-300">Email: {t.email}</p>}
+                          {t.website && (
+                            <p className="text-xs text-slate-300 line-clamp-1" title={t.website}>
+                              Website: <a href={t.website} target="_blank" rel="noreferrer" className="text-violet-450 text-violet-400 hover:underline">{t.website} ↗</a>
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 font-semibold mb-1">Earnings & Payouts</p>
+                          <p className="text-xs text-slate-300">Total Bookings: {t.totalBookings}</p>
+                          <p className="text-xs text-slate-300">Sessions Given: {t.sessionsGiven}</p>
+                          <p className="text-xs text-slate-300">Gross Earned (100%): ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
+                          <p className="text-xs text-red-400">Platform Fee (30%): -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
+                          <p className="text-xs font-bold text-emerald-450 text-emerald-400">Payout Due (70%): ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
+                          <div className="flex flex-col gap-1 mt-1">
+                            {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
+                            {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License ↗</a>}
+                            {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Government ID ↗</a>}
+                            {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-[11px] text-blue-400 hover:underline">Intro Video ↗</a>}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 font-semibold mb-1">Payment Details</p>
+                          {t.paymentDetails?.upiId ? (
+                            <p className="text-xs text-slate-300 font-mono">UPI: {t.paymentDetails.upiId}</p>
+                          ) : null}
+                          {t.paymentDetails?.bankDetails ? (
+                            <p className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-tight">{t.paymentDetails.bankDetails}</p>
+                          ) : null}
+                          {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
+                            <p className="text-xs text-slate-500 italic">No banking info added</p>
+                          ) : null}
                         </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Payment Details</p>
-                        {t.paymentDetails?.upiId ? (
-                          <p className="text-xs text-slate-300 font-mono">UPI: {t.paymentDetails.upiId}</p>
-                        ) : null}
-                        {t.paymentDetails?.bankDetails ? (
-                          <p className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-tight">{t.paymentDetails.bankDetails}</p>
-                        ) : null}
-                        {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
-                          <p className="text-xs text-slate-500 italic">No banking info added</p>
-                        ) : null}
+                    </div>
+                    <div className="flex flex-col items-end justify-between gap-4 flex-shrink-0 self-stretch">
+                      <div className="flex items-center gap-1">
+                        <Star className="size-3 text-amber-400 fill-amber-400" />
+                        <span className="text-xs text-slate-300">{t.rating?.toFixed(1) ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
+                          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
+                            isVerified 
+                              ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
+                              : 'text-green-400 bg-green-900/30 border-green-800 hover:bg-green-900/50'
+                          }`}
+                          disabled={isVerified}>
+                          <CheckCircle className="size-3.5" /> Verify
+                        </button>
+                        <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
+                          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
+                            !isVerified 
+                              ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
+                              : 'text-red-400 bg-red-900/30 border-red-800 hover:bg-red-900/50'
+                          }`}
+                          disabled={!isVerified}>
+                          <XCircle className="size-3.5" /> Revoke
+                        </button>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end justify-between gap-4 flex-shrink-0 self-stretch">
-                    <div className="flex items-center gap-1">
-                      <Star className="size-3 text-amber-400 fill-amber-400" />
-                      <span className="text-xs text-slate-300">{t.rating?.toFixed(1) ?? '—'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
-                        className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
-                          t.verified 
-                            ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
-                            : 'text-green-400 bg-green-900/30 border-green-800 hover:bg-green-900/50'
-                        }`}
-                        disabled={t.verified}>
-                        <CheckCircle className="size-3.5" /> Verify
-                      </button>
-                      <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
-                        className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
-                          !t.verified 
-                            ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
-                            : 'text-red-400 bg-red-900/30 border-red-800 hover:bg-red-900/50'
-                        }`}
-                        disabled={!t.verified}>
-                        <XCircle className="size-3.5" /> Revoke
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredTherapists.length === 0 && !therapistsLoading && (
                 <p className="text-slate-500 text-sm text-center py-8">No therapists found</p>
               )}
