@@ -44,6 +44,7 @@ export interface IOrganization extends Document {
   /** Join requests from users wanting to link with this org */
   pendingJoinRequests: IJoinRequest[];
   allowExternalTherapists: boolean;
+  coverMemberTherapyFees: boolean;
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -94,6 +95,7 @@ const OrganizationSchema = new Schema<IOrganization>(
       }
     ],
     allowExternalTherapists: { type: Boolean, default: false },
+    coverMemberTherapyFees: { type: Boolean, default: false },
     deletedAt: { type: Date }
   },
   { timestamps: true }

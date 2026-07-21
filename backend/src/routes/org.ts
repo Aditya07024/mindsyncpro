@@ -23,6 +23,13 @@ router.post("/onboarding", requireAuth, OrgController.onboarding);
 router.post("/request-join", requireAuth, OrgController.requestJoin);
 
 // ── ORG ADMIN ROUTES ──
+router.patch(
+  "/settings",
+  requireAuth,
+  requireRole(["org_admin"]),
+  requireSubscription,
+  OrgController.updateSettings,
+);
 router.get(
   "/pending-therapists",
   requireAuth,

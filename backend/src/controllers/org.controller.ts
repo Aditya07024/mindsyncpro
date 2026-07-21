@@ -50,6 +50,7 @@ export class OrgController {
         registrationUrl,
         accreditationUrl,
         governmentIdUrl,
+        coverMemberTherapyFees,
       } = req.body;
 
       const user = await User.findById(req.user!.sub);
@@ -102,6 +103,7 @@ export class OrgController {
         departments: [],
         allowedEmails: [],
         pendingJoinRequests: [],
+        coverMemberTherapyFees: typeof coverMemberTherapyFees === "boolean" ? coverMemberTherapyFees : false,
       });
 
       await org.save();
@@ -116,6 +118,33 @@ export class OrgController {
         org,
       });
     },
+  );
+
+  /** PATCH /org/settings — Org Admin updates organization settings (such as therapy fee coverage) */
+  static updateSettings = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const user = await User.findById(req.user!.sub);
+      if (!user || !user.orgId) {
+        return res
+          .status(403)
+          .json({ error: "Not associated with an organization" });
+      }
+
+      const { coverMemberTherapyFees, allowExternalTherapists } = req.body;
+      const updateData: any = {};
+      if (typeof coverMemberTherapyFees === "boolean") {
+        updateData.coverMemberTherapyFees = coverMemberTherapyFees;
+      }
+      if (typeof allowExternalTherapists === "boolean") {
+        updateData.allowExternalTherapists = allowExternalTherapists;
+      }
+
+      const org = await Organization.findByIdAndUpdate(user.orgId, updateData, { new: true });
+      if (!org) return res.status(404).json({ error: "Organization not found" });
+
+      res.json({ message: "Organization settings updated successfully", organization: org });
+    },
+  );
   );
 
   /** GET /org/pending-therapists — Get pending therapists for this organization */

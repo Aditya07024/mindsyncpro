@@ -84,35 +84,49 @@ export class BookingController {
       });
       if (conflict) throw new AppError("This slot is already booked", 409);
 
-      // Calculate amount based on user subscription
+      // Calculate amount based on user subscription or organization benefits
       let amount = therapist.therapistProfile.sessionFee ?? 0;
 
-      const { Subscription } = await import("@/models/subscription");
-      const activeSub = await Subscription.findOne({
-        userId: req.user!.sub,
-        status: "active",
-      }).sort({ createdAt: -1 });
+      const seekerUser = await User.findById(req.user!.sub).select("orgId fullName");
+      let isOrgCovered = false;
 
-      if (activeSub) {
-        // Find non-cancelled bookings since subscription start date
-        const bookingCount = await TherapistBooking.countDocuments({
+      if (seekerUser?.orgId && therapist.orgId && seekerUser.orgId.toString() === therapist.orgId.toString()) {
+        const { Organization } = await import("@/models/organization");
+        const userOrg = await Organization.findById(seekerUser.orgId);
+        if (userOrg && userOrg.coverMemberTherapyFees) {
+          isOrgCovered = true;
+          amount = 0;
+        }
+      }
+
+      if (!isOrgCovered) {
+        const { Subscription } = await import("@/models/subscription");
+        const activeSub = await Subscription.findOne({
           userId: req.user!.sub,
-          status: { $in: ["confirmed", "completed", "pending_payment"] },
-          createdAt: { $gte: activeSub.startDate },
-        });
+          status: "active",
+        }).sort({ createdAt: -1 });
 
-        if (activeSub.plan === "Apna Mann") {
-          // Buy 1, get 2 free -> Cycle of 3: 1 paid, 2 free
-          if (bookingCount % 3 !== 0) {
-            amount = 0;
-          }
-        } else if (activeSub.plan === "Mann Shanti") {
-          // Buy 2, get 5 free -> Cycle of 7: 2 paid, 5 free
-          if ((bookingCount % 7) >= 2) {
-            amount = 0;
-          } else {
-            // 10% therapist discount
-            amount = Math.round(amount * 0.9);
+        if (activeSub) {
+          // Find non-cancelled bookings since subscription start date
+          const bookingCount = await TherapistBooking.countDocuments({
+            userId: req.user!.sub,
+            status: { $in: ["confirmed", "completed", "pending_payment"] },
+            createdAt: { $gte: activeSub.startDate },
+          });
+
+          if (activeSub.plan === "Apna Mann") {
+            // Buy 1, get 2 free -> Cycle of 3: 1 paid, 2 free
+            if (bookingCount % 3 !== 0) {
+              amount = 0;
+            }
+          } else if (activeSub.plan === "Mann Shanti") {
+            // Buy 2, get 5 free -> Cycle of 7: 2 paid, 5 free
+            if ((bookingCount % 7) >= 2) {
+              amount = 0;
+            } else {
+              // 10% therapist discount
+              amount = Math.round(amount * 0.9);
+            }
           }
         }
       }

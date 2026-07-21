@@ -306,6 +306,7 @@ export class AdminController {
         documents: org.documents,
         verificationStatus: org.verificationStatus,
         allowExternalTherapists: org.allowExternalTherapists,
+        coverMemberTherapyFees: org.coverMemberTherapyFees ?? false,
         createdAt: org.createdAt
       }))
     });
@@ -379,6 +380,31 @@ export class AdminController {
       allowExternalTherapists: org.allowExternalTherapists,
       name: org.name,
       message: allow ? "External therapists allowed" : "External therapists disallowed",
+    });
+  });
+
+  /** PATCH /admin/org/:id/toggle-cover-therapy — Super admin: toggle member therapy fee coverage feature */
+  static toggleCoverMemberTherapyFees = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { coverMemberTherapyFees, password } = req.body as { coverMemberTherapyFees: boolean, password?: string };
+
+    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    const org = await Organization.findByIdAndUpdate(
+      id,
+      { coverMemberTherapyFees: coverMemberTherapyFees },
+      { new: true }
+    ).lean();
+
+    if (!org) throw new Error("Organization not found");
+
+    res.json({
+      id,
+      coverMemberTherapyFees: org.coverMemberTherapyFees,
+      name: org.name,
+      message: coverMemberTherapyFees ? "Member therapy fee coverage enabled" : "Member therapy fee coverage disabled",
     });
   });
 

@@ -17,6 +17,7 @@ router.post("/verify-password", requireAuth, requireRole(["super_admin"]), Admin
 router.get("/pending-orgs", requireAuth, requireRole(["super_admin"]), AdminController.pendingOrgs);
 router.patch("/org/:id/verify", requireAuth, requireRole(["super_admin"]), AdminController.verifyOrg);
 router.patch("/org/:id/toggle-external-therapists", requireAuth, requireRole(["super_admin"]), AdminController.toggleExternalTherapists);
+router.patch("/org/:id/toggle-cover-therapy", requireAuth, requireRole(["super_admin"]), AdminController.toggleCoverMemberTherapyFees);
 
 router.post("/plans", requireAuth, requireRole(["super_admin"]), PlanController.createPlan);
 router.put("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanController.updatePlan);
