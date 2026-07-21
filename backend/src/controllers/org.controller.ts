@@ -145,7 +145,6 @@ export class OrgController {
       res.json({ message: "Organization settings updated successfully", organization: org });
     },
   );
-  );
 
   /** GET /org/pending-therapists — Get pending therapists for this organization */
   static pendingTherapists = asyncHandler(
