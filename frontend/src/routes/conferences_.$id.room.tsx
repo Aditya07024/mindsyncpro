@@ -173,6 +173,10 @@ function ConferenceRoomPage() {
             startWithVideoMuted: false,
             prejoinPageEnabled: false,
             disableDeepLinking: true,
+            lobby: {
+              autoKnock: false,
+              enableLobby: false,
+            },
           },
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,

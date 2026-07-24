@@ -70,7 +70,7 @@ export class JaasService {
   public static generateMeetingToken({
     roomName,
     user,
-    moderator = true,
+    moderator = false,
     expirySeconds = 3600,
     features = {},
   }: JaasTokenOptions) {

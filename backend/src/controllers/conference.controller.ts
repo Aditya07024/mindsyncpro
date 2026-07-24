@@ -584,7 +584,7 @@ export class ConferenceController {
       // Generate JaaS RS256 JWT Token
       let jaasData = null;
       try {
-        const isModerator = Boolean(isAdmin) || !conference.enableWaitingRoom;
+        const isModerator = Boolean(isAdmin);
 
         jaasData = JaasService.generateMeetingToken({
           roomName: conference.roomName,
