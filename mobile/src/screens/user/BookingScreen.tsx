@@ -111,6 +111,15 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
           throw new Error("Could not retrieve secure booking ID.");
         }
 
+        // Check if booking is free (covered by organization benefits or active plan)
+        const isFreeOrPaid = bookingRes?.booking?.payment?.paid || bookingRes?.booking?.payment?.amount === 0 || bookingRes?.booking?.status === 'confirmed';
+        if (isFreeOrPaid) {
+          setLoading(false);
+          Alert.alert('Session Confirmed!', 'Your booking has been confirmed under your organization benefits.');
+          navigation.replace('UserTabs', { screen: 'Bookings' });
+          return;
+        }
+
         // 2. Initiate Razorpay Payment Link (returns short_url — hosted Razorpay page)
         console.log("[Booking] Initiating payment link for bookingId:", bookingId);
         const paymentRes = await API.payment.initiate({ bookingId });

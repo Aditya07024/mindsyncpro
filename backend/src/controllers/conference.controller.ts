@@ -1,0 +1,917 @@
+import type { Response } from "express";
+import { asyncHandler } from "@/lib/async-handler";
+import type { AuthedRequest } from "@/middleware/auth";
+import { Conference, ConferenceRegistration, ConferencePayment, User } from "@/models";
+import { AppError } from "@/lib/app-error";
+import PaymentService from "@/services/payment.service";
+import { JaasService } from "@/services/jaas.service";
+import mongoose from "mongoose";
+import * as XLSX from "xlsx";
+
+function slugifyRoomName(title: string): string {
+  const clean = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `${clean || "conference"}-${random}`;
+}
+
+export class ConferenceController {
+  /**
+   * POST /api/conferences - Create conference (Admin)
+   */
+  static createConference = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const {
+        title,
+        description,
+        banner,
+        meetingDate,
+        meetingTime,
+        duration,
+        category,
+        meetingType,
+        priceType,
+        price,
+        maxParticipants,
+        enableWaitingRoom,
+        enableRecording,
+        enablePassword,
+        password,
+        roomName,
+        autoGenerateRoomName,
+        instructions,
+        status,
+      } = req.body;
+
+      if (!title || !description || !meetingDate || !meetingTime) {
+        throw new AppError("Title, description, date, and time are required", 400);
+      }
+
+      let finalRoomName = roomName;
+      if (autoGenerateRoomName || !finalRoomName || finalRoomName.trim() === "") {
+        finalRoomName = slugifyRoomName(title);
+      } else {
+        finalRoomName = finalRoomName.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
+      }
+
+      // Ensure roomName is unique
+      const existing = await Conference.findOne({ roomName: finalRoomName });
+      if (existing) {
+        finalRoomName = `${finalRoomName}-${Date.now().toString().slice(-4)}`;
+      }
+
+      const numPrice = priceType === "free" ? 0 : Number(price || 0);
+
+      const conference = await Conference.create({
+        title,
+        description,
+        banner: banner || "",
+        roomName: finalRoomName,
+        meetingDate,
+        meetingTime,
+        duration: Number(duration || 60),
+        category: category || "Mental Health",
+        meetingType: meetingType || "public",
+        priceType: priceType || "free",
+        price: numPrice,
+        maxParticipants: Number(maxParticipants || 100),
+        enableWaitingRoom: Boolean(enableWaitingRoom),
+        enableRecording: Boolean(enableRecording),
+        enablePassword: Boolean(enablePassword),
+        password: password || "",
+        instructions: instructions || "",
+        status: status || "published",
+        createdBy: new mongoose.Types.ObjectId(req.user!.sub),
+      });
+
+      res.status(201).json({
+        message: "Conference created successfully",
+        conference,
+      });
+    }
+  );
+
+  /**
+   * GET /api/conferences - List all public conferences
+   */
+  static getAllConferences = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { category, search, status, type } = req.query as Record<string, string>;
+
+      // Ensure legacy documents without status field are marked published
+      await Conference.updateMany({ status: { $exists: false } }, { $set: { status: "published" } });
+
+      const query: any = {};
+
+      // Non-admins see all published, live, upcoming, ended or un-drafted conferences
+      const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+      if (!isAdmin) {
+        query.status = { $ne: "draft" };
+      } else if (status && status !== "all") {
+        query.status = status;
+      }
+
+      if (category && category !== "All") {
+        query.category = category;
+      }
+
+      if (type && type !== "All") {
+        query.meetingType = type;
+      }
+
+      if (search) {
+        query.$or = [
+          { title: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+          { category: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const conferences = await Conference.find(query)
+        .populate("createdBy", "fullName email")
+        .sort({ createdAt: -1, meetingDate: 1 })
+        .lean();
+
+      // Enhance with registration counts & computed status
+      const now = new Date();
+      const enhanced = await Promise.all(
+        conferences.map(async (conf) => {
+          const registeredCount = await ConferenceRegistration.countDocuments({
+            conferenceId: conf._id,
+            paymentStatus: { $in: ["free", "paid"] },
+          });
+
+          // Check user registration if authed
+          let userRegistration = null;
+          if (req.user?.sub) {
+            userRegistration = await ConferenceRegistration.findOne({
+              conferenceId: conf._id,
+              userId: req.user.sub,
+            }).lean();
+          }
+
+          // Calculate computed status (upcoming, live, ended)
+          let computedStatus = conf.status === "draft" ? "draft" : "published";
+          try {
+            const rawDate = conf.meetingDate ? String(conf.meetingDate) : "";
+            const dateOnlyStr = rawDate.includes("T") ? rawDate.split("T")[0] : rawDate;
+            const timeStr = conf.meetingTime || "00:00";
+            const startDateTime = new Date(`${dateOnlyStr}T${timeStr.length === 5 ? timeStr + ":00" : timeStr}`);
+            const endDateTime = new Date(startDateTime.getTime() + (conf.duration || 60) * 60 * 1000);
+
+            if (!isNaN(startDateTime.getTime())) {
+              if (now >= startDateTime && now <= endDateTime) {
+                computedStatus = "live";
+              } else if (now > endDateTime) {
+                computedStatus = "ended";
+              } else {
+                computedStatus = "upcoming";
+              }
+            }
+          } catch (e) {
+            // fallback
+          }
+
+          return {
+            ...conf,
+            registeredCount,
+            computedStatus,
+            isUserRegistered: Boolean(userRegistration && ["free", "paid"].includes(userRegistration.paymentStatus)),
+            userRegistrationStatus: userRegistration ? userRegistration.paymentStatus : null,
+          };
+        })
+      );
+
+      res.json(enhanced);
+    }
+  );
+
+  /**
+   * GET /api/conferences/:id - Get single conference
+   */
+  static getConferenceById = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      const conference = await Conference.findById(id)
+        .populate("createdBy", "fullName email")
+        .lean();
+
+      if (!conference) {
+        throw new AppError("Conference not found", 404);
+      }
+
+      const registeredCount = await ConferenceRegistration.countDocuments({
+        conferenceId: conference._id,
+        paymentStatus: { $in: ["free", "paid"] },
+      });
+
+      let userRegistration = null;
+      if (req.user?.sub) {
+        userRegistration = await ConferenceRegistration.findOne({
+          conferenceId: conference._id,
+          userId: req.user.sub,
+        }).lean();
+      }
+
+      const now = new Date();
+      let computedStatus = conference.status;
+      try {
+        const startDateTime = new Date(`${conference.meetingDate}T${conference.meetingTime}:00`);
+        const endDateTime = new Date(startDateTime.getTime() + conference.duration * 60 * 1000);
+        if (now >= startDateTime && now <= endDateTime) {
+          computedStatus = "live";
+        } else if (now > endDateTime) {
+          computedStatus = "ended";
+        } else {
+          computedStatus = "upcoming";
+        }
+      } catch (e) {
+        // fallback
+      }
+
+      res.json({
+        ...conference,
+        registeredCount,
+        computedStatus,
+        isUserRegistered: Boolean(userRegistration && ["free", "paid"].includes(userRegistration.paymentStatus)),
+        userRegistrationStatus: userRegistration ? userRegistration.paymentStatus : null,
+      });
+    }
+  );
+
+  /**
+   * PUT /api/conferences/:id - Update conference (Admin)
+   */
+  static updateConference = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      const conference = await Conference.findById(id);
+      if (!conference) {
+        throw new AppError("Conference not found", 404);
+      }
+
+      const updates = req.body;
+      if (updates.priceType === "free") {
+        updates.price = 0;
+      }
+
+      Object.assign(conference, updates);
+      await conference.save();
+
+      res.json({
+        message: "Conference updated successfully",
+        conference,
+      });
+    }
+  );
+
+  /**
+   * DELETE /api/conferences/:id - Delete conference (Admin)
+   */
+  static deleteConference = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      const conference = await Conference.findById(id);
+      if (!conference) {
+        throw new AppError("Conference not found", 404);
+      }
+
+      await Conference.deleteOne({ _id: id });
+      await ConferenceRegistration.deleteMany({ conferenceId: id });
+      await ConferencePayment.deleteMany({ conferenceId: id });
+
+      res.json({ message: "Conference deleted successfully" });
+    }
+  );
+
+  /**
+   * PATCH /api/conferences/:id/publish - Toggle publish/draft status (Admin)
+   */
+  static togglePublish = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+      const { status } = req.body as { status: "published" | "draft" };
+
+      const conference = await Conference.findById(id);
+      if (!conference) throw new AppError("Conference not found", 404);
+
+      conference.status = status || (conference.status === "published" ? "draft" : "published");
+      await conference.save();
+
+      res.json({
+        message: `Conference ${conference.status === "published" ? "published" : "unpublished"} successfully`,
+        conference,
+      });
+    }
+  );
+
+  /**
+   * POST /api/conferences/register - Register user for conference
+   */
+  static registerConference = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { conferenceId, fullName, age, email, phone } = req.body;
+
+      if (!conferenceId || !fullName || !age || !email) {
+        throw new AppError("Full name, age, email, and conferenceId are required", 400);
+      }
+
+      const numAge = Number(age);
+      if (isNaN(numAge) || numAge <= 0 || numAge > 120) {
+        throw new AppError("Please provide a valid age", 400);
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new AppError("Please provide a valid email address", 400);
+      }
+
+      const conference = await Conference.findById(conferenceId);
+      if (!conference) {
+        throw new AppError("Conference not found", 404);
+      }
+
+      // Check seat limit
+      const currentRegs = await ConferenceRegistration.countDocuments({
+        conferenceId,
+        paymentStatus: { $in: ["free", "paid"] },
+      });
+
+      if (currentRegs >= conference.maxParticipants) {
+        throw new AppError("This conference is fully booked!", 400);
+      }
+
+      const cleanEmail = email.toLowerCase().trim();
+      const userId = req.user?.sub ? new mongoose.Types.ObjectId(req.user.sub) : new mongoose.Types.ObjectId();
+
+      // Check existing registration
+      let registration = await ConferenceRegistration.findOne({
+        conferenceId,
+        $or: req.user?.sub
+          ? [{ userId }, { email: cleanEmail }]
+          : [{ email: cleanEmail }],
+      });
+
+      if (registration && ["free", "paid"].includes(registration.paymentStatus)) {
+        return res.json({
+          message: "You are already registered for this conference",
+          registration,
+          isAlreadyRegistered: true,
+          roomName: conference.roomName,
+        });
+      }
+
+      // Check if user is linked to an organization with fee coverage
+      let isOrgMember = false;
+      try {
+        const { Organization } = await import("@/models/organization");
+        const dbUser = req.user?.sub ? await User.findById(req.user.sub).select("orgId phoneMasked email") : null;
+        const userOrg = (dbUser?.orgId ? await Organization.findById(dbUser.orgId) : null) ||
+                        await Organization.findOne({ allowedEmails: cleanEmail, verificationStatus: "verified" });
+        if (userOrg) isOrgMember = true;
+      } catch (e) {
+        // ignore
+      }
+
+      const isFree = conference.priceType === "free" || conference.price === 0 || isOrgMember;
+
+      if (isFree) {
+        if (!registration) {
+          registration = await ConferenceRegistration.create({
+            conferenceId: conference._id,
+            userId,
+            fullName,
+            age: numAge,
+            email: email.toLowerCase(),
+            phone: phone || "",
+            paymentStatus: "free",
+            paymentAmount: 0,
+            currentStatus: "registered",
+            approvalStatus: "approved",
+          });
+        } else {
+          registration.fullName = fullName;
+          registration.age = numAge;
+          registration.phone = phone || "";
+          registration.paymentStatus = "free";
+          registration.paymentAmount = 0;
+          await registration.save();
+        }
+
+        return res.json({
+          message: "Registration successful!",
+          registration,
+          isPaid: false,
+          roomName: conference.roomName,
+        });
+      }
+
+      // PAID CONFERENCE: Create or update pending registration and generate Razorpay order
+      if (!registration) {
+        registration = await ConferenceRegistration.create({
+          conferenceId: conference._id,
+          userId,
+          fullName,
+          age: numAge,
+          email: email.toLowerCase(),
+          phone: phone || "",
+          paymentStatus: "pending",
+          paymentAmount: conference.price,
+          currentStatus: "registered",
+          approvalStatus: "approved",
+        });
+      } else {
+        registration.fullName = fullName;
+        registration.age = numAge;
+        registration.phone = phone || "";
+        registration.paymentStatus = "pending";
+        registration.paymentAmount = conference.price;
+        await registration.save();
+      }
+
+      // Create Razorpay Order (with fallback to free entry if order creation fails)
+      try {
+        const order = await PaymentService.createOrder({
+          amount: conference.price,
+          bookingId: `conf_${registration._id}`,
+          userEmail: email,
+          userName: fullName,
+        });
+
+        await ConferencePayment.create({
+          conferenceId: conference._id,
+          registrationId: registration._id,
+          userId,
+          razorpayOrderId: order.orderId,
+          amount: conference.price,
+          currency: "INR",
+          status: "created",
+        });
+
+        return res.json({
+          message: "Registration recorded. Please complete payment.",
+          registration,
+          isPaid: true,
+          orderId: order.orderId,
+          amount: conference.price,
+          currency: "INR",
+          keyId: process.env.RAZORPAY_KEY_ID || "",
+          roomName: conference.roomName,
+        });
+      } catch (paymentErr) {
+        console.warn("Razorpay order creation fallback to free entry:", paymentErr);
+        registration.paymentStatus = "free";
+        registration.paymentAmount = 0;
+        await registration.save();
+
+        return res.json({
+          message: "Registration successful!",
+          registration,
+          isPaid: false,
+          roomName: conference.roomName,
+        });
+      }
+    }
+  );
+
+  /**
+   * POST /api/payments/conference/verify - Verify Razorpay payment signature
+   */
+  static verifyPayment = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { conferenceId, orderId, paymentId, signature } = req.body;
+
+      if (!conferenceId || !orderId || !paymentId || !signature) {
+        throw new AppError("Missing payment verification details", 400);
+      }
+
+      const isValid = PaymentService.verifyPaymentSignature(orderId, paymentId, signature);
+      if (!isValid) {
+        throw new AppError("Invalid payment signature", 400);
+      }
+
+      const conference = await Conference.findById(conferenceId);
+      if (!conference) throw new AppError("Conference not found", 404);
+
+      const userId = new mongoose.Types.ObjectId(req.user!.sub);
+
+      const registration = await ConferenceRegistration.findOne({
+        conferenceId,
+        userId,
+      });
+
+      if (!registration) throw new AppError("Registration record not found", 404);
+
+      registration.paymentStatus = "paid";
+      registration.paymentAmount = conference.price;
+      await registration.save();
+
+      // Update payment record
+      await ConferencePayment.findOneAndUpdate(
+        { razorpayOrderId: orderId },
+        {
+          razorpayPaymentId: paymentId,
+          razorpaySignature: signature,
+          status: "paid",
+        }
+      );
+
+      res.json({
+        message: "Payment verified successfully!",
+        registration,
+        roomName: conference.roomName,
+      });
+    }
+  );
+
+  /**
+   * GET /api/conferences/:id/join - Get join details for registered user
+   */
+  static getJoinInfo = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      const conference = await Conference.findById(id).lean();
+      if (!conference) throw new AppError("Conference not found", 404);
+
+      const emailParam = (req.query.email as string)?.toLowerCase().trim();
+      const userId = req.user?.sub ? new mongoose.Types.ObjectId(req.user.sub) : null;
+
+      let registration = null;
+      if (userId) {
+        registration = await ConferenceRegistration.findOne({ conferenceId: id, userId }).lean();
+      }
+      if (!registration && emailParam) {
+        registration = await ConferenceRegistration.findOne({ conferenceId: id, email: emailParam }).lean();
+      }
+
+      const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+
+      if (!registration && !isAdmin) {
+        throw new AppError("You are not registered for this conference. Please register first.", 403);
+      }
+
+      if (registration && registration.approvalStatus === "rejected") {
+        throw new AppError("Your registration for this conference was rejected by the admin.", 403);
+      }
+
+      if (registration && !["free", "paid"].includes(registration.paymentStatus) && !isAdmin) {
+        throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
+      }
+
+      const dbUser = userId ? await User.findById(userId).lean() : null;
+      const participantName = registration?.fullName || dbUser?.fullName || "Participant";
+      const participantEmail = registration?.email || dbUser?.phoneMasked || "user@mymindtherapyfriend.com";
+
+      // Generate JaaS RS256 JWT Token
+      let jaasData = null;
+      try {
+        jaasData = JaasService.generateMeetingToken({
+          roomName: conference.roomName,
+          user: {
+            id: String(registration?._id || dbUser?._id || `participant_${Date.now()}`),
+            name: participantName,
+            email: participantEmail,
+          },
+          moderator: Boolean(isAdmin),
+        });
+      } catch (jaasErr) {
+        console.error("[JaaS] Token generation error in getJoinInfo:", jaasErr);
+      }
+
+      res.json({
+        conference: {
+          id: conference._id,
+          title: conference.title,
+          description: conference.description,
+          roomName: jaasData ? jaasData.roomName : conference.roomName,
+          rawRoomName: conference.roomName,
+          enablePassword: conference.enablePassword,
+          password: conference.password,
+          enableWaitingRoom: conference.enableWaitingRoom,
+          enableRecording: conference.enableRecording,
+          instructions: conference.instructions,
+          duration: conference.duration,
+        },
+        jaas: jaasData
+          ? {
+              token: jaasData.token,
+              roomName: jaasData.roomName,
+              domain: jaasData.domain,
+              appId: jaasData.appId,
+            }
+          : null,
+        user: {
+          fullName: participantName,
+          email: participantEmail,
+        },
+      });
+    }
+  );
+
+  /**
+   * POST /api/conferences/:id/track - Track attendance (join, heartbeat, leave)
+   */
+  static trackAttendance = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+      const { event, deviceInfo, browserInfo, email } = req.body as {
+        event: "join" | "heartbeat" | "leave";
+        deviceInfo?: string;
+        browserInfo?: string;
+        email?: string;
+      };
+
+      const userId = req.user?.sub ? new mongoose.Types.ObjectId(req.user.sub) : null;
+      let registration = userId
+        ? await ConferenceRegistration.findOne({ conferenceId: id, userId })
+        : null;
+      if (!registration && email) {
+        registration = await ConferenceRegistration.findOne({ conferenceId: id, email: email.toLowerCase().trim() });
+      }
+
+      if (!registration) {
+        return res.json({ tracked: false, message: "Registration not found" });
+      }
+
+      const conference = await Conference.findById(id).lean();
+      const now = new Date();
+
+      if (event === "join") {
+        registration.joined = true;
+        if (!registration.joinedAt) registration.joinedAt = now;
+        registration.joinTime = now;
+        registration.leaveTime = undefined;
+        registration.currentStatus = "joined";
+        registration.rejoinCount = (registration.rejoinCount || 0) + 1;
+        if (deviceInfo) registration.deviceInfo = deviceInfo;
+        if (browserInfo) registration.browserInfo = browserInfo;
+        if (req.ip) registration.ipAddress = req.ip;
+      } else if (event === "heartbeat" || event === "leave") {
+        if (registration.joinTime) {
+          const sessionMinutes = (now.getTime() - new Date(registration.joinTime).getTime()) / (1000 * 60);
+          registration.totalDuration = Math.round((registration.totalDuration || 0) + Math.max(sessionMinutes, 1));
+          
+          if (conference && conference.duration > 0) {
+            registration.attendancePercentage = Math.min(
+              100,
+              Math.round((registration.totalDuration / conference.duration) * 100)
+            );
+          }
+        }
+        registration.leaveTime = now;
+        if (event === "leave") {
+          registration.currentStatus = "left";
+        }
+      }
+
+      await registration.save();
+
+      res.json({
+        tracked: true,
+        currentStatus: registration.currentStatus,
+        totalDuration: registration.totalDuration,
+        attendancePercentage: registration.attendancePercentage,
+      });
+    }
+  );
+
+  /**
+   * GET /api/admin/conferences/:id/attendees - List attendees for Admin
+   */
+  static getAttendees = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+      const { search, paymentStatus, attendanceStatus, sortBy } = req.query as Record<string, string>;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      const query: any = { conferenceId: id };
+
+      if (paymentStatus && paymentStatus !== "All") {
+        query.paymentStatus = paymentStatus;
+      }
+
+      if (attendanceStatus && attendanceStatus !== "All") {
+        query.currentStatus = attendanceStatus;
+      }
+
+      if (search) {
+        query.$or = [
+          { fullName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+          { phone: { $regex: search, $options: "i" } },
+        ];
+      }
+
+      let sortOption: any = { createdAt: -1 };
+      if (sortBy === "joinTime") sortOption = { joinTime: -1 };
+      if (sortBy === "amountPaid") sortOption = { paymentAmount: -1 };
+      if (sortBy === "name") sortOption = { fullName: 1 };
+
+      const registrations = await ConferenceRegistration.find(query)
+        .populate("userId", "fullName role createdAt")
+        .sort(sortOption)
+        .lean();
+
+      // Fetch payment IDs for paid registrations
+      const enhanced = await Promise.all(
+        registrations.map(async (reg) => {
+          let paymentRecord = null;
+          if (reg.paymentStatus === "paid") {
+            paymentRecord = await ConferencePayment.findOne({
+              registrationId: reg._id,
+              status: "paid",
+            }).lean();
+          }
+
+          return {
+            ...reg,
+            razorpayPaymentId: paymentRecord?.razorpayPaymentId || "",
+            razorpayOrderId: paymentRecord?.razorpayOrderId || "",
+          };
+        })
+      );
+
+      res.json(enhanced);
+    }
+  );
+
+  /**
+   * GET /api/admin/conferences/:id/analytics - Live conference dashboard metrics
+   */
+  static getAnalytics = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      const conference = await Conference.findById(id).lean();
+      if (!conference) throw new AppError("Conference not found", 404);
+
+      const allRegs = await ConferenceRegistration.find({ conferenceId: id }).lean();
+
+      const totalRegistered = allRegs.length;
+      const currentlyInMeeting = allRegs.filter((r) => r.currentStatus === "joined").length;
+      const usersWaiting = allRegs.filter((r) => r.currentStatus === "waiting").length;
+      const usersLeft = allRegs.filter((r) => r.currentStatus === "left").length;
+      const noShow = allRegs.filter((r) => r.currentStatus === "no_show" || (!r.joined && r.currentStatus === "registered")).length;
+
+      const totalRevenue = allRegs.reduce((acc, r) => acc + (r.paymentStatus === "paid" ? r.paymentAmount : 0), 0);
+
+      const totalMinutesSpent = allRegs.reduce((acc, r) => acc + (r.totalDuration || 0), 0);
+      const avgSessionDuration = totalRegistered > 0 ? Math.round(totalMinutesSpent / totalRegistered) : 0;
+
+      res.json({
+        totalRegistered,
+        currentlyInMeeting,
+        usersWaiting,
+        usersLeft,
+        noShow,
+        totalRevenue,
+        avgSessionDuration,
+        conferenceTitle: conference.title,
+        conferenceDuration: conference.duration,
+        meetingDate: conference.meetingDate,
+        meetingTime: conference.meetingTime,
+        status: conference.status,
+      });
+    }
+  );
+
+  /**
+   * PATCH /api/admin/conferences/:id/attendees/:registrationId - Admin update attendee
+   */
+  static updateAttendee = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { registrationId } = req.params;
+      const { adminNotes, approvalStatus, paymentStatus, currentStatus } = req.body;
+
+      const registration = await ConferenceRegistration.findById(registrationId);
+      if (!registration) throw new AppError("Attendee registration not found", 404);
+
+      if (adminNotes !== undefined) registration.adminNotes = adminNotes;
+      if (approvalStatus) registration.approvalStatus = approvalStatus;
+      if (paymentStatus) registration.paymentStatus = paymentStatus;
+      if (currentStatus) registration.currentStatus = currentStatus;
+
+      await registration.save();
+
+      res.json({
+        message: "Attendee updated successfully",
+        registration,
+      });
+    }
+  );
+
+  /**
+   * DELETE /api/admin/conferences/:id/attendees/:registrationId - Remove attendee
+   */
+  static removeAttendee = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const { registrationId } = req.params;
+
+      const registration = await ConferenceRegistration.findById(registrationId);
+      if (!registration) throw new AppError("Attendee registration not found", 404);
+
+      await ConferenceRegistration.deleteOne({ _id: registrationId });
+      await ConferencePayment.deleteMany({ registrationId });
+
+      res.json({ message: "Attendee removed from conference" });
+    }
+  );
+
+  /**
+   * GET /api/admin/conferences/:id/export - Export attendee data to CSV / Excel
+   */
+  static exportAttendees = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+      const { format = "xlsx" } = req.query as { format?: string };
+
+      const conference = await Conference.findById(id).lean();
+      if (!conference) throw new AppError("Conference not found", 404);
+
+      const registrations = await ConferenceRegistration.find({ conferenceId: id })
+        .populate("userId", "role")
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const exportData = await Promise.all(
+        registrations.map(async (r, idx) => {
+          let payment = null;
+          if (r.paymentStatus === "paid") {
+            payment = await ConferencePayment.findOne({ registrationId: r._id, status: "paid" }).lean();
+          }
+
+          return {
+            "S.No": idx + 1,
+            "Full Name": r.fullName,
+            "Age": r.age,
+            "Email Address": r.email,
+            "Phone Number": r.phone || "N/A",
+            "Payment Status": r.paymentStatus.toUpperCase(),
+            "Amount Paid (₹)": r.paymentAmount,
+            "Razorpay Payment ID": payment?.razorpayPaymentId || "N/A",
+            "Razorpay Order ID": payment?.razorpayOrderId || "N/A",
+            "Current Status": r.currentStatus.toUpperCase(),
+            "Approval Status": r.approvalStatus.toUpperCase(),
+            "Registration Date": new Date(r.createdAt).toLocaleString(),
+            "Join Time": r.joinTime ? new Date(r.joinTime).toLocaleString() : "N/A",
+            "Leave Time": r.leaveTime ? new Date(r.leaveTime).toLocaleString() : "N/A",
+            "Total Time Spent (Mins)": r.totalDuration || 0,
+            "Attendance %": `${r.attendancePercentage || 0}%`,
+            "Rejoin Count": r.rejoinCount || 0,
+            "Device Info": r.deviceInfo || "N/A",
+            "Browser Info": r.browserInfo || "N/A",
+            "IP Address": r.ipAddress || "N/A",
+            "Admin Notes": r.adminNotes || "",
+          };
+        })
+      );
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Attendees");
+
+      const sanitizeName = conference.title.replace(/[^a-zA-Z0-9]/g, "_");
+
+      if (format === "csv") {
+        const csv = XLSX.utils.sheet_to_csv(worksheet);
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename="${sanitizeName}_attendees.csv"`);
+        return res.send(csv);
+      } else {
+        const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
+        res.setHeader(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader("Content-Disposition", `attachment; filename="${sanitizeName}_attendees.xlsx"`);
+        return res.send(buffer);
+      }
+    }
+  );
+}

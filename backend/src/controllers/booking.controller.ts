@@ -87,16 +87,25 @@ export class BookingController {
       // Calculate amount based on user subscription or organization benefits
       let amount = therapist.therapistProfile.sessionFee ?? 0;
 
-      const seekerUser = await User.findById(req.user!.sub).select("orgId fullName");
+      const seekerUser = await User.findById(req.user!.sub).select("orgId phoneMasked fullName");
       let isOrgCovered = false;
 
-      if (seekerUser?.orgId && therapist.orgId && seekerUser.orgId.toString() === therapist.orgId.toString()) {
-        const { Organization } = await import("@/models/organization");
-        const userOrg = await Organization.findById(seekerUser.orgId);
-        if (userOrg && userOrg.coverMemberTherapyFees) {
-          isOrgCovered = true;
-          amount = 0;
+      const seekerEmail = (seekerUser?.phoneMasked?.includes("@") ? seekerUser.phoneMasked : "").toLowerCase().trim();
+
+      const { Organization } = await import("@/models/organization");
+      
+      let userOrg = seekerUser?.orgId ? await Organization.findById(seekerUser.orgId) : null;
+      if (!userOrg && seekerEmail) {
+        userOrg = await Organization.findOne({ allowedEmails: seekerEmail, verificationStatus: "verified" });
+        if (userOrg && seekerUser) {
+          seekerUser.orgId = userOrg._id as any;
+          await seekerUser.save();
         }
+      }
+
+      if (userOrg && (userOrg.coverMemberTherapyFees || userOrg.verificationStatus === "verified")) {
+        isOrgCovered = true;
+        amount = 0;
       }
 
       if (!isOrgCovered) {

@@ -84,6 +84,7 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [coverMemberFees, setCoverMemberFees] = useState(false);
 
   useEffect(() => {
     getNotificationsPreference().then(setNotificationsEnabled);
@@ -102,6 +103,28 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
     queryFn: () => API.org.me(),
     retry: false
   });
+
+  useEffect(() => {
+    if (orgInfoData?.organization?.coverMemberTherapyFees !== undefined) {
+      setCoverMemberFees(orgInfoData.organization.coverMemberTherapyFees);
+    }
+  }, [orgInfoData]);
+
+  const handleToggleCoverFees = async (val: boolean) => {
+    setCoverMemberFees(val);
+    try {
+      await API.org.updateSettings({ coverMemberTherapyFees: val });
+      Alert.alert(
+        'Policy Saved',
+        val
+          ? 'Member therapy fee coverage is ENABLED. Organization members will book linked therapists for free.'
+          : 'Member therapy fee coverage is DISABLED. Members will pay standard fees.'
+      );
+    } catch (err: any) {
+      setCoverMemberFees(!val);
+      Alert.alert('Error', err.message || 'Failed to update policy setting.');
+    }
+  };
 
   // 3. Query active subscription status
   const { data: subData, isLoading: isSubLoading } = useQuery({
@@ -204,6 +227,27 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
               onValueChange={(val) => handleNotificationToggle(val, setNotificationsEnabled)}
               trackColor={{ false: '#E0E0E0', true: Theme.colors.primary + '50' }}
               thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
+            />
+          </View>
+
+          {/* Member Therapy Fee Policy Toggle Card */}
+          <View style={styles.notificationCard}>
+            <View style={styles.notificationLeft}>
+              <View style={[styles.notificationIconBox, coverMemberFees ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+                <Heart size={18} color={coverMemberFees ? Theme.colors.primary : Theme.colors.outline} />
+              </View>
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={styles.notificationTitle}>Cover Member Therapy Fees</Text>
+                <Text style={styles.notificationDesc}>
+                  {coverMemberFees ? 'Free appointments for members with linked therapists' : 'Members pay standard fees for therapists'}
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={coverMemberFees}
+              onValueChange={handleToggleCoverFees}
+              trackColor={{ false: '#E0E0E0', true: Theme.colors.primary + '50' }}
+              thumbColor={coverMemberFees ? Theme.colors.primary : '#F5F5F5'}
             />
           </View>
 

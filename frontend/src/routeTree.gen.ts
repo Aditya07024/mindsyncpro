@@ -22,6 +22,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConferencesRouteImport } from './routes/conferences'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BreatheRouteImport } from './routes/breathe'
 import { Route as BookingsRouteImport } from './routes/bookings'
@@ -36,6 +37,7 @@ import { Route as OrgOnboardingRouteImport } from './routes/org/onboarding'
 import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
 import { Route as BookingTherapistIdRouteImport } from './routes/booking.$therapistId'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as ConferencesIdRoomRouteImport } from './routes/conferences_.$id.room'
 
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
@@ -100,6 +102,11 @@ const JournalRoute = JournalRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConferencesRoute = ConferencesRouteImport.update({
+  id: '/conferences',
+  path: '/conferences',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -172,6 +179,11 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConferencesIdRoomRoute = ConferencesIdRoomRouteImport.update({
+  id: '/conferences_/$id/room',
+  path: '/conferences/$id/room',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -179,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
+  '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
   '/journal': typeof JournalRoute
   '/mood': typeof MoodRoute
@@ -201,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/sign-up/sso-callback': typeof SignUpSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
+  '/conferences/$id/room': typeof ConferencesIdRoomRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -208,6 +222,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
+  '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
   '/journal': typeof JournalRoute
   '/mood': typeof MoodRoute
@@ -230,6 +245,7 @@ export interface FileRoutesByTo {
   '/sign-up/sso-callback': typeof SignUpSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
+  '/conferences/$id/room': typeof ConferencesIdRoomRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -238,6 +254,7 @@ export interface FileRoutesById {
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
+  '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
   '/journal': typeof JournalRoute
   '/mood': typeof MoodRoute
@@ -260,6 +277,7 @@ export interface FileRoutesById {
   '/sign-up/sso-callback': typeof SignUpSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
+  '/conferences_/$id/room': typeof ConferencesIdRoomRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -269,6 +287,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/breathe'
     | '/chat'
+    | '/conferences'
     | '/dashboard'
     | '/journal'
     | '/mood'
@@ -291,6 +310,7 @@ export interface FileRouteTypes {
     | '/sign-up/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
+    | '/conferences/$id/room'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -298,6 +318,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/breathe'
     | '/chat'
+    | '/conferences'
     | '/dashboard'
     | '/journal'
     | '/mood'
@@ -320,6 +341,7 @@ export interface FileRouteTypes {
     | '/sign-up/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
+    | '/conferences/$id/room'
   id:
     | '__root__'
     | '/'
@@ -327,6 +349,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/breathe'
     | '/chat'
+    | '/conferences'
     | '/dashboard'
     | '/journal'
     | '/mood'
@@ -349,6 +372,7 @@ export interface FileRouteTypes {
     | '/sign-up/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
+    | '/conferences_/$id/room'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -357,6 +381,7 @@ export interface RootRouteChildren {
   BookingsRoute: typeof BookingsRoute
   BreatheRoute: typeof BreatheRoute
   ChatRoute: typeof ChatRoute
+  ConferencesRoute: typeof ConferencesRoute
   DashboardRoute: typeof DashboardRoute
   JournalRoute: typeof JournalRoute
   MoodRoute: typeof MoodRoute
@@ -377,6 +402,7 @@ export interface RootRouteChildren {
   SessionBookingIdRoute: typeof SessionBookingIdRoute
   TherapistDashboardRoute: typeof TherapistDashboardRoute
   TherapistOnboardingRoute: typeof TherapistOnboardingRoute
+  ConferencesIdRoomRoute: typeof ConferencesIdRoomRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -470,6 +496,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conferences': {
+      id: '/conferences'
+      path: '/conferences'
+      fullPath: '/conferences'
+      preLoaderRoute: typeof ConferencesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -570,6 +603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conferences_/$id/room': {
+      id: '/conferences_/$id/room'
+      path: '/conferences/$id/room'
+      fullPath: '/conferences/$id/room'
+      preLoaderRoute: typeof ConferencesIdRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -601,6 +641,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookingsRoute: BookingsRoute,
   BreatheRoute: BreatheRoute,
   ChatRoute: ChatRoute,
+  ConferencesRoute: ConferencesRoute,
   DashboardRoute: DashboardRoute,
   JournalRoute: JournalRoute,
   MoodRoute: MoodRoute,
@@ -621,6 +662,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionBookingIdRoute: SessionBookingIdRoute,
   TherapistDashboardRoute: TherapistDashboardRoute,
   TherapistOnboardingRoute: TherapistOnboardingRoute,
+  ConferencesIdRoomRoute: ConferencesIdRoomRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

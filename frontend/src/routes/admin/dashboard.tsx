@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { UserButton } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
+import { AdminConferencesTab } from './-conferences';
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
@@ -21,7 +22,9 @@ export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdmin
 function SuperAdminDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences'>('overview');
+
+  const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
   const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
@@ -114,6 +117,17 @@ function SuperAdminDashboard() {
       setToggleModal(null);
       setAdminPassword('');
       toast.success(allow ? 'External therapists enabled ✓' : 'External therapists disabled');
+      qc.invalidateQueries({ queryKey: ['admin-orgs'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggleCoverTherapyMutation = useMutation({
+    mutationFn: ({ id, coverMemberTherapyFees, password }: { id: string; coverMemberTherapyFees: boolean; password?: string }) => {
+      return API.admin.toggleCoverMemberTherapyFees(id, { coverMemberTherapyFees, password });
+    },
+    onSuccess: (_, { coverMemberTherapyFees }) => {
+      toast.success(coverMemberTherapyFees ? 'Member therapy fee coverage enabled ✓' : 'Member therapy fee coverage disabled');
       qc.invalidateQueries({ queryKey: ['admin-orgs'] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -226,19 +240,22 @@ function SuperAdminDashboard() {
 
       {/* Tab Nav */}
       <div className="bg-slate-900 border-b border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 flex gap-1">
-          {(['overview', 'users', 'therapists', 'organizations', 'subscriptions', 'plans', 'earnings'] as const).map((t) => (
+        <div className="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto">
+          {(['overview', 'users', 'therapists', 'organizations', 'subscriptions', 'plans', 'earnings', 'conferences'] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-3 text-sm font-semibold capitalize transition border-b-2 ${
+              className={`px-4 py-3 text-sm font-semibold capitalize transition border-b-2 shrink-0 ${
                 tab === t ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}>
-              {t}
+              {t === 'conferences' ? 'Video Conferences' : t}
             </button>
           ))}
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+        {/* CONFERENCES TAB */}
+        {tab === 'conferences' && <AdminConferencesTab />}
 
         {/* OVERVIEW TAB */}
         {tab === 'overview' && (
@@ -564,6 +581,22 @@ function SuperAdminDashboard() {
                       >
                         {o.allowExternalTherapists ? 'External Therapists: ON' : 'External Therapists: OFF'}
                       </button>
+                      <button 
+                        onClick={() => toggleCoverTherapyMutation.mutate({ id: o.id, coverMemberTherapyFees: !o.coverMemberTherapyFees })}
+                        className={`text-[10px] font-bold px-2 py-1 rounded transition-colors ${
+                          o.coverMemberTherapyFees 
+                            ? 'bg-blue-900/40 text-blue-300 border border-blue-800 hover:bg-blue-900/60' 
+                            : 'bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600'
+                        }`}
+                      >
+                        {o.coverMemberTherapyFees ? 'Member Fee: COVERED' : 'Member Fee: CHARGED'}
+                      </button>
+                      <button 
+                        onClick={() => setSelectedOrgForUsers(o)}
+                        className="text-[10px] font-bold px-2 py-1 rounded bg-teal-900/40 text-teal-300 border border-teal-700 hover:bg-teal-900/60 transition-colors flex items-center gap-1"
+                      >
+                        <Users className="size-3" /> View Linked Users & Whitelist
+                      </button>
                     </div>
                     {o.verificationStatus === 'verified' ? (
                       <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: false, type: 'org' })}
@@ -584,6 +617,10 @@ function SuperAdminDashboard() {
               )}
             </div>
           </div>
+        )}
+
+        {selectedOrgForUsers && (
+          <OrgLinkedUsersModal org={selectedOrgForUsers} onClose={() => setSelectedOrgForUsers(null)} />
         )}
 
         {/* SUBSCRIPTIONS TAB */}
@@ -1280,6 +1317,174 @@ function SuperAdminDashboard() {
         )}
       </AnimatePresence>
 
+    </div>
+  );
+}
+
+function OrgLinkedUsersModal({ org, onClose }: { org: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [emailText, setEmailText] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["admin-org-users", org.id],
+    queryFn: () => API.admin.orgLinkedUsers(org.id),
+  });
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file && !emailText.trim()) {
+      toast.error("Please select a CSV/Excel file or enter email addresses.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const res = await API.admin.uploadOrgEmails(org.id, { file: file || undefined, emailText });
+      toast.success(res.message);
+      setEmailText("");
+      setFile(null);
+      refetch();
+      qc.invalidateQueries({ queryKey: ["admin-orgs"] });
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const members = data?.linkedUsers || [];
+  const allowedEmails = data?.allowedEmails || [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-hidden">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col text-slate-100 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+          <div>
+            <div className="flex items-center gap-2 text-violet-400 font-semibold text-xs uppercase tracking-wider">
+              <Building2 className="size-4" /> Linked Users & Whitelist Management
+            </div>
+            <h3 className="text-xl font-bold text-white mt-1">{org.name}</h3>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800">
+            <XCircle className="size-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+          {/* Coverage Status Banner */}
+          <div className="p-4 rounded-2xl bg-violet-950/40 border border-violet-800/60 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-violet-300">Appointment & Conference Fee Coverage</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Users linked to this organization enjoy 100% FREE appointments & conference access without any charges.
+              </p>
+            </div>
+            <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-bold rounded-full border border-emerald-500/30">
+              Coverage Active
+            </span>
+          </div>
+
+          {/* Bulk Upload CSV / Excel / Email List */}
+          <form onSubmit={handleUpload} className="p-5 rounded-2xl bg-slate-800/60 border border-slate-700/80 space-y-3">
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <Users className="size-4 text-teal-400" /> Bulk Upload CSV / Excel / Email Whitelist
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-slate-400 font-medium block mb-1">Upload CSV or Excel File (.csv, .xlsx)</label>
+                <input
+                  type="file"
+                  accept=".csv, .xlsx, .xls"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-slate-300 bg-slate-900 border border-slate-700 rounded-xl p-2"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-400 font-medium block mb-1">Or Enter Emails (comma or newline separated)</label>
+                <textarea
+                  rows={2}
+                  value={emailText}
+                  onChange={(e) => setEmailText(e.target.value)}
+                  placeholder="user1@company.com, user2@company.com"
+                  className="w-full text-xs text-slate-100 bg-slate-900 border border-slate-700 rounded-xl p-2 placeholder-slate-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={uploading}
+                className="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-lg transition-all disabled:opacity-50"
+              >
+                {uploading ? "Processing..." : "Add to Whitelist & Auto-Link"}
+              </button>
+            </div>
+          </form>
+
+          {/* Linked Users Table */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold text-white">Linked Registered Users ({members.length})</h4>
+            {isLoading ? (
+              <p className="text-xs text-slate-400">Loading members...</p>
+            ) : members.length === 0 ? (
+              <p className="text-xs text-slate-500 p-4 bg-slate-800/40 rounded-xl">No users currently registered with this organization ID.</p>
+            ) : (
+              <div className="overflow-x-auto border border-slate-800 rounded-2xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800">
+                    <tr>
+                      <th className="p-3">User Name</th>
+                      <th className="p-3">Email / Contact</th>
+                      <th className="p-3">Role</th>
+                      <th className="p-3">Department</th>
+                      <th className="p-3">Joined Date</th>
+                      <th className="p-3">Appointment Charge</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {members.map((m: any) => (
+                      <tr key={m._id} className="hover:bg-slate-800/40">
+                        <td className="p-3 font-semibold text-white">{m.fullName || "User"}</td>
+                        <td className="p-3 text-slate-300">{m.phoneMasked || m.email || "N/A"}</td>
+                        <td className="p-3"><span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase text-[10px]">{m.role}</span></td>
+                        <td className="p-3 text-slate-400">{m.department || "General"}</td>
+                        <td className="p-3 text-slate-400">{new Date(m.createdAt).toLocaleDateString()}</td>
+                        <td className="p-3"><span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px]">FREE (Org Covered)</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Allowed Email Whitelist Tag List */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold text-white">Whitelisted Emails ({allowedEmails.length})</h4>
+            <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-800 max-h-36 overflow-y-auto">
+              {allowedEmails.length === 0 ? (
+                <span className="text-xs text-slate-500">No email whitelist uploaded yet.</span>
+              ) : (
+                allowedEmails.map((em: string, idx: number) => (
+                  <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-[11px]">
+                    {em}
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-800 flex justify-end">
+          <button onClick={onClose} className="px-5 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-semibold text-xs">
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

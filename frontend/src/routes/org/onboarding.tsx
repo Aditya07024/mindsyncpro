@@ -27,6 +27,7 @@ function OrgOnboarding() {
     registrationUrl: "",
     accreditationUrl: "",
     governmentIdUrl: "",
+    coverMemberTherapyFees: false,
   });
 
   useEffect(() => {
@@ -225,6 +226,63 @@ function OrgOnboarding() {
                     className="w-full mt-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                     placeholder="Full headquarters or campus address"
                   />
+                </div>
+
+                <div className="pt-2 border-t border-slate-100">
+                  <label className="text-xs font-bold text-slate-700 uppercase block mb-2">
+                    Therapy Payment Policy
+                  </label>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Do you want your linked users/students to pay for appointments with organization-linked therapists?
+                  </p>
+
+                  <div className="space-y-2">
+                    <label
+                      onClick={() => setFormData((prev) => ({ ...prev, coverMemberTherapyFees: true }))}
+                      className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
+                        formData.coverMemberTherapyFees
+                          ? "border-blue-600 bg-blue-50/50 text-blue-900 ring-1 ring-blue-600"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="coverMemberTherapyFees"
+                        checked={formData.coverMemberTherapyFees === true}
+                        onChange={() => setFormData((prev) => ({ ...prev, coverMemberTherapyFees: true }))}
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="text-xs font-semibold">No — Cover Member Therapy Fees (Free Appointments)</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          Organization covers therapy costs. Members won't be charged when booking organization-linked therapists.
+                        </div>
+                      </div>
+                    </label>
+
+                    <label
+                      onClick={() => setFormData((prev) => ({ ...prev, coverMemberTherapyFees: false }))}
+                      className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
+                        !formData.coverMemberTherapyFees
+                          ? "border-blue-600 bg-blue-50/50 text-blue-900 ring-1 ring-blue-600"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="coverMemberTherapyFees"
+                        checked={formData.coverMemberTherapyFees === false}
+                        onChange={() => setFormData((prev) => ({ ...prev, coverMemberTherapyFees: false }))}
+                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div>
+                        <div className="text-xs font-semibold">Yes — Members Pay Standard Fees</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          Members will pay standard appointment fees when booking organization-linked therapists.
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
                 <button

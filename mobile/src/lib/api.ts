@@ -132,6 +132,14 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    toggleCoverMemberTherapyFees: (
+      id: string,
+      data: { coverMemberTherapyFees: boolean; password?: string },
+    ) =>
+      apiCall<any>(`/api/admin/org/${id}/toggle-cover-therapy`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     createPlan: (data: any) =>
       apiCall<any>("/api/admin/plans", {
         method: "POST",
@@ -171,6 +179,11 @@ const API = {
     onboarding: (data: any) =>
       apiCall<any>("/api/org/onboarding", {
         method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateSettings: (data: { coverMemberTherapyFees?: boolean; allowExternalTherapists?: boolean }) =>
+      apiCall<any>("/api/org/settings", {
+        method: "PATCH",
         body: JSON.stringify(data),
       }),
     pendingTherapists: () => apiCall<any>("/api/org/pending-therapists"),

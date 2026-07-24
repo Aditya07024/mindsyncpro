@@ -149,7 +149,7 @@ function PrivacyPage() {
             <p className="leading-relaxed">
               You may request access to, correction of, or deletion of your personal data held by the Service Provider. 
               To exercise these rights, or to withdraw consent where processing is based on consent, contact the Service Provider 
-              directly at <a href="mailto:atulmtr01542@gmail.com" className="text-teal-600 hover:underline font-semibold">atulmtr01542@gmail.com</a>.
+              directly at <a href="mailto:contact@mymindtherapyfriend.com" className="text-teal-600 hover:underline font-semibold">contact@mymindtherapyfriend.com</a>.
             </p>
           </div>
           
@@ -161,7 +161,7 @@ function PrivacyPage() {
             <p className="leading-relaxed">
               If you are a California resident, you have the right to know what personal information is collected, the right to delete 
               personal information, the right to opt out of the sale or sharing of personal information, and the right to non-discrimination 
-              for exercising these rights. To exercise your CCPA/CPRA rights, contact the Service Provider at <a href="mailto:atulmtr01542@gmail.com" className="text-teal-600 hover:underline font-semibold">atulmtr01542@gmail.com</a>.
+              for exercising these rights. To exercise your CCPA/CPRA rights, contact the Service Provider at <a href="mailto:contact@mymindtherapyfriend.com" className="text-teal-600 hover:underline font-semibold">contact@mymindtherapyfriend.com</a>.
             </p>
           </div>
         </div>
@@ -187,7 +187,7 @@ function PrivacyPage() {
             <h5 className="font-bold text-sm text-slate-900 mb-1">Personally Identifiable Information (PII)</h5>
             <p className="text-xs text-slate-600 leading-relaxed">
               For a better experience while using the Application, the Service Provider may require you to provide certain personally 
-              identifiable information, including but not limited to <span className="font-semibold text-slate-950">atulmtr01542@gmail.com</span>. 
+              identifiable information, including but not limited to <span className="font-semibold text-slate-950">contact@mymindtherapyfriend.com</span>. 
               The information the Service Provider requests will be retained and used as described in this privacy policy.
             </p>
           </div>
@@ -287,7 +287,7 @@ function PrivacyPage() {
             </p>
             <p className="text-sm text-slate-500">
               To request deletion of your personal data, to withdraw consent, or to exercise any of your rights, contact the Service Provider 
-              at <a href="mailto:atulmtr01542@gmail.com" className="text-teal-600 hover:underline">atulmtr01542@gmail.com</a>.
+              at <a href="mailto:contact@mymindtherapyfriend.com" className="text-teal-600 hover:underline">contact@mymindtherapyfriend.com</a>.
             </p>
           </div>
 
@@ -316,7 +316,7 @@ function PrivacyPage() {
             </div>
             <p className="text-xs text-slate-500 leading-relaxed mt-4">
               If you want the Service Provider to delete User Provided Data submitted through the Application, please contact them 
-              at <a href="mailto:atulmtr01542@gmail.com" className="text-teal-600 hover:underline">atulmtr01542@gmail.com</a>. Please note 
+              at <a href="mailto:contact@mymindtherapyfriend.com" className="text-teal-600 hover:underline">contact@mymindtherapyfriend.com</a>. Please note 
               that some User Provided Data may be required for the Application to function properly.
             </p>
           </div>
@@ -343,7 +343,7 @@ function PrivacyPage() {
             <p className="text-xs text-rose-800 leading-relaxed">
               In the event the Service Provider discovers that a child has provided personal information, the Service Provider will immediately 
               delete this from their servers. If you are a parent or guardian and you are aware that your child has provided the Service Provider 
-              with personal information, please contact the Service Provider (<a href="mailto:atulmtr01542@gmail.com" className="underline font-bold">atulmtr01542@gmail.com</a>) 
+              with personal information, please contact the Service Provider (<a href="mailto:contact@mymindtherapyfriend.com" className="underline font-bold">contact@mymindtherapyfriend.com</a>) 
               so that they will be able to take the necessary actions.
             </p>
           </div>
@@ -404,7 +404,7 @@ function PrivacyPage() {
           </p>
           <p className="text-xs text-slate-500 leading-relaxed">
             Previous versions of this Privacy Policy will be maintained and made available upon request by contacting the Service Provider 
-            at <a href="mailto:atulmtr01542@gmail.com" className="text-teal-600 hover:underline">atulmtr01542@gmail.com</a>.
+            at <a href="mailto:contact@mymindtherapyfriend.com" className="text-teal-600 hover:underline">contact@mymindtherapyfriend.com</a>.
           </p>
 
           <h4 className="font-bold text-slate-900 text-sm border-t border-slate-100 pt-4 mt-4">Your Consent</h4>
@@ -658,7 +658,7 @@ function PrivacyPage() {
                 </p>
               </div>
               <a 
-                href="mailto:atulmtr01542@gmail.com" 
+                href="mailto:contact@mymindtherapyfriend.com" 
                 className="px-6 py-4 bg-white rounded-2xl text-teal-900 font-bold text-sm shadow-lg hover:scale-105 transition hover:bg-teal-50 shrink-0 flex items-center gap-2"
               >
                 Email Service Provider <ArrowLeft className="size-4 rotate-180" />

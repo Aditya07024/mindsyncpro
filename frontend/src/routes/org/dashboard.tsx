@@ -207,6 +207,18 @@ function OrgDashboard() {
       });
   }, [navigate]);
 
+  const updateSettingsMutation = useMutation({
+    mutationFn: (data: { coverMemberTherapyFees?: boolean; allowExternalTherapists?: boolean }) =>
+      API.org.updateSettings(data),
+    onSuccess: (data: any) => {
+      if (data.organization) {
+        setOrgData(data.organization);
+      }
+      toast.success(data.message || 'Settings updated successfully');
+    },
+    onError: (e: Error) => toast.error(e.message || 'Failed to update settings'),
+  });
+
   const { data: therapistsData, refetch: refetchTherapists } = useQuery({
     queryKey: ['org-pending-therapists'],
     queryFn: () => API.org.pendingTherapists(),
@@ -514,12 +526,13 @@ function OrgDashboard() {
       {/* Tabs */}
       <div className="bg-white border-b border-slate-200 print:hidden">
         <div className="max-w-6xl mx-auto px-4 flex gap-4 overflow-x-auto">
-          {(['overview', 'therapists', 'external-therapists', 'requests', 'members', 'subscriptions'] as const).map((t) => {
+          {(['overview', 'therapists', 'external-therapists', 'requests', 'members', 'subscriptions', 'settings'] as const).map((t) => {
             const disabled = orgSubRequired && t !== 'subscriptions';
             if (t === 'external-therapists' && !orgData?.allowExternalTherapists) return null;
             
             const labels: Record<string, string> = {
-              'external-therapists': 'Invite External'
+              'external-therapists': 'Invite External',
+              'settings': 'Settings & Policy',
             };
 
             return (
@@ -1122,6 +1135,40 @@ function OrgDashboard() {
                 <p className="text-xs text-blue-700 leading-relaxed opacity-80">
                   Organization plans are recurring and billed monthly via Razorpay. Benefits are automatically enabled for therapists linked to your organization ID once they are verified. You can switch plans or cancel any time from this dashboard.
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'settings' && (
+          <div className="space-y-6 max-w-3xl">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Organization Settings & Policies</h3>
+              <p className="text-xs text-slate-500 mb-6">Manage member therapy fee policies and organization preferences.</p>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="space-y-1 max-w-lg">
+                    <h4 className="text-sm font-bold text-slate-900">Cover Member Therapy Fees</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      When enabled, members/students belonging to your organization will not pay any appointment fees when booking appointments with organization-linked therapists (Free therapy appointments for members).
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => updateSettingsMutation.mutate({ coverMemberTherapyFees: !orgData?.coverMemberTherapyFees })}
+                    disabled={updateSettingsMutation.isPending}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      orgData?.coverMemberTherapyFees ? 'bg-blue-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        orgData?.coverMemberTherapyFees ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

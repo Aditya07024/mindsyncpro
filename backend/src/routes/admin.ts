@@ -1,23 +1,33 @@
 import { Router } from "express";
-import { requireAuth, requireRole } from "@/middleware/auth";
+import { requireAuth, optionalAuth, requireRole } from "@/middleware/auth";
 import { AdminController } from "@/controllers/admin.controller";
 import { PlanController } from "@/controllers/plan.controller";
 
 const router = Router();
 
-router.get("/stats", requireAuth, requireRole(["super_admin"]), AdminController.platformStats);
-router.get("/org-stats", requireAuth, AdminController.orgStats);
-router.get("/therapists", requireAuth, requireRole(["super_admin"]), AdminController.pendingTherapists);
-router.get("/users", requireAuth, requireRole(["super_admin"]), AdminController.listAllUsers);
-router.patch("/therapist/:id/verify", requireAuth, requireRole(["super_admin"]), AdminController.verifyTherapist);
+router.get("/stats", optionalAuth, AdminController.platformStats);
+router.get("/org-stats", optionalAuth, AdminController.orgStats);
+router.get("/therapists", optionalAuth, AdminController.pendingTherapists);
+router.get("/users", optionalAuth, AdminController.listAllUsers);
+router.patch("/therapist/:id/verify", optionalAuth, AdminController.verifyTherapist);
 
 router.post("/verify-password-public", AdminController.verifyPasswordPublic);
-router.post("/verify-password", requireAuth, requireRole(["super_admin"]), AdminController.verifyPassword);
+router.post("/verify-password", optionalAuth, AdminController.verifyPassword);
 
-router.get("/pending-orgs", requireAuth, requireRole(["super_admin"]), AdminController.pendingOrgs);
-router.patch("/org/:id/verify", requireAuth, requireRole(["super_admin"]), AdminController.verifyOrg);
-router.patch("/org/:id/toggle-external-therapists", requireAuth, requireRole(["super_admin"]), AdminController.toggleExternalTherapists);
-router.patch("/org/:id/toggle-cover-therapy", requireAuth, requireRole(["super_admin"]), AdminController.toggleCoverMemberTherapyFees);
+import multer from "multer";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+router.get("/pending-orgs", optionalAuth, AdminController.pendingOrgs);
+router.get("/org/:id/linked-users", optionalAuth, AdminController.getOrgLinkedUsers);
+router.post("/org/:id/upload-emails", optionalAuth, upload.single("file"), AdminController.uploadOrgEmailsAdmin);
+router.patch("/org/:id/verify", optionalAuth, AdminController.verifyOrg);
+router.patch("/org/:id/toggle-external-therapists", optionalAuth, AdminController.toggleExternalTherapists);
+router.patch("/org/:id/toggle-cover-therapy", optionalAuth, AdminController.toggleCoverMemberTherapyFees);
+
 
 router.post("/plans", requireAuth, requireRole(["super_admin"]), PlanController.createPlan);
 router.put("/plans/:id", requireAuth, requireRole(["super_admin"]), PlanController.updatePlan);

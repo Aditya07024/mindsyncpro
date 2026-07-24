@@ -3,6 +3,7 @@ import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
 import { User, TherapistBooking, Mood, Conversation, Organization } from "@/models";
 import { NotificationController } from "./notification.controller";
+import * as XLSX from "xlsx";
 
 export class AdminController {
   /** POST /admin/verify-password */
@@ -496,5 +497,102 @@ export class AdminController {
       message: "User deleted successfully",
     });
   });
+
+  /** GET /admin/org/:id/linked-users — Fetch all users linked to an organization */
+  static getOrgLinkedUsers = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const id = req.params.id as string;
+    const org = await Organization.findById(id).lean();
+    if (!org) return res.status(404).json({ error: "Organization not found" });
+
+    // Fetch users whose orgId matches this org
+    const linkedUsers = await User.find({ orgId: id, deletedAt: null })
+      .select("fullName phoneMasked email role tier department streak lastActiveAt createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      organization: {
+        id: org._id,
+        name: org.name,
+        type: org.type,
+        officialEmail: org.officialEmail,
+        contactPerson: org.contactPerson,
+        allowedEmails: org.allowedEmails || [],
+        coverMemberTherapyFees: org.coverMemberTherapyFees ?? false,
+        allowExternalTherapists: org.allowExternalTherapists ?? false,
+      },
+      linkedUsers,
+      allowedEmails: org.allowedEmails || [],
+      pendingJoinRequests: org.pendingJoinRequests || [],
+    });
+  });
+
+  /** POST /admin/org/:id/upload-emails — Bulk upload emails (CSV / Excel / raw text) for an organization */
+  static uploadOrgEmailsAdmin = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const id = req.params.id as string;
+    const org = await Organization.findById(id);
+    if (!org) return res.status(404).json({ error: "Organization not found" });
+
+    const file = (req as any).file;
+    const { emailText } = req.body as { emailText?: string };
+
+    const emails: string[] = [];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Parse file if provided (Excel or CSV)
+    if (file && file.buffer) {
+      const workbook = XLSX.read(file.buffer, { type: "buffer" });
+      for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+        for (const row of rows) {
+          for (const cell of row) {
+            if (typeof cell === "string" && emailRegex.test(cell.trim())) {
+              emails.push(cell.trim().toLowerCase());
+            }
+          }
+        }
+      }
+    }
+
+    // Parse text input if provided
+    if (emailText) {
+      const tokens = emailText.split(/[\s,;\n]+/);
+      for (const token of tokens) {
+        if (emailRegex.test(token.trim())) {
+          emails.push(token.trim().toLowerCase());
+        }
+      }
+    }
+
+    const uniqueEmails = [...new Set(emails)];
+    if (uniqueEmails.length === 0) {
+      return res.status(400).json({ error: "No valid email addresses found in file or text input." });
+    }
+
+    const newEmails = uniqueEmails.filter((e) => !org.allowedEmails.includes(e));
+    org.allowedEmails = [...new Set([...org.allowedEmails, ...uniqueEmails])];
+    await org.save();
+
+    // Auto-link existing User documents matching these emails
+    let linkedCount = 0;
+    for (const em of newEmails) {
+      const result = await User.updateMany(
+        {
+          phoneMasked: em,
+          $or: [{ orgId: null }, { orgId: { $exists: false } }],
+        },
+        { $set: { orgId: org._id } }
+      );
+      linkedCount += result.modifiedCount;
+    }
+
+    res.json({
+      message: `Successfully added ${newEmails.length} email(s) to whitelist. Auto-linked ${linkedCount} existing user(s).`,
+      addedCount: newEmails.length,
+      allowedEmails: org.allowedEmails,
+    });
+  });
 }
+
 

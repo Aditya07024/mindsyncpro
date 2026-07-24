@@ -55,6 +55,16 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
     );
   };
 
+  const handleToggleCoverFees = async (id: string, name: string, currentVal: boolean) => {
+    try {
+      await API.admin.toggleCoverMemberTherapyFees(id, { coverMemberTherapyFees: !currentVal });
+      Alert.alert('Policy Updated', `Member therapy fee coverage for ${name} is now ${!currentVal ? 'ENABLED (Free)' : 'DISABLED (Charged)'}.`);
+      refetchOrgs();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update policy.');
+    }
+  };
+
   const handleVerifyOrg = async (id: string, name: string) => {
     Alert.alert(
       'Verify Organization Partner',
@@ -279,6 +289,14 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
                         {o.verificationStatus || 'pending'}
                       </Text>
                     </View>
+                    <TouchableOpacity
+                      onPress={() => handleToggleCoverFees(o._id || o.id, o.name, !!o.coverMemberTherapyFees)}
+                      style={{ marginTop: 8, padding: 8, backgroundColor: o.coverMemberTherapyFees ? '#E8F5E9' : '#F5F5F5', borderRadius: Theme.radius.sm, alignItems: 'center' }}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: Theme.fonts.bodyBold, color: o.coverMemberTherapyFees ? '#2E7D32' : '#616161' }}>
+                        {o.coverMemberTherapyFees ? 'Member Therapy Fee: COVERED (Free)' : 'Member Therapy Fee: CHARGED'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
 
                   {/* Actions */}

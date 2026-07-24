@@ -455,12 +455,16 @@ function BookingFlow() {
             >
               <Card className="p-8 border-2 border-green-200 bg-green-50">
                 <div className="text-5xl mb-4">✓</div>
-                <h2 className="text-2xl font-bold text-green-900 mb-2">Payment Successful!</h2>
+                <h2 className="text-2xl font-bold text-green-900 mb-2">
+                  {bookingAmount === 0 ? "Appointment Confirmed!" : "Payment Successful!"}
+                </h2>
                 <p className="text-slate-600 mb-4">
-                  Your therapy session with {therapist.name} is confirmed.
+                  {bookingAmount === 0
+                    ? `Your therapy session with ${therapist.name} is confirmed under your organization benefits.`
+                    : `Your therapy session with ${therapist.name} is confirmed.`}
                 </p>
                 <p className="text-sm text-slate-500">
-                  Check your phone for SMS with video room link and session details.
+                  Check your notifications for session details and video room link.
                 </p>
               </Card>
 

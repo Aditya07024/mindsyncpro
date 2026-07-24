@@ -80,3 +80,8 @@ dist/
 *.pid
 *.seed
 *.pid.lock
+
+# JaaS / Cryptographic Keys
+keys/
+*.pem
+*.pub

@@ -12,4 +12,7 @@ export { SharedReport, type ISharedReport } from "./shared-report";
 export { AIReport, type IAIReport } from "./ai-report";
 export { WalletTransaction, type IWalletTransaction } from "./wallet-transaction";
 export { TherapistRecommendation, type ITherapistRecommendation } from "./therapist-recommendation";
+export { Conference, type IConference } from "./conference";
+export { ConferenceRegistration, type IConferenceRegistration } from "./conference-registration";
+export { ConferencePayment, type IConferencePayment } from "./conference-payment";
 

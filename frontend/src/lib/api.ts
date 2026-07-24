@@ -97,6 +97,33 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    toggleCoverMemberTherapyFees: (id: string, data: { coverMemberTherapyFees: boolean; password?: string }) =>
+      apiCall<any>(`/api/admin/org/${id}/toggle-cover-therapy`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    orgLinkedUsers: (id: string) => apiCall<any>(`/api/admin/org/${id}/linked-users`),
+    uploadOrgEmails: async (id: string, fileOrText: { file?: File; emailText?: string }) => {
+      const headers: Record<string, string> = {};
+      if (_getToken) {
+        const token = await _getToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      }
+      const formData = new FormData();
+      if (fileOrText.file) formData.append("file", fileOrText.file);
+      if (fileOrText.emailText) formData.append("emailText", fileOrText.emailText);
+
+      const response = await fetch(`${API_BASE_URL}/api/admin/org/${id}/upload-emails`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: "Upload failed" }));
+        throw new Error(err.error || err.message || "Upload failed");
+      }
+      return response.json();
+    },
     createPlan: (data: any) =>
       apiCall<any>("/api/admin/plans", { method: "POST", body: JSON.stringify(data) }),
     updatePlan: (id: string, data: any) =>
@@ -118,6 +145,8 @@ const API = {
     verifiedOrgs: () => apiCall<any>("/api/org/verified"),
     onboarding: (data: any) =>
       apiCall<any>("/api/org/onboarding", { method: "POST", body: JSON.stringify(data) }),
+    updateSettings: (data: { coverMemberTherapyFees?: boolean; allowExternalTherapists?: boolean }) =>
+      apiCall<any>("/api/org/settings", { method: "PATCH", body: JSON.stringify(data) }),
     pendingTherapists: () => apiCall<any>("/api/org/pending-therapists"),
     verifyTherapist: (id: string, data: { verified: boolean }) =>
       apiCall<any>(`/api/org/therapist/${id}/verify`, {
@@ -309,6 +338,54 @@ const API = {
     sync: () => apiCall<any>("/api/subscription/sync", { method: "POST" }),
     admin: { all: () => apiCall<any>("/api/subscription/admin/all") },
   },
+
+  conference: {
+    list: (query?: { category?: string; search?: string; status?: string; type?: string }) => {
+      const params = new URLSearchParams();
+      if (query) {
+        Object.entries(query).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== "") params.append(k, String(v));
+        });
+      }
+      return apiCall<any>(`/api/conferences?${params.toString()}`);
+    },
+    get: (id: string) => apiCall<any>(`/api/conferences/${id}`),
+    create: (data: any) => apiCall<any>("/api/conferences", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => apiCall<any>(`/api/conferences/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) => apiCall<any>(`/api/conferences/${id}`, { method: "DELETE" }),
+    togglePublish: (id: string, status?: string) =>
+      apiCall<any>(`/api/conferences/${id}/publish`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    register: (data: { conferenceId: string; fullName: string; age: number; email: string; phone?: string }) =>
+      apiCall<any>("/api/conferences/register", { method: "POST", body: JSON.stringify(data) }),
+    verifyPayment: (data: { conferenceId: string; orderId: string; paymentId: string; signature: string }) =>
+      apiCall<any>("/api/conferences/payments/verify", { method: "POST", body: JSON.stringify(data) }),
+    getJoinInfo: (id: string, email?: string) =>
+      apiCall<any>(`/api/conferences/${id}/join${email ? `?email=${encodeURIComponent(email)}` : ""}`),
+    trackAttendance: (id: string, data: { event: "join" | "heartbeat" | "leave"; deviceInfo?: string; browserInfo?: string; email?: string }) =>
+      apiCall<any>(`/api/conferences/${id}/track`, { method: "POST", body: JSON.stringify(data) }),
+    adminAttendees: (id: string, query?: Record<string, any>) => {
+      const params = new URLSearchParams();
+      if (query) {
+        Object.entries(query).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== "") params.append(k, String(v));
+        });
+      }
+      return apiCall<any>(`/api/conferences/admin/${id}/attendees?${params.toString()}`);
+    },
+    adminAnalytics: (id: string) => apiCall<any>(`/api/conferences/admin/${id}/analytics`),
+    adminUpdateAttendee: (id: string, registrationId: string, data: any) =>
+      apiCall<any>(`/api/conferences/admin/${id}/attendees/${registrationId}`, { method: "PATCH", body: JSON.stringify(data) }),
+    adminRemoveAttendee: (id: string, registrationId: string) =>
+      apiCall<any>(`/api/conferences/admin/${id}/attendees/${registrationId}`, { method: "DELETE" }),
+    exportUrl: (id: string, format: "xlsx" | "csv" = "xlsx") =>
+      `${import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com"}/api/conferences/admin/${id}/export?format=${format}`,
+  },
+
+  video: {
+    getToken: (data: { roomName: string; user: { id?: string; name: string; email?: string }; moderator?: boolean }) =>
+      apiCall<any>("/api/video/token", { method: "POST", body: JSON.stringify(data) }),
+  },
 };
+
 
 export default API;

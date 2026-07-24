@@ -103,6 +103,33 @@ export async function requireAuth(
       return next(new AppError("Failed to create or fetch user", 500));
     }
 
+    // Auto-link user to Organization if email is in Organization's allowedEmails
+    if (!user.orgId && (user.phoneMasked?.includes("@") || user.email)) {
+      try {
+        const userEmail = (user.email || user.phoneMasked || "").toLowerCase().trim();
+        if (userEmail) {
+          const { Organization } = await import("@/models/organization");
+          const matchingOrg = await Organization.findOne({
+            allowedEmails: userEmail,
+            verificationStatus: "verified",
+          });
+
+          if (matchingOrg) {
+            await User.updateOne({ _id: user._id }, { $set: { orgId: matchingOrg._id } });
+            user.orgId = matchingOrg._id;
+
+            // Auto approve join request if present
+            await Organization.updateOne(
+              { _id: matchingOrg._id, "pendingJoinRequests.userId": user._id },
+              { $set: { "pendingJoinRequests.$.status": "approved", "pendingJoinRequests.$.autoApproved": true } }
+            );
+          }
+        }
+      } catch (orgLinkErr) {
+        console.error("Auto org link check failed:", orgLinkErr);
+      }
+    }
+
     req.user = {
       sub: String(user._id),
       role: user.role || "user",
@@ -123,4 +150,20 @@ export function requireRole(roles: string[]) {
     }
     next();
   };
+}
+
+export async function optionalAuth(
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const auth = getAuth(req);
+    if (auth && auth.userId) {
+      return requireAuth(req, res, next);
+    }
+  } catch (e) {
+    // ignore token errors for optional auth
+  }
+  next();
 }

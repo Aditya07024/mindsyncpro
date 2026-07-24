@@ -12,6 +12,8 @@ import subscriptionRoutes from "./subscription";
 import orgRoutes from "./org";
 import planRoutes from "./plan";
 import notificationRoutes from "./notification";
+import conferenceRoutes from "./conference";
+import videoRoutes from "./video";
 
 export const apiRouter = Router();
 
@@ -32,4 +34,6 @@ apiRouter.use("/admin", adminRoutes);
 apiRouter.use("/org", orgRoutes);
 apiRouter.use("/plans", planRoutes);
 apiRouter.use("/notifications", notificationRoutes);
+apiRouter.use("/conferences", conferenceRoutes);
+apiRouter.use("/video", videoRoutes);
 
