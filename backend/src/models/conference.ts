@@ -17,6 +17,8 @@ export interface IConference extends Document {
   enableRecording: boolean;
   enablePassword: boolean;
   password?: string;
+  hostEmail?: string;
+  hostJoined?: boolean;
   instructions?: string;
   status: "draft" | "published" | "upcoming" | "live" | "ended";
   createdBy: Types.ObjectId;
@@ -50,6 +52,8 @@ const ConferenceSchema = new Schema<IConference>(
     enableRecording: { type: Boolean, default: false },
     enablePassword: { type: Boolean, default: false },
     password: { type: String, default: "" },
+    hostEmail: { type: String, default: "", trim: true, lowercase: true },
+    hostJoined: { type: Boolean, default: false },
     instructions: { type: String, default: "" },
     status: {
       type: String,

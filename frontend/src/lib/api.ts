@@ -359,8 +359,13 @@ const API = {
       apiCall<any>("/api/conferences/register", { method: "POST", body: JSON.stringify(data) }),
     verifyPayment: (data: { conferenceId: string; orderId: string; paymentId: string; signature: string }) =>
       apiCall<any>("/api/conferences/payments/verify", { method: "POST", body: JSON.stringify(data) }),
-    getJoinInfo: (id: string, email?: string) =>
-      apiCall<any>(`/api/conferences/${id}/join${email ? `?email=${encodeURIComponent(email)}` : ""}`),
+    getJoinInfo: (id: string, email?: string, password?: string) => {
+      const params = new URLSearchParams();
+      if (email) params.append("email", email);
+      if (password) params.append("password", password);
+      const queryStr = params.toString();
+      return apiCall<any>(`/api/conferences/${id}/join${queryStr ? `?${queryStr}` : ""}`);
+    },
     trackAttendance: (id: string, data: { event: "join" | "heartbeat" | "leave"; deviceInfo?: string; browserInfo?: string; email?: string }) =>
       apiCall<any>(`/api/conferences/${id}/track`, { method: "POST", body: JSON.stringify(data) }),
     adminAttendees: (id: string, query?: Record<string, any>) => {

@@ -63,6 +63,7 @@ export function AdminConferencesTab() {
     enableRecording: false,
     enablePassword: false,
     password: "",
+    hostEmail: "",
     roomName: "",
     autoGenerateRoomName: true,
     instructions: "",
@@ -131,6 +132,7 @@ export function AdminConferencesTab() {
       enableRecording: false,
       enablePassword: false,
       password: "",
+      hostEmail: "",
       roomName: "",
       autoGenerateRoomName: true,
       instructions: "",
@@ -156,6 +158,7 @@ export function AdminConferencesTab() {
       enableRecording: conf.enableRecording || false,
       enablePassword: conf.enablePassword || false,
       password: conf.password || "",
+      hostEmail: conf.hostEmail || "",
       roomName: conf.roomName || "",
       autoGenerateRoomName: false,
       instructions: conf.instructions || "",
@@ -281,10 +284,11 @@ export function AdminConferencesTab() {
 
                       <p className="text-slate-400 text-xs line-clamp-1">{conf.description}</p>
 
-                      <div className="flex items-center gap-4 text-xs text-slate-400 pt-1">
+                      <div className="flex items-center gap-4 text-xs text-slate-400 pt-1 flex-wrap">
                         <span>
                           📅 {conf.meetingDate} at {conf.meetingTime} ({conf.duration}m)
                         </span>
+                        <span>👤 Host/Leader: <strong className="text-teal-300">{conf.hostEmail || conf.createdBy?.email || "Admin"}</strong></span>
                         <span>👥 Registered: {conf.registeredCount || 0} / {conf.maxParticipants}</span>
                         <span>🔑 Room: {conf.roomName}</span>
                       </div>
@@ -500,9 +504,20 @@ export function AdminConferencesTab() {
                 </div>
               </div>
 
+              <div className="space-y-1">
+                <label className="font-medium text-slate-300">Designated Meeting Host / Leader Email (Optional)</label>
+                <input
+                  type="email"
+                  value={form.hostEmail}
+                  onChange={(e) => setForm({ ...form, hostEmail: e.target.value })}
+                  placeholder="e.g. therapist@mymindtherapyfriend.com (User who will lead & host the meeting)"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:border-teal-500"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="font-medium text-slate-300">Jitsi Room Name</label>
+                  <label className="font-medium text-slate-300">Room Name</label>
                   <input
                     type="text"
                     value={form.roomName}
@@ -536,7 +551,7 @@ export function AdminConferencesTab() {
                   <span>Enable Waiting Room</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                {/* <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.enableRecording}
@@ -544,7 +559,7 @@ export function AdminConferencesTab() {
                     className="rounded bg-slate-800 border-slate-700 text-teal-500"
                   />
                   <span>Enable Recording</span>
-                </label>
+                </label> */}
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">

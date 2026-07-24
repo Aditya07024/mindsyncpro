@@ -36,6 +36,7 @@ export class ConferenceController {
         enableRecording,
         enablePassword,
         password,
+        hostEmail,
         roomName,
         autoGenerateRoomName,
         instructions,
@@ -78,6 +79,7 @@ export class ConferenceController {
         enableRecording: Boolean(enableRecording),
         enablePassword: Boolean(enablePassword),
         password: password || "",
+        hostEmail: hostEmail ? String(hostEmail).toLowerCase().trim() : "",
         instructions: instructions || "",
         status: status || "published",
         createdBy: new mongoose.Types.ObjectId(req.user!.sub),
@@ -262,6 +264,9 @@ export class ConferenceController {
       const updates = req.body;
       if (updates.priceType === "free") {
         updates.price = 0;
+      }
+      if (updates.hostEmail !== undefined) {
+        updates.hostEmail = String(updates.hostEmail).toLowerCase().trim();
       }
 
       Object.assign(conference, updates);
@@ -553,6 +558,7 @@ export class ConferenceController {
       if (!conference) throw new AppError("Conference not found", 404);
 
       const emailParam = (req.query.email as string)?.toLowerCase().trim();
+      const providedPassword = (req.query.password as string)?.trim();
       const userId = req.user?.sub ? new mongoose.Types.ObjectId(req.user.sub) : null;
 
       let registration = null;
@@ -565,7 +571,34 @@ export class ConferenceController {
 
       const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
 
-      if (!registration && !isAdmin) {
+      // Check if meeting time has passed (ended)
+      const now = new Date();
+      let endDateTime: Date | null = null;
+      try {
+        const dateOnlyStr = conference.meetingDate ? String(conference.meetingDate).split("T")[0] : "";
+        const timeStr = conference.meetingTime || "00:00";
+        const startDateTime = new Date(`${dateOnlyStr}T${timeStr.length === 5 ? timeStr + ":00" : timeStr}`);
+        if (!isNaN(startDateTime.getTime())) {
+          endDateTime = new Date(startDateTime.getTime() + (conference.duration || 60) * 60 * 1000);
+          if (now.getTime() > endDateTime.getTime()) {
+            throw new AppError("This scheduled meeting has already ended.", 403);
+          }
+        }
+      } catch (err: any) {
+        if (err instanceof AppError) throw err;
+      }
+
+      const dbUser = userId ? await User.findById(userId).lean() : null;
+      const participantName = registration?.fullName || dbUser?.fullName || (req.user as any)?.fullName || "Participant";
+      const participantEmail = (registration?.email || (dbUser as any)?.email || emailParam || (req.user as any)?.email || "").toLowerCase().trim();
+
+      // Determine Host / Leader Role:
+      // User is host if they are admin, creator of the conference, or match designated hostEmail
+      const isCreator = req.user?.sub && String(conference.createdBy) === String(req.user.sub);
+      const isDesignatedHost = Boolean(conference.hostEmail && participantEmail && participantEmail === conference.hostEmail.toLowerCase().trim());
+      const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
+
+      if (!registration && !isHost) {
         throw new AppError("You are not registered for this conference. Please register first.", 403);
       }
 
@@ -573,15 +606,55 @@ export class ConferenceController {
         throw new AppError("Your registration for this conference was rejected by the admin.", 403);
       }
 
-      if (registration && !["free", "paid"].includes(registration.paymentStatus) && !isAdmin) {
+      if (registration && !["free", "paid"].includes(registration.paymentStatus) && !isHost) {
         throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
       }
 
-      const dbUser = userId ? await User.findById(userId).lean() : null;
-      const participantName = registration?.fullName || dbUser?.fullName || "Participant";
-      const participantEmail = registration?.email || dbUser?.phoneMasked || "user@mymindtherapyfriend.com";
+      // Check password if enabled and user is not host/admin
+      if (conference.enablePassword && conference.password && conference.password.trim() !== "") {
+        if (!isHost && providedPassword !== conference.password.trim()) {
+          return res.status(401).json({
+            requiresPassword: true,
+            message: "Password required to join this conference.",
+          });
+        }
+      }
 
-      // Generate JaaS RS256 JWT Token
+      // Handle Waiting Room logic:
+      if (isHost) {
+        // Mark hostJoined = true when host joins
+        if (!conference.hostJoined) {
+          await Conference.updateOne({ _id: id }, { $set: { hostJoined: true } });
+          conference.hostJoined = true;
+        }
+      } else if (conference.enableWaitingRoom && !conference.hostJoined) {
+        // Participant must wait until host joins
+        return res.json({
+          waitingForHost: true,
+          message: "The meeting host has not joined yet. Please stay in the waiting room.",
+          conference: {
+            id: conference._id,
+            title: conference.title,
+            description: conference.description,
+            roomName: conference.roomName,
+            enableWaitingRoom: true,
+            meetingDate: conference.meetingDate,
+            meetingTime: conference.meetingTime,
+            duration: conference.duration,
+            endDateTime: endDateTime ? endDateTime.toISOString() : null,
+            hostEmail: conference.hostEmail || "",
+            hostJoined: false,
+            isHost: false,
+          },
+          user: {
+            fullName: participantName,
+            email: participantEmail,
+            isHost: false,
+          },
+        });
+      }
+
+      // Generate JaaS RS256 JWT Token (moderator: isHost)
       let jaasData = null;
       try {
         jaasData = JaasService.generateMeetingToken({
@@ -591,7 +664,7 @@ export class ConferenceController {
             name: participantName,
             email: participantEmail,
           },
-          moderator: true,
+          moderator: isHost,
         });
       } catch (jaasErr) {
         console.error("[JaaS] Token generation error in getJoinInfo:", jaasErr);
@@ -605,11 +678,15 @@ export class ConferenceController {
           roomName: jaasData ? jaasData.roomName : conference.roomName,
           rawRoomName: conference.roomName,
           enablePassword: conference.enablePassword,
-          password: conference.password,
           enableWaitingRoom: conference.enableWaitingRoom,
           enableRecording: conference.enableRecording,
           instructions: conference.instructions,
           duration: conference.duration,
+          meetingDate: conference.meetingDate,
+          meetingTime: conference.meetingTime,
+          endDateTime: endDateTime ? endDateTime.toISOString() : null,
+          hostEmail: conference.hostEmail || "",
+          isHost,
         },
         jaas: jaasData
           ? {
@@ -622,6 +699,7 @@ export class ConferenceController {
         user: {
           fullName: participantName,
           email: participantEmail,
+          isHost,
         },
       });
     }
