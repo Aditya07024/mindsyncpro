@@ -659,7 +659,7 @@ function Landing() {
 
               <div className="flex items-center justify-between pt-2 text-xs text-slate-400">
                 <span>🔒 Secure Room</span>
-                <span className="text-teal-400 font-semibold">Join Free or Paid Workshops</span>
+                <span className="text-teal-400 font-semibold">Join your Workshops</span>
               </div>
             </div>
           </div>
