@@ -295,7 +295,7 @@ export function AdminConferencesTab() {
                   <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-slate-800">
                     <button
                       onClick={() => {
-                        window.open(`/conferences/${conf._id}/room`, "_blank");
+                        window.location.href = `/conferences/${conf._id}/room`;
                       }}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5"
                     >

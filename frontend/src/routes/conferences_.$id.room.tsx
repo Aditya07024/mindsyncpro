@@ -158,6 +158,12 @@ function ConferenceRoomPage() {
         }
 
         const domain = roomData.jaas?.domain || "8x8.vc";
+
+        console.log("[JaaS Frontend Init Debug]:");
+        console.log("  Domain:", domain);
+        console.log("  Room Name:", formattedRoomName);
+        console.log("  JWT Token Received:", jwtToken ? `YES (Length: ${jwtToken.length})` : "NO");
+
         const options = {
           roomName: formattedRoomName,
           jwt: jwtToken,
@@ -198,6 +204,14 @@ function ConferenceRoomPage() {
 
         apiInstance = new window.JitsiMeetExternalAPI(domain, options);
         jitsiApiRef.current = apiInstance;
+
+        apiInstance.addEventListener("videoConferenceJoined", (participant: any) => {
+          console.log("[JaaS SDK Event] Joined Conference:", participant);
+        });
+
+        apiInstance.addEventListener("participantRoleChanged", (event: any) => {
+          console.log("[JaaS SDK Event] Participant Role Changed:", event);
+        });
 
         apiInstance.addEventListener("audioMuteStatusChanged", (data: { muted: boolean }) => {
           setIsAudioMuted(data.muted);

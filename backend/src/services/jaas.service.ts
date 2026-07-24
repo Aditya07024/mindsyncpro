@@ -104,35 +104,33 @@ export class JaasService {
     }
 
     const formattedRoomName = `${appId}/${cleanRoom}`;
+    const isMod = moderator !== false;
     const now = Math.floor(Date.now() / 1000);
 
-    const isMod = moderator !== false;
-
-    // 3. Construct JaaS JWT Payload
+    // 3. Construct JaaS JWT Payload according to official 8x8 JaaS specification
+    // Reference: https://developer.8x8.com/jaas/docs/jaas-jwt-structure
     const payload = {
       aud: "jitsi",
       iss: "chat",
       sub: appId,
-      room: cleanRoom, // or "*" for wildcard room access
+      room: cleanRoom, // clean room name without app id prefix
       exp: now + expirySeconds,
       nbf: now - 10,
-      moderator: true,
+      iat: now,
       context: {
         user: {
           id: user.id || user.email || `user_${Date.now()}`,
           name: user.name.trim(),
           email: user.email || `${user.name.toLowerCase().replace(/\s+/g, ".")}@mymindtherapyfriend.com`,
           avatar: user.avatar || "",
-          moderator: true,
-          role: "moderator",
+          moderator: isMod ? "true" : "false",
         },
         features: {
-          recording: "true",
-          livestreaming: "true",
-          transcription: "true",
-          "file-upload": "true",
+          recording: isMod || (features.recording ?? true) ? "true" : "false",
+          livestreaming: isMod || (features.livestreaming ?? true) ? "true" : "false",
+          transcription: isMod || (features.transcription ?? true) ? "true" : "false",
+          "file-upload": isMod || (features.fileUpload ?? true) ? "true" : "false",
           "outbound-call": "false",
-          moderation: "true",
         },
       },
     };
@@ -151,6 +149,18 @@ export class JaasService {
     } catch (jwtErr: any) {
       throw new AppError(`JWT generation failed: ${jwtErr.message}`, 500);
     }
+
+    // 5. Debug Logging (Verify against 8x8 JaaS JWT specification)
+    const decoded = jwt.decode(token, { complete: true });
+    console.log("[JaaS JWT Debug] Token Generated Successfully:");
+    console.log("  Header:", JSON.stringify(decoded?.header));
+    console.log("  Payload:", JSON.stringify(decoded?.payload));
+    console.log("  Formatted Room Name:", formattedRoomName);
+    console.log("  Raw Room Name:", cleanRoom);
+    console.log("  Sub (App ID):", appId);
+    console.log("  KID:", kid);
+    console.log("  Moderator Flag:", payload.context.user.moderator);
+    console.log("  Expires At:", new Date(payload.exp * 1000).toISOString());
 
     return {
       success: true,
