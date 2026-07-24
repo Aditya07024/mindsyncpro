@@ -590,7 +590,7 @@ function Landing() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-teal-400/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-teal-300 backdrop-blur-md">
                 <Video className="size-4 text-teal-400" />
-                <span>Powered by Jitsi Meet HD</span>
+                <span>Powered by MyMindtherapyFriend</span>
               </div>
 
               <h2 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl text-white leading-tight">
@@ -607,7 +607,7 @@ function Landing() {
               <div className="grid grid-cols-2 gap-4 pt-2 text-xs sm:text-sm text-slate-300">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="size-4 text-teal-400 shrink-0" />
-                  <span>256-bit Encrypted Rooms</span>
+                  <span>end to end Encryption rooms</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="size-4 text-teal-400 shrink-0" />
@@ -653,7 +653,7 @@ function Landing() {
                     <Video className="size-7" />
                   </div>
                   <h4 className="font-bold text-white text-base">Mindfulness & Stress Relief Masterclass</h4>
-                  <p className="text-xs text-slate-400">Hosted by Dr. Ananya Sharma • 120 Attendees Live</p>
+                  <p className="text-xs text-slate-400">Hosted by mymindtherapyfriend</p>
                 </div>
               </div>
 

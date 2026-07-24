@@ -333,7 +333,7 @@ function ConferenceRoomPage() {
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
         <Loader2 className="w-12 h-12 text-teal-400 animate-spin mb-4" />
         <h3 className="text-xl font-bold">Connecting to Video Room...</h3>
-        <p className="text-slate-400 text-sm mt-2">Setting up encrypted connection powered by Jitsi Meet.</p>
+        <p className="text-slate-400 text-sm mt-2">Setting up encrypted connection powered by mymindtherapyfriend.</p>
       </div>
     );
   }

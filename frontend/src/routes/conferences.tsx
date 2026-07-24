@@ -27,7 +27,7 @@ export const Route = createFileRoute("/conferences")({
       {
         name: "description",
         content:
-          "Join live, secure video conferences, workshops, and therapy webinars powered by Jitsi Meet on MyMindTherapyFriend.",
+          "Join live, secure video conferences, workshops, and therapy webinars on MyMindTherapyFriend.",
       },
     ],
   }),
@@ -159,7 +159,7 @@ function ConferencesPage() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-teal-200 text-teal-800 text-xs font-semibold uppercase tracking-wider mb-6 shadow-xs"
             >
               <Video className="w-4 h-4 text-teal-600" />
-              <span>Powered by Jitsi Meet HD</span>
+              <span>Powered by mymindtherapyfriend</span>
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 15 }}
