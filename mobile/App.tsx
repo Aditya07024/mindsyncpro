@@ -156,7 +156,7 @@ function MaintenanceScreen({ onRetry }: MaintenanceScreenProps) {
   };
 
   const handleMailPress = () => {
-    Linking.openURL('mailto:your-work@outlook.com').catch(() => {
+    Linking.openURL('mailto:contact@mymindtherapyfriend.com').catch(() => {
       // Fallback
     });
   };
@@ -180,7 +180,7 @@ function MaintenanceScreen({ onRetry }: MaintenanceScreenProps) {
             <Text style={styles.infoLabel}>App is in maintenance</Text>
             <Text style={styles.infoSubtitle}>Please contact support:</Text>
             <TouchableOpacity onPress={handleMailPress} activeOpacity={0.7}>
-              <Text style={styles.emailText}>your-work@outlook.com</Text>
+              <Text style={styles.emailText}>contact@mymindtherapyfriend.com</Text>
             </TouchableOpacity>
           </View>
         </View>
