@@ -7,7 +7,7 @@ export const Route = createFileRoute('/support')({
   component: SupportPage,
 });
 
-const CONTACT_EMAIL = import.meta.env.VITE_ENTERPRISE_EMAIL || "support@mymindtherapyfriend.com";
+const CONTACT_EMAIL ="support@mymindtherapyfriend.com";
 
 function SupportPage() {
   const faqs = [
