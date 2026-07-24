@@ -70,7 +70,7 @@ export class ConferenceController {
         meetingDate,
         meetingTime,
         duration: Number(duration || 60),
-        category: category || "Mental Health",
+        category: category || "",
         meetingType: meetingType || "public",
         priceType: priceType || "free",
         price: numPrice,

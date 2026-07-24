@@ -54,7 +54,6 @@ export function AdminConferencesTab() {
     meetingDate: new Date().toISOString().split("T")[0],
     meetingTime: "18:00",
     duration: 60,
-    category: "Mental Health",
     meetingType: "public" as "public" | "private" | "webinar" | "workshop",
     priceType: "free" as "free" | "paid" | "custom",
     price: 0,
@@ -123,7 +122,6 @@ export function AdminConferencesTab() {
       meetingDate: new Date().toISOString().split("T")[0],
       meetingTime: "18:00",
       duration: 60,
-      category: "Mental Health",
       meetingType: "public",
       priceType: "free",
       price: 0,
@@ -149,7 +147,6 @@ export function AdminConferencesTab() {
       meetingDate: conf.meetingDate || "",
       meetingTime: conf.meetingTime || "",
       duration: conf.duration || 60,
-      category: conf.category || "Mental Health",
       meetingType: conf.meetingType || "public",
       priceType: conf.priceType || "free",
       price: conf.price || 0,
@@ -745,21 +742,21 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
               <Mail className="w-3.5 h-3.5" /> Copy Emails
             </button>
 
-            <a
+            {/* <a
               href={API.conference.exportUrl(conference._id, "xlsx")}
               download
               className="px-3 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 text-xs font-semibold transition-colors flex items-center gap-1.5"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" /> Export Excel
-            </a>
+            </a> */}
 
-            <a
+            {/* <a
               href={API.conference.exportUrl(conference._id, "csv")}
               download
               className="px-3 py-2 rounded-xl bg-teal-500/20 text-teal-300 hover:bg-teal-500/30 border border-teal-500/30 text-xs font-semibold transition-colors flex items-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5" /> Export CSV
-            </a>
+            </a> */}
 
             <button
               onClick={handlePrint}
