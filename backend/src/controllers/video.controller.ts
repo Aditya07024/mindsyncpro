@@ -25,13 +25,11 @@ export class VideoController {
       throw new AppError("user.name is required", 400);
     }
 
-    // Determine moderator status if authed
+    // Determine moderator status
     const isUserModerator =
       typeof moderator === "boolean"
         ? moderator
-        : req.user
-        ? ["super_admin", "admin", "org_admin", "therapist"].includes(req.user.role)
-        : false;
+        : true;
 
     // 2. Generate JaaS Token using JaasService helper
     const result = JaasService.generateMeetingToken({

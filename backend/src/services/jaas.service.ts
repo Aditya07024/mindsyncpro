@@ -70,7 +70,7 @@ export class JaasService {
   public static generateMeetingToken({
     roomName,
     user,
-    moderator = false,
+    moderator = true,
     expirySeconds = 3600,
     features = {},
   }: JaasTokenOptions) {
@@ -106,6 +106,8 @@ export class JaasService {
     const formattedRoomName = `${appId}/${cleanRoom}`;
     const now = Math.floor(Date.now() / 1000);
 
+    const isMod = Boolean(moderator);
+
     // 3. Construct JaaS JWT Payload
     const payload = {
       aud: "jitsi",
@@ -114,20 +116,23 @@ export class JaasService {
       room: cleanRoom, // or "*" for wildcard room access
       exp: now + expirySeconds,
       nbf: now - 10,
+      moderator: isMod,
       context: {
         user: {
           id: user.id || user.email || `user_${Date.now()}`,
           name: user.name.trim(),
           email: user.email || `${user.name.toLowerCase().replace(/\s+/g, ".")}@mymindtherapyfriend.com`,
           avatar: user.avatar || "",
-          moderator: Boolean(moderator),
+          moderator: isMod,
+          role: isMod ? "moderator" : "participant",
         },
         features: {
-          recording: features.recording ?? true ? "true" : "false",
-          livestreaming: features.livestreaming ?? true ? "true" : "false",
-          transcription: features.transcription ?? true ? "true" : "false",
-          "file-upload": features.fileUpload ?? true ? "true" : "false",
-          "outbound-call": features.outboundCall ?? false ? "true" : "false",
+          recording: isMod || (features.recording ?? true) ? "true" : "false",
+          livestreaming: isMod || (features.livestreaming ?? true) ? "true" : "false",
+          transcription: isMod || (features.transcription ?? true) ? "true" : "false",
+          "file-upload": isMod || (features.fileUpload ?? true) ? "true" : "false",
+          "outbound-call": "false",
+          moderation: isMod ? "true" : "false",
         },
       },
     };
