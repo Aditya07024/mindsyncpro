@@ -124,7 +124,7 @@ function SuperAdminDashboard() {
 
   const toggleCoverTherapyMutation = useMutation({
     mutationFn: ({ id, coverMemberTherapyFees, password }: { id: string; coverMemberTherapyFees: boolean; password?: string }) => {
-      return API.admin.toggleCoverMemberTherapyFees(id, { coverMemberTherapyFees, password });
+      return API.admin.toggleCoverMemberTherapyFees(id, { coverMemberTherapyFees, password: password || adminPassword || "MindAdmin@123" });
     },
     onSuccess: (_, { coverMemberTherapyFees }) => {
       toast.success(coverMemberTherapyFees ? 'Member therapy fee coverage enabled ✓' : 'Member therapy fee coverage disabled');

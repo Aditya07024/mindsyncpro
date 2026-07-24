@@ -1143,15 +1143,25 @@ function OrgDashboard() {
         {tab === 'settings' && (
           <div className="space-y-6 max-w-3xl">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
-              <h3 className="text-lg font-bold text-slate-900 mb-1">Organization Settings & Policies</h3>
-              <p className="text-xs text-slate-500 mb-6">Manage member therapy fee policies and organization preferences.</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Organization Settings & Features</h3>
+              <p className="text-xs text-slate-500 mb-6">Manage therapist booking permissions and member fee coverage policies for your organization.</p>
 
               <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="space-y-1 max-w-lg">
-                    <h4 className="text-sm font-bold text-slate-900">Cover Member Therapy Fees</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      When enabled, members/students belonging to your organization will not pay any appointment fees when booking appointments with organization-linked therapists (Free therapy appointments for members).
+                {/* 1. Cover Member Therapy Fees Toggle */}
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="space-y-1.5 max-w-lg">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900">Member Therapy Fees</h4>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        orgData?.coverMemberTherapyFees ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {orgData?.coverMemberTherapyFees ? 'FREE / COVERED' : 'CHARGED TO MEMBER'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {orgData?.coverMemberTherapyFees
+                        ? 'Your organization is currently covering 100% of member therapy fees (Appointments are ₹0 FREE for linked members).'
+                        : 'Members are currently charged standard appointment fees when booking therapy sessions.'}
                     </p>
                   </div>
 
@@ -1159,12 +1169,45 @@ function OrgDashboard() {
                     onClick={() => updateSettingsMutation.mutate({ coverMemberTherapyFees: !orgData?.coverMemberTherapyFees })}
                     disabled={updateSettingsMutation.isPending}
                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      orgData?.coverMemberTherapyFees ? 'bg-blue-600' : 'bg-slate-300'
+                      orgData?.coverMemberTherapyFees ? 'bg-teal-600' : 'bg-slate-300'
                     }`}
                   >
                     <span
                       className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
                         orgData?.coverMemberTherapyFees ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* 2. Allow External Therapists Toggle */}
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="space-y-1.5 max-w-lg">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900">External Therapists</h4>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        orgData?.allowExternalTherapists ? 'bg-teal-100 text-teal-800' : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        {orgData?.allowExternalTherapists ? 'ON (ALLOWED)' : 'OFF (INTERNAL ONLY)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {orgData?.allowExternalTherapists
+                        ? 'Members can browse and book appointments with external platform therapists.'
+                        : 'External therapists are OFF. Members can only view and book internal organization-approved therapists.'}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => updateSettingsMutation.mutate({ allowExternalTherapists: !orgData?.allowExternalTherapists })}
+                    disabled={updateSettingsMutation.isPending}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      orgData?.allowExternalTherapists ? 'bg-teal-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        orgData?.allowExternalTherapists ? 'translate-x-5' : 'translate-x-0'
                       }`}
                     />
                   </button>
