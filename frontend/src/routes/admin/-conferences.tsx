@@ -405,7 +405,7 @@ export function AdminConferencesTab() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="font-medium text-slate-300">Banner Image URL</label>
                   <input
@@ -427,7 +427,7 @@ export function AdminConferencesTab() {
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:border-teal-500"
                   />
                 </div>
-              </div>
+              </div> */}
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">

@@ -584,8 +584,6 @@ export class ConferenceController {
       // Generate JaaS RS256 JWT Token
       let jaasData = null;
       try {
-        const isModerator = Boolean(isAdmin);
-
         jaasData = JaasService.generateMeetingToken({
           roomName: conference.roomName,
           user: {
@@ -593,7 +591,7 @@ export class ConferenceController {
             name: participantName,
             email: participantEmail,
           },
-          moderator: isModerator,
+          moderator: true,
         });
       } catch (jaasErr) {
         console.error("[JaaS] Token generation error in getJoinInfo:", jaasErr);
