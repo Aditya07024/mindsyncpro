@@ -37,6 +37,16 @@ import play from "@/assets/play.webp";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
 const ENTERPRISE_EMAIL ="contact@mymindtherapyfriend.com";
+const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL";
+
+function WhatsAppIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
+      <path d="M12 2C6.477 2 2 6.477 2 12c0 2.159.682 4.16 1.848 5.805L2 22l4.305-1.734A9.946 9.946 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.78 0-3.444-.467-4.887-1.285l-.35-.2-.2.08-2.583 1.04.996-2.476.096-.238-.177-.323A7.954 7.954 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
+    </svg>
+  );
+}
 
 const PRICING_PLANS = [
   {
@@ -952,6 +962,37 @@ function Landing() {
         </section>
       </main>
 
+      {/* WhatsApp Community Section */}
+      <section className="mt-20 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[36px] bg-gradient-to-r from-emerald-600 to-teal-700 p-8 sm:p-12 text-white shadow-xl shadow-emerald-900/10">
+          <div className="relative z-10 max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur-md mb-6">
+              <WhatsAppIcon className="size-4 text-emerald-200" />
+              MindSync Peer Community
+            </div>
+            <h2 className="font-display text-3xl font-bold sm:text-4xl lg:text-5xl text-white tracking-tight">
+              Join Our Supportive WhatsApp Community
+            </h2>
+            <p className="mt-4 text-base sm:text-lg text-emerald-100 leading-relaxed">
+              You are never alone on your wellness journey. Connect with like-minded individuals, receive daily mental health tips, peer support, and exclusive updates in our official WhatsApp group.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <a
+                href={WHATSAPP_COMMUNITY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-emerald-800 shadow-lg transition hover:bg-emerald-50 hover:scale-105 active:scale-95"
+              >
+                <WhatsAppIcon className="size-5 text-emerald-600" />
+                Join WhatsApp Group
+              </a>
+              <span className="text-xs text-emerald-200 font-medium">Safe • Supportive • 24/7 Available</span>
+            </div>
+          </div>
+          <div className="absolute -bottom-16 -right-16 size-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <section className="mt-24 mb-24 mx-auto max-w-4xl rounded-[40px] border border-slate-200 bg-white px-8 py-16 shadow-sm sm:px-12 text-left relative z-10">
         <div className="text-center mb-12">
@@ -1000,6 +1041,9 @@ function Landing() {
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book Verified Therapist</Link>
+              <a href={WHATSAPP_COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 font-medium transition text-left flex items-center gap-1.5 text-emerald-700">
+                <WhatsAppIcon className="size-4" /> WhatsApp Community
+              </a>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Free Crisis Support India</Link>
             </div>
@@ -1024,6 +1068,16 @@ function Landing() {
             </h3>
 
             <div className="mt-5 flex items-center gap-3">
+              <a 
+                href={WHATSAPP_COMMUNITY_URL}
+                target="_blank" 
+                rel="noopener noreferrer"
+                title="Join WhatsApp Community"
+                className="flex size-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-600 hover:text-white"
+              >
+                <WhatsAppIcon className="size-5" />
+              </a>
+
               <a 
                 href="https://www.instagram.com/mymindtherapyfriend/" 
                 target="_blank" 

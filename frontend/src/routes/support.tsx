@@ -58,20 +58,42 @@ function SupportPage() {
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-1 mb-20">
-          {[
-            { icon: Mail, title: "Email Us", contact: CONTACT_EMAIL, desc: "Get a response within 24 hours" },
-            // { icon: MessageSquare, title: "Live Chat", contact: "Start Chat", desc: "Available 10 AM - 8 PM IST" }
-          ].map((item) => (
-            <div key={item.title} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center">
+        <div className="grid gap-8 md:grid-cols-2 mb-20">
+          <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center flex flex-col justify-between items-center">
+            <div>
               <div className="size-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-6">
-                <item.icon className="size-7" />
+                <Mail className="size-7" />
               </div>
-              <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-              <p className="text-teal-600 font-bold mb-1">{item.contact}</p>
-              <p className="text-sm text-slate-500">{item.desc}</p>
+              <h3 className="text-xl font-bold mb-2">Email Us</h3>
+              <p className="text-teal-600 font-bold mb-1">{CONTACT_EMAIL}</p>
+              <p className="text-sm text-slate-500">Get a response within 24 hours</p>
             </div>
-          ))}
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="mt-6 inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-6 py-2.5 rounded-full text-sm transition"
+            >
+              Send Email
+            </a>
+          </div>
+
+          <div className="bg-emerald-50/50 p-8 rounded-3xl border border-emerald-200 shadow-sm text-center flex flex-col justify-between items-center">
+            <div>
+              <div className="size-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-6">
+                <MessageSquare className="size-7" />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-slate-900">WhatsApp Community</h3>
+              <p className="text-emerald-700 font-bold mb-1">Join MindSync Community</p>
+              <p className="text-sm text-slate-600">Connect, share & find support with peers 24/7</p>
+            </div>
+            <a
+              href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition shadow-md shadow-emerald-600/20"
+            >
+              Join WhatsApp Group
+            </a>
+          </div>
         </div>
 
         <section className="max-w-3xl mx-auto">

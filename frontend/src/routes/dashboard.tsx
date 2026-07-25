@@ -369,6 +369,29 @@ function Dashboard() {
               {todayMood && <p className="mt-3 text-center text-[10px] text-muted-foreground">Logged for today.</p>}
             </motion.div>
 
+            {/* WhatsApp Community Group Card */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-emerald-500/10 border border-emerald-500/30 p-5 shadow-sm space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-emerald-600 text-white">
+                  <MessageCircle className="size-5" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-display font-bold text-slate-900 text-sm">MindSync Community</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Connect with peers, share experiences & get daily support in our official WhatsApp group.
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-sm transition"
+              >
+                Join WhatsApp Group <ChevronRight className="size-4" />
+              </a>
+            </motion.div>
+
             {/* Upgrade nudge for free users */}
             {tier === 'free' && !upcomingBooking && (
               <Link to="/subscription">
