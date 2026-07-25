@@ -968,7 +968,7 @@ function Landing() {
           <div className="relative z-10 max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur-md mb-6">
               <WhatsAppIcon className="size-4 text-emerald-200" />
-              MindSync Peer Community
+              MyMindFriend Peer Community
             </div>
             <h2 className="font-display text-3xl font-bold sm:text-4xl lg:text-5xl text-white tracking-tight">
               Join Our Supportive WhatsApp Community

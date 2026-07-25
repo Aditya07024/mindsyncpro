@@ -376,7 +376,7 @@ function Dashboard() {
                   <MessageCircle className="size-5" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-display font-bold text-slate-900 text-sm">MindSync Community</h3>
+                  <h3 className="font-display font-bold text-slate-900 text-sm">MyMindFriend Community</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
                     Connect with peers, share experiences & get daily support in our official WhatsApp group.
                   </p>

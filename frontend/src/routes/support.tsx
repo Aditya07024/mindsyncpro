@@ -82,7 +82,7 @@ function SupportPage() {
                 <MessageSquare className="size-7" />
               </div>
               <h3 className="text-xl font-bold mb-2 text-slate-900">WhatsApp Community</h3>
-              <p className="text-emerald-700 font-bold mb-1">Join MindSync Community</p>
+              <p className="text-emerald-700 font-bold mb-1">Join MyMindFriend Community</p>
               <p className="text-sm text-slate-600">Connect, share & find support with peers 24/7</p>
             </div>
             <a
