@@ -24,6 +24,8 @@ import {
   Phone,
   Mail,
   Video,
+  Menu,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
@@ -212,6 +214,7 @@ function Landing() {
   const [adminPassword, setAdminPassword] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Auto-redirect signed-in users to their role's portal
   useEffect(() => {
@@ -269,33 +272,34 @@ function Landing() {
     <div className="min-h-screen overflow-x-hidden bg-[#fff9e6] relative text-slate-900">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,214,102,0.18),transparent_35%),radial-gradient(circle_at_top_right,rgba(255,235,153,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(255,193,7,0.10),transparent_35%)]" />
       {/* Header */}
-      <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-2xl border border-white/60 bg-white/80 px-6 py-4 shadow-lg backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
+      <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-2xl border border-white/60 bg-white/80 px-4 py-3 sm:px-6 sm:py-4 shadow-lg backdrop-blur-xl">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="flex size-10 sm:size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
             <img src={logoUrl} alt="mymindtherapyfriend AI mental health India" className="size-full object-cover scale-125" />
           </div>
 
           <div>
-            <p className="font-display text-lg font-bold text-[#012620]">MyMindTherapyFriend</p>
+            <p className="font-display text-base sm:text-lg font-bold text-[#012620]">MyMindTherapyFriend</p>
           </div>
-        </div>
+        </Link>
 
-        <div className="flex items-center gap-3">
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-3">
           <Link
-            to="/Meeting_Workspace"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
+            to="/meeting_workspace"
+            className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
             Meeting Workspace
           </Link>
           <Link
             to="/about"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
+            className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
             About
           </Link>
           <Link
             to="/pricing"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
+            className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
             Pricing
           </Link>
@@ -307,7 +311,70 @@ function Landing() {
             Get Started
           </button>
         </div>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="flex md:hidden items-center justify-center size-10 rounded-xl bg-slate-100/90 text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+          aria-label="Toggle Navigation Menu"
+        >
+          {mobileMenuOpen ? <X className="size-6 text-[#004038]" /> : <Menu className="size-6 text-[#004038]" />}
+        </button>
       </header>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="sticky top-20 z-40 mx-auto mt-2 w-[95%] max-w-7xl md:hidden rounded-2xl border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-xl"
+          >
+            <div className="flex flex-col gap-2">
+              <Link
+                to="/meeting_workspace"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-[#004038]"
+              >
+                <span>Meeting Workspace</span>
+                <ChevronRight className="size-4 text-slate-400" />
+              </Link>
+
+              <Link
+                to="/about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-[#004038]"
+              >
+                <span>About</span>
+                <ChevronRight className="size-4 text-slate-400" />
+              </Link>
+
+              <Link
+                to="/pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-[#004038]"
+              >
+                <span>Pricing</span>
+                <ChevronRight className="size-4 text-slate-400" />
+              </Link>
+
+              <hr className="my-1.5 border-slate-100" />
+
+              <button
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleGetStarted(e);
+                }}
+                className="w-full rounded-xl bg-[#004038] py-3.5 text-center text-base font-semibold text-white shadow-lg transition active:scale-[0.98] cursor-pointer"
+              >
+                Get Started
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="mx-auto max-w-7xl px-5 pb-5 pt-2 sm:px-6 lg:px-8">
         {/* Hero */}
@@ -391,55 +458,61 @@ function Landing() {
               opacity: { duration: 0.8 },
               y: { duration: 5, repeat: Infinity, ease: "easeInOut" }
             }}
-            className="relative flex items-center justify-center"
+            className="relative flex items-center justify-center w-full"
           >
-            <div className="relative h-[560px] w-full max-w-xl">
-              <div className="absolute top-8 left-8 rounded-3xl bg-[#87c8ff] p-3 shadow-xl">
-                <div className="h-36 w-36 rounded-2xl bg-white/40 backdrop-blur flex items-center justify-center text-5xl">
+            <div className="relative h-[330px] min-[400px]:h-[420px] min-[500px]:h-[490px] sm:h-[560px] w-full max-w-xl mx-auto overflow-visible">
+              {/* User Card - Top Left */}
+              <div className="absolute top-2 left-2 min-[400px]:top-4 min-[400px]:left-4 sm:top-8 sm:left-8 rounded-xl min-[400px]:rounded-2xl sm:rounded-3xl bg-[#87c8ff] p-1.5 min-[400px]:p-2 sm:p-3 shadow-xl">
+                <div className="h-20 w-20 min-[400px]:h-28 min-[400px]:w-28 sm:h-36 sm:w-36 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 backdrop-blur flex items-center justify-center text-5xl">
                   <img
-                  src={user}
-                  alt="mymindtherapyfriend"
-                  className="h-full w-full object-cover border-4 border-red rounded-2xl"
-                />
+                    src={user}
+                    alt="mymindtherapyfriend"
+                    className="h-full w-full object-cover border-2 sm:border-4 border-red rounded-lg min-[400px]:rounded-xl sm:rounded-2xl"
+                  />
                 </div>
-                <div className="absolute -right-10 top-6 rounded-full bg-[#fde8ce] px-4 py-2 text-xs font-semibold">
+                <div className="absolute -right-6 min-[400px]:-right-8 sm:-right-10 top-2 min-[400px]:top-4 sm:top-6 rounded-full bg-[#fde8ce] px-2 py-0.5 min-[400px]:px-3 min-[400px]:py-1 sm:px-4 sm:py-2 text-[10px] min-[400px]:text-xs font-semibold shadow-sm whitespace-nowrap">
                   User
                 </div>
               </div>
 
-<div className="absolute top-25 right-5 z-30 rounded-3xl bg-[#e8c1b0] p-3 shadow-xl">                <div className="h-32 w-32 rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
+              {/* Therapist Card - Top Right */}
+              <div className="absolute top-8 right-2 min-[400px]:top-14 min-[400px]:right-3 sm:top-25 sm:right-5 z-30 rounded-xl min-[400px]:rounded-2xl sm:rounded-3xl bg-[#e8c1b0] p-1.5 min-[400px]:p-2 sm:p-3 shadow-xl">
+                <div className="h-16 w-16 min-[400px]:h-24 min-[400px]:w-24 sm:h-32 sm:w-32 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
                   <img
-                  src={therapist}
-                  alt="mymindtherapyfriend"
-                  className="h-full w-full object-cover border-4 border-white rounded-2xl shadow-lg"
-                />
+                    src={therapist}
+                    alt="mymindtherapyfriend"
+                    className="h-full w-full object-cover border-2 sm:border-4 border-white rounded-lg min-[400px]:rounded-xl sm:rounded-2xl shadow-lg"
+                  />
                 </div>
-                <div className="absolute -left-16 top-8 rounded-full bg-[#fde8ce] px-4 py-2 text-xs font-semibold">
+                <div className="absolute -left-10 min-[400px]:-left-14 sm:-left-16 top-2 min-[400px]:top-4 sm:top-8 rounded-full bg-[#fde8ce] px-2 py-0.5 min-[400px]:px-3 min-[400px]:py-1 sm:px-4 sm:py-2 text-[10px] min-[400px]:text-xs font-semibold shadow-sm whitespace-nowrap">
                   therapist
                 </div>
               </div>
 
-              <div className="absolute bottom-10 right-8 rounded-3xl bg-[#ff9a52] p-3 shadow-xl">
-               <div className="h-32 w-32 rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
+              {/* Organisation Card - Bottom Right */}
+              <div className="absolute bottom-4 right-2 min-[400px]:bottom-6 min-[400px]:right-3 sm:bottom-10 sm:right-8 rounded-xl min-[400px]:rounded-2xl sm:rounded-3xl bg-[#ff9a52] p-1.5 min-[400px]:p-2 sm:p-3 shadow-xl">
+                <div className="h-16 w-16 min-[400px]:h-24 min-[400px]:w-24 sm:h-32 sm:w-32 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
                   <img
-                  src={org}
-                  alt="mymindtherapyfriend"
-                  className="h-full w-full object-cover border-4 border-red rounded-2xl shadow-lg"
-                />
+                    src={org}
+                    alt="mymindtherapyfriend"
+                    className="h-full w-full object-cover border-2 sm:border-4 border-red rounded-lg min-[400px]:rounded-xl sm:rounded-2xl shadow-lg"
+                  />
                 </div>
-                <div className="absolute -left-20 top-8 rounded-full bg-[#fde8ce] px-4 py-2 text-xs font-semibold">
+                <div className="absolute -left-12 min-[400px]:-left-16 sm:-left-20 top-2 min-[400px]:top-4 sm:top-8 rounded-full bg-[#fde8ce] px-2 py-0.5 min-[400px]:px-3 min-[400px]:py-1 sm:px-4 sm:py-2 text-[10px] min-[400px]:text-xs font-semibold shadow-sm whitespace-nowrap">
                   Organisation
                 </div>
               </div>
 
-              <div className="absolute left-12 bottom-16 w-64 rounded-[28px] border border-white/30 bg-white/40 p-5 backdrop-blur-xl shadow-2xl">
-                <p className="text-xs text-slate-500">Manas AI</p>
-                <div className="mt-3 rounded-2xl bg-white/70 p-3 text-sm text-slate-700">
+              {/* Manas AI Message Card - Bottom Left */}
+              <div className="absolute left-2 bottom-4 min-[400px]:left-5 min-[400px]:bottom-8 sm:left-12 sm:bottom-16 w-36 min-[400px]:w-48 sm:w-64 rounded-xl min-[400px]:rounded-2xl sm:rounded-[28px] border border-white/30 bg-white/40 p-2.5 min-[400px]:p-3.5 sm:p-5 backdrop-blur-xl shadow-2xl z-20">
+                <p className="text-[10px] min-[400px]:text-xs text-slate-500 font-medium">Manas AI</p>
+                <div className="mt-1 min-[400px]:mt-2 sm:mt-3 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/70 p-2 sm:p-3 text-[10px] min-[400px]:text-xs sm:text-sm text-slate-700 leading-snug">
                   You're doing better than you think. Let's take one step at a time.
                 </div>
               </div>
 
-              <div className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[40px] bg-red shadow-2xl">
+              {/* Center Logo */}
+              <div className="absolute left-1/2 top-1/2 h-28 w-28 min-[400px]:h-36 min-[400px]:w-36 min-[500px]:h-44 min-[500px]:w-44 sm:h-52 sm:w-52 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl min-[400px]:rounded-3xl sm:rounded-[40px] bg-red shadow-2xl z-10">
                 <img
                   src={logoUrl}
                   alt="mymindtherapyfriend"
@@ -447,9 +520,10 @@ function Landing() {
                 />
               </div>
 
-              <div className="absolute top-8 right-24 h-4 w-4 rounded-full bg-yellow-400" />
-              <div className="absolute bottom-24 left-4 h-4 w-4 rounded-full bg-cyan-400" />
-              <div className="absolute top-28 right-32 h-3 w-3 rounded-full bg-violet-400" />
+              {/* Decorative Dots */}
+              <div className="absolute top-4 right-14 min-[400px]:top-6 min-[400px]:right-20 sm:top-8 sm:right-24 h-2 w-2 sm:h-4 sm:w-4 rounded-full bg-yellow-400" />
+              <div className="absolute bottom-12 left-1 min-[400px]:bottom-16 min-[400px]:left-2 sm:bottom-24 sm:left-4 h-2 w-2 sm:h-4 sm:w-4 rounded-full bg-cyan-400" />
+              <div className="absolute top-[60px] right-20 min-[400px]:top-20 min-[400px]:right-28 sm:top-28 sm:right-32 h-1.5 w-1.5 sm:h-3 sm:w-3 rounded-full bg-violet-400" />
             </div>
           </motion.div>
         </section>

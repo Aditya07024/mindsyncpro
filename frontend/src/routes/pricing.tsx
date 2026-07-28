@@ -4,7 +4,6 @@ import { Activity, Check, Mail, Building2, Shield, MessageCircle, Users, } from 
 
 const ENTERPRISE_EMAIL ="contact@mymindtherapyfriend.com";
 
-
 const PRICING_PLANS = [
   {
     name: "Free",
