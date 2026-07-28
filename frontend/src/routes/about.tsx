@@ -42,8 +42,54 @@ function AboutPage() {
             without judgment, at any time of the day.
           </p>
         </motion.div>
+<section
+          id="about"
+          className="mt-24 rounded-[40px] border border-slate-200 bg-white px-8 py-16 shadow-sm sm:px-12"
+        >
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700">
+              <Sparkles className="size-4" />
+              About mymindtherapyfriend
+            </div>
 
-        <section className="grid gap-12 md:grid-cols-2 mb-20">
+            <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
+              About mymindtherapyfriend - India's AI Mental Health Platform
+            </h2>
+
+            <div className="mt-6 space-y-4 text-left text-base leading-relaxed text-slate-600 sm:text-lg">
+              <p>mymindtherapyfriend is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of verified online therapists.</p>
+              <p>Whether you are a student managing exam stress, a professional dealing with burnout, or an organisation looking to support employee mental health - mymindtherapyfriend offers affordable, private, and always-available mental health support starting at ₹0/month.</p>
+              <p>We are DPDPA-compliant, store all data in India, and your conversations are always private.</p>
+            </div>
+
+            <div className="mt-10 grid gap-6 text-left md:grid-cols-3">
+              <div className="rounded-3xl border border-teal-100 bg-teal-50/60 p-6">
+                <Brain className="size-8 text-teal-600" />
+                <h3 className="mt-4 text-lg font-semibold text-[#012620]">AI Emotional Support</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  Smart conversations that adapt to emotions and provide calming guidance.
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-6">
+                <Heart className="size-8 text-rose-500" />
+                <h3 className="mt-4 text-lg font-semibold text-[#012620]">Human-Centered Care</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  Connect with therapists and wellness experiences designed for real people.
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-violet-100 bg-violet-50/60 p-6">
+                <ShieldCheck className="size-8 text-violet-600" />
+                <h3 className="mt-4 text-lg font-semibold text-[#012620]">Private & Secure</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  Your emotional wellness data stays protected with secure and private systems.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="grid gap-12 md:grid-cols-2 mb-20 mt-20">
           <div className="space-y-6">
             <h2 className="text-3xl font-bold text-slate-900">Who We Are</h2>
             <p className="text-slate-600 leading-relaxed">
@@ -94,6 +140,7 @@ function AboutPage() {
             Get Started with MyMindTherapyFriend
           </Link>
         </section>
+        
       </main>
 
       <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">

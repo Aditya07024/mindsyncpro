@@ -282,17 +282,23 @@ function Landing() {
 
         <div className="flex items-center gap-3">
           <Link
+            to="/Meeting_Workspace"
+            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
+          >
+            Meeting Workspace
+          </Link>
+          <Link
             to="/about"
             className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
           >
             About
           </Link>
-          <a
-            href="#pricing"
+          <Link
+            to="/pricing"
             className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:block"
           >
             Pricing
-          </a>
+          </Link>
 
           <button
             onClick={handleGetStarted}
@@ -591,222 +597,12 @@ function Landing() {
           </div>
         </section>
 
-        {/* Video Conference Feature Highlight Section */}
-        <section id="video-conferences" className="relative mt-24 overflow-hidden rounded-[40px] border border-teal-500/20 bg-gradient-to-br from-slate-900 via-[#002822] to-slate-950 p-8 sm:p-14 shadow-2xl text-white">
-          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+       
 
-          <div className="relative z-10 grid gap-12 lg:grid-cols-2 lg:items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-teal-400/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-teal-300 backdrop-blur-md">
-                <Video className="size-4 text-teal-400" />
-                <span>Powered by MyMindtherapyFriend</span>
-              </div>
-
-              <h2 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl text-white leading-tight">
-                Join a Video <br />
-                <span className="bg-gradient-to-r from-teal-300 via-emerald-300 to-cyan-200 bg-clip-text text-transparent">
-                  Conference
-                </span>
-              </h2>
-
-              <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
-                Experience high-definition, end-to-end encrypted live online conferences, group therapy sessions, wellness workshops, and interactive expert webinars right in your browser.
-              </p>
-
-              <div className="grid grid-cols-2 gap-4 pt-2 text-xs sm:text-sm text-slate-300">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="size-4 text-teal-400 shrink-0" />
-                  <span>end to end Encryption rooms</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="size-4 text-teal-400 shrink-0" />
-                  <span>Interactive Chat & Polls</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Play className="size-4 text-teal-400 shrink-0" />
-                  <span>No App Install Required</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Heart className="size-4 text-teal-400 shrink-0" />
-                  <span>Verified Host Therapists</span>
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <Link
-                  to="/conferences"
-                  className="inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 px-8 py-4 text-base font-bold text-slate-950 shadow-xl shadow-teal-500/20 transition-all hover:scale-[1.03] hover:from-teal-400 hover:to-emerald-400 active:scale-95"
-                >
-                  <span>Browse Conferences</span>
-                  <ArrowRight className="size-5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Glassmorphic Mockup Preview Card */}
-            <div className="relative rounded-3xl border border-slate-700/80 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="size-3 rounded-full bg-rose-500 animate-pulse" />
-                  <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Live Video Session</span>
-                </div>
-                <span className="rounded-full bg-teal-500/20 px-3 py-1 text-xs font-semibold text-teal-300 border border-teal-500/30">
-                  HD Quality
-                </span>
-              </div>
-
-              <div className="relative h-56 rounded-2xl bg-slate-950 overflow-hidden border border-slate-800 flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-tr from-teal-950/60 via-slate-950 to-emerald-950/60 opacity-80" />
-                <div className="relative z-10 text-center space-y-3 p-4">
-                  <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-300 shadow-inner">
-                    <Video className="size-7" />
-                  </div>
-                  <h4 className="font-bold text-white text-base">Mindfulness & Stress Relief Masterclass</h4>
-                  <p className="text-xs text-slate-400">Hosted by mymindtherapyfriend</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 text-xs text-slate-400">
-                <span>🔒 Secure Room</span>
-                <span className="text-teal-400 font-semibold">Join your Workshops</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section id="pricing" className="mt-24">
-
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-4 py-2 text-sm font-medium text-teal-700 shadow-sm">
-              <Activity className="size-4" />
-              Simple, Transparent Pricing
-            </div>
-
-            <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
-              Free Mental Health Support
-              <br />
-              & Affordable Plans
-            </h2>
-          </div>
-
-          <div className="mt-14 grid gap-8 lg:grid-cols-4">
-            {PRICING_PLANS.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -6, scale: 1.02 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, scale: { duration: 0.2 }, y: { duration: 0.2 } }}
-                className={`relative flex flex-col rounded-[32px] border border-slate-200 p-8 shadow-sm transition-shadow duration-300 hover:shadow-xl ${plan.color}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-1 text-xs font-bold text-white shadow-lg">
-                    Most Popular
-                  </div>
-                )}
-
-                <div className="mb-8">
-                  <h3 className={`text-xl font-bold ${plan.isEnterprise ? "text-teal-400" : "text-slate-900"}`}>
-                    {plan.name}
-                  </h3>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                    <span className="text-sm font-medium opacity-60">{plan.period}</span>
-                  </div>
-                  <p className="mt-3 text-sm leading-relaxed opacity-70">
-                    {plan.description}
-                  </p>
-                </div>
-
-                <ul className="mb-10 flex-1 space-y-4">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm">
-                      <Check className={`size-5 shrink-0 ${plan.isEnterprise ? "text-teal-400" : "text-teal-600"}`} />
-                      <span className="opacity-80">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {plan.isEnterprise ? (
-                  <div className="space-y-3 mt-auto">
-                    <div className="flex items-center gap-2 text-xs font-medium text-teal-400">
-                      <Mail className="size-3" /> {ENTERPRISE_EMAIL}
-                    </div>
-                    <button
-                      onClick={(e) => handlePortalClick(e, plan.portalId, "/sign-in")}
-                      className="w-full rounded-2xl bg-teal-500 px-6 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:bg-teal-400"
-                    >
-                      {plan.buttonText}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={(e) => handlePortalClick(e, plan.portalId, "/sign-in")}
-                    className={`mt-auto w-full rounded-2xl px-6 py-3 text-sm font-bold shadow-lg transition hover:scale-[1.02] ${
-                      plan.popular 
-                        ? "bg-[#004038] text-white hover:bg-[#00362c]" 
-                        : "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50"
-                    }`}
-                  >
-                    {plan.buttonText}
-                  </button>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </section>
+       
 
         {/* About Section */}
-        <section
-          id="about"
-          className="mt-24 rounded-[40px] border border-slate-200 bg-white px-8 py-16 shadow-sm sm:px-12"
-        >
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700">
-              <Sparkles className="size-4" />
-              About mymindtherapyfriend
-            </div>
-
-            <h2 className="mt-6 font-display text-4xl font-bold text-[#012620] sm:text-5xl">
-              About mymindtherapyfriend - India's AI Mental Health Platform
-            </h2>
-
-            <div className="mt-6 space-y-4 text-left text-base leading-relaxed text-slate-600 sm:text-lg">
-              <p>mymindtherapyfriend is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of verified online therapists.</p>
-              <p>Whether you are a student managing exam stress, a professional dealing with burnout, or an organisation looking to support employee mental health - mymindtherapyfriend offers affordable, private, and always-available mental health support starting at ₹0/month.</p>
-              <p>We are DPDPA-compliant, store all data in India, and your conversations are always private.</p>
-            </div>
-
-            <div className="mt-10 grid gap-6 text-left md:grid-cols-3">
-              <div className="rounded-3xl border border-teal-100 bg-teal-50/60 p-6">
-                <Brain className="size-8 text-teal-600" />
-                <h3 className="mt-4 text-lg font-semibold text-[#012620]">AI Emotional Support</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Smart conversations that adapt to emotions and provide calming guidance.
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-cyan-100 bg-cyan-50/60 p-6">
-                <Heart className="size-8 text-rose-500" />
-                <h3 className="mt-4 text-lg font-semibold text-[#012620]">Human-Centered Care</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Connect with therapists and wellness experiences designed for real people.
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-violet-100 bg-violet-50/60 p-6">
-                <ShieldCheck className="size-8 text-violet-600" />
-                <h3 className="mt-4 text-lg font-semibold text-[#012620]">Private & Secure</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Your emotional wellness data stays protected with secure and private systems.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        
 
         {/* Testimonials Section */}
         <section className="mt-24">

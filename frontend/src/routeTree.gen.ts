@@ -18,8 +18,10 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
+import { Route as Meeting_workspaceRouteImport } from './routes/meeting_workspace'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConferencesRouteImport } from './routes/conferences'
@@ -84,6 +86,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -92,6 +99,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MoodRoute = MoodRouteImport.update({
   id: '/mood',
   path: '/mood',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Meeting_workspaceRoute = Meeting_workspaceRouteImport.update({
+  id: '/meeting_workspace',
+  path: '/meeting_workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JournalRoute = JournalRouteImport.update({
@@ -194,8 +206,10 @@ export interface FileRoutesByFullPath {
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
   '/journal': typeof JournalRoute
+  '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/sign-in': typeof SignInRouteWithChildren
@@ -225,8 +239,10 @@ export interface FileRoutesByTo {
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
   '/journal': typeof JournalRoute
+  '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/sign-in': typeof SignInRouteWithChildren
@@ -257,8 +273,10 @@ export interface FileRoutesById {
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
   '/journal': typeof JournalRoute
+  '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
   '/onboarding': typeof OnboardingRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/sign-in': typeof SignInRouteWithChildren
@@ -290,8 +308,10 @@ export interface FileRouteTypes {
     | '/conferences'
     | '/dashboard'
     | '/journal'
+    | '/meeting_workspace'
     | '/mood'
     | '/onboarding'
+    | '/pricing'
     | '/privacy'
     | '/reports'
     | '/sign-in'
@@ -321,8 +341,10 @@ export interface FileRouteTypes {
     | '/conferences'
     | '/dashboard'
     | '/journal'
+    | '/meeting_workspace'
     | '/mood'
     | '/onboarding'
+    | '/pricing'
     | '/privacy'
     | '/reports'
     | '/sign-in'
@@ -352,8 +374,10 @@ export interface FileRouteTypes {
     | '/conferences'
     | '/dashboard'
     | '/journal'
+    | '/meeting_workspace'
     | '/mood'
     | '/onboarding'
+    | '/pricing'
     | '/privacy'
     | '/reports'
     | '/sign-in'
@@ -384,8 +408,10 @@ export interface RootRouteChildren {
   ConferencesRoute: typeof ConferencesRoute
   DashboardRoute: typeof DashboardRoute
   JournalRoute: typeof JournalRoute
+  Meeting_workspaceRoute: typeof Meeting_workspaceRoute
   MoodRoute: typeof MoodRoute
   OnboardingRoute: typeof OnboardingRoute
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
   SignInRoute: typeof SignInRouteWithChildren
@@ -470,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -482,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/mood'
       fullPath: '/mood'
       preLoaderRoute: typeof MoodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meeting_workspace': {
+      id: '/meeting_workspace'
+      path: '/meeting_workspace'
+      fullPath: '/meeting_workspace'
+      preLoaderRoute: typeof Meeting_workspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journal': {
@@ -644,8 +684,10 @@ const rootRouteChildren: RootRouteChildren = {
   ConferencesRoute: ConferencesRoute,
   DashboardRoute: DashboardRoute,
   JournalRoute: JournalRoute,
+  Meeting_workspaceRoute: Meeting_workspaceRoute,
   MoodRoute: MoodRoute,
   OnboardingRoute: OnboardingRoute,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
   SignInRoute: SignInRouteWithChildren,
