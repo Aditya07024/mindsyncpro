@@ -58,7 +58,7 @@ function RouteComponent() {
   e.preventDefault();
   
   // Construct the portal URL
-  const url = `https://mindtherapist.authportal.io/${portalId}${redirectTo}`;
+  const url = `https://www.mymindtherapyfriend.com/sign-in`;
   
   // Open in new tab
   window.open(url, '_blank', 'noopener,noreferrer');

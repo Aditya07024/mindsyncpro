@@ -26,6 +26,11 @@ import {
   Video,
   Menu,
   X,
+  TrendingUp,
+  Clock,
+  AlertTriangle,
+  HeartHandshake,
+  Zap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
@@ -204,6 +209,188 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function MiniDonut({ percent, color, size = 36 }: { percent: number; color: string; size?: number }) {
+  const r = (size - 4) / 2;
+  const circ = 2 * Math.PI * r;
+  const filled = circ * (percent / 100);
+  return (
+    <svg width={size} height={size} className="flex-shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e8f0" strokeWidth={3.5} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={3.5}
+        strokeDasharray={`${filled} ${circ - filled}`}
+        strokeDashoffset={circ * 0.25}
+        strokeLinecap="round"
+        className="transition-all duration-700"
+      />
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fontSize={size * 0.26} fontWeight={700} fill={color}>
+        {percent}%
+      </text>
+    </svg>
+  );
+}
+
+function MiniBar({ segments }: { segments: { pct: number; color: string }[] }) {
+  return (
+    <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      {segments.map((s, i) => (
+        <div key={i} className="transition-all duration-700" style={{ width: `${s.pct}%`, backgroundColor: s.color }} />
+      ))}
+    </div>
+  );
+}
+
+function MentalHealthLiveShowcase() {
+  const [stressedToday, setStressedToday] = useState(0);
+  const [helpedToday, setHelpedToday] = useState(0);
+
+  useEffect(() => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const sec = Math.max(1, Math.floor((now.getTime() - startOfDay) / 1000));
+    setStressedToday(Math.floor(sec * 1620.5) + 124500);
+    setHelpedToday(Math.floor(sec * 0.52) + 3840);
+
+    const t = setInterval(() => {
+      setStressedToday((p) => p + Math.floor(Math.random() * 3) + 1);
+      if (Math.random() > 0.45) setHelpedToday((p) => p + 1);
+    }, 450);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <section className="relative mt-14 overflow-hidden rounded-[28px] border border-[#e8d5c0] bg-gradient-to-r from-[#fffaf3] via-white to-[#f0faf7] px-5 py-6 sm:px-8 sm:py-7 shadow-lg">
+      <div className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-amber-200/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 size-48 rounded-full bg-teal-200/20 blur-3xl" />
+
+      {/* Compact header line */}
+      <div className="relative z-10 flex flex-wrap items-center gap-3 mb-5">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/70 bg-amber-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-900 shadow-sm">
+          <span className="relative flex size-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+            <span className="relative inline-flex size-1.5 rounded-full bg-rose-500"></span>
+          </span>
+          Live
+        </span>
+        <p className="text-sm font-semibold text-[#012620]">
+          Millions go through stress every day — therapists & AI help them come out of depression
+        </p>
+      </div>
+
+      {/* Single-row stat cards with mini graphs */}
+      <div className="relative z-10 grid grid-cols-1 gap-2 ">
+        <div className="relative z-10 grid grid-cols-2 gap-2">
+          {/* 1 — Live stressed counter */}
+        <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/80 to-white px-4 py-4 shadow-md backdrop-blur-sm hover:shadow-lg transition group">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <TrendingUp className="size-4" />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
+              Stressed Today
+              <span className="size-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            </p>
+          </div>
+          <p className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none tracking-tight">
+            {stressedToday > 0 ? stressedToday.toLocaleString("en-IN") : "---"}
+          </p>
+          <div className="mt-2.5">
+            <MiniBar segments={[{ pct: 72, color: "#f59e0b" }, { pct: 28, color: "#fde68a" }]} />
+          </div>
+        </div>
+
+        {/* 2 — Helped through therapy */}
+        <div className="rounded-2xl border-2 border-teal-200 bg-gradient-to-br from-teal-50/80 to-white px-4 py-4 shadow-md backdrop-blur-sm hover:shadow-lg transition group">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
+              <HeartHandshake className="size-4" />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700 flex items-center gap-1.5">
+              Recovering
+              <span className="size-1.5 rounded-full bg-teal-500 animate-ping"></span>
+            </p>
+          </div>
+          <p className="font-mono text-2xl sm:text-3xl font-black text-teal-700 leading-none tracking-tight">
+            {helpedToday > 0 ? helpedToday.toLocaleString("en-IN") : "---"}
+          </p>
+          <div className="mt-2.5">
+            <MiniBar segments={[{ pct: 15, color: "#14b8a6" }, { pct: 85, color: "#ccfbf1" }]} />
+          </div>
+        </div></div>
+        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* 3 — Prevalence donut */}
+        <div className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <MiniDonut percent={10.5} color="#004038" size={40} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Prevalence</p>
+              <p className="text-sm font-extrabold text-[#012620] leading-tight">10.5%</p>
+              <p className="text-[9px] text-slate-400">Mental disorders</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 — Treatment gap donut */}
+        <div className="rounded-2xl border border-rose-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <MiniDonut percent={84.5} color="#e11d48" size={40} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Treatment Gap</p>
+              <p className="text-sm font-extrabold text-rose-700 leading-tight">84.5%</p>
+              <p className="text-[9px] text-slate-400">Go untreated</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 5 — Teen stress donut */}
+        <div className="rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <MiniDonut percent={40} color="#6366f1" size={40} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Teens Stressed</p>
+              <p className="text-sm font-extrabold text-indigo-800 leading-tight">40%</p>
+              <p className="text-[9px] text-slate-400">IPS 2024 Study</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 6 — Adults need help */}
+        <div className="rounded-2xl border border-violet-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
+          <div className="flex items-center gap-3">
+            <MiniDonut percent={15} color="#7c3aed" size={40} />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-violet-600">Adults Need Help</p>
+              <p className="text-sm font-extrabold text-violet-800 leading-tight">15%</p>
+              <p className="text-[9px] text-slate-400">Active intervention</p>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        
+
+        
+
+      </div>
+
+      {/* Bottom tagline bar */}
+      <div className="relative z-10 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#004038]/5 px-4 py-2.5">
+        <p className="text-xs text-slate-600">
+          <span className="font-bold text-[#004038]">5.3%</span> suffer depressive disorders •
+          Projected <span className="font-bold text-[#004038]">23%</span> prevalence by 2026 •
+          <span className="font-bold text-[#004038]">210M+</span> adults need therapy access
+        </p>
+        <Link
+          to="/sign-in"
+          className="rounded-lg bg-[#004038] px-4 py-1.5 text-[11px] font-bold text-white shadow transition hover:scale-[1.03]"
+        >
+          Get Free Support →
+        </Link>
+      </div>
+    </section>
   );
 }
 
@@ -527,6 +714,9 @@ function Landing() {
             </div>
           </motion.div>
         </section>
+
+        {/* Mental Health Live Showcase */}
+        <MentalHealthLiveShowcase />
 
         {/* Experience Section */}
         <section
