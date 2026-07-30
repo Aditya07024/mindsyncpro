@@ -11,6 +11,10 @@ router.post("/cancel", requireAuth, SubscriptionController.cancelSubscription);
 router.post("/demo-activate", requireAuth, SubscriptionController.demoActivate);
 router.post("/sync", requireAuth, SubscriptionController.syncSubscription);
 
+// Cron job / Keep-alive endpoints (no auth required for external uptime monitoring & cron triggers)
+router.get("/cron-sync", SubscriptionController.cronSync);
+router.get("/keep-alive", (req, res) => res.json({ status: "ok", message: "Server is online", timestamp: new Date().toISOString() }));
+
 // Razorpay webhook (no auth — verified by signature)
 router.post("/webhook", SubscriptionController.webhook);
 

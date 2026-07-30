@@ -58,6 +58,7 @@ export class SubscriptionService {
     razorpayPlanId: string,
     tierName: string,
     userPhone: string,
+    durationMonths: number = 1
   ) {
     const isEmail = userPhone.includes("@");
     const notify_info: any = {};
@@ -71,10 +72,13 @@ export class SubscriptionService {
       notify_info.notify_email = "customer@mymindtherapyfriend.com";
     }
 
+    // Number of billing cycles: e.g. 6-month plan -> 12 / 6 = 2 cycles for 1 year
+    const total_count = Math.max(1, Math.round(12 / durationMonths));
+
     try {
       const subscription = await getRazorpay().subscriptions.create({
         plan_id: razorpayPlanId,
-        total_count: 12, // 12 billing cycles = 1 year
+        total_count,
         quantity: 1,
         notify_info,
         notes: {
@@ -92,6 +96,96 @@ export class SubscriptionService {
       console.error("[SubscriptionService] createDynamicSubscription failed:", error);
       throw error;
     }
+  }
+
+  /** Ensure a Razorpay Plan exists for the tier, create if missing */
+  static async createRazorpayPlan(name: string, amount: number, durationMonths: number = 1) {
+    try {
+      const plan = await getRazorpay().plans.create({
+        period: "monthly",
+        interval: durationMonths,
+        item: {
+          name: name,
+          amount: amount * 100, // Convert to paise
+          currency: "INR",
+          description: `MyMindTherapyFriend ${name} subscription (${durationMonths} months)`,
+        },
+      });
+      console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name} (${durationMonths} months)`);
+      return plan.id;
+    } catch (error) {
+      console.error(`[Subscription] Failed to create dynamic Razorpay plan for ${name}:`, error);
+      throw error;
+    }
+  }
+
+  /** Synchronize all pending and active subscriptions with Razorpay and clean expired ones */
+  static async syncAllSubscriptions(): Promise<{ processed: number; activated: number; expired: number }> {
+    const { Subscription, User } = await import("@/models");
+    let processed = 0;
+    let activated = 0;
+    let expired = 0;
+
+    try {
+      // 1. Sync pending/active subscriptions with Razorpay
+      const pendingOrActive = await Subscription.find({
+        status: { $in: ["pending", "active"] },
+        razorpaySubscriptionId: { $exists: true, $ne: "" },
+      });
+
+      for (const sub of pendingOrActive) {
+        processed++;
+        try {
+          if (sub.razorpaySubscriptionId) {
+            const rzSub = await getRazorpay().subscriptions.fetch(sub.razorpaySubscriptionId);
+            
+            if (rzSub.status === "active" && sub.status !== "active") {
+              sub.status = "active";
+              sub.startDate = new Date();
+              await sub.save();
+              activated++;
+
+              // Update user tier
+              if (sub.userId) {
+                await User.findByIdAndUpdate(sub.userId, { tier: sub.plan });
+              }
+            } else if (["cancelled", "expired", "completed"].includes(rzSub.status)) {
+              if (sub.status !== "cancelled") {
+                sub.status = "cancelled";
+                await sub.save();
+                expired++;
+
+                if (sub.userId) {
+                  await User.findByIdAndUpdate(sub.userId, { tier: "free" });
+                }
+              }
+            }
+          }
+        } catch (subErr) {
+          // Ignore individual fetch errors
+        }
+      }
+
+      // 2. Check for subscriptions past their end date
+      const expiredSubs = await Subscription.find({
+        status: "active",
+        endDate: { $lt: new Date() },
+      });
+
+      for (const sub of expiredSubs) {
+        sub.status = "cancelled";
+        await sub.save();
+        expired++;
+
+        if (sub.userId) {
+          await User.findByIdAndUpdate(sub.userId, { tier: "free" });
+        }
+      }
+    } catch (err) {
+      console.error("[SubscriptionService] syncAllSubscriptions failed:", err);
+    }
+
+    return { processed, activated, expired };
   }
 
   /** Create a Razorpay subscription for a user */
@@ -132,27 +226,6 @@ export class SubscriptionService {
       };
     } catch (error) {
       console.error("[SubscriptionService] createSubscription failed:", error);
-      throw error;
-    }
-  }
-
-  /** Create a Razorpay Plan dynamically */
-  static async createRazorpayPlan(name: string, amount: number, durationMonths: number = 1) {
-    try {
-      const plan = await getRazorpay().plans.create({
-        period: "monthly",
-        interval: durationMonths,
-        item: {
-          name: name,
-          amount: amount * 100, // Convert to paise
-          currency: "INR",
-          description: `MyMindTherapyFriend ${name} subscription (${durationMonths} months)`,
-        },
-      });
-      console.log(`[Subscription] Created dynamic Razorpay plan ${plan.id} for ${name} (${durationMonths} months)`);
-      return plan.id;
-    } catch (error) {
-      console.error(`[Subscription] Failed to create dynamic Razorpay plan for ${name}:`, error);
       throw error;
     }
   }

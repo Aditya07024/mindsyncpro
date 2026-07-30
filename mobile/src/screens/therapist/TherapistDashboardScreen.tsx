@@ -87,10 +87,11 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
     enabled: isSubscribed,
   });
 
-  // 4. Fetch Therapist Bookings (Only if subscribed)
+  // 4. Fetch Therapist Bookings (Only if subscribed) (auto-refreshes every 5 minutes from backend)
   const { data: bookingsData, refetch: refetchBookings } = useQuery({
     queryKey: ['therapistBookings'],
     queryFn: () => API.therapist.meBookings(),
+    refetchInterval: 300000,
     retry: false,
     enabled: isSubscribed,
   });

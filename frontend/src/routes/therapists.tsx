@@ -22,6 +22,20 @@ const getYouTubeId = (url: string) => {
   return match ? match[1] : null;
 };
 
+const getGoogleDriveId = (url: string) => {
+  if (!url) return null;
+  const usercontentMatch = url.match(/drive\.usercontent\.google\.com\/download\?id=([^&]+)/);
+  if (usercontentMatch) return usercontentMatch[1];
+
+  const fileDMatch = url.match(/drive\.google\.com\/file\/d\/([^/&?]+)/);
+  if (fileDMatch) return fileDMatch[1];
+
+  const idParamMatch = url.match(/drive\.google\.com\/(?:uc|open)\?.*id=([^&]+)/);
+  if (idParamMatch) return idParamMatch[1];
+
+  return null;
+};
+
 export const Route = createFileRoute("/therapists")({
   component: TherapistMarketplace,
 });
@@ -77,12 +91,12 @@ function TherapistMarketplace() {
 
   const baseLanguages = ["English", "Hindi"];
   const dynamicLanguages = Array.from(
-    new Set(
+    new Set<string>(
       (allTherapistsData?.therapists || []).flatMap((t: any) => t.languages || [])
     )
-  ).filter((lang: string) => lang && !baseLanguages.includes(lang));
+  ).filter((lang: string) => Boolean(lang) && !baseLanguages.includes(lang));
 
-  const availableLanguages = [...baseLanguages, ...dynamicLanguages];
+  const availableLanguages: string[] = [...baseLanguages, ...dynamicLanguages];
 
   // Fetch therapists with filters
   const {
@@ -316,6 +330,13 @@ function TherapistMarketplace() {
                           allow="autoplay; encrypted-media"
                           frameBorder="0"
                         />
+                      ) : getGoogleDriveId(therapist.introVideoUrl) ? (
+                        <iframe
+                          src={`https://drive.google.com/file/d/${getGoogleDriveId(therapist.introVideoUrl)}/preview`}
+                          className="w-full h-full object-cover pointer-events-none"
+                          allow="autoplay"
+                          frameBorder="0"
+                        />
                       ) : (
                         <video
                           src={therapist.introVideoUrl}
@@ -439,6 +460,14 @@ function TherapistMarketplace() {
                     getYouTubeId(selectedTherapist.introVideoUrl) ? (
                       <iframe
                         src={`https://www.youtube.com/embed/${getYouTubeId(selectedTherapist.introVideoUrl)}?autoplay=1&mute=0&rel=0`}
+                        className="w-full h-full object-cover"
+                        allow="autoplay; encrypted-media; fullscreen"
+                        allowFullScreen
+                        frameBorder="0"
+                      />
+                    ) : getGoogleDriveId(selectedTherapist.introVideoUrl) ? (
+                      <iframe
+                        src={`https://drive.google.com/file/d/${getGoogleDriveId(selectedTherapist.introVideoUrl)}/preview`}
                         className="w-full h-full object-cover"
                         allow="autoplay; encrypted-media; fullscreen"
                         allowFullScreen

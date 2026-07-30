@@ -199,7 +199,7 @@ function SubscriptionPage() {
           <p className="text-muted-foreground text-sm max-w-xs mx-auto">
             Recurring billing via Razorpay. Cancel anytime.
           </p>
-          {import.meta.env.DEV && currentTier === "free" && (
+          {/* {import.meta.env.DEV && currentTier === "free" && (
             <Button
               onClick={() => demoActivateMutation.mutate()}
               disabled={demoActivateMutation.isPending}
@@ -208,7 +208,7 @@ function SubscriptionPage() {
             >
               {demoActivateMutation.isPending ? "Activating..." : "Dev: Bypass Payment"}
             </Button>
-          )}
+          )} */}
         </motion.div>
 
         {/* Usage summary for current user */}

@@ -212,33 +212,178 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   );
 }
 
-function MiniDonut({ percent, color, size = 36 }: { percent: number; color: string; size?: number }) {
-  const r = (size - 4) / 2;
+function MiniDonut({
+  percent,
+  color,
+  size = 40,
+  pulse = false,
+}: {
+  percent: number;
+  color: string;
+  size?: number;
+  pulse?: boolean;
+}) {
+  const r = (size - 6) / 2;
   const circ = 2 * Math.PI * r;
   const filled = circ * (percent / 100);
+  const angle = (percent / 100) * 360 - 90;
+  const dotX = size / 2 + r * Math.cos((angle * Math.PI) / 180);
+  const dotY = size / 2 + r * Math.sin((angle * Math.PI) / 180);
+
   return (
-    <svg width={size} height={size} className="flex-shrink-0">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e8f0" strokeWidth={3.5} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={3.5}
-        strokeDasharray={`${filled} ${circ - filled}`}
-        strokeDashoffset={circ * 0.25}
-        strokeLinecap="round"
-        className="transition-all duration-700"
-      />
-      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fontSize={size * 0.26} fontWeight={700} fill={color}>
-        {percent}%
-      </text>
-    </svg>
+    <div className="relative flex-shrink-0">
+      <svg width={size} height={size} className="transform -rotate-90 overflow-visible">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e8f0" strokeWidth={3.5} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={3.5}
+          strokeDasharray={`${filled} ${circ - filled}`}
+          strokeDashoffset={0}
+          strokeLinecap="round"
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-[10px] font-black tracking-tighter" style={{ color }}>
+          {percent}%
+        </span>
+      </div>
+      {pulse && (
+        <span
+          className="absolute size-2 rounded-full animate-ping opacity-75 pointer-events-none"
+          style={{
+            left: `${(dotX / size) * 100}%`,
+            top: `${(dotY / size) * 100}%`,
+            backgroundColor: color,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      )}
+    </div>
   );
 }
 
-function MiniBar({ segments }: { segments: { pct: number; color: string }[] }) {
+function LiveSparkline({
+  data,
+  color = "#dc2626",
+  gradientId = "grad-spark-red",
+  height = 46,
+  showGrid = true,
+}: {
+  data: number[];
+  color?: string;
+  gradientId?: string;
+  height?: number;
+  showGrid?: boolean;
+}) {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  if (!data || data.length < 2) return null;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const width = 280;
+
+  const pointCoords = data.map((val, idx) => {
+    const x = (idx / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * (height - 14) - 7;
+    return { x, y, val };
+  });
+
+  const pointsString = pointCoords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const lastCoord = pointCoords[pointCoords.length - 1];
+
   return (
-    <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
-      {segments.map((s, i) => (
-        <div key={i} className="transition-all duration-700" style={{ width: `${s.pct}%`, backgroundColor: s.color }} />
-      ))}
+    <div className="relative w-full h-12 overflow-hidden mt-1.5 group cursor-crosshair">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-full overflow-visible"
+        onMouseLeave={() => setHoverIndex(null)}
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+          </linearGradient>
+          <pattern id="telemetry-grid-pattern" width="16" height="8" patternUnits="userSpaceOnUse">
+            <path d="M 16 0 L 0 0 0 8" fill="none" stroke="#94a3b8" strokeWidth="0.4" strokeOpacity="0.15" />
+          </pattern>
+        </defs>
+
+        {showGrid && <rect width={width} height={height} fill="url(#telemetry-grid-pattern)" />}
+        <polygon
+          fill={`url(#${gradientId})`}
+          points={`0,${height} ${pointsString} ${width},${height}`}
+          style={{ transition: "all 1000ms ease-in-out" }}
+        />
+        <polyline
+          fill="none"
+          stroke={color}
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          points={pointsString}
+          style={{ transition: "all 1000ms ease-in-out" }}
+        />
+
+        {pointCoords.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="7"
+            fill="transparent"
+            onMouseEnter={() => setHoverIndex(i)}
+            className="cursor-pointer"
+          />
+        ))}
+
+        {hoverIndex !== null && pointCoords[hoverIndex] && (
+          <g>
+            <line
+              x1={pointCoords[hoverIndex].x}
+              y1="0"
+              x2={pointCoords[hoverIndex].x}
+              y2={height}
+              stroke={color}
+              strokeWidth="1"
+              strokeDasharray="2 2"
+              opacity="0.5"
+            />
+            <circle
+              cx={pointCoords[hoverIndex].x}
+              cy={pointCoords[hoverIndex].y}
+              r="3.5"
+              fill={color}
+              stroke="#ffffff"
+              strokeWidth="1.5"
+            />
+          </g>
+        )}
+
+        {hoverIndex === null && (
+          <g style={{ transition: "all 1000ms ease-in-out" }}>
+            <circle cx={lastCoord.x} cy={lastCoord.y} r="4.5" fill={color} className="animate-ping opacity-75" />
+            <circle cx={lastCoord.x} cy={lastCoord.y} r="3" fill={color} stroke="#ffffff" strokeWidth="1" />
+          </g>
+        )}
+      </svg>
+
+      {hoverIndex !== null && pointCoords[hoverIndex] && (
+        <div
+          className="absolute top-0 bg-slate-900/90 text-white text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded shadow pointer-events-none z-20 backdrop-blur-xs"
+          style={{
+            left: `${Math.min(88, Math.max(12, (pointCoords[hoverIndex].x / width) * 100))}%`,
+            transform: "translate(-50%, 0%)",
+          }}
+        >
+          Rate: {pointCoords[hoverIndex].val}
+        </div>
+      )}
     </div>
   );
 }
@@ -246,6 +391,30 @@ function MiniBar({ segments }: { segments: { pct: number; color: string }[] }) {
 function MentalHealthLiveShowcase() {
   const [stressedToday, setStressedToday] = useState(0);
   const [helpedToday, setHelpedToday] = useState(0);
+  const [activeTab, setActiveTab] = useState<"live" | "24h" | "7d">("live");
+  const [activeFeedIdx, setActiveFeedIdx] = useState(0);
+
+  const [stressedSpark, setStressedSpark] = useState<number[]>([
+    45, 52, 49, 60, 58, 65, 72, 70, 85, 82, 90, 88, 95, 92, 104, 98, 110
+  ]);
+  const [helpedSpark, setHelpedSpark] = useState<number[]>([
+    15, 18, 17, 22, 21, 28, 27, 32, 31, 38, 37, 44, 43, 50, 49, 56
+  ]);
+
+  const LIVE_FEED_ITEMS = [
+    { text: "Anonymous AI Mental Assessment completed in New Delhi", time: "2s ago", tag: "AI Care", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    { text: "Licensed Clinical Psychologist session booked in Bengaluru", time: "5s ago", tag: "Therapy", color: "bg-blue-50 text-blue-700 border-blue-200" },
+    { text: "Confidential Stress Screening initiated in Hyderabad", time: "8s ago", tag: "Screening", color: "bg-slate-100 text-slate-700 border-slate-200" },
+    { text: "Guided CBT Mood Journal entry saved in Pune", time: "12s ago", tag: "Wellness", color: "bg-teal-50 text-teal-700 border-teal-200" },
+    { text: "Urgent Crisis Support consultation matched in Mumbai", time: "17s ago", tag: "Urgent", color: "bg-red-50 text-red-700 border-red-200" },
+    { text: "Corporate Employee Mind Check completed in Chennai", time: "21s ago", tag: "Enterprise", color: "bg-violet-50 text-violet-700 border-violet-200" },
+    { text: "Teen Stress Assessment completed in Jaipur", time: "26s ago", tag: "Adolescent", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    { text: "AI Support Chat completed in Kolkata", time: "30s ago", tag: "AI Care", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    { text: "Depression Screening Test completed in Ahmedabad", time: "34s ago", tag: "Clinical", color: "bg-amber-50 text-amber-700 border-amber-200" },
+    { text: "Mindfulness & Breathing Exercise done in Kochi", time: "39s ago", tag: "Wellness", color: "bg-teal-50 text-teal-700 border-teal-200" },
+    { text: "Therapy Follow-up appointment scheduled in Chandigarh", time: "44s ago", tag: "Therapy", color: "bg-blue-50 text-blue-700 border-blue-200" },
+    { text: "Confidential Self-Assessment finished in Lucknow", time: "49s ago", tag: "Screening", color: "bg-slate-100 text-slate-700 border-slate-200" },
+  ];
 
   useEffect(() => {
     const now = new Date();
@@ -254,141 +423,287 @@ function MentalHealthLiveShowcase() {
     setStressedToday(Math.floor(sec * 1620.5) + 124500);
     setHelpedToday(Math.floor(sec * 0.52) + 3840);
 
-    const t = setInterval(() => {
+    // Smooth real-time counter update every 1200ms
+    const counterTimer = setInterval(() => {
       setStressedToday((p) => p + Math.floor(Math.random() * 3) + 1);
-      if (Math.random() > 0.45) setHelpedToday((p) => p + 1);
-    }, 450);
-    return () => clearInterval(t);
+      if (Math.random() > 0.4) {
+        setHelpedToday((p) => p + 1);
+      }
+    }, 1200);
+
+    // Smooth graph morphing every 2400ms with subtle micro-fluctuations
+    const sparklineTimer = setInterval(() => {
+      setStressedSpark((prev) => {
+        const last = prev[prev.length - 1];
+        const next = Math.max(40, Math.min(120, last + (Math.floor(Math.random() * 7) - 3)));
+        return [...prev.slice(1), next];
+      });
+
+      setHelpedSpark((prev) => {
+        const last = prev[prev.length - 1];
+        const next = Math.max(20, Math.min(70, last + (Math.floor(Math.random() * 5) - 2)));
+        return [...prev.slice(1), next];
+      });
+    }, 2400);
+
+    const feedTimer = setInterval(() => {
+      setActiveFeedIdx((prev) => (prev + 1) % LIVE_FEED_ITEMS.length);
+    }, 3500);
+
+    return () => {
+      clearInterval(counterTimer);
+      clearInterval(sparklineTimer);
+      clearInterval(feedTimer);
+    };
   }, []);
 
-  return (
-    <section className="relative mt-14 overflow-hidden rounded-[28px] border border-[#e8d5c0] bg-gradient-to-r from-[#fffaf3] via-white to-[#f0faf7] px-5 py-6 sm:px-8 sm:py-7 shadow-lg">
-      <div className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-amber-200/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-16 size-48 rounded-full bg-teal-200/20 blur-3xl" />
+  const currentFeed = LIVE_FEED_ITEMS[activeFeedIdx];
 
-      {/* Compact header line */}
-      <div className="relative z-10 flex flex-wrap items-center gap-3 mb-5">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/70 bg-amber-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-900 shadow-sm">
-          <span className="relative flex size-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
-            <span className="relative inline-flex size-1.5 rounded-full bg-rose-500"></span>
+  return (
+    <section className="relative mt-14 overflow-hidden rounded-[28px] border border-slate-200/90 bg-white px-5 py-6 sm:px-8 sm:py-7 shadow-xl">
+      <div className="pointer-events-none absolute -top-20 -right-20 size-64 rounded-full bg-red-500/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-20 size-64 rounded-full bg-emerald-500/5 blur-3xl" />
+
+      {/* Header section with live feed indicator and timeframe toggle */}
+      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-100">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-red-700 shadow-xs">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex size-2 rounded-full bg-red-600"></span>
+            </span>
+            Realtime Telemetry
           </span>
-          Live
-        </span>
-        <p className="text-sm font-semibold text-[#012620]">
-          Millions go through stress every day — therapists & AI help them come out of depression
-        </p>
+          <p className="text-sm font-semibold text-slate-800">
+            Millions go through stress every day — therapists & AI help them come out of depression
+          </p>
+        </div>
+
+        {/* Timeframe Toggles */}
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/70 text-[11px] font-medium">
+          <button
+            onClick={() => setActiveTab("live")}
+            className={`px-2.5 py-0.5 rounded-lg transition-all ${
+              activeTab === "live"
+                ? "bg-white text-slate-900 font-bold shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            Live Ticker
+          </button>
+          <button
+            onClick={() => setActiveTab("24h")}
+            className={`px-2.5 py-0.5 rounded-lg transition-all ${
+              activeTab === "24h"
+                ? "bg-white text-slate-900 font-bold shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            24H View
+          </button>
+          <button
+            onClick={() => setActiveTab("7d")}
+            className={`px-2.5 py-0.5 rounded-lg transition-all ${
+              activeTab === "7d"
+                ? "bg-white text-slate-900 font-bold shadow-xs"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            7D Trend
+          </button>
+        </div>
       </div>
 
-      {/* Single-row stat cards with mini graphs */}
-      <div className="relative z-10 grid grid-cols-1 gap-2 ">
-        <div className="relative z-10 grid grid-cols-2 gap-2">
-          {/* 1 — Live stressed counter */}
-        <div className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/80 to-white px-4 py-4 shadow-md backdrop-blur-sm hover:shadow-lg transition group">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-              <TrendingUp className="size-4" />
+      {/* Real-time Telemetry Stat Cards */}
+      <div className="relative z-10 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* 1 — Realtime Live Stressed Counter with Red Sparkline */}
+          <div className="rounded-2xl border border-red-100 bg-gradient-to-br from-red-50/40 via-white to-slate-50/50 p-4 shadow-sm backdrop-blur-sm transition-all hover:shadow-md hover:border-red-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-red-100/80 text-red-600">
+                  <TrendingUp className="size-4" />
+                </div>
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-red-700 flex items-center gap-1.5">
+                  Stressed Today
+                  <span className="size-1.5 rounded-full bg-red-600 animate-pulse"></span>
+                </p>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-red-600 bg-red-100/60 px-2 py-0.5 rounded">
+                {activeTab === "live" ? "REALTIME WAVE" : activeTab === "24h" ? "24H PEAK" : "WEEKLY INDEX"}
+              </span>
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 flex items-center gap-1.5">
-              Stressed Today
-              <span className="size-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <p className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none tracking-tight mt-2">
+              {stressedToday > 0 ? stressedToday.toLocaleString("en-IN") : "---"}
             </p>
+            {/* Live Red Waveform/Sparkline with Interactive Hover */}
+            <LiveSparkline data={stressedSpark} color="#dc2626" gradientId="grad-spark-red" />
           </div>
-          <p className="font-mono text-2xl sm:text-3xl font-black text-slate-900 leading-none tracking-tight">
-            {stressedToday > 0 ? stressedToday.toLocaleString("en-IN") : "---"}
-          </p>
-          <div className="mt-2.5">
-            <MiniBar segments={[{ pct: 72, color: "#f59e0b" }, { pct: 28, color: "#fde68a" }]} />
-          </div>
-        </div>
 
-        {/* 2 — Helped through therapy */}
-        <div className="rounded-2xl border-2 border-teal-200 bg-gradient-to-br from-teal-50/80 to-white px-4 py-4 shadow-md backdrop-blur-sm hover:shadow-lg transition group">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-teal-100 text-teal-600">
-              <HeartHandshake className="size-4" />
+          {/* 2 — Realtime Recovering & Assisted with Emerald Sparkline */}
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/40 via-white to-slate-50/50 p-4 shadow-sm backdrop-blur-sm transition-all hover:shadow-md hover:border-emerald-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100/80 text-emerald-700">
+                  <HeartHandshake className="size-4" />
+                </div>
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                  Recovering
+                  <span className="size-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+                </p>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded">
+                OUTCOMES
+              </span>
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-teal-700 flex items-center gap-1.5">
-              Recovering
-              <span className="size-1.5 rounded-full bg-teal-500 animate-ping"></span>
+            <p className="font-mono text-2xl sm:text-3xl font-black text-emerald-700 leading-none tracking-tight mt-2">
+              {helpedToday > 0 ? helpedToday.toLocaleString("en-IN") : "---"}
             </p>
+            {/* Live Emerald Waveform/Sparkline with Interactive Hover */}
+            <LiveSparkline data={helpedSpark} color="#059669" gradientId="grad-spark-emerald" />
           </div>
-          <p className="font-mono text-2xl sm:text-3xl font-black text-teal-700 leading-none tracking-tight">
-            {helpedToday > 0 ? helpedToday.toLocaleString("en-IN") : "---"}
-          </p>
-          <div className="mt-2.5">
-            <MiniBar segments={[{ pct: 15, color: "#14b8a6" }, { pct: 85, color: "#ccfbf1" }]} />
+        </div>
+
+        {/* Live Event Activity Ticker Stream */}
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200/70 bg-slate-50/80 px-3.5 py-2 text-xs transition-all">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="shrink-0 flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded">
+              <Activity className="size-3 text-emerald-600 animate-spin" />
+              Live Feed
+            </span>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeFeedIdx}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-2 text-slate-700 text-[11px] truncate"
+              >
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${currentFeed.color}`}>
+                  {currentFeed.tag}
+                </span>
+                <span className="font-medium truncate">{currentFeed.text}</span>
+                <span className="text-[10px] font-mono text-slate-400 shrink-0">• {currentFeed.time}</span>
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </div></div>
-        <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {/* 3 — Prevalence donut */}
-        <div className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
-          <div className="flex items-center gap-3">
-            <MiniDonut percent={10.5} color="#004038" size={40} />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Prevalence</p>
-              <p className="text-sm font-extrabold text-[#012620] leading-tight">10.5%</p>
-              <p className="text-[9px] text-slate-400">Mental disorders</p>
+          <span className="hidden sm:inline-flex shrink-0 text-[10px] font-mono font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            Telemetry Stream Active
+          </span>
+        </div>
+
+        {/* 4 Demographics & Baseline Metrics Grid - Live Dynamic Styling */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Card 1: Prevalence */}
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/80 via-white to-slate-100/40 p-3.5 shadow-2xs transition-all hover:shadow-xs hover:border-slate-300">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-slate-700 animate-pulse"></span>
+                Prevalence
+              </span>
+              <span className="text-[8px] font-mono text-slate-500 bg-slate-200/60 px-1.5 py-0.2 rounded font-semibold">
+                LIVE METRIC
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <MiniDonut percent={10.5} color="#0f172a" size={42} pulse={true} />
+              <div>
+                <p className="text-base font-black text-slate-900 leading-tight">10.5%</p>
+                <p className="text-[10px] font-medium text-slate-600">Mental disorders</p>
+                <p className="text-[9px] font-mono text-slate-400 mt-0.5">1 in 10 adults</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Treatment Gap */}
+          <div className="relative overflow-hidden rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50/50 via-white to-slate-50/40 p-3.5 shadow-2xs transition-all hover:shadow-xs hover:border-rose-300">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-rose-600 flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-rose-600 animate-ping"></span>
+                Treatment Gap
+              </span>
+              <span className="text-[8px] font-mono font-bold text-rose-700 bg-rose-100 px-1.5 py-0.2 rounded">
+                CRISIS ALERT
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <MiniDonut percent={84.5} color="#dc2626" size={42} pulse={true} />
+              <div>
+                <p className="text-base font-black text-rose-700 leading-tight">84.5%</p>
+                <p className="text-[10px] font-medium text-slate-600">Go untreated</p>
+                <p className="text-[9px] font-mono text-rose-600/80 mt-0.5">7 of 8 untreated</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Teen Stress */}
+          <div className="relative overflow-hidden rounded-2xl border border-teal-200/80 bg-gradient-to-br from-teal-50/50 via-white to-slate-50/40 p-3.5 shadow-2xs transition-all hover:shadow-xs hover:border-teal-300">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-teal-600 animate-pulse"></span>
+                Teens Stressed
+              </span>
+              <span className="text-[8px] font-mono font-bold text-teal-800 bg-teal-100/70 px-1.5 py-0.2 rounded">
+                SURVEY FEED
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <MiniDonut percent={40} color="#004038" size={42} pulse={true} />
+              <div>
+                <p className="text-base font-black text-[#004038] leading-tight">40%</p>
+                <p className="text-[10px] font-medium text-slate-600">IPS 2024 Study</p>
+                <p className="text-[9px] font-mono text-teal-800/80 mt-0.5">2 in 5 adolescents</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Adults Need Help */}
+          <div className="relative overflow-hidden rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50/40 p-3.5 shadow-2xs transition-all hover:shadow-xs hover:border-indigo-300">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1">
+                <span className="size-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                Adults Need Help
+              </span>
+              <span className="text-[8px] font-mono font-bold text-indigo-700 bg-indigo-100/70 px-1.5 py-0.2 rounded">
+                ACTIVE NEED
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <MiniDonut percent={15} color="#4f46e5" size={42} pulse={true} />
+              <div>
+                <p className="text-base font-black text-indigo-900 leading-tight">15%</p>
+                <p className="text-[10px] font-medium text-slate-600">Active intervention</p>
+                <p className="text-[9px] font-mono text-indigo-600/80 mt-0.5">Therapy priority</p>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* 4 — Treatment gap donut */}
-        <div className="rounded-2xl border border-rose-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
-          <div className="flex items-center gap-3">
-            <MiniDonut percent={84.5} color="#e11d48" size={40} />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Treatment Gap</p>
-              <p className="text-sm font-extrabold text-rose-700 leading-tight">84.5%</p>
-              <p className="text-[9px] text-slate-400">Go untreated</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 5 — Teen stress donut */}
-        <div className="rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
-          <div className="flex items-center gap-3">
-            <MiniDonut percent={40} color="#6366f1" size={40} />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">Teens Stressed</p>
-              <p className="text-sm font-extrabold text-indigo-800 leading-tight">40%</p>
-              <p className="text-[9px] text-slate-400">IPS 2024 Study</p>
-            </div>
-          </div>
-        </div>
-
-        {/* 6 — Adults need help */}
-        <div className="rounded-2xl border border-violet-100 bg-white/90 px-4 py-3.5 shadow-sm backdrop-blur-sm hover:shadow-md transition">
-          <div className="flex items-center gap-3">
-            <MiniDonut percent={15} color="#7c3aed" size={40} />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-violet-600">Adults Need Help</p>
-              <p className="text-sm font-extrabold text-violet-800 leading-tight">15%</p>
-              <p className="text-[9px] text-slate-400">Active intervention</p>
-            </div>
-          </div>
-        </div>
-        </div>
-
-        
-
-        
-
       </div>
 
       {/* Bottom tagline bar */}
-      <div className="relative z-10 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#004038]/5 px-4 py-2.5">
-        <p className="text-xs text-slate-600">
-          <span className="font-bold text-[#004038]">5.3%</span> suffer depressive disorders •
-          Projected <span className="font-bold text-[#004038]">23%</span> prevalence by 2026 •
-          <span className="font-bold text-[#004038]">210M+</span> adults need therapy access
-        </p>
-        <Link
-          to="/sign-in"
-          className="rounded-lg bg-[#004038] px-4 py-1.5 text-[11px] font-bold text-white shadow transition hover:scale-[1.03]"
-        >
-          Get Free Support →
-        </Link>
+      <div className="relative z-10 mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 shadow-2xs backdrop-blur-sm">
+        <div className="flex items-center gap-2.5 text-xs text-slate-600">
+          <span className="hidden md:inline-flex items-center gap-1 rounded-md bg-[#004038]/10 px-2 py-0.5 text-[10px] font-bold text-[#004038]">
+            <ShieldCheck className="size-3 text-[#004038]" />
+            100% Private & Confidential
+          </span>
+          <p className="leading-snug">
+            <span className="font-bold text-slate-900">5.3%</span> suffer depressive disorders •
+            Projected <span className="font-bold text-slate-900">23%</span> prevalence by 2026 •
+            <span className="font-bold text-slate-900"> 210M+</span> adults need therapy access
+          </p>
+        </div>
+        <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
+          <Link
+            to="/sign-in"
+            className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#004038] to-[#005c51] px-4 py-2 text-xs font-bold text-white shadow-md transition-all duration-200 hover:shadow-lg hover:from-[#00332d] hover:to-[#004c43] hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Sparkles className="size-3.5 text-emerald-300 animate-pulse" />
+            <span>Start Free Assessment</span>
+            <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     </section>
   );

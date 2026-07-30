@@ -36,10 +36,11 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [selectedPrescription, setSelectedPrescription] = useState<Booking['prescription'] | null>(null);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
-  // Query booked sessions
+  // Query booked sessions (auto-refreshes every 5 minutes from backend)
   const { data: bookingsList, isLoading } = useQuery({
     queryKey: ['userBookings'],
     queryFn: () => API.booking.getUserBookings(),
+    refetchInterval: 300000,
     retry: false,
   });
 

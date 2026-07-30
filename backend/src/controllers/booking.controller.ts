@@ -123,17 +123,20 @@ export class BookingController {
             createdAt: { $gte: activeSub.startDate },
           });
 
-          if (activeSub.plan === "Apna Mann") {
-            // Buy 1, get 2 free -> Cycle of 3: 1 paid, 2 free
-            if (bookingCount % 3 !== 0) {
+          const planLower = (activeSub.plan || "").toLowerCase();
+
+          if (planLower.includes("apna") || planLower === "apna_therapist") {
+            // "After 3 Bookings, 1 booking is free": 4th booking in a cycle of 4 is free
+            if ((bookingCount + 1) % 4 === 0) {
               amount = 0;
             }
-          } else if (activeSub.plan === "Mann Shanti") {
-            // Buy 2, get 5 free -> Cycle of 7: 2 paid, 5 free
-            if ((bookingCount % 7) >= 2) {
+          } else if (planLower.includes("shanti") || planLower === "mann_shanti") {
+            // "After 5 bookings, 2 bookings are free": 6th & 7th bookings in a cycle of 7 are free
+            const position = bookingCount % 7;
+            if (position >= 5) {
               amount = 0;
             } else {
-              // 10% therapist discount
+              // 10% therapist discount for paid bookings in this tier
               amount = Math.round(amount * 0.9);
             }
           }

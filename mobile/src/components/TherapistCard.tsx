@@ -9,12 +9,21 @@ export interface TherapistData {
   userId?: string;
   name: string;
   specialties?: string[];
+  specializations?: string[];
   experience?: number;
+  experienceYears?: number;
   hourlyRate?: number;
+  sessionFee?: number;
   rating?: number;
   verified?: boolean;
   avatarUrl?: string;
   bio?: string;
+  introVideoUrl?: string;
+  languages?: string[];
+  specialty?: string;
+  gender?: string;
+  city?: string;
+  state?: string;
 }
 
 interface TherapistCardProps {

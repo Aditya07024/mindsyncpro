@@ -73,7 +73,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
     // Set up Android notification channel
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
-        name: 'Default',
+        name: 'MyMindTherapyFriend',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#2E6E65',

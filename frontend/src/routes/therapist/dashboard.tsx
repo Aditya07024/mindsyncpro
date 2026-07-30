@@ -162,6 +162,7 @@ function TherapistDashboard() {
   const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
     queryKey: ['therapist-bookings'],
     queryFn: () => API.therapist.meBookings(),
+    refetchInterval: 300000,
     enabled: !subRequired,
     retry: false,
   });
@@ -893,7 +894,7 @@ function TherapistDashboard() {
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Your Subscription</h2>
                 <div className="flex items-center gap-3">
-                  {import.meta.env.DEV && !hasActiveSub && (
+                  {/* {import.meta.env.DEV && !hasActiveSub && (
                     <Button
                       onClick={() => demoActivateMutation.mutate()}
                       disabled={demoActivateMutation.isPending}
@@ -902,7 +903,7 @@ function TherapistDashboard() {
                     >
                       {demoActivateMutation.isPending ? "Activating..." : "Dev: Bypass Payment"}
                     </Button>
-                  )}
+                  )} */}
                   {subscriptionData?.subscription && (
                     <div className={`px-4 py-1.5 rounded-full text-sm font-bold border-2 ${
                       hasActiveSub ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-amber-50 border-amber-200 text-amber-700'

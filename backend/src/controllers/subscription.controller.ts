@@ -180,7 +180,8 @@ export class SubscriptionController {
             razorpaySub = await SubscriptionService.createDynamicSubscription(
               dynamicPlan.razorpayPlanId,
               dynamicPlan.name,
-              contactInfo
+              contactInfo,
+              durationMonths
             );
           } catch (err: any) {
             // If the stored plan ID is invalid (e.g. from a different account), clear it and retry once
@@ -192,7 +193,8 @@ export class SubscriptionController {
               razorpaySub = await SubscriptionService.createDynamicSubscription(
                 dynamicPlan.razorpayPlanId,
                 dynamicPlan.name,
-                contactInfo
+                contactInfo,
+                durationMonths
               );
             } else {
               throw err;
@@ -558,6 +560,19 @@ export class SubscriptionController {
         console.error("[Subscription Sync Error]", err);
         throw new AppError(err.message || "Failed to sync subscription status", 500);
       }
+    }
+  );
+
+  /** GET /subscription/cron-sync — Cron endpoint to sync all subscriptions & keep server alive */
+  static cronSync = asyncHandler(
+    async (req: Request, res: Response) => {
+      const result = await SubscriptionService.syncAllSubscriptions();
+      res.json({
+        success: true,
+        message: "Cron subscription sync completed",
+        timestamp: new Date().toISOString(),
+        ...result,
+      });
     }
   );
 }
