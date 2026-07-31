@@ -531,10 +531,10 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
   });
   const walletBalance = walletData?.walletBalance ?? 0;
 
-  const { data: bookingsData } = useQuery({
-    queryKey: ['bookings'],
-    queryFn: () => API.booking.list(),
-  });
+  const { data: therapistsData } = useQuery({
+  queryKey: ['therapists'],
+  queryFn: () => API.therapist.list(),
+});
 
   const { data: sharesData, isLoading: sharesLoading } = useQuery({
     queryKey: ['reportShares'],
@@ -600,13 +600,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
     });
   };
 
-  const uniqueTherapists: { id: string; name: string }[] = Array.from(
-    new Map(
-      (bookingsData?.bookings || [])
-        .filter((b: any) => b.therapistId)
-        .map((b: any) => [b.therapistId, { id: b.therapistId, name: b.therapistName }])
-    ).values()
-  );
+  const uniqueTherapists = therapistsData?.therapists ?? [];
 
   const shares = sharesData?.shares || [];
   const sortedMoods = [...(reportData?.moods || [])].sort(

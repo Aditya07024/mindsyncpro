@@ -51,9 +51,10 @@ function ReportsPage() {
     queryFn: () => API.user.getReport(period),
   });
 
-  const { data: bookingsData } = useQuery({
-    queryKey: ['bookings'],
-    queryFn: () => API.booking.list(),
+
+  const { data: therapistsData } = useQuery({
+    queryKey: ['therapists'],
+    queryFn: () => API.therapist.list(),
   });
 
   const { data: sharesData, isLoading: sharesLoading } = useQuery({
@@ -196,14 +197,8 @@ function ReportsPage() {
     }
   });
 
-  // Extract unique therapists that the user has booked
-  const uniqueTherapists = Array.from(
-    new Map(
-      (bookingsData?.bookings || [])
-        .filter((b: any) => b.therapistId)
-        .map((b: any) => [b.therapistId, { id: b.therapistId, name: b.therapistName }])
-    ).values()
-  );
+
+  const uniqueTherapists = therapistsData?.therapists ?? [];
 
   const handleDownload = async () => {
     const element = document.getElementById('report-document');

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
@@ -32,13 +31,14 @@ export const ChatScreen: React.FC = () => {
   const [subData, setSubData] = useState<any>(null);
 
   const scrollRef = useRef<ScrollView>(null);
+
   const keyboard = useAnimatedKeyboard();
-const footerAnimatedStyle = useAnimatedStyle(() => ({
-  transform: [{ translateY: -keyboard.height.value }],
-}));
-const spacerAnimatedStyle = useAnimatedStyle(() => ({
-  height: keyboard.height.value,
-}));
+  const footerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -keyboard.height.value }],
+  }));
+  const spacerAnimatedStyle = useAnimatedStyle(() => ({
+    height: keyboard.height.value,
+  }));
 
   // Load message history from MongoDB whenever the screen gains focus
   useFocusEffect(
@@ -202,56 +202,126 @@ const spacerAnimatedStyle = useAnimatedStyle(() => ({
   }
 
   return (
-  <View style={{ flex: 1 }}>
-    <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-      {/* unchanged */}
-    </View>
-
-    <ScrollView
-      ref={scrollRef}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={styles.feedContent}
-    >
-      {messages.map(m => {
-        /* unchanged */
-      })}
-      <Animated.View style={spacerAnimatedStyle} />
-    </ScrollView>
-
-    <Animated.View style={footerAnimatedStyle}>
-      {limitHit && (
-        <View style={styles.limitWarning}>
-          {/* unchanged */}
+    <View style={{ flex: 1 }}>
+      {/* Dynamic top bar */}
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.topBarLeft}>
+          <ManasAvatar size={34} />
+          <View>
+            <Text style={styles.companionName}>Manas</Text>
+            <View style={styles.statusRow}>
+              <View style={styles.pulseDot} />
+              <Text style={styles.statusText}>AI companion · always here</Text>
+            </View>
+          </View>
         </View>
-      )}
-
-      <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          editable={!streaming && !limitHit}
-          placeholder={limitHit ? 'Daily limit reached' : 'Type what you feel…'}
-          placeholderTextColor={Theme.colors.outline}
-          style={styles.chatInput}
-          onFocus={() => {
-            requestAnimationFrame(() => {
-              scrollRef.current?.scrollToEnd({ animated: false });
-            });
-          }}
-        />
-        <TouchableOpacity
-          onPress={handleSend}
-          disabled={!input.trim() || streaming || limitHit}
-          style={[styles.sendBtn, (!input.trim() || streaming || limitHit) && styles.sendBtnDisabled]}
-        >
-          <Send size={18} color="#FFF" />
-        </TouchableOpacity>
+        <View style={[
+          styles.limitBadge,
+          limitHit ? styles.limitBadgeHit : styles.limitBadgeNormal
+        ]}>
+          <Text style={[
+            styles.limitText,
+            limitHit ? styles.limitTextHit : styles.limitTextNormal
+          ]}>
+            {isUnlimited ? 'Unlimited' : `${remaining} left`}
+          </Text>
+        </View>
       </View>
-    </Animated.View>
 
-    <CrisisOverlay open={crisis} onClose={() => setCrisis(false)} />
-  </View>
-);
+      {/* Messages Feed */}
+      <ScrollView
+  ref={scrollRef}
+  keyboardShouldPersistTaps="handled"
+  contentContainerStyle={styles.feedContent}
+>
+        {messages.map(m => {
+          const isUser = m.role === 'user';
+          return (
+            <View 
+              key={m.id} 
+              style={[
+                styles.msgBubbleRow,
+                { maxWidth: maxBubbleWidth },
+                isUser ? styles.msgRowUser : styles.msgRowAssistant
+              ]}
+            >
+              {!isUser && (
+                <View style={styles.avatarMini}>
+                  <Sparkles size={12} color="#FFF" />
+                </View>
+              )}
+              <View style={[
+                styles.bubble,
+                isUser ? styles.bubbleUser : styles.bubbleAssistant
+              ]}>
+                {m.content === '' && streaming ? (
+                  <View style={styles.typingBox}>
+                    <View style={styles.typingDot} />
+                    <View style={styles.typingDot} />
+                    <View style={styles.typingDot} />
+                  </View>
+                ) : (
+                  <Text style={[
+                    styles.bubbleText,
+                    isUser ? styles.textWhite : styles.textDark
+                  ]}>
+                    {m.content}
+                  </Text>
+                )}
+              </View>
+            </View>
+          );
+        })}
+        <Animated.View style={spacerAnimatedStyle} />
+      </ScrollView>
+
+      <Animated.View style={footerAnimatedStyle}>
+        {/* Limit Warning banner */}
+        {limitHit && (
+          <View style={styles.limitWarning}>
+            <View style={styles.warningHead}>
+              <AlertTriangle size={16} color={Theme.colors.secondary} />
+              <Text style={styles.warningTitle}>Daily limit reached</Text>
+            </View>
+            <Text style={styles.warningDesc}>
+              {dailyLimit <= 7
+                ? 'Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day.'
+                : 'Come back tomorrow, or upgrade to Apna Therapist for unlimited messages.'}
+            </Text>
+          </View>
+        )}
+
+        {/* Input container */}
+        <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            editable={!streaming && !limitHit}
+            placeholder={limitHit ? 'Daily limit reached' : 'Type what you feel…'}
+            placeholderTextColor={Theme.colors.outline}
+            style={styles.chatInput}
+            onFocus={() => {
+              requestAnimationFrame(() => {
+                scrollRef.current?.scrollToEnd({ animated: false });
+              });
+            }}
+          />
+          <TouchableOpacity
+            onPress={handleSend}
+            disabled={!input.trim() || streaming || limitHit}
+            style={[
+              styles.sendBtn,
+              (!input.trim() || streaming || limitHit) && styles.sendBtnDisabled
+            ]}
+          >
+            <Send size={18} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+
+      <CrisisOverlay open={crisis} onClose={() => setCrisis(false)} />
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
