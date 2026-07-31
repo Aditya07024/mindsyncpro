@@ -80,7 +80,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <View style={[styles.headerContainer, { paddingTop: insets.top + 8 }]}>
       <View style={styles.leftSection}>
         <View style={styles.logoCircle}>
-          <HeartHandshake size={20} color={Theme.colors.primary} />
+          <Image source={require('../../assets/logo.png')} style={{ width: 26, height: 26 }} resizeMode="contain" />
         </View>
         <View>
           <Text style={styles.brandTitle}>MyMindTherapyFriend</Text>

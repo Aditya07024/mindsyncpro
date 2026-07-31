@@ -151,6 +151,18 @@ export class AIService {
     const conversation = await this.getOrCreateConversation(userId);
     const crisis = this.detectCrisis(message);
 
+    // Prevent duplicate consecutive user messages (same text within 5 seconds)
+    const lastMsg = conversation.messages[conversation.messages.length - 1];
+    if (
+      lastMsg &&
+      lastMsg.role === "user" &&
+      lastMsg.content === message &&
+      new Date().getTime() - new Date(lastMsg.timestamp).getTime() < 5000
+    ) {
+      // Skip duplicate — return existing conversation without re-saving
+      return { conversation, crisis };
+    }
+
     conversation.messages.push({
       role: "user",
       content: message,
@@ -350,110 +362,178 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
   private static async queryHF(
     messages: { role: string; content: string }[]
   ): Promise<string> {
-    const apiKey = process.env.HF_TOKEN;
-    const model = process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct";
+    const nvidiaKey = process.env.NVIDIA_API_KEY;
+    const hfToken = process.env.HF_TOKEN;
 
-    if (!apiKey) {
-      throw new Error("HF_TOKEN is not configured");
-    }
+    const baseUrl = `${process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1"}/chat/completions`;
+    const model = process.env.NVIDIA_MODEL || "meta/llama-3.1-8b-instruct";
 
-    let attempt = 0;
-    const maxAttempts = 2;
-    let lastError: any = null;
-
-    while (attempt < maxAttempts) {
+    // Helper to attempt NVIDIA non-streaming query
+    const tryNvidia = async (modelName: string): Promise<string | null> => {
+      if (!nvidiaKey) return null;
       try {
-        const response = await this.fetchWithTimeout(`https://router.huggingface.co/v1/chat/completions`, {
+        const response = await this.fetchWithTimeout(baseUrl, {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${apiKey}`,
+            "Authorization": `Bearer ${nvidiaKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model,
+            model: modelName,
             messages,
-            max_tokens: 500,
-            temperature: 0.75,
+            max_tokens: 1024,
+            temperature: 0.2,
+            top_p: 0.7,
             stream: false,
           }),
         }, 30000);
 
-        if (!response.ok) {
-          const errText = await response.text().catch(() => "API Error");
-          throw new Error(`HuggingFace API error: ${response.status} - ${errText}`);
+        if (response.ok) {
+          const data = await response.json() as any;
+          const text = data.choices?.[0]?.message?.content?.trim();
+          if (text) return text;
         }
-
-        const data = await response.json() as any;
-        return data.choices?.[0]?.message?.content?.trim() ?? "";
       } catch (err) {
-        lastError = err;
-        attempt++;
-        if (attempt < maxAttempts) {
-          console.warn(`HuggingFace API query failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
-          await new Promise((res) => setTimeout(res, 1000));
+        console.warn(`NVIDIA queryHF [${modelName}] failed:`, (err as Error).message);
+      }
+      return null;
+    };
+
+    // 1. Try primary NVIDIA model
+    let result = await tryNvidia(model);
+    if (result) return result;
+
+    // 2. Retry once
+    result = await tryNvidia(model);
+    if (result) return result;
+
+    // 3. Try secondary NVIDIA 70B model
+    result = await tryNvidia("meta/llama-3.1-70b-instruct");
+    if (result) return result;
+
+    // 4. Last resort: HuggingFace
+    if (hfToken) {
+      try {
+        const response = await this.fetchWithTimeout("https://router.huggingface.co/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${hfToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct",
+            messages,
+            max_tokens: 1024,
+            temperature: 0.2,
+            top_p: 0.7,
+            stream: false,
+          }),
+        }, 30000);
+
+        if (response.ok) {
+          const data = await response.json() as any;
+          return data.choices?.[0]?.message?.content?.trim() ?? "";
         }
+      } catch (err) {
+        console.warn("HuggingFace queryHF failed:", (err as Error).message);
       }
     }
 
-    throw lastError || new Error("Failed to query HuggingFace API");
+    throw new Error("Failed to query AI API");
   }
 
   private static async *queryHFStream(
     messages: { role: string; content: string }[]
   ): AsyncGenerator<string> {
-    const apiKey = process.env.HF_TOKEN;
-    const model = process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct";
+    const nvidiaKey = process.env.NVIDIA_API_KEY;
+    const hfToken = process.env.HF_TOKEN;
 
-    if (!apiKey) {
-      throw new Error("HF_TOKEN is not configured");
-    }
-
-    let attempt = 0;
-    const maxAttempts = 2;
     let response: Response | null = null;
-    let lastError: any = null;
 
-    while (attempt < maxAttempts) {
+    const baseUrl = `${process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1"}/chat/completions`;
+    const primaryModel = process.env.NVIDIA_MODEL || "meta/llama-3.1-8b-instruct";
+
+    // Helper to attempt NVIDIA streaming
+    const tryNvidia = async (model: string, timeoutMs: number): Promise<Response | null> => {
+      if (!nvidiaKey) return null;
       try {
-        response = await this.fetchWithTimeout(`https://router.huggingface.co/v1/chat/completions`, {
+        const res = await this.fetchWithTimeout(baseUrl, {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${apiKey}`,
+            "Authorization": `Bearer ${nvidiaKey}`,
             "Content-Type": "application/json",
+            "Accept": "text/event-stream",
           },
           body: JSON.stringify({
             model,
             messages,
-            max_tokens: 500,
-            temperature: 0.75,
+            max_tokens: 1024,
+            temperature: 0.2,
+            top_p: 0.7,
+            stream: true,
+          }),
+        }, timeoutMs) as any;
+
+        if (res && res.ok) return res;
+        if (res) {
+          const errBody = await res.text().catch(() => "");
+          console.warn(`NVIDIA [${model}] returned status ${res.status}: ${errBody.slice(0, 100)}`);
+        }
+      } catch (err) {
+        console.warn(`NVIDIA [${model}] streaming failed:`, (err as Error).message);
+      }
+      return null;
+    };
+
+    // 1. Try primary NVIDIA model with 30s timeout
+    response = await tryNvidia(primaryModel, 30000);
+
+    // 2. Retry primary model once on failure (transient timeouts)
+    if (!response) {
+      console.log("Retrying NVIDIA primary model...");
+      response = await tryNvidia(primaryModel, 30000);
+    }
+
+    // 3. Try secondary NVIDIA 70B model
+    if (!response) {
+      console.log("Trying NVIDIA fallback model meta/llama-3.1-70b-instruct...");
+      response = await tryNvidia("meta/llama-3.1-70b-instruct", 30000);
+    }
+
+    // 4. Last resort: HuggingFace (may be quota-limited)
+    if (!response && hfToken) {
+      try {
+        const res = await this.fetchWithTimeout("https://router.huggingface.co/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${hfToken}`,
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+          },
+          body: JSON.stringify({
+            model: process.env.HF_MODEL || "meta-llama/Llama-3.3-70B-Instruct",
+            messages,
+            max_tokens: 1024,
+            temperature: 0.2,
+            top_p: 0.7,
             stream: true,
           }),
         }, 30000) as any;
-        
-        if (response && response.ok) {
-          break;
-        } else if (response) {
-          const errText = await response.text().catch(() => "API Error");
-          throw new Error(`HuggingFace API error: ${response.status} - ${errText}`);
-        } else {
-          throw new Error("No response received");
+
+        if (res && res.ok) {
+          response = res;
         }
       } catch (err) {
-        lastError = err;
-        attempt++;
-        if (attempt < maxAttempts) {
-          console.warn(`HuggingFace API connection failed, retrying (attempt ${attempt + 1}/${maxAttempts})...`, err);
-          await new Promise((res) => setTimeout(res, 1000));
-        }
+        console.error("HuggingFace API streaming failed:", err);
       }
     }
 
     if (!response || !response.ok) {
-      throw lastError || new Error("Failed to connect to HuggingFace API");
+      throw new Error("Failed to connect to AI API");
     }
 
     if (!response.body) {
-      throw new Error("No response body received from HuggingFace API");
+      throw new Error("No response body received from AI API");
     }
 
     const reader = (response.body as any).getReader();
@@ -513,9 +593,11 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
       return;
     }
 
-    // Trigger rolling conversation summarization if message history is getting long
+    // Trigger rolling conversation summarization asynchronously in background
     if (conversation.messages.length > 10) {
-      await this.summarizeConversation(conversation);
+      this.summarizeConversation(conversation).catch((err) => {
+        console.error("Background conversation summary failed:", err);
+      });
     }
 
     // Grab the user's profile for personalization
@@ -565,9 +647,11 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
 
     const systemPrompt = systemPromptParts.join("\n\n");
 
-    // History: system prompt + last 10 messages + current user message
+    // History: system prompt + clean last 10 messages (filtering out any previous error messages) + current user message
     const allMessages = conversation.messages;
-    const historyMessages = allMessages.slice(0, -1);
+    const historyMessages = allMessages
+      .slice(0, -1)
+      .filter((m) => m.content && !m.content.includes("I'm having trouble responding right now"));
     const last10History = historyMessages.slice(-10);
 
     const apiMessages = [
@@ -580,27 +664,33 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     ];
 
     let fullReply = "";
+    let isError = false;
+
     try {
       for await (const chunk of this.queryHFStream(apiMessages)) {
         fullReply += chunk;
         yield chunk;
       }
     } catch (err) {
-      console.error("HuggingFace streamReply failed:", err);
-      fullReply = "I'm having trouble responding right now. Please try again in a moment.";
+      console.error("AI streamReply failed, using empathetic fallback:", err);
+      const fallbackReplies = [
+        "I hear you. That sounds like a heavy weight to carry. Let's take a slow breath together. Tell me a bit more about how you're feeling.",
+        "Thank you for sharing that with me. I am right here with you. Whatever you're experiencing, you don't have to carry it alone.",
+        "I'm listening and I'm right here with you. What's been feeling the most overwhelming for you today?"
+      ];
+      fullReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
       yield fullReply;
     }
 
-    // Record response in DB
-    conversation.messages.push({
-      role: "assistant",
-      content: fullReply,
-      timestamp: new Date(),
-    });
-    await conversation.save();
+    if (fullReply) {
+      conversation.messages.push({
+        role: "assistant",
+        content: fullReply,
+        timestamp: new Date(),
+      });
+      await conversation.save();
 
-    // Trigger background memory extraction if response succeeded
-    if (fullReply && fullReply !== "I'm having trouble responding right now. Please try again in a moment.") {
+      // Trigger background memory extraction
       this.extractMemories(userId, message, fullReply).catch((e) => {
         console.error("Background fact memory extraction failed:", e);
       });
@@ -620,11 +710,15 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
       };
     }
 
+    const cleanMessages = conversation.messages.filter(
+      (m) => m.content && !m.content.includes("I'm having trouble responding right now")
+    );
+
     return {
       sessionId: conversation.sessionId,
       riskLevel: conversation.riskLevel,
       escalated: conversation.escalated,
-      messages: conversation.messages,
+      messages: cleanMessages,
     };
   }
 

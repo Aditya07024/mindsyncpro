@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Alert, Switch } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Alert, Switch, Linking } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles, Wallet, FileText, Bell, BellOff } from 'lucide-react-native';
+import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles, Wallet, FileText, Bell, BellOff, MessageCircle, ChevronRight } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { useStore } from '../../lib/store';
@@ -317,6 +317,29 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           </View>
         </View>
         </TouchableOpacity>
+
+        {/* WhatsApp Community Group Card */}
+        <View style={styles.whatsappCard}>
+          <View style={styles.whatsappHeader}>
+            <View style={styles.whatsappIconBox}>
+              <MessageCircle size={22} color="#FFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.whatsappTitle}>MyMindFriend Community</Text>
+              <Text style={styles.whatsappSubtitle}>
+                Connect with peers, share experiences & get daily support in our official WhatsApp group.
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.whatsappBtn}
+            onPress={() => Linking.openURL('https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.whatsappBtnText}>Join WhatsApp Group</Text>
+            <ChevronRight size={16} color="#FFF" />
+          </TouchableOpacity>
+        </View>
 
         {/* Logout Button */}
         <TouchableOpacity 
@@ -744,6 +767,54 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: Theme.colors.textMuted,
     marginTop: 1,
+  },
+  whatsappCard: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+    gap: 12,
+  },
+  whatsappHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  whatsappIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: '#2E7D32',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  whatsappTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 15,
+    color: '#1B5E20',
+  },
+  whatsappSubtitle: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 12,
+    color: '#2E7D32',
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  whatsappBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#2E7D32',
+    borderRadius: Theme.radius.lg,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+  },
+  whatsappBtnText: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 13.5,
+    color: '#FFF',
   },
 });
 export default DashboardScreen;

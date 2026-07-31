@@ -253,7 +253,7 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
       <View style={styles.totalCard}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Hourly Session</Text>
-          <Text style={styles.totalPrice}>₹{therapist?.hourlyRate || 999}</Text>
+          <Text style={styles.totalPrice}>₹{therapist?.sessionFee || therapist?.hourlyRate || 1500}</Text>
         </View>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Platform Fee</Text>
@@ -262,7 +262,7 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
         <View style={styles.divider} />
         <View style={styles.totalRow}>
           <Text style={styles.totalLabelBold}>Total Amount</Text>
-          <Text style={styles.totalPriceBold}>₹{therapist?.hourlyRate || 999}</Text>
+          <Text style={styles.totalPriceBold}>₹{therapist?.sessionFee || therapist?.hourlyRate || 1500}</Text>
         </View>
       </View>
 

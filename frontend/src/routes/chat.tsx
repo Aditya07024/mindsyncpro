@@ -48,10 +48,22 @@ function Chat() {
 
   const dbMessages = chatData?.messages || [];
   const [localMessages, setLocalMessages] = useState<any[]>([]);
+  // Track last sent message to prevent rapid duplicate sends
+  const lastSentRef = useRef<{ text: string; time: number }>({ text: '', time: 0 });
 
   useEffect(() => {
-    setLocalMessages(dbMessages);
-  }, [dbMessages]);
+    const fifteenDaysAgo = Date.now() - 15 * 24 * 60 * 60 * 1000;
+    const filtered = dbMessages.filter((m: any) => {
+      const msgTime = m.timestamp ? new Date(m.timestamp).getTime() : (m.createdAt ? new Date(m.createdAt).getTime() : Date.now());
+      const isClean = !m.content || !m.content.includes("I'm having trouble responding right now");
+      return (isNaN(msgTime) || msgTime >= fifteenDaysAgo) && isClean;
+    });
+
+    // If we're currently streaming, don't overwrite local state (would kill the in-progress response)
+    if (streaming) return;
+
+    setLocalMessages(filtered);
+  }, [dbMessages, streaming]);
 
   const messages = localMessages;
 
@@ -73,6 +85,14 @@ function Chat() {
   const send = async () => {
     const text = input.trim();
     if (!text || streaming) return;
+
+    // Prevent rapid duplicate sends (same text within 3 seconds)
+    const now = Date.now();
+    if (text === lastSentRef.current.text && now - lastSentRef.current.time < 3000) {
+      return;
+    }
+    lastSentRef.current = { text, time: now };
+
     setInput('');
     await sendHelper(text);
   };
@@ -101,11 +121,8 @@ function Chat() {
       });
       if (res.headers.get('X-Crisis') === '1') setCrisis(true);
       if (!res.ok || !res.body) {
-        setLocalMessages(prev => prev.map(m => m._id === placeholder._id ? {
-          ...m,
-          content: "I'm having trouble responding right now. Please try again in a moment.",
-          error: true
-        } : m));
+        // Remove the empty placeholder instead of showing error
+        setLocalMessages(prev => prev.filter(m => m._id !== placeholder._id));
         return;
       }
       const reader = res.body.getReader();
@@ -133,12 +150,14 @@ function Chat() {
           } catch {}
         }
       }
+
+      // If stream ended but no content was received, remove the empty placeholder
+      if (!acc) {
+        setLocalMessages(prev => prev.filter(m => m._id !== placeholder._id));
+      }
     } catch {
-      setLocalMessages(prev => prev.map(m => m._id === placeholder._id ? {
-        ...m,
-        content: "I'm having trouble responding right now. Please try again in a moment.",
-        error: true
-      } : m));
+      // On error, remove the empty placeholder silently
+      setLocalMessages(prev => prev.filter(m => m._id !== placeholder._id));
     } finally {
       setStreaming(false);
       refetch();
@@ -194,11 +213,9 @@ function Chat() {
                 </div>
               </div>
             )}
-            {messages.map((m) => (
-              <motion.div
-                key={m._id || m.id || Math.random()}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
+            {messages.map((m, index) => (
+              <div
+                key={m._id || m.id || `msg-${index}`}
                 className={`flex items-end gap-2 ${m.role === 'user' ? 'justify-end' : ''}`}
               >
                 {m.role === 'assistant' && <ManasAvatar size={36} />}
@@ -233,7 +250,7 @@ function Chat() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}

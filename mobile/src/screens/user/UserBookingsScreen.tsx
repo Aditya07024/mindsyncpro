@@ -195,15 +195,42 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
                     >
                       <Text style={styles.videoBtnText}>Complete Payment</Text>
                     </TouchableOpacity>
-                  ) : (
-                    <TouchableOpacity 
-                      onPress={() => handleLaunchVideo(item)}
-                      style={styles.videoBtn}
-                    >
-                      <Video size={16} color="#FFF" />
-                      <Text style={styles.videoBtnText}>Start Session</Text>
-                    </TouchableOpacity>
-                  )}
+                  ) : (() => {
+                    const slotTime = new Date(item.slot).getTime();
+                    const now = Date.now();
+                    const isUpcoming = !isNaN(slotTime) && now < (slotTime - 5 * 60 * 1000);
+                    const isExpired = !isNaN(slotTime) && now > (slotTime + 60 * 60 * 1000);
+
+                    if (isExpired) {
+                      return (
+                        <View style={[styles.videoBtn, { backgroundColor: Theme.colors.surfaceHigh }]}>
+                          <Text style={[styles.videoBtnText, { color: Theme.colors.textMuted }]}>Session Completed</Text>
+                        </View>
+                      );
+                    }
+
+                    if (isUpcoming) {
+                      return (
+                        <TouchableOpacity 
+                          onPress={() => Alert.alert('Session Scheduled', `Your meeting window opens at the scheduled time (${item.slot}) and stays open for 1 hour.`)}
+                          style={[styles.videoBtn, { backgroundColor: Theme.colors.secondary + '40' }]}
+                        >
+                          <Clock size={16} color={Theme.colors.onSurface} />
+                          <Text style={[styles.videoBtnText, { color: Theme.colors.onSurface }]}>Session Scheduled</Text>
+                        </TouchableOpacity>
+                      );
+                    }
+
+                    return (
+                      <TouchableOpacity 
+                        onPress={() => handleLaunchVideo(item)}
+                        style={[styles.videoBtn, { backgroundColor: Theme.colors.primary }]}
+                      >
+                        <Video size={16} color="#FFF" />
+                        <Text style={styles.videoBtnText}>Join Video Session</Text>
+                      </TouchableOpacity>
+                    );
+                  })()}
                 </View>
               )}
 

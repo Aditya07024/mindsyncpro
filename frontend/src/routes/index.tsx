@@ -1110,7 +1110,7 @@ function Landing() {
               ))}
             </div>
 
-            <div className="relative z-10 mt-14 grid gap-5 lg:grid-cols-3">
+            {/* <div className="relative z-10 mt-14 grid gap-5 lg:grid-cols-3">
               {[
                 {
                   icon: MessageCircle,
@@ -1146,7 +1146,7 @@ function Landing() {
                   <p className="mt-3 text-sm leading-relaxed text-slate-600">{feature.desc}</p>
                 </motion.div>
               ))}
-            </div>
+            </div> */}
 
             <div className="relative z-10 mt-14 rounded-[32px] border border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50 p-8 shadow-sm backdrop-blur-xl">
               <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">

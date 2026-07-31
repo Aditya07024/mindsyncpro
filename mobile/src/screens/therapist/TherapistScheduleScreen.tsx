@@ -263,12 +263,40 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
                       >
                         <Text style={styles.briefBtnText}>AI Brief</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity 
-                        onPress={() => navigation.navigate('Session', { bookingId: booking.id, role: 'therapist' })}
-                        style={[styles.briefBtn, { backgroundColor: Theme.colors.primary }]}
-                      >
-                        <Text style={styles.briefBtnText}>Start Session</Text>
-                      </TouchableOpacity>
+                      {(() => {
+                        const slotTime = new Date(booking.slot).getTime();
+                        const now = Date.now();
+                        const isUpcoming = !isNaN(slotTime) && now < (slotTime - 5 * 60 * 1000);
+                        const isExpired = !isNaN(slotTime) && now > (slotTime + 60 * 60 * 1000);
+
+                        if (isExpired) {
+                          return (
+                            <View style={[styles.briefBtn, { backgroundColor: Theme.colors.surfaceHigh }]}>
+                              <Text style={[styles.briefBtnText, { color: Theme.colors.textMuted }]}>Completed</Text>
+                            </View>
+                          );
+                        }
+
+                        if (isUpcoming) {
+                          return (
+                            <TouchableOpacity 
+                              onPress={() => Alert.alert('Session Scheduled', `Meeting window opens at scheduled time (${new Date(booking.slot).toLocaleString()}) and stays open for 1 hour.`)}
+                              style={[styles.briefBtn, { backgroundColor: Theme.colors.secondary + '40' }]}
+                            >
+                              <Text style={[styles.briefBtnText, { color: Theme.colors.onSurface }]}>Scheduled</Text>
+                            </TouchableOpacity>
+                          );
+                        }
+
+                        return (
+                          <TouchableOpacity 
+                            onPress={() => navigation.navigate('Session', { bookingId: booking.id || booking._id, role: 'therapist' })}
+                            style={[styles.briefBtn, { backgroundColor: Theme.colors.primary }]}
+                          >
+                            <Text style={styles.briefBtnText}>Join Session</Text>
+                          </TouchableOpacity>
+                        );
+                      })()}
                     </View>
                   </View>
                 ))

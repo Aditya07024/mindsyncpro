@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity, Modal, Dimensions, Linking, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity, Modal, Dimensions, Linking, ActivityIndicator, Platform } from 'react-native';
 import { Star, ShieldCheck, Heart, Award, ArrowLeft, PlayCircle, X, Video as VideoIcon, ExternalLink } from 'lucide-react-native';
 import { Video, ResizeMode } from 'expo-av';
+import { WebView } from 'react-native-webview';
 import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';
 
@@ -12,29 +13,16 @@ const getYouTubeId = (url: string): string | null => {
   return match ? match[1] : null;
 };
 
-// Utility: convert Google Drive share/download URLs to a direct streamable URL
-const getStreamableUrl = (url: string): string => {
-  if (!url) return url;
+// Utility: extract Google Drive file ID from various URL formats
+const getGoogleDriveFileId = (url: string): string | null => {
+  if (!url) return null;
+  const match = url.match(/(?:id=|\/file\/d\/|usercontent\.google\.com\/download\?id=)([^&/?]+)/);
+  return match ? match[1] : null;
+};
 
-  // Google Drive download link: extract file ID
-  const driveDownloadMatch = url.match(/drive\.usercontent\.google\.com\/download\?id=([^&]+)/);
-  if (driveDownloadMatch) {
-    return `https://drive.google.com/uc?export=download&id=${driveDownloadMatch[1]}`;
-  }
-
-  // Google Drive share link: /file/d/{ID}
-  const driveShareMatch = url.match(/drive\.google\.com\/file\/d\/([^/&?]+)/);
-  if (driveShareMatch) {
-    return `https://drive.google.com/uc?export=download&id=${driveShareMatch[1]}`;
-  }
-
-  // Google Drive uc or open link: ?id={ID}
-  const idParamMatch = url.match(/drive\.google\.com\/(?:uc|open)\?.*id=([^&]+)/);
-  if (idParamMatch) {
-    return `https://drive.google.com/uc?export=download&id=${idParamMatch[1]}`;
-  }
-
-  return url;
+// Check if a URL is a Google Drive URL
+const isGoogleDriveUrl = (url: string): boolean => {
+  return url.includes('drive.google.com') || url.includes('drive.usercontent.google.com');
 };
 
 interface TherapistDetailScreenProps {
@@ -44,8 +32,6 @@ interface TherapistDetailScreenProps {
 
 export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ navigation, route }) => {
   const therapist: TherapistData = route.params?.therapist;
-  const [videoModalVisible, setVideoModalVisible] = useState(false);
-  const [videoLoading, setVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<Video>(null);
 
@@ -63,41 +49,27 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
       ? therapist.specializations.join(', ')
       : 'Clinical Psychology';
 
-  const hourlyRate = therapist.hourlyRate || therapist.sessionFee || 999;
+  const hourlyRate = therapist.sessionFee || therapist.hourlyRate || 1500;
   const experience = therapist.experience || therapist.experienceYears || 3;
 
   const hasVideo = !!therapist.introVideoUrl;
   const isYouTube = hasVideo ? !!getYouTubeId(therapist.introVideoUrl!) : false;
+  const isGoogleDrive = hasVideo ? isGoogleDriveUrl(therapist.introVideoUrl!) : false;
+  const useWebViewPlayer = isYouTube || isGoogleDrive;
 
-  const handlePlayVideo = () => {
-    if (!hasVideo) return;
-
+  // Build the WebView embed URL
+  const getEmbedUrl = (): string => {
+    if (!hasVideo || !therapist.introVideoUrl) return '';
     if (isYouTube) {
-      // Open YouTube videos externally (expo-av can't embed YouTube)
       const ytId = getYouTubeId(therapist.introVideoUrl!);
-      if (ytId) {
-        Linking.openURL(`https://www.youtube.com/watch?v=${ytId}`);
-      }
-    } else {
-      // Show video in modal player for direct video URLs
-      setVideoLoading(true);
-      setVideoError(false);
-      setVideoModalVisible(true);
+      return ytId ? `https://www.youtube.com/embed/${ytId}?autoplay=1&muted=0&playsinline=1` : therapist.introVideoUrl;
     }
-  };
-
-  const handleCloseVideo = async () => {
-    if (videoRef.current) {
-      try {
-        await videoRef.current.stopAsync();
-      } catch (_) {}
+    if (isGoogleDrive) {
+      const fileId = getGoogleDriveFileId(therapist.introVideoUrl!);
+      return fileId ? `https://drive.google.com/file/d/${fileId}/preview?autoplay=1` : therapist.introVideoUrl;
     }
-    setVideoModalVisible(false);
+    return therapist.introVideoUrl;
   };
-
-  const streamableUrl = hasVideo && !isYouTube
-    ? getStreamableUrl(therapist.introVideoUrl!)
-    : '';
 
   return (
     <>
@@ -112,29 +84,54 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
 
         {/* Hero Video / Avatar Section */}
         <View style={styles.videoPlaceholder}>
-          {therapist.avatarUrl ? (
+          {hasVideo ? (
+            useWebViewPlayer ? (
+              Platform.OS === 'web' ? (
+                <iframe
+                  src={getEmbedUrl()}
+                  style={{ width: '100%', height: '100%', border: 'none', borderRadius: 16, objectFit: 'contain' }}
+                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <WebView
+                  source={{ uri: getEmbedUrl() }}
+                  style={styles.videoPlayer}
+                  allowsInlineMediaPlayback={true}
+                  mediaPlaybackRequiresUserAction={false}
+                  javaScriptEnabled={true}
+                  domStorageEnabled={true}
+                  allowsFullscreenVideo={true}
+                  scalesPageToFit={true}
+                  startInLoadingState={true}
+                  renderLoading={() => (
+                    <View style={styles.videoLoadingOverlay}>
+                      <ActivityIndicator size="large" color={Theme.colors.primary} />
+                    </View>
+                  )}
+                  onError={() => setVideoError(true)}
+                />
+              )
+            ) : (
+              <Video
+                ref={videoRef}
+                source={{ uri: therapist.introVideoUrl! }}
+                style={styles.videoPlayer}
+                resizeMode={ResizeMode.CONTAIN}
+                useNativeControls
+                shouldPlay
+                isLooping
+                onError={(error) => {
+                  console.error('[VideoPlayer] Playback error:', error);
+                  setVideoError(true);
+                }}
+              />
+            )
+          ) : therapist.avatarUrl ? (
             <Image source={{ uri: therapist.avatarUrl }} style={styles.videoBg} />
           ) : (
             <View style={styles.avatarFallback} />
           )}
-          <View style={styles.videoOverlay}>
-            {hasVideo ? (
-              <TouchableOpacity
-                onPress={handlePlayVideo}
-                style={styles.playBtn}
-              >
-                <PlayCircle size={48} color="#FFF" />
-                <Text style={styles.playText}>
-                  {isYouTube ? 'Watch on YouTube' : 'Watch Intro Video'}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.playBtn}>
-                <VideoIcon size={36} color="rgba(255,255,255,0.5)" />
-                <Text style={[styles.playText, { opacity: 0.6 }]}>No intro video available</Text>
-              </View>
-            )}
-          </View>
         </View>
 
         {/* Practitioner details card */}
@@ -185,70 +182,6 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
           <Text style={styles.bookBtnText}>Book Secure Session (₹{hourlyRate})</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Video Player Modal */}
-      <Modal
-        visible={videoModalVisible}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={handleCloseVideo}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {/* Close button */}
-            <TouchableOpacity onPress={handleCloseVideo} style={styles.modalCloseBtn}>
-              <X size={24} color="#FFF" />
-            </TouchableOpacity>
-
-            <Text style={styles.modalTitle}>Introduction Video</Text>
-
-            <View style={styles.videoContainer}>
-              {videoLoading && (
-                <View style={styles.videoLoadingOverlay}>
-                  <ActivityIndicator size="large" color={Theme.colors.primary} />
-                  <Text style={styles.videoLoadingText}>Loading video…</Text>
-                </View>
-              )}
-
-              {videoError ? (
-                <View style={styles.videoErrorContainer}>
-                  <VideoIcon size={48} color={Theme.colors.textMuted} />
-                  <Text style={styles.videoErrorText}>
-                    Unable to play this video format in-app.
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (therapist.introVideoUrl) {
-                        Linking.openURL(therapist.introVideoUrl);
-                      }
-                      handleCloseVideo();
-                    }}
-                    style={styles.openExternalBtn}
-                  >
-                    <ExternalLink size={16} color="#FFF" />
-                    <Text style={styles.openExternalText}>Open in Browser</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <Video
-                  ref={videoRef}
-                  source={{ uri: streamableUrl }}
-                  style={styles.videoPlayer}
-                  resizeMode={ResizeMode.CONTAIN}
-                  useNativeControls
-                  shouldPlay
-                  onLoad={() => setVideoLoading(false)}
-                  onError={(error) => {
-                    console.error('[VideoPlayer] Playback error:', error);
-                    setVideoLoading(false);
-                    setVideoError(true);
-                  }}
-                />
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
     </>
   );
 };
@@ -299,11 +232,11 @@ const styles = StyleSheet.create({
   },
   videoPlaceholder: {
     width: '100%',
-    height: 200,
+    height: 320,
     borderRadius: Theme.radius.xl,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: Theme.colors.primaryContainer,
+    backgroundColor: '#000',
   },
   videoBg: {
     width: '100%',
@@ -479,10 +412,10 @@ const styles = StyleSheet.create({
   },
   videoLoadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 5,
+    zIndex: 1,
   },
   videoLoadingText: {
     fontFamily: Theme.fonts.body,

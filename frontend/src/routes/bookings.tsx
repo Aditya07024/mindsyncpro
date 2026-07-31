@@ -24,8 +24,12 @@ function statusBadge(status: string) {
 
 function canJoin(slot: string, status: string) {
   if (status !== 'confirmed') return false;
-  const diff = new Date(slot).getTime() - Date.now();
-  return diff <= 15 * 60 * 1000 && diff > -2 * 60 * 60 * 1000;
+  const slotTime = new Date(slot).getTime();
+  const now = Date.now();
+  // Meeting window opens 5 minutes before scheduled slot and stays open for 1 full hour
+  const startTime = slotTime - 5 * 60 * 1000;
+  const endTime = slotTime + 60 * 60 * 1000;
+  return now >= startTime && now <= endTime;
 }
 
 function MyBookings() {

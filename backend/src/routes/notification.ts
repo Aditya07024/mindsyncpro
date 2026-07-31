@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { NotificationController } from "@/controllers/notification.controller";
-import { requireAuth } from "@/middleware/auth";
+import { optionalAuth, requireAuth } from "@/middleware/auth";
 
 const router = Router();
 
-router.use(requireAuth);
-router.get("/", NotificationController.getMyNotifications);
-router.put("/read-all", NotificationController.markAllAsRead);
-router.put("/:id/read", NotificationController.markAsRead);
+router.get("/", optionalAuth, NotificationController.getMyNotifications);
+router.put("/read-all", requireAuth, NotificationController.markAllAsRead);
+router.put("/:id/read", requireAuth, NotificationController.markAsRead);
 
 export default router;

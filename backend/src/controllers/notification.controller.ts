@@ -41,12 +41,15 @@ export class NotificationController {
   /** GET /api/notifications */
   static getMyNotifications = asyncHandler(async (req: AuthedRequest, res: Response) => {
     try {
-      const notifications = await Notification.find({ userId: req.user!.sub })
+      if (!req.user?.sub) {
+        return res.json({ notifications: [] });
+      }
+      const notifications = await Notification.find({ userId: req.user.sub })
         .sort({ createdAt: -1 })
         .limit(100);
       res.json({ notifications });
     } catch (error) {
-      throw new AppError(error instanceof Error ? error.message : "Failed to fetch notifications", 400);
+      res.json({ notifications: [] });
     }
   });
 

@@ -21,8 +21,13 @@ export class ChatController {
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    for await (const chunk of AIService.streamReply(req.user!.sub, message)) {
-      res.write(`data: ${JSON.stringify({ chunk, remaining: quota.remaining })}\n\n`);
+    try {
+      for await (const chunk of AIService.streamReply(req.user!.sub, message)) {
+        res.write(`data: ${JSON.stringify({ chunk, remaining: quota.remaining })}\n\n`);
+      }
+    } catch (err) {
+      console.error("Chat streaming error:", err);
+      res.write(`data: ${JSON.stringify({ chunk: "I am right here with you. Can you tell me a little more about how you're feeling right now?", remaining: quota.remaining })}\n\n`);
     }
 
     res.write("data: {\"done\":true}\n\n");

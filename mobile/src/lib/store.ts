@@ -50,6 +50,17 @@ export const useStore = create<State>()(
   )
 );
 
+import { Platform } from 'react-native';
+
 export const FREE_DAILY_LIMIT = 300;
 export const ADMIN_PASSWORD = process.env.EXPO_PUBLIC_ADMIN_PASSWORD || 'admin'; // For Admin Portal protection
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.mymindtherapyfriend.com';
+
+const getDevApiUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    return Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+  }
+  return 'https://api.mymindtherapyfriend.com';
+};
+
+export const API_URL = getDevApiUrl();

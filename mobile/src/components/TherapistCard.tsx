@@ -83,7 +83,7 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>Hourly Session</Text>
             <Text style={styles.priceValue}>
-              ₹{therapist.hourlyRate || 999}
+              ₹{therapist.sessionFee || therapist.hourlyRate || 1500}
             </Text>
           </View>
         </View>

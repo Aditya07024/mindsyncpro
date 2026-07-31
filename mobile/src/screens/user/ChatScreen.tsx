@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Keyboard } from 'react-native';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Keyboard, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Send, AlertTriangle, Sparkles } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,6 +19,8 @@ interface Message {
 
 export const ChatScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const maxBubbleWidth = Math.min(windowWidth * 0.82, 560);
   const [profileName, setProfileName] = useState(useStore.getState().firstName || 'friend');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,12 +45,15 @@ export const ChatScreen: React.FC = () => {
 
           const history = await API.chat.getMessages();
           if (history && Array.isArray(history.messages) && history.messages.length > 0) {
-            const mapped: Message[] = history.messages.map((m: any) => ({
-              id: m._id || Math.random().toString(),
-              role: m.role,
-              content: m.content,
-              timestamp: m.timestamp ? new Date(m.timestamp).getTime() : Date.now()
-            }));
+            const fifteenDaysAgo = Date.now() - 15 * 24 * 60 * 60 * 1000;
+            const mapped: Message[] = history.messages
+              .map((m: any) => ({
+                id: m._id || Math.random().toString(),
+                role: m.role,
+                content: m.content,
+                timestamp: m.timestamp ? new Date(m.timestamp).getTime() : Date.now()
+              }))
+              .filter((m: Message) => m.timestamp >= fifteenDaysAgo && !m.content.includes("I'm having trouble responding right now"));
             setMessages(mapped);
           } else {
             // Fallback to initial welcome message if no history exists yet
@@ -190,11 +195,11 @@ export const ChatScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView 
       style={styles.container}
-      behavior="padding"
-      keyboardVerticalOffset={0}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       {/* Dynamic top bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <View style={styles.topBarLeft}>
           <ManasAvatar size={34} />
           <View>
@@ -233,6 +238,7 @@ export const ChatScreen: React.FC = () => {
               key={m.id} 
               style={[
                 styles.msgBubbleRow,
+                { maxWidth: maxBubbleWidth },
                 isUser ? styles.msgRowUser : styles.msgRowAssistant
               ]}
             >
@@ -281,7 +287,7 @@ export const ChatScreen: React.FC = () => {
       )}
 
       {/* Input container */}
-      <View style={[styles.inputArea]}>
+      <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         <TextInput
           value={input}
           onChangeText={setInput}
@@ -320,9 +326,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.margin,
-    paddingTop: 50,
     paddingBottom: Theme.spacing.xs,
-    backgroundColor: '#FFF',
+    backgroundColor: Theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.surfaceHigh,
   },
@@ -376,6 +381,7 @@ const styles = StyleSheet.create({
   },
   feed: {
     flex: 1,
+    backgroundColor: Theme.colors.background,
   },
   feedContent: {
     paddingHorizontal: Theme.spacing.margin,
@@ -407,9 +413,10 @@ const styles = StyleSheet.create({
   bubble: {
     borderRadius: Theme.radius.xl,
     padding: Theme.spacing.sm,
-    shadowColor: '#2E6E65',
+    flexShrink: 1,
+    shadowColor: Theme.colors.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
   },
@@ -418,15 +425,16 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   bubbleAssistant: {
-    backgroundColor: '#FFF',
+    backgroundColor: Theme.colors.surface,
     borderBottomLeftRadius: 4,
     borderWidth: 1,
     borderColor: Theme.colors.surfaceHigh,
   },
   bubbleText: {
     fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 22,
+    flexShrink: 1,
   },
   textWhite: {
     color: '#FFF',
@@ -478,10 +486,9 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
     paddingHorizontal: Theme.spacing.margin,
     paddingVertical: Theme.spacing.sm,
-    backgroundColor: '#FFF',
+    backgroundColor: Theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.surfaceHigh,
-
   },
   chatInput: {
     flex: 1,
