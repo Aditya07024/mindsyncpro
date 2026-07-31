@@ -999,7 +999,7 @@ function OrgDashboard() {
                   >
                     {syncMutation.isPending ? 'Syncing...' : 'Sync Payment Status'}
                   </button>
-                  {import.meta.env.DEV && (
+                  {/* {import.meta.env.DEV && (
                     <button
                       onClick={() => demoActivateMutation.mutate()}
                       disabled={demoActivateMutation.isPending}
@@ -1007,7 +1007,7 @@ function OrgDashboard() {
                     >
                       {demoActivateMutation.isPending ? 'Bypassing...' : 'Bypass Payment'}
                     </button>
-                  )}
+                  )} */}
                 </div>
               </div>
             )}

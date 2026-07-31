@@ -934,7 +934,7 @@ function TherapistDashboard() {
                     >
                       {syncMutation.isPending ? "Syncing..." : "Sync Payment Status"}
                     </Button>
-                    {import.meta.env.DEV && (
+                    {/* {import.meta.env.DEV && (
                       <Button 
                         onClick={() => demoActivateMutation.mutate()} 
                         disabled={demoActivateMutation.isPending}
@@ -943,7 +943,7 @@ function TherapistDashboard() {
                       >
                         {demoActivateMutation.isPending ? "Bypassing..." : "Demo: Bypass Payment"}
                       </Button>
-                    )}
+                    )} */}
                   </div>
                 </div>
               )}
