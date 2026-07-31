@@ -140,9 +140,14 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
             <View style={{ flex: 1 }}>
               <View style={styles.nameRow}>
                 <Text style={styles.name}>{therapist.name}</Text>
-                {therapist.verified && <ShieldCheck size={20} color={Theme.colors.primary} />}
               </View>
+              <View style={styles.nameRow}>
               <Text style={styles.specialties}>{specs}</Text>
+
+                                {therapist.verified && <ShieldCheck size={20} color={Theme.colors.primary} />}
+
+              </View>
+              
             </View>
             <View style={styles.ratingBadge}>
               <Star size={14} color={Theme.colors.gold} fill={Theme.colors.gold} />

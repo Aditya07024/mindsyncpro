@@ -80,8 +80,15 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             need,
           });
           setLoading(false);
-          navigation.replace('UserTabs');
-        })
+navigation.reset({
+  index: 0,
+  routes: [
+    {
+      name: 'UserTabs',
+      params: { screen: 'Home' },
+    },
+  ],
+});        })
         .catch((err: any) => {
           setLoading(false);
           Alert.alert('Onboarding Sync Failed', err.message || 'We could not save your data to the server.');

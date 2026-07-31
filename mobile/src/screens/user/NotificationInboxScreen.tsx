@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.md,
     borderWidth: 1,
     borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
+    shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.03,
     shadowRadius: 10,

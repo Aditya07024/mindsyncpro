@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Keyboard, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Send, AlertTriangle, Sparkles } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Theme } from '../../theme';
@@ -193,11 +194,11 @@ export const ChatScreen: React.FC = () => {
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
+    <KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  keyboardVerticalOffset={0}
+>
       {/* Dynamic top bar */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <View style={styles.topBarLeft}>
@@ -224,13 +225,13 @@ export const ChatScreen: React.FC = () => {
       </View>
 
       {/* Messages Feed */}
-      <ScrollView 
-        ref={scrollRef}
-        style={styles.feed}
-        contentContainerStyle={styles.feedContent}
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
-        keyboardShouldPersistTaps="handled"
-      >
+      <KeyboardAwareScrollView
+  ref={scrollRef}
+  enableOnAndroid
+  extraScrollHeight={20}
+  keyboardShouldPersistTaps="handled"
+  contentContainerStyle={styles.feedContent}
+>
         {messages.map(m => {
           const isUser = m.role === 'user';
           return (
@@ -269,7 +270,7 @@ export const ChatScreen: React.FC = () => {
             </View>
           );
         })}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* Limit Warning banner */}
       {limitHit && (
@@ -296,8 +297,14 @@ export const ChatScreen: React.FC = () => {
           placeholderTextColor={Theme.colors.outline}
           style={styles.chatInput}
           onFocus={() => {
-            setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
-          }}
+
+  requestAnimationFrame(() => {
+
+    scrollRef.current?.scrollToEnd({ animated: false });
+
+  });
+
+}}
         />
         <TouchableOpacity
           onPress={handleSend}

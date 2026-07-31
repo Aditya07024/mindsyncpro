@@ -106,19 +106,35 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
         // 2. Default fallback check if no custom signup role was saved (subsequent opens)
         const profile = await API.auth.me();
         const role = profile?.role || 'user';
-        if (role === 'user') {
-          if (profile && profile.onboarding && profile.onboarding.completedAt) {
-            navigation.replace('UserTabs', { screen: 'Home' });
-          } else {
-            navigation.replace('Onboarding');
-          }
-        } else if (role === 'therapist') {
-          navigation.replace('TherapistTabs');
-        } else if (role === 'org_admin') {
-          navigation.replace('OrgTabs');
-        } else if (role === 'super_admin') {
-          navigation.replace('AdminTabs');
-        }
+
+if (role === 'user') {
+  if (profile?.onboarding?.completedAt) {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'UserTabs', params: { screen: 'Home' } }],
+    });
+  } else {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Onboarding' }],
+    });
+  }
+} else if (role === 'therapist') {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'TherapistTabs' }],
+  });
+} else if (role === 'org_admin') {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'OrgTabs' }],
+  });
+} else if (role === 'super_admin') {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'AdminTabs' }],
+  });
+}
       } catch (err) {
         console.error("Failed to fetch profile on autologin:", err);
         // Recover stashed intended role if any, to prevent wrong portal drops
@@ -127,14 +143,26 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
         await AsyncStorage.removeItem('upgrade_plan');
 
         if (backupRole === 'therapist') {
-          navigation.replace('TherapistTabs');
-        } else if (backupRole === 'org_admin') {
-          navigation.replace('OrgTabs');
-        } else if (backupRole === 'super_admin') {
-          navigation.replace('AdminTabs');
-        } else {
-          navigation.replace('UserTabs', { screen: 'Home' });
-        }
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'TherapistTabs' }],
+  });
+} else if (backupRole === 'org_admin') {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'OrgTabs' }],
+  });
+} else if (backupRole === 'super_admin') {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'AdminTabs' }],
+  });
+} else {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: 'UserTabs', params: { screen: 'Home' } }],
+  });
+}
       }
     };
 
