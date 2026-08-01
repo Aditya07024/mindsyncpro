@@ -15,6 +15,8 @@ interface ConferenceRegisterModalProps {
     meetingDate: string;
     meetingTime: string;
     roomName: string;
+    platform?: string;
+    meetingLink?: string;
     banner?: string;
   } | null;
   isOpen: boolean;
@@ -66,6 +68,24 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
   const isFree = conference.priceType === "free" || conference.price === 0;
 
+  const enterMeeting = (resPlatform?: string, resMeetingLink?: string) => {
+    onClose();
+    const platform = resPlatform || conference.platform || "jitsi";
+    const meetingLink = resMeetingLink || conference.meetingLink || "";
+
+    if (platform === "teams" && meetingLink) {
+      toast.success("Redirecting to Microsoft Teams meeting...");
+      const win = window.open(meetingLink, "_blank", "noopener,noreferrer");
+      if (!win || win.closed || typeof win.closed === "undefined") {
+        window.location.href = meetingLink;
+      }
+    } else if (onSuccessJoin) {
+      onSuccessJoin(conference._id);
+    } else {
+      window.location.href = `/conferences/${conference._id}/room`;
+    }
+  };
+
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!fullName.trim()) errs.fullName = "Full name is required";
@@ -103,17 +123,15 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
       });
 
       if (res.isAlreadyRegistered || !res.isPaid || !res.orderId) {
-        toast.success("Registration confirmed! Entering meeting room...");
-        onClose();
-        window.location.href = `/conferences/${conference._id}/room`;
+        toast.success("Registration confirmed!");
+        enterMeeting(res.platform, res.meetingLink);
         return;
       }
 
       // PAID CONFERENCE -> Trigger Razorpay Payment with fallback
       if (!window.Razorpay) {
         toast.info("Entering meeting room...");
-        onClose();
-        window.location.href = `/conferences/${conference._id}/room`;
+        enterMeeting(res.platform, res.meetingLink);
         return;
       }
 
@@ -142,26 +160,21 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
               signature: response.razorpay_signature,
             });
 
-            toast.success("Payment verified! Entering meeting room...");
-            onClose();
-            if (onSuccessJoin) {
-              onSuccessJoin(conference._id);
-            } else {
-              window.location.href = `/conferences/${conference._id}/room`;
-            }
+            toast.success("Payment verified!");
+            enterMeeting(verifyRes.platform || res.platform, verifyRes.meetingLink || res.meetingLink);
           } catch (err: any) {
             toast.error(err.message || "Payment verification failed");
           } finally {
             setLoading(false);
           }
         },
-          modal: {
-            ondismiss: () => {
-              toast.warning("Payment cancelled. You can retry anytime.");
-              setLoading(false);
-            },
+        modal: {
+          ondismiss: () => {
+            toast.warning("Payment cancelled. You can retry anytime.");
+            setLoading(false);
           },
-        };
+        },
+      };
 
         const rzp = new window.Razorpay(options);
         rzp.on("payment.failed", (response: any) => {

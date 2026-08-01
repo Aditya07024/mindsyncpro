@@ -289,7 +289,7 @@ function ConferencesPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/10 to-transparent" />
 
                     {/* Status Badge */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                    <div className="absolute top-4 left-4 flex items-center gap-2 flex-wrap">
                       {isLive && (
                         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md animate-pulse">
                           <span className="w-2 h-2 rounded-full bg-white"></span>
@@ -304,6 +304,15 @@ function ConferencesPage() {
                       {isEnded && (
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800/90 text-slate-300 border border-slate-700 backdrop-blur-md">
                           Ended
+                        </span>
+                      )}
+                      {conf.platform === "teams" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-sm flex items-center gap-1">
+                          🔵 Microsoft Teams
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-700 text-white shadow-sm flex items-center gap-1">
+                          🟢 Jitsi Meet
                         </span>
                       )}
                     </div>
@@ -349,7 +358,7 @@ function ConferencesPage() {
                           <Calendar className="w-3.5 h-3.5 text-teal-600" /> Date & Time
                         </span>
                         <span className="font-bold text-slate-800">
-                          {conf.meetingDate} at {conf.meetingTime}
+                          {conf.meetingDate} at {conf.meetingTime} {conf.endTime ? `- ${conf.endTime}` : ""}
                         </span>
                       </div>
 
@@ -386,6 +395,20 @@ function ConferencesPage() {
                           className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-slate-100 text-slate-400 cursor-not-allowed text-center border border-slate-200"
                         >
                           Conference Ended
+                        </button>
+                      ) : conf.platform === "teams" ? (
+                        <button
+                          onClick={() => {
+                            if (conf.isUserRegistered || isFree) {
+                              window.open(conf.meetingLink, "_blank", "noopener,noreferrer");
+                            } else {
+                              handleJoinClick(conf);
+                            }
+                          }}
+                          className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all flex items-center justify-center gap-2"
+                        >
+                          <Play className="w-4 h-4 fill-white" />
+                          <span>Join Meeting</span>
                         </button>
                       ) : conf.isUserRegistered ? (
                         <button

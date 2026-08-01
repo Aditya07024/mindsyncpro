@@ -14,6 +14,24 @@ function slugifyRoomName(title: string): string {
   return `${clean || "conference"}-${random}`;
 }
 
+export function isValidTeamsUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  try {
+    const parsed = new URL(url.trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    return (
+      host === "teams.microsoft.com" ||
+      host.endsWith(".teams.microsoft.com") ||
+      host === "teams.live.com" ||
+      host.endsWith(".teams.live.com") ||
+      host === "teams.microsoft.us"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export class ConferenceController {
   /**
    * POST /api/conferences - Create conference (Admin)
@@ -26,6 +44,9 @@ export class ConferenceController {
         banner,
         meetingDate,
         meetingTime,
+        endTime,
+        platform,
+        meetingLink,
         duration,
         category,
         meetingType,
@@ -45,6 +66,18 @@ export class ConferenceController {
 
       if (!title || !description || !meetingDate || !meetingTime) {
         throw new AppError("Title, description, date, and time are required", 400);
+      }
+
+      const selectedPlatform = platform === "teams" ? "teams" : "jitsi";
+      const cleanMeetingLink = (meetingLink || "").trim();
+
+      if (selectedPlatform === "teams") {
+        if (!cleanMeetingLink) {
+          throw new AppError("Meeting Link is required for Microsoft Teams meetings.", 400);
+        }
+        if (!isValidTeamsUrl(cleanMeetingLink)) {
+          throw new AppError("Invalid Microsoft Teams meeting URL. Please enter a valid Teams meeting link.", 400);
+        }
       }
 
       let finalRoomName = roomName;
@@ -69,6 +102,9 @@ export class ConferenceController {
         roomName: finalRoomName,
         meetingDate,
         meetingTime,
+        endTime: endTime || "",
+        platform: selectedPlatform,
+        meetingLink: selectedPlatform === "teams" ? cleanMeetingLink : "",
         duration: Number(duration || 60),
         category: category || "",
         meetingType: meetingType || "public",
@@ -269,6 +305,21 @@ export class ConferenceController {
         updates.hostEmail = String(updates.hostEmail).toLowerCase().trim();
       }
 
+      const targetPlatform = updates.platform !== undefined ? updates.platform : conference.platform;
+      const targetMeetingLink = updates.meetingLink !== undefined ? String(updates.meetingLink).trim() : (conference.meetingLink || "").trim();
+
+      if (targetPlatform === "teams") {
+        if (!targetMeetingLink) {
+          throw new AppError("Meeting Link is required for Microsoft Teams meetings.", 400);
+        }
+        if (!isValidTeamsUrl(targetMeetingLink)) {
+          throw new AppError("Invalid Microsoft Teams meeting URL. Please enter a valid Teams meeting link.", 400);
+        }
+        updates.meetingLink = targetMeetingLink;
+      } else if (targetPlatform === "jitsi") {
+        updates.meetingLink = "";
+      }
+
       Object.assign(conference, updates);
       await conference.save();
 
@@ -377,6 +428,8 @@ export class ConferenceController {
           registration,
           isAlreadyRegistered: true,
           roomName: conference.roomName,
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
         });
       }
 
@@ -422,6 +475,8 @@ export class ConferenceController {
           registration,
           isPaid: false,
           roomName: conference.roomName,
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
         });
       }
 
@@ -476,6 +531,8 @@ export class ConferenceController {
           currency: "INR",
           keyId: process.env.RAZORPAY_KEY_ID || "",
           roomName: conference.roomName,
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
         });
       } catch (paymentErr) {
         console.warn("Razorpay order creation fallback to free entry:", paymentErr);
@@ -488,6 +545,8 @@ export class ConferenceController {
           registration,
           isPaid: false,
           roomName: conference.roomName,
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
         });
       }
     }
@@ -684,6 +743,9 @@ export class ConferenceController {
           duration: conference.duration,
           meetingDate: conference.meetingDate,
           meetingTime: conference.meetingTime,
+          endTime: conference.endTime || "",
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
           endDateTime: endDateTime ? endDateTime.toISOString() : null,
           hostEmail: conference.hostEmail || "",
           isHost,

@@ -107,6 +107,14 @@ function ConferenceRoomPage() {
     fetchJoinInfo();
   }, [id]);
 
+  // Auto-redirect to Teams if platform is teams
+  useEffect(() => {
+    if (roomData?.conference?.platform === "teams" && roomData?.conference?.meetingLink) {
+      toast.info("Redirecting to Microsoft Teams...");
+      window.location.href = roomData.conference.meetingLink;
+    }
+  }, [roomData]);
+
   // Polling for Waiting Room (auto-checks every 5 seconds until host enters)
   useEffect(() => {
     if (!waitingForHost) return;
@@ -184,7 +192,7 @@ function ConferenceRoomPage() {
 
   // Load JaaS (8x8.vc) script and initialize iframe
   useEffect(() => {
-    if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current) return;
+    if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current || roomData?.conference?.platform === "teams") return;
 
     let apiInstance: any = null;
     const appId = roomData.jaas?.appId || "vpaas-magic-cookie-b417268e55554d20b3e8c5a64a71f374";
@@ -334,6 +342,59 @@ function ConferenceRoomPage() {
         <Loader2 className="w-12 h-12 text-teal-400 animate-spin mb-4" />
         <h3 className="text-xl font-bold">Connecting to Video Room...</h3>
         <p className="text-slate-400 text-sm mt-2">Setting up encrypted connection powered by mymindtherapyfriend.</p>
+      </div>
+    );
+  }
+
+  // TEAMS MEETING PORTAL UI
+  if (roomData?.conference?.platform === "teams") {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
+        >
+          <div className="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mx-auto">
+            <Video className="w-9 h-9 text-blue-400" />
+          </div>
+
+          <div>
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
+              🔵 Microsoft Teams Meeting
+            </span>
+            <h3 className="text-2xl font-bold text-white mt-3">
+              {roomData.conference.title}
+            </h3>
+            <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+              This meeting is taking place on Microsoft Teams. Click the button below to join the meeting in a new browser tab.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs text-slate-300 text-left">
+            <div><strong>Date & Time:</strong> {roomData.conference.meetingDate} at {roomData.conference.meetingTime}</div>
+            {roomData.conference.endTime && <div><strong>End Time:</strong> {roomData.conference.endTime}</div>}
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
+            <button
+              onClick={() => navigate({ to: "/conferences" })}
+              className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Conferences
+            </button>
+            <button
+              onClick={() => {
+                if (roomData.conference.meetingLink) {
+                  window.open(roomData.conference.meetingLink, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+            >
+              <Video className="w-4 h-4" /> Join Microsoft Teams Meeting
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }

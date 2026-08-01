@@ -19,6 +19,9 @@ export interface IConference extends Document {
   password?: string;
   hostEmail?: string;
   hostJoined?: boolean;
+  platform: "jitsi" | "teams";
+  meetingLink?: string;
+  endTime?: string;
   instructions?: string;
   status: "draft" | "published" | "upcoming" | "live" | "ended";
   createdBy: Types.ObjectId;
@@ -34,6 +37,13 @@ const ConferenceSchema = new Schema<IConference>(
     roomName: { type: String, required: true, unique: true, trim: true },
     meetingDate: { type: String, required: true },
     meetingTime: { type: String, required: true },
+    endTime: { type: String, default: "" },
+    platform: {
+      type: String,
+      enum: ["jitsi", "teams"],
+      default: "jitsi",
+    },
+    meetingLink: { type: String, default: "" },
     duration: { type: Number, default: 60 },
     category: { type: String, default: "Mental Health" },
     meetingType: {

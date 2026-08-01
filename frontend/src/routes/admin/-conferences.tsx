@@ -53,6 +53,9 @@ export function AdminConferencesTab() {
     banner: "",
     meetingDate: new Date().toISOString().split("T")[0],
     meetingTime: "18:00",
+    endTime: "19:00",
+    platform: "jitsi" as "jitsi" | "teams",
+    meetingLink: "",
     duration: 60,
     meetingType: "public" as "public" | "private" | "webinar" | "workshop",
     priceType: "free" as "free" | "paid" | "custom",
@@ -121,6 +124,9 @@ export function AdminConferencesTab() {
       banner: "",
       meetingDate: new Date().toISOString().split("T")[0],
       meetingTime: "18:00",
+      endTime: "19:00",
+      platform: "jitsi",
+      meetingLink: "",
       duration: 60,
       meetingType: "public",
       priceType: "free",
@@ -146,6 +152,9 @@ export function AdminConferencesTab() {
       banner: conf.banner || "",
       meetingDate: conf.meetingDate || "",
       meetingTime: conf.meetingTime || "",
+      endTime: conf.endTime || "",
+      platform: conf.platform || "jitsi",
+      meetingLink: conf.meetingLink || "",
       duration: conf.duration || 60,
       meetingType: conf.meetingType || "public",
       priceType: conf.priceType || "free",
@@ -166,6 +175,30 @@ export function AdminConferencesTab() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.platform === "teams") {
+      if (!form.meetingLink.trim()) {
+        toast.error("Meeting Link is required for Microsoft Teams meetings.");
+        return;
+      }
+      try {
+        const parsed = new URL(form.meetingLink.trim());
+        const host = parsed.hostname.toLowerCase();
+        const valid =
+          (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+          (host === "teams.microsoft.com" ||
+            host.endsWith(".teams.microsoft.com") ||
+            host === "teams.live.com" ||
+            host.endsWith(".teams.live.com") ||
+            host === "teams.microsoft.us");
+        if (!valid) {
+          toast.error("Please enter a valid Microsoft Teams meeting URL.");
+          return;
+        }
+      } catch {
+        toast.error("Please enter a valid Microsoft Teams meeting URL.");
+        return;
+      }
+    }
     if (editingConference) {
       updateMutation.mutate({ id: editingConference._id, data: form });
     } else {
@@ -277,6 +310,16 @@ export function AdminConferencesTab() {
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
                           {conf.priceType === "free" ? "FREE" : `₹${conf.price}`}
                         </span>
+
+                        {conf.platform === "teams" ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
+                            🔵 Microsoft Teams
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                            🟢 Jitsi Meet
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-slate-400 text-xs line-clamp-1">{conf.description}</p>
@@ -430,7 +473,75 @@ export function AdminConferencesTab() {
                 </div>
               </div> */}
 
-              <div className="grid grid-cols-3 gap-4">
+              {/* Meeting Platform Selection */}
+              <div className="space-y-2 border-y border-slate-800 py-3">
+                <label className="font-medium text-slate-300 block">Meeting Platform *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, platform: "jitsi", meetingLink: "" })}
+                    className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+                      form.platform === "jitsi"
+                        ? "bg-emerald-500/10 border-emerald-500 text-emerald-300 font-semibold"
+                        : "bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-white">Jitsi Meet (Default)</div>
+                      <div className="text-[10px] text-slate-400">Integrated video conferencing room</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, platform: "teams" })}
+                    className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+                      form.platform === "teams"
+                        ? "bg-blue-500/10 border-blue-500 text-blue-300 font-semibold"
+                        : "bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-white">Microsoft Teams</div>
+                      <div className="text-[10px] text-slate-400">External Teams invitation link</div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Microsoft Teams Specific Section */}
+                {form.platform === "teams" && (
+                  <div className="mt-3 p-4 rounded-2xl bg-blue-950/30 border border-blue-800/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-blue-200">Create meeting in MS Teams:</span>
+                      <button
+                        type="button"
+                        onClick={() => window.open("https://teams.live.com/v2", "_blank")}
+                        className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-md shadow-blue-500/20"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Create Teams Meeting
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-medium text-slate-200">Meeting Link *</label>
+                      <input
+                        type="url"
+                        required
+                        value={form.meetingLink}
+                        onChange={(e) => setForm({ ...form, meetingLink: e.target.value })}
+                        placeholder="https://teams.microsoft.com/l/meetup-join/..."
+                        className="w-full px-3 py-2 bg-slate-900 border border-blue-700/60 rounded-xl text-white text-xs focus:border-blue-400 focus:outline-none"
+                      />
+                      <p className="text-[10px] text-slate-400">
+                        Paste the copied Microsoft Teams meeting invitation URL here.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
                 <div className="space-y-1">
                   <label className="font-medium text-slate-300">Meeting Date *</label>
                   <input
@@ -443,7 +554,7 @@ export function AdminConferencesTab() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-medium text-slate-300">Meeting Time *</label>
+                  <label className="font-medium text-slate-300">Start Time *</label>
                   <input
                     type="time"
                     required
@@ -454,7 +565,17 @@ export function AdminConferencesTab() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-medium text-slate-300">Duration (Minutes)</label>
+                  <label className="font-medium text-slate-300">End Time</label>
+                  <input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:border-teal-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-medium text-slate-300">Duration (Mins)</label>
                   <input
                     type="number"
                     value={form.duration}
