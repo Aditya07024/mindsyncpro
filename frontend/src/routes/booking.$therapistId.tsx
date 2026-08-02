@@ -434,7 +434,7 @@ function BookingFlow() {
                 </div>
               </Card>
 
-              <div className="pt-4 border-t border-slate-200">
+              {/* <div className="pt-4 border-t border-slate-200">
                 <Button 
                   onClick={() => demoVerifyMutation.mutate(bookingId)} 
                   disabled={demoVerifyMutation.isPending}
@@ -443,7 +443,7 @@ function BookingFlow() {
                 >
                   {demoVerifyMutation.isPending ? 'Processing...' : 'Demo Mode: Bypass Payment'}
                 </Button>
-              </div>
+              </div> */}
             </motion.div>
           )}
 
