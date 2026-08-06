@@ -947,7 +947,7 @@ export class ConferenceController {
 
       const totalRegistered = allRegs.length;
       const currentlyInMeeting = allRegs.filter((r) => r.currentStatus === "joined").length;
-      const usersWaiting = allRegs.filter((r) => r.currentStatus === "waiting").length;
+      const usersWaiting = allRegs.filter((r) => r.currentStatus === "waiting" || r.admitStatus === "waiting" || (r.admitted === false && r.currentStatus !== "joined" && r.currentStatus !== "left")).length;
       const usersLeft = allRegs.filter((r) => r.currentStatus === "left").length;
       const noShow = allRegs.filter((r) => r.currentStatus === "no_show" || (!r.joined && r.currentStatus === "registered")).length;
 
