@@ -138,15 +138,7 @@ const PORTALS = [
     iconBg: "bg-violet-100 text-violet-700",
     dest: "/sign-in",
   },
-  {
-    id: "super_admin",
-    icon: Shield,
-    title: "Super Admin",
-    subtitle: "Platform operations, therapist verification, and mental health analytics dashboard",
-    color: "from-slate-500/10 to-slate-600/5 border-slate-200 hover:border-slate-400",
-    iconBg: "bg-slate-100 text-slate-700",
-    dest: "/sign-in",
-  },
+  
 ] as const;
 
 const FAQ_ITEMS = [
@@ -1076,7 +1068,9 @@ function Landing() {
                   whileHover={{ y: -8, scale: 1.015 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08, scale: { duration: 0.2 }, y: { duration: 0.2 } }}
-                  className="group relative overflow-hidden rounded-[32px] border border-teal-100 bg-white/80 p-7 shadow-lg backdrop-blur-2xl transition-shadow duration-300 hover:border-teal-300 hover:bg-white hover:shadow-[0_25px_80px_rgba(20,184,166,0.12)]"
+                  className={`group relative overflow-hidden rounded-[32px] border border-teal-100 bg-white/80 p-7 shadow-lg backdrop-blur-2xl transition-shadow duration-300 hover:border-teal-300 hover:bg-white hover:shadow-[0_25px_80px_rgba(20,184,166,0.12)] ${
+                    p.id === "org_admin" ? "lg:col-span-2" : ""
+                  }`}
                 >
                   <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-teal-300/20 blur-3xl transition-all duration-500 group-hover:scale-125" />
 
@@ -1092,7 +1086,7 @@ function Landing() {
                     {p.title}
                   </h3>
 
-                      <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+                      <p className={`mt-3 text-sm leading-relaxed text-slate-600 ${p.id === "org_admin" ? "max-w-xl" : "max-w-md"}`}>
                         {p.subtitle}
                       </p>
                     </div>
@@ -1404,6 +1398,12 @@ function Landing() {
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-600">
               mymindtherapyfriend - India's AI-powered mental health platform. Affordable, private, and always available.
             </p>
+            <button
+              onClick={(e) => handlePortalClick(e, "super_admin", "/admin/sign-in")}
+              className="mt-5 text-sm font-bold text-teal-700 hover:text-teal-600 transition"
+            >
+              Admin Login
+            </button>
           </div>
 
           <div>
