@@ -396,24 +396,12 @@ function ConferencesPage() {
                         >
                           Conference Ended
                         </button>
-                      ) : conf.platform === "teams" ? (
-                        <button
-                          onClick={() => {
-                            if (conf.isUserRegistered || isFree) {
-                              window.open(conf.meetingLink, "_blank", "noopener,noreferrer");
-                            } else {
-                              handleJoinClick(conf);
-                            }
-                          }}
-                          className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-md transition-all flex items-center justify-center gap-2"
-                        >
-                          <Play className="w-4 h-4 fill-white" />
-                          <span>Join Meeting</span>
-                        </button>
                       ) : conf.isUserRegistered ? (
                         <button
                           onClick={() => { window.location.href = `/conferences/${conf._id}/room`; }}
-                          className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-[#004038] hover:bg-[#00302a] text-white shadow-md transition-all flex items-center justify-center gap-2"
+                          className={`w-full py-3 px-4 rounded-xl font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
+                            conf.platform === "teams" ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-[#004038] hover:bg-[#00302a] text-white"
+                          }`}
                         >
                           <Play className="w-4 h-4 fill-white" />
                           <span>{isLive ? "Join Room Now" : "Enter Room"}</span>
@@ -424,6 +412,8 @@ function ConferencesPage() {
                           className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                             isLive
                               ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
+                              : conf.platform === "teams"
+                              ? "bg-blue-600 hover:bg-blue-500 text-white shadow-md hover:scale-[1.02]"
                               : "bg-[#004038] hover:bg-[#00302a] text-white shadow-md hover:scale-[1.02]"
                           }`}
                         >

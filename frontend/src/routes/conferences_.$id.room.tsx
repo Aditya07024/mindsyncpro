@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Video,
   LogOut,
@@ -12,6 +12,11 @@ import {
   Crown,
   RefreshCw,
   Hourglass,
+  Users,
+  CheckCircle2,
+  XCircle,
+  X,
+  ShieldCheck,
 } from "lucide-react";
 import API from "@/lib/api";
 import { toast } from "sonner";
@@ -47,6 +52,60 @@ function ConferenceRoomPage() {
   // Waiting Room state
   const [waitingForHost, setWaitingForHost] = useState(false);
 
+  // Host / Admin waiting room management state
+  const [waitingQueue, setWaitingQueue] = useState<any[]>([]);
+  const [showWaitingModal, setShowWaitingModal] = useState(false);
+  const [admittingId, setAdmittingId] = useState<string | null>(null);
+  const [admittingAll, setAdmittingAll] = useState(false);
+
+  const fetchWaitingQueue = async () => {
+    try {
+      const res = await API.conference.getWaitingRoom(id);
+      setWaitingQueue(res.waiting || []);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handleAdmitSingle = async (registrationId: string) => {
+    setAdmittingId(registrationId);
+    try {
+      const res = await API.conference.admitAttendee(id, registrationId);
+      toast.success(res.message || "Allowed participant into the room ✓");
+      fetchWaitingQueue();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to allow participant");
+    } finally {
+      setAdmittingId(null);
+    }
+  };
+
+  const handleAdmitAll = async () => {
+    setAdmittingAll(true);
+    try {
+      const res = await API.conference.admitAllAttendees(id);
+      toast.success(res.message || "Allowed all waiting attendees into the room ✓");
+      fetchWaitingQueue();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to allow all attendees");
+    } finally {
+      setAdmittingAll(false);
+    }
+  };
+
+  const handleDenySingle = async (registrationId: string) => {
+    setAdmittingId(registrationId);
+    try {
+      const res = await API.conference.denyAttendee(id, registrationId);
+      toast.info(res.message || "Denied participant entry");
+      fetchWaitingQueue();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to deny participant");
+    } finally {
+      setAdmittingId(null);
+    }
+  };
+
   // Auto-cut countdown state (remaining seconds until end time)
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
@@ -65,7 +124,7 @@ function ConferenceRoomPage() {
         return;
       }
 
-      if (data.waitingForHost) {
+      if (data.waitingForHost || data.waitingForAdminApproval) {
         setWaitingForHost(true);
         setRequiresPassword(false);
         setRoomData(data);
@@ -107,24 +166,18 @@ function ConferenceRoomPage() {
     fetchJoinInfo();
   }, [id]);
 
-  // Auto-redirect to Teams if platform is teams
+  // Auto-redirect to Teams if platform is teams (only when user is admitted and waitingForHost is false)
   useEffect(() => {
-    if (roomData?.conference?.platform === "teams" && roomData?.conference?.meetingLink) {
-      toast.info("Redirecting to Microsoft Teams...");
+    if (
+      roomData?.conference?.platform === "teams" &&
+      roomData?.conference?.meetingLink &&
+      !waitingForHost &&
+      !requiresPassword
+    ) {
+      toast.info("You have been admitted! Redirecting to Microsoft Teams...");
       window.location.href = roomData.conference.meetingLink;
     }
-  }, [roomData]);
-
-  // Polling for Waiting Room (auto-checks every 5 seconds until host enters)
-  useEffect(() => {
-    if (!waitingForHost) return;
-
-    const interval = setInterval(() => {
-      fetchJoinInfo(enteredPassword || undefined);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [waitingForHost, enteredPassword]);
+  }, [roomData, waitingForHost, requiresPassword]);
 
   // Session timer (elapsed)
   useEffect(() => {
@@ -346,10 +399,69 @@ function ConferenceRoomPage() {
     );
   }
 
-  // TEAMS MEETING PORTAL UI
-  if (roomData?.conference?.platform === "teams") {
+  const isMeetingHost = roomData?.user?.isHost || roomData?.conference?.isHost;
+
+  // WAITING ROOM UI (Must come BEFORE Teams or Jitsi UI so unadmitted participants wait here!)
+  if (waitingForHost) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
+        >
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl" />
+
+          <div className="relative z-10 space-y-6">
+            <div className="relative w-20 h-20 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 flex items-center justify-center mx-auto">
+              <div className="absolute inset-0 rounded-full border-2 border-teal-400/40 animate-ping" />
+              <Hourglass className="w-9 h-9 text-teal-300" />
+            </div>
+
+            <div>
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                Waiting for Host / Admin Approval
+              </span>
+              <h3 className="text-2xl font-bold text-white mt-3">
+                {roomData?.conference?.title || "Meeting Waiting Room"}
+              </h3>
+              <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                The meeting host or admin has been notified. You will automatically be admitted to the meeting as soon as they allow you in.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 text-slate-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                <span>Checking admission status (auto every 3s)...</span>
+              </div>
+              <button
+                onClick={() => fetchJoinInfo(enteredPassword || undefined)}
+                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-teal-400" /> Refresh Now
+              </button>
+            </div>
+
+            <div className="pt-2 flex justify-center gap-4">
+              <button
+                onClick={() => navigate({ to: "/conferences" })}
+                className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" /> Leave Waiting Room
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // TEAMS MEETING PORTAL UI (Rendered ONLY when user is admitted or host)
+  if (roomData?.conference?.platform === "teams") {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4 relative">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -360,16 +472,51 @@ function ConferenceRoomPage() {
           </div>
 
           <div>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
-              🔵 Microsoft Teams Meeting
-            </span>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
+                🔵 Microsoft Teams Meeting
+              </span>
+              {isMeetingHost && (
+                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5" /> Host
+                </span>
+              )}
+            </div>
             <h3 className="text-2xl font-bold text-white mt-3">
               {roomData.conference.title}
             </h3>
             <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-              This meeting is taking place on Microsoft Teams. Click the button below to join the meeting in a new browser tab.
+              {isMeetingHost
+                ? "You are host of this Microsoft Teams session. Click below to launch Teams and use the Lobby button to manage waiting participants."
+                : "You have been admitted! Click the button below to join the Microsoft Teams meeting."}
             </p>
           </div>
+
+          {/* Host Lobby Control Bar inside Teams View */}
+          {isMeetingHost && (
+            <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-3">
+              <div className="flex items-center justify-between text-xs text-amber-300">
+                <span className="font-bold flex items-center gap-1.5">
+                  <Users className="w-4 h-4" /> Waiting Room Lobby Queue ({waitingQueue.length})
+                </span>
+                {waitingQueue.length > 0 && (
+                  <button
+                    onClick={handleAdmitAll}
+                    disabled={admittingAll}
+                    className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg transition-all text-xs"
+                  >
+                    Allow All ({waitingQueue.length})
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowWaitingModal(true)}
+                className="w-full py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <Users className="w-4 h-4" /> Open Waiting Room Lobby ({waitingQueue.length} Waiting)
+              </button>
+            </div>
+          )}
 
           <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs text-slate-300 text-left">
             <div><strong>Date & Time:</strong> {roomData.conference.meetingDate} at {roomData.conference.meetingTime}</div>
@@ -391,70 +538,106 @@ function ConferenceRoomPage() {
               }}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
             >
-              <Video className="w-4 h-4" /> Join Microsoft Teams Meeting
+              <Video className="w-4 h-4" /> Open Microsoft Teams Meeting
             </button>
           </div>
         </motion.div>
-      </div>
-    );
-  }
 
-  // WAITING ROOM UI (When host has not joined yet)
-  if (waitingForHost) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
-        >
-          {/* Top subtle glow */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl" />
-
-          <div className="relative z-10 space-y-6">
-            <div className="relative w-20 h-20 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 flex items-center justify-center mx-auto">
-              <div className="absolute inset-0 rounded-full border-2 border-teal-400/40 animate-ping" />
-              <Hourglass className="w-9 h-9 text-teal-300" />
-            </div>
-
-            <div>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
-                Waiting Room Enabled
-              </span>
-              <h3 className="text-2xl font-bold text-white mt-3">
-                {roomData?.conference?.title || "Meeting Waiting Room"}
-              </h3>
-              <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-                The meeting host has not started the session yet. You will automatically enter the meeting room as soon as the host joins.
-              </p>
-            </div>
-
-            {/* Status box */}
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-                <span>Checking host status...</span>
-              </div>
-              <button
-                onClick={() => fetchJoinInfo(enteredPassword || undefined)}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors flex items-center gap-1.5"
+        {/* Host Waiting Room Management Modal */}
+        <AnimatePresence>
+          {showWaitingModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, y: 10 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 10 }}
+                className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-left"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-teal-400" /> Refresh
-              </button>
-            </div>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-teal-400" />
+                    <h3 className="text-lg font-bold text-white">Teams Waiting Room Lobby</h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
+                      {waitingQueue.length} Waiting
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowWaitingModal(false)}
+                    className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
 
-            {/* Actions */}
-            <div className="pt-2 flex justify-center gap-4">
-              <button
-                onClick={() => navigate({ to: "/conferences" })}
-                className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" /> Leave Waiting Room
-              </button>
-            </div>
-          </div>
-        </motion.div>
+                {waitingQueue.length > 0 && (
+                  <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl">
+                    <div>
+                      <p className="text-xs text-emerald-300 font-bold">Admit All Participants</p>
+                      <p className="text-[11px] text-slate-400">Allow everyone waiting to redirect to Microsoft Teams.</p>
+                    </div>
+                    <button
+                      onClick={handleAdmitAll}
+                      disabled={admittingAll}
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Allow All ({waitingQueue.length})
+                    </button>
+                  </div>
+                )}
+
+                <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
+                  {waitingQueue.map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-white text-sm truncate">{item.fullName}</p>
+                        <p className="text-xs text-slate-400 truncate">{item.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleAdmitSingle(item.id)}
+                          disabled={admittingId === item.id}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Allow
+                        </button>
+                        <button
+                          onClick={() => handleDenySingle(item.id)}
+                          disabled={admittingId === item.id}
+                          className="px-2.5 py-1.5 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-semibold text-xs rounded-xl transition flex items-center gap-1"
+                        >
+                          <XCircle className="w-3.5 h-3.5" /> Deny
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {waitingQueue.length === 0 && (
+                    <div className="p-8 text-center text-slate-500 text-sm">
+                      No attendees currently waiting in the lobby.
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => setShowWaitingModal(false)}
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                  >
+                    Close Lobby
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -555,8 +738,6 @@ function ConferenceRoomPage() {
     );
   }
 
-  const isMeetingHost = roomData?.user?.isHost || roomData?.conference?.isHost;
-
   return (
     <div className="fixed inset-0 bg-slate-950 flex flex-col z-50 overflow-hidden select-none">
       {/* Top Session Bar */}
@@ -601,6 +782,25 @@ function ConferenceRoomPage() {
 
         {/* Right Info */}
         <div className="flex items-center gap-3">
+          {isMeetingHost && (
+            <button
+              onClick={() => setShowWaitingModal(true)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                waitingQueue.length > 0
+                  ? "bg-amber-400 text-slate-950 hover:bg-amber-300 font-black animate-pulse shadow-lg shadow-amber-400/20"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Waiting Lobby</span>
+              {waitingQueue.length > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black">
+                  {waitingQueue.length}
+                </span>
+              )}
+            </button>
+          )}
+
           <span className="hidden sm:inline-flex px-3 py-1 bg-slate-800 text-slate-300 text-xs font-medium rounded-full border border-slate-700">
             {roomData?.user?.fullName}
           </span>
@@ -616,8 +816,129 @@ function ConferenceRoomPage() {
 
       {/* Main Jitsi iFrame Container */}
       <div className="flex-1 relative w-full h-full bg-slate-950">
+        {/* Floating Waiting Room Banner for Host */}
+        {isMeetingHost && waitingQueue.length > 0 && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 border border-amber-500/50 shadow-2xl rounded-2xl px-5 py-3 flex items-center gap-4 text-xs backdrop-blur-md">
+            <div className="flex items-center gap-2 text-amber-300 font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+              <span>{waitingQueue.length} participant(s) waiting in lobby</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleAdmitAll}
+                disabled={admittingAll}
+                className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl transition-all shadow-md flex items-center gap-1.5 text-xs"
+              >
+                <CheckCircle2 className="w-4 h-4" /> Allow All
+              </button>
+              <button
+                onClick={() => setShowWaitingModal(true)}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 text-xs"
+              >
+                Manage Lobby
+              </button>
+            </div>
+          </div>
+        )}
+
         <div ref={jitsiContainerRef} className="w-full h-full" />
       </div>
+
+      {/* Host Waiting Room Management Modal */}
+      <AnimatePresence>
+        {showWaitingModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-teal-400" />
+                  <h3 className="text-lg font-bold text-white">Waiting Room Lobby</h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
+                    {waitingQueue.length} Waiting
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowWaitingModal(false)}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {waitingQueue.length > 0 && (
+                <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl">
+                  <div>
+                    <p className="text-xs text-emerald-300 font-bold">Admit All Participants</p>
+                    <p className="text-[11px] text-slate-400">Allow everyone waiting in the queue to enter immediately.</p>
+                  </div>
+                  <button
+                    onClick={handleAdmitAll}
+                    disabled={admittingAll}
+                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Allow All ({waitingQueue.length})
+                  </button>
+                </div>
+              )}
+
+              <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
+                {waitingQueue.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-white text-sm truncate">{item.fullName}</p>
+                      <p className="text-xs text-slate-400 truncate">{item.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleAdmitSingle(item.id)}
+                        disabled={admittingId === item.id}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Allow
+                      </button>
+                      <button
+                        onClick={() => handleDenySingle(item.id)}
+                        disabled={admittingId === item.id}
+                        className="px-2.5 py-1.5 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-semibold text-xs rounded-xl transition flex items-center gap-1"
+                      >
+                        <XCircle className="w-3.5 h-3.5" /> Deny
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {waitingQueue.length === 0 && (
+                  <div className="p-8 text-center text-slate-500 text-sm">
+                    No attendees currently waiting in the lobby.
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowWaitingModal(false)}
+                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                >
+                  Close Lobby
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -698,31 +698,51 @@ export class ConferenceController {
           await Conference.updateOne({ _id: id }, { $set: { hostJoined: true } });
           conference.hostJoined = true;
         }
-      } else if (conference.enableWaitingRoom && !conference.hostJoined) {
-        // Participant must wait until host joins
-        return res.json({
-          waitingForHost: true,
-          message: "The meeting host has not joined yet. Please stay in the waiting room.",
-          conference: {
-            id: conference._id,
-            title: conference.title,
-            description: conference.description,
-            roomName: conference.roomName,
-            enableWaitingRoom: true,
-            meetingDate: conference.meetingDate,
-            meetingTime: conference.meetingTime,
-            duration: conference.duration,
-            endDateTime: endDateTime ? endDateTime.toISOString() : null,
-            hostEmail: conference.hostEmail || "",
-            hostJoined: false,
-            isHost: false,
-          },
-          user: {
-            fullName: participantName,
-            email: participantEmail,
-            isHost: false,
-          },
-        });
+        if (registration) {
+          await ConferenceRegistration.updateOne(
+            { _id: registration._id },
+            { $set: { admitted: true, admitStatus: "admitted" } }
+          );
+        }
+      } else if (conference.enableWaitingRoom) {
+        if (registration?.admitStatus === "denied") {
+          throw new AppError("You were denied entry to this conference room by the host.", 403);
+        }
+
+        const isAdmitted = registration?.admitted === true || registration?.admitStatus === "admitted";
+        if (!isAdmitted) {
+          if (registration) {
+            await ConferenceRegistration.updateOne(
+              { _id: registration._id },
+              { $set: { currentStatus: "waiting", admitStatus: "waiting", admitted: false } }
+            );
+          }
+
+          return res.json({
+            waitingForHost: true,
+            waitingForAdminApproval: true,
+            message: "The meeting host or admin must allow you into the room. Please wait in the lobby.",
+            conference: {
+              id: conference._id,
+              title: conference.title,
+              description: conference.description,
+              roomName: conference.roomName,
+              enableWaitingRoom: true,
+              meetingDate: conference.meetingDate,
+              meetingTime: conference.meetingTime,
+              duration: conference.duration,
+              endDateTime: endDateTime ? endDateTime.toISOString() : null,
+              hostEmail: conference.hostEmail || "",
+              hostJoined: conference.hostJoined || false,
+              isHost: false,
+            },
+            user: {
+              fullName: participantName,
+              email: participantEmail,
+              isHost: false,
+            },
+          });
+        }
       }
 
       // Generate JaaS RS256 JWT Token (moderator: isHost)
@@ -1066,4 +1086,103 @@ export class ConferenceController {
       }
     }
   );
+
+  /** GET /conferences/:id/waiting-room — List all attendees currently waiting in lobby */
+  static getWaitingRoomAttendees = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const conference = await Conference.findById(id).lean();
+    if (!conference) throw new AppError("Conference not found", 404);
+
+    const waiting = await ConferenceRegistration.find({
+      conferenceId: id,
+      admitStatus: "waiting",
+    })
+      .select("_id fullName email currentStatus admitStatus paymentStatus createdAt")
+      .sort({ createdAt: 1 })
+      .lean();
+
+    res.json({
+      waiting: waiting.map((w: any) => ({
+        id: w._id,
+        fullName: w.fullName,
+        email: w.email,
+        paymentStatus: w.paymentStatus,
+        createdAt: w.createdAt,
+      })),
+      count: waiting.length,
+    });
+  });
+
+  /** POST /conferences/:id/waiting-room/admit — Admit an individual attendee */
+  static admitAttendee = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { registrationId, email } = req.body as { registrationId?: string; email?: string };
+
+    let query: any = { conferenceId: id };
+    if (registrationId) {
+      query._id = registrationId;
+    } else if (email) {
+      query.email = email.toLowerCase().trim();
+    } else {
+      throw new AppError("registrationId or email is required", 400);
+    }
+
+    const reg = await ConferenceRegistration.findOneAndUpdate(
+      query,
+      { $set: { admitted: true, admitStatus: "admitted", currentStatus: "registered" } },
+      { new: true }
+    );
+
+    if (!reg) throw new AppError("Attendee registration not found", 404);
+
+    res.json({
+      message: `Allowed ${reg.fullName} into the conference room`,
+      registrationId: reg._id,
+      email: reg.email,
+    });
+  });
+
+  /** POST /conferences/:id/waiting-room/admit-all — Admit ALL waiting attendees at once */
+  static admitAllAttendees = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+
+    const result = await ConferenceRegistration.updateMany(
+      { conferenceId: id, admitStatus: "waiting" },
+      { $set: { admitted: true, admitStatus: "admitted", currentStatus: "registered" } }
+    );
+
+    res.json({
+      message: `Allowed all waiting attendees into the conference room`,
+      admittedCount: result.modifiedCount,
+    });
+  });
+
+  /** POST /conferences/:id/waiting-room/deny — Deny an individual attendee */
+  static denyAttendee = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { registrationId, email } = req.body as { registrationId?: string; email?: string };
+
+    let query: any = { conferenceId: id };
+    if (registrationId) {
+      query._id = registrationId;
+    } else if (email) {
+      query.email = email.toLowerCase().trim();
+    } else {
+      throw new AppError("registrationId or email is required", 400);
+    }
+
+    const reg = await ConferenceRegistration.findOneAndUpdate(
+      query,
+      { $set: { admitted: false, admitStatus: "denied", currentStatus: "no_show" } },
+      { new: true }
+    );
+
+    if (!reg) throw new AppError("Attendee registration not found", 404);
+
+    res.json({
+      message: `Denied ${reg.fullName} entry to the conference room`,
+      registrationId: reg._id,
+      email: reg.email,
+    });
+  });
 }

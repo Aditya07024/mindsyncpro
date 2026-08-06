@@ -21,6 +21,8 @@ export interface IConferenceRegistration extends Document {
   browserInfo?: string;
   ipAddress?: string;
   adminNotes?: string;
+  admitted?: boolean;
+  admitStatus?: "waiting" | "admitted" | "denied";
   approvalStatus: "approved" | "rejected" | "pending";
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +58,12 @@ const ConferenceRegistrationSchema = new Schema<IConferenceRegistration>(
     browserInfo: { type: String, default: "" },
     ipAddress: { type: String, default: "" },
     adminNotes: { type: String, default: "" },
+    admitted: { type: Boolean, default: false },
+    admitStatus: {
+      type: String,
+      enum: ["waiting", "admitted", "denied"],
+      default: "waiting",
+    },
     approvalStatus: {
       type: String,
       enum: ["approved", "rejected", "pending"],

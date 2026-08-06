@@ -68,18 +68,9 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
   const isFree = conference.priceType === "free" || conference.price === 0;
 
-  const enterMeeting = (resPlatform?: string, resMeetingLink?: string) => {
+  const enterMeeting = () => {
     onClose();
-    const platform = resPlatform || conference.platform || "jitsi";
-    const meetingLink = resMeetingLink || conference.meetingLink || "";
-
-    if (platform === "teams" && meetingLink) {
-      toast.success("Redirecting to Microsoft Teams meeting...");
-      const win = window.open(meetingLink, "_blank", "noopener,noreferrer");
-      if (!win || win.closed || typeof win.closed === "undefined") {
-        window.location.href = meetingLink;
-      }
-    } else if (onSuccessJoin) {
+    if (onSuccessJoin) {
       onSuccessJoin(conference._id);
     } else {
       window.location.href = `/conferences/${conference._id}/room`;
@@ -124,14 +115,14 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
       if (res.isAlreadyRegistered || !res.isPaid || !res.orderId) {
         toast.success("Registration confirmed!");
-        enterMeeting(res.platform, res.meetingLink);
+        enterMeeting();
         return;
       }
 
       // PAID CONFERENCE -> Trigger Razorpay Payment with fallback
       if (!window.Razorpay) {
         toast.info("Entering meeting room...");
-        enterMeeting(res.platform, res.meetingLink);
+        enterMeeting();
         return;
       }
 

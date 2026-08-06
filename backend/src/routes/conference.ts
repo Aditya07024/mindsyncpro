@@ -13,6 +13,10 @@ router.post("/payments/verify", optionalAuth, ConferenceController.verifyPayment
 router.get("/:id", optionalAuth, ConferenceController.getConferenceById);
 router.get("/:id/join", optionalAuth, ConferenceController.getJoinInfo);
 router.post("/:id/track", optionalAuth, ConferenceController.trackAttendance);
+router.get("/:id/waiting-room", optionalAuth, ConferenceController.getWaitingRoomAttendees);
+router.post("/:id/waiting-room/admit", optionalAuth, ConferenceController.admitAttendee);
+router.post("/:id/waiting-room/admit-all", optionalAuth, ConferenceController.admitAllAttendees);
+router.post("/:id/waiting-room/deny", optionalAuth, ConferenceController.denyAttendee);
 
 // Admin endpoints require authentication and role checks
 router.use(requireAuth);

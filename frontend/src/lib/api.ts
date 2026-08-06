@@ -377,6 +377,14 @@ const API = {
     },
     trackAttendance: (id: string, data: { event: "join" | "heartbeat" | "leave"; deviceInfo?: string; browserInfo?: string; email?: string }) =>
       apiCall<any>(`/api/conferences/${id}/track`, { method: "POST", body: JSON.stringify(data) }),
+    getWaitingRoom: (id: string) =>
+      apiCall<any>(`/api/conferences/${id}/waiting-room`),
+    admitAttendee: (id: string, registrationId?: string, email?: string) =>
+      apiCall<any>(`/api/conferences/${id}/waiting-room/admit`, { method: "POST", body: JSON.stringify({ registrationId, email }) }),
+    admitAllAttendees: (id: string) =>
+      apiCall<any>(`/api/conferences/${id}/waiting-room/admit-all`, { method: "POST" }),
+    denyAttendee: (id: string, registrationId?: string, email?: string) =>
+      apiCall<any>(`/api/conferences/${id}/waiting-room/deny`, { method: "POST", body: JSON.stringify({ registrationId, email }) }),
     adminAttendees: (id: string, query?: Record<string, any>) => {
       const params = new URLSearchParams();
       if (query) {
