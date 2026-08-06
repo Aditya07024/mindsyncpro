@@ -10,6 +10,7 @@ router.get("/org-stats", optionalAuth, AdminController.orgStats);
 router.get("/therapists", optionalAuth, AdminController.pendingTherapists);
 router.get("/users", optionalAuth, AdminController.listAllUsers);
 router.patch("/therapist/:id/verify", optionalAuth, AdminController.verifyTherapist);
+router.post("/therapists/:id/revoke-org", optionalAuth, AdminController.revokeTherapistOrg);
 
 router.post("/verify-password-public", AdminController.verifyPasswordPublic);
 router.post("/verify-password", optionalAuth, AdminController.verifyPassword);

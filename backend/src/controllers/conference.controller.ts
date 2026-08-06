@@ -32,6 +32,15 @@ export function isValidTeamsUrl(url: string): boolean {
   }
 }
 
+export function formatHostEmails(emailStr?: any): string {
+  if (!emailStr) return "";
+  return String(emailStr)
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+    .join(", ");
+}
+
 export class ConferenceController {
   /**
    * POST /api/conferences - Create conference (Admin)
@@ -115,7 +124,7 @@ export class ConferenceController {
         enableRecording: Boolean(enableRecording),
         enablePassword: Boolean(enablePassword),
         password: password || "",
-        hostEmail: hostEmail ? String(hostEmail).toLowerCase().trim() : "",
+        hostEmail: formatHostEmails(hostEmail),
         instructions: instructions || "",
         status: status || "published",
         createdBy: new mongoose.Types.ObjectId(req.user!.sub),
@@ -302,7 +311,7 @@ export class ConferenceController {
         updates.price = 0;
       }
       if (updates.hostEmail !== undefined) {
-        updates.hostEmail = String(updates.hostEmail).toLowerCase().trim();
+        updates.hostEmail = formatHostEmails(updates.hostEmail);
       }
 
       const targetPlatform = updates.platform !== undefined ? updates.platform : conference.platform;
@@ -652,9 +661,12 @@ export class ConferenceController {
       const participantEmail = (registration?.email || (dbUser as any)?.email || emailParam || (req.user as any)?.email || "").toLowerCase().trim();
 
       // Determine Host / Leader Role:
-      // User is host if they are admin, creator of the conference, or match designated hostEmail
+      // User is host if they are admin, creator of the conference, or match designated hostEmail(s)
       const isCreator = req.user?.sub && String(conference.createdBy) === String(req.user.sub);
-      const isDesignatedHost = Boolean(conference.hostEmail && participantEmail && participantEmail === conference.hostEmail.toLowerCase().trim());
+      const hostEmailsList = conference.hostEmail
+        ? conference.hostEmail.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean)
+        : [];
+      const isDesignatedHost = Boolean(participantEmail && hostEmailsList.includes(participantEmail.toLowerCase().trim()));
       const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
 
       if (!registration && !isHost) {

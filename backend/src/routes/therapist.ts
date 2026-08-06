@@ -32,6 +32,7 @@ router.patch(
 
 router.get("/me/invitations", requireAuth, TherapistController.listInvitations);
 router.patch("/me/invitations/:id/respond", requireAuth, TherapistController.respondToInvitation);
+router.post("/me/leave-org", requireAuth, TherapistController.leaveOrg);
 
 // Shared Reports (no subscription check — reports are shared directly to therapist)
 router.get(

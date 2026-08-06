@@ -241,6 +241,17 @@ function TherapistDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const leaveOrgMutation = useMutation({
+    mutationFn: () => API.therapist.leaveOrg(),
+    onSuccess: () => {
+      toast.success("Successfully left organization");
+      qc.invalidateQueries({ queryKey: ['auth-me'] });
+      qc.invalidateQueries({ queryKey: ['therapist-invitations'] });
+      setTab('schedule');
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to leave organization"),
+  });
+
   const { data: membersData } = useQuery({
     queryKey: ['org-members'],
     queryFn: () => API.org.members(),
@@ -1062,7 +1073,21 @@ function TherapistDashboard() {
 
         {tab === 'organization' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 h-[600px] flex flex-col">
-            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Linked Organization Members</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Linked Organization Members</h2>
+              <Button
+                onClick={() => {
+                  if (confirm("Are you sure you want to leave your currently linked organization?")) {
+                    leaveOrgMutation.mutate();
+                  }
+                }}
+                disabled={leaveOrgMutation.isPending}
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50 font-bold rounded-xl flex items-center gap-1.5 text-xs px-3 py-1.5"
+              >
+                <LogOut className="size-3.5" /> Leave Organization
+              </Button>
+            </div>
             <div className="flex gap-6 flex-1 overflow-hidden">
               {/* Left side list */}
               <div className="w-1/3 bg-white rounded-3xl border border-slate-200 flex flex-col shadow-sm overflow-hidden">

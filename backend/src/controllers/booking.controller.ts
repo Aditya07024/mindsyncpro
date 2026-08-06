@@ -185,29 +185,19 @@ export class BookingController {
           { bookingId: booking._id.toString(), seekerId: req.user!.sub }
         );
 
-        // Send EMAIL to therapist if they have an email on file
+        // Send EMAIL to therapist only if booking is free (confirmed immediately).
+        // For paid bookings, email will be sent after payment is confirmed.
         const therapistEmail = therapist.therapistProfile.email;
-        if (therapistEmail) {
-          if (isFree) {
-            const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
-            sendPaymentConfirmedToTherapist({
-              therapistEmail,
-              therapistName: therapist.therapistProfile.name || "Therapist",
-              seekerName,
-              slot: slotDate,
-              fee: 0,
-              bookingId: booking._id.toString(),
-            }).catch(err => console.error("[Email] Free therapist booking email failed:", err));
-          } else {
-            sendBookingNotificationToTherapist({
-              therapistEmail,
-              therapistName: therapist.therapistProfile.name || "Therapist",
-              seekerName,
-              slot: slotDate,
-              fee: amount,
-              bookingId: booking._id.toString(),
-            }).catch(err => console.error("[Email] Therapist booking email failed:", err));
-          }
+        if (therapistEmail && isFree) {
+          const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
+          sendPaymentConfirmedToTherapist({
+            therapistEmail,
+            therapistName: therapist.therapistProfile.name || "Therapist",
+            seekerName,
+            slot: slotDate,
+            fee: 0,
+            bookingId: booking._id.toString(),
+          }).catch(err => console.error("[Email] Free therapist booking email failed:", err));
         }
 
       } catch (err) {

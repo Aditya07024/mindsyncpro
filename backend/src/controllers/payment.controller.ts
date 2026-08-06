@@ -364,6 +364,25 @@ export class PaymentController {
             booking.payment.razorpayPaymentId = paymentId;
             booking.status = "confirmed";
             await booking.save();
+
+            // Send payment-confirmed email to therapist
+            try {
+              const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
+              const seeker = await User.findById(booking.userId).select("fullName").lean();
+              const therapistEmail = therapist?.therapistProfile?.email;
+              if (therapistEmail) {
+                sendPaymentConfirmedToTherapist({
+                  therapistEmail,
+                  therapistName: therapist?.therapistProfile?.name || "Therapist",
+                  seekerName: seeker?.fullName || "Client",
+                  slot: booking.slot,
+                  fee: booking.payment.amount,
+                  bookingId: booking._id.toString(),
+                }).catch(err => console.error("[Email] Webhook payment confirmed email failed:", err));
+              }
+            } catch (err) {
+              console.error("[Email] Could not send webhook payment confirmed email:", err);
+            }
           }
         }
       } else if (event.event === "payment.failed") {

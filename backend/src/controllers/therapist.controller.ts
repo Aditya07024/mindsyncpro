@@ -529,6 +529,28 @@ export class TherapistController {
     res.json({ message: `Invitation ${action}`, status: action });
   });
 
+  /** POST /therapists/me/leave-org — Therapist leaves their linked organization */
+  static leaveOrg = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const userId = req.user!.sub;
+    const therapist = await User.findOne({ _id: userId, role: "therapist" });
+    if (!therapist) return res.status(404).json({ error: "Therapist not found" });
+
+    if (!therapist.orgId) {
+      return res.status(400).json({ error: "Therapist is not attached to any organization" });
+    }
+
+    const oldOrgId = therapist.orgId;
+    therapist.orgId = undefined;
+    await therapist.save();
+
+    await TherapistInvitation.updateMany(
+      { orgId: oldOrgId, therapistId: userId },
+      { status: "rejected" }
+    );
+
+    res.json({ message: "Successfully left organization" });
+  });
+
   /**
    * POST /api/therapists/recommend — Recommend therapists to the user based on subscription limits
    */

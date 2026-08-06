@@ -875,6 +875,26 @@ export class OrgController {
     res.json({ message: "Invitation cancelled" });
   });
 
+  /** DELETE /org/therapist/:id — Org admin removes an external/attached therapist from organization */
+  static removeTherapistFromOrg = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const adminUser = await User.findById(req.user!.sub).lean();
+    if (!adminUser || !adminUser.orgId) return res.status(403).json({ error: "Org access required" });
+
+    const { id } = req.params;
+    const therapist = await User.findOne({ _id: id, role: "therapist", orgId: adminUser.orgId });
+    if (!therapist) return res.status(404).json({ error: "Therapist not found in this organization" });
+
+    therapist.orgId = undefined;
+    await therapist.save();
+
+    await TherapistInvitation.updateMany(
+      { orgId: adminUser.orgId, therapistId: id },
+      { status: "rejected" }
+    );
+
+    res.json({ message: "Therapist removed from organization successfully" });
+  });
+
   /** POST /org/whitelist-email — Org admin manually adds an employee email to whitelist */
   static whitelistEmail = asyncHandler(
     async (req: AuthedRequest, res: Response) => {

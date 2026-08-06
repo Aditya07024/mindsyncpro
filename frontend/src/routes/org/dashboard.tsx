@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Users, BarChart2, Shield, Building2, TrendingUp, AlertTriangle, Download,
   CheckCircle, Clock, UserCheck, UserX, Upload, X, Loader2, ChevronRight,
-  CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle
+  CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle, UserMinus
 } from 'lucide-react';
 import API from '@/lib/api';
 import { UserButton, useClerk } from '@clerk/clerk-react';
@@ -251,6 +251,18 @@ function OrgDashboard() {
       refetchTherapists();
     } catch (e: any) {
       toast.error(e.message || 'Failed to verify therapist');
+    }
+  };
+
+  const handleRemoveTherapist = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to remove Dr. ${name} from your organization?`)) return;
+    try {
+      await API.org.removeTherapist(id);
+      toast.success(`Dr. ${name} removed from organization`);
+      refetchTherapists();
+      refetchExtInvitations();
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to remove therapist');
     }
   };
 
@@ -818,6 +830,18 @@ function OrgDashboard() {
                           className="text-red-500 hover:text-red-700 text-xs font-bold transition flex items-center gap-1"
                         >
                           <X className="size-3" /> Cancel
+                        </button>
+                      )}
+                      {inv.status === 'accepted' && (
+                        <button 
+                          onClick={() => {
+                            const therapistId = inv.therapistId?._id || inv.therapistId;
+                            const therapistName = inv.therapistId?.therapistProfile?.name || inv.therapistId?.fullName || 'Therapist';
+                            handleRemoveTherapist(therapistId, therapistName);
+                          }}
+                          className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                        >
+                          <UserMinus className="size-3.5" /> Remove Therapist
                         </button>
                       )}
                     </div>

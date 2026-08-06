@@ -89,6 +89,11 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    revokeTherapistOrg: (id: string, data?: { password?: string }) =>
+      apiCall<any>(`/api/admin/therapists/${id}/revoke-org`, {
+        method: "POST",
+        body: JSON.stringify(data || {}),
+      }),
     pendingOrgs: () => apiCall<any>("/api/admin/pending-orgs"),
     verifyOrg: (id: string, data: { verified: boolean; password?: string }) =>
       apiCall<any>(`/api/admin/org/${id}/verify`, { method: "PATCH", body: JSON.stringify(data) }),
@@ -173,6 +178,8 @@ const API = {
     invitations: () => apiCall<any>("/api/org/invitations"),
     cancelInvitation: (id: string) =>
       apiCall<any>(`/api/org/invitation/${id}`, { method: "DELETE" }),
+    removeTherapist: (id: string) =>
+      apiCall<any>(`/api/org/therapist/${id}`, { method: "DELETE" }),
     // Excel email whitelist
     uploadEmails: async (file: File) => {
       const headers: Record<string, string> = {};
@@ -251,6 +258,8 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    leaveOrg: () =>
+      apiCall<any>("/api/therapists/me/leave-org", { method: "POST" }),
     sharedReports: () => apiCall<any>("/api/therapists/me/shared-reports"),
     sharedReportDetail: (id: string) => apiCall<any>(`/api/therapists/me/shared-reports/${id}`),
     recommend: () => apiCall<any>("/api/therapists/recommend", { method: "POST" }),

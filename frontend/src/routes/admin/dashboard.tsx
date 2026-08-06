@@ -133,6 +133,17 @@ function SuperAdminDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const revokeTherapistOrgMutation = useMutation({
+    mutationFn: ({ therapistId, password }: { therapistId: string; password?: string }) =>
+      API.admin.revokeTherapistOrg(therapistId, { password: password || adminPassword || "MindAdmin@123" }),
+    onSuccess: () => {
+      toast.success("Therapist unlinked from organization successfully ✓");
+      qc.invalidateQueries({ queryKey: ['admin-therapists'] });
+      qc.invalidateQueries({ queryKey: ['admin-orgs'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const planMutation = useMutation({
     mutationFn: ({ id, data, isDelete }: { id?: string, data?: any, isDelete?: boolean }) => {
       if (isDelete) return API.admin.deletePlan(id!, { password: adminPassword });
@@ -433,8 +444,17 @@ function SuperAdminDashboard() {
                       {t.name?.charAt(0) ?? '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white">{t.name}</p>
-                      {/* <p className="text-xs text-slate-400">RCI: {t.rciNumber || 'Not provided'}</p> */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-white">{t.name}</p>
+                        {t.orgName && (
+                          <span className="text-[10px] bg-blue-900/60 text-blue-300 border border-blue-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                            🏢 {t.orgName}
+                          </span>
+                        )}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isVerified ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-700' : 'bg-rose-900/60 text-rose-300 border border-rose-700'}`}>
+                          {isVerified ? '✓ Verified Practitioner' : '✕ Verification Revoked / Pending'}
+                        </span>
+                      </div>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {(t.specializations ?? []).slice(0, 3).map((s: string) => (
                           <span key={s} className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{s}</span>
@@ -507,6 +527,19 @@ function SuperAdminDashboard() {
                           disabled={!isVerified}>
                           <XCircle className="size-3.5" /> Revoke
                         </button>
+                        {t.orgId && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`Revoke organization affiliation for Dr. ${t.name}?`)) {
+                                revokeTherapistOrgMutation.mutate({ therapistId: t.id });
+                              }
+                            }}
+                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border text-amber-400 bg-amber-900/30 border-amber-800 hover:bg-amber-900/50"
+                            title="Unlink therapist from organization"
+                          >
+                            <Building2 className="size-3.5" /> Unlink Org
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

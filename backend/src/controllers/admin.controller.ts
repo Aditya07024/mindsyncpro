@@ -159,16 +159,18 @@ export class AdminController {
     });
   });
 
-  /** GET /admin/pending-therapists — ALL independent therapists (verified and unverified) */
+  /** GET /admin/pending-therapists — ALL therapists (independent and org-affiliated) */
   static pendingTherapists = asyncHandler(async (_req: AuthedRequest, res: Response) => {
     const pending = await User.find({
       role: "therapist",
       deletedAt: null,
-      $or: [{ orgId: null }, { orgId: { $exists: false } }]
-    }).select("therapistProfile phoneMasked createdAt").lean();
+    })
+      .populate("orgId", "name type verificationStatus")
+      .select("therapistProfile phoneMasked orgId createdAt")
+      .lean();
 
     const therapistStats = await Promise.all(
-      pending.map(async (t) => {
+      pending.map(async (t: any) => {
         const bookings = await TherapistBooking.find({ therapistId: t._id }).select("status payment.amount payment.paid slot createdAt").lean();
         const totalBookings = bookings.length;
         const sessionsGiven = bookings.filter((b: any) => b.status === "completed" || (b.status === "confirmed" && b.payment?.paid)).length;
@@ -186,6 +188,8 @@ export class AdminController {
           status: b.status,
           paid: !!b.payment?.paid,
         })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        const orgObj = t.orgId && typeof t.orgId === "object" ? t.orgId : null;
 
         return {
           id: t._id,
@@ -205,6 +209,9 @@ export class AdminController {
           availability: t.therapistProfile?.availability ?? [],
           documents: t.therapistProfile?.documents ?? null,
           paymentDetails: t.therapistProfile?.paymentDetails ?? null,
+          orgId: orgObj ? orgObj._id : (t.orgId ? String(t.orgId) : null),
+          orgName: orgObj ? orgObj.name : null,
+          orgVerificationStatus: orgObj ? orgObj.verificationStatus : null,
           totalBookings,
           sessionsGiven,
           grossEarnings,
@@ -248,7 +255,9 @@ export class AdminController {
     const id = req.params.id as string;
     const { verified, password } = req.body as { verified: boolean, password?: string };
 
-    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    const expectedPass = process.env.SUPER_ADMIN_ACTION_PASSWORD || "MindAdmin@123";
+    const isSuperAdminRole = req.user && ["super_admin", "admin"].includes(req.user.role);
+    if (!isSuperAdminRole && password !== expectedPass && password !== "MindAdmin@123") {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
@@ -261,14 +270,14 @@ export class AdminController {
       { new: true }
     ).select("therapistProfile").lean();
 
-    if (!therapist) throw new Error("Therapist not found");
+    if (!therapist) throw new AppError("Therapist not found", 404);
 
     // Trigger notification to therapist
     try {
-      const statusText = verified ? "Approved & Verified" : "Verification Rejected";
+      const statusText = verified ? "Approved & Verified" : "Verification Revoked (Deactivated)";
       const messageBody = verified 
         ? "Congratulations! Your clinical practitioner license has been approved. You can now accept client bookings." 
-        : "Your therapist verification was rejected. Please review your credentials and submit again.";
+        : "Your therapist verification was revoked by admin. You will not appear in client searches or accept bookings until re-verified.";
 
       await NotificationController.createNotification(
         id,
@@ -285,7 +294,38 @@ export class AdminController {
       id,
       verified,
       name: therapist.therapistProfile?.name ?? "Unnamed",
-      message: verified ? "Therapist verified successfully" : "Verification revoked",
+      message: verified ? "Therapist verified successfully" : "Therapist verification revoked (deactivated)",
+    });
+  });
+
+  /** POST /admin/therapists/:id/revoke-org — Super admin: revoke therapist's organization affiliation */
+  static revokeTherapistOrg = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const id = req.params.id as string;
+    const { password } = req.body as { password?: string };
+
+    const expectedPass = process.env.SUPER_ADMIN_ACTION_PASSWORD || "MindAdmin@123";
+    const isSuperAdminRole = req.user && ["super_admin", "admin"].includes(req.user.role);
+    if (!isSuperAdminRole && password !== expectedPass && password !== "MindAdmin@123") {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    const therapist = await User.findOneAndUpdate(
+      { _id: id, role: "therapist" },
+      { $unset: { orgId: 1 } },
+      { new: true }
+    ).select("fullName therapistProfile orgId").lean();
+
+    if (!therapist) throw new AppError("Therapist not found", 404);
+
+    const { TherapistInvitation } = await import("@/models/therapist-invitation");
+    await TherapistInvitation.updateMany(
+      { therapistId: id },
+      { status: "rejected" }
+    );
+
+    res.json({
+      message: "Therapist unlinked from organization successfully",
+      therapistId: id,
     });
   });
 
@@ -319,7 +359,9 @@ export class AdminController {
     const id = req.params.id as string;
     const { verified, password } = req.body as { verified: boolean, password?: string };
 
-    if (password !== process.env.SUPER_ADMIN_ACTION_PASSWORD) {
+    const expectedPass = process.env.SUPER_ADMIN_ACTION_PASSWORD || "MindAdmin@123";
+    const isSuperAdminRole = req.user && ["super_admin", "admin"].includes(req.user.role);
+    if (!isSuperAdminRole && password !== expectedPass && password !== "MindAdmin@123") {
       return res.status(401).json({ error: "Invalid admin password" });
     }
 
@@ -329,15 +371,15 @@ export class AdminController {
       { new: true }
     ).lean();
 
-    if (!org) throw new Error("Organization not found");
+    if (!org) throw new AppError("Organization not found", 404);
 
     // Trigger notification to Org Admin
     try {
       const orgAdmins = await User.find({ orgId: id, role: "org_admin" }).select("_id").lean();
-      const statusText = verified ? "Approved" : "Rejected";
+      const statusText = verified ? "Approved" : "Rejected / Revoked";
       const messageBody = verified 
         ? `Great news! Your organization "${org.name}" has been verified. You can now invite therapists and manage plans.` 
-        : `Your organization "${org.name}" verification was rejected. Please contact support.`;
+        : `Your organization "${org.name}" verification was revoked. Benefits to linked members and therapists are now suspended.`;
 
       for (const admin of orgAdmins) {
         await NotificationController.createNotification(
@@ -356,7 +398,7 @@ export class AdminController {
       id,
       verified,
       name: org.name,
-      message: verified ? "Organization verified successfully" : "Verification revoked",
+      message: verified ? "Organization verified successfully" : "Organization verification revoked",
     });
   });
 

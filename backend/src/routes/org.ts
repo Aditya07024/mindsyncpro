@@ -140,5 +140,12 @@ router.delete(
   requireSubscription,
   OrgController.cancelInvitation,
 );
+router.delete(
+  "/therapist/:id",
+  requireAuth,
+  requireRole(["org_admin"]),
+  requireSubscription,
+  OrgController.removeTherapistFromOrg,
+);
 
 export default router;

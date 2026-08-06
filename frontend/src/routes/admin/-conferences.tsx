@@ -623,12 +623,12 @@ export function AdminConferencesTab() {
               </div>
 
               <div className="space-y-1">
-                <label className="font-medium text-slate-300">Designated Meeting Host / Leader Email (Optional)</label>
+                <label className="font-medium text-slate-300">Designated Meeting Host / Leader Email(s) (Optional)</label>
                 <input
-                  type="email"
+                  type="text"
                   value={form.hostEmail}
                   onChange={(e) => setForm({ ...form, hostEmail: e.target.value })}
-                  placeholder="e.g. therapist@mymindtherapyfriend.com (User who will lead & host the meeting)"
+                  placeholder="e.g. host1@example.com, host2@example.com (Separate multiple emails with commas)"
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:border-teal-500"
                 />
               </div>
