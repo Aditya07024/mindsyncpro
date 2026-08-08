@@ -15,7 +15,11 @@ export async function createApp() {
 
   const app = express();
   app.set("trust proxy", 1);
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+  );
   const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
@@ -46,9 +50,17 @@ export async function createApp() {
 
   app.use(clerkMiddleware());
 
-  // Serve uploaded images statically
+  // Serve uploaded images statically with explicit Cross-Origin headers
   const { getUploadDirectory } = await import("@/middleware/upload.middleware");
-  app.use("/uploads/images", express.static(getUploadDirectory()));
+  app.use(
+    "/uploads/images",
+    (req, res, next) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      next();
+    },
+    express.static(getUploadDirectory())
+  );
 
   app.use("/api", apiRouter);
   app.use(errorHandler);
