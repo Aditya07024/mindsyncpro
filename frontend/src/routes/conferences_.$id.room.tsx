@@ -243,6 +243,21 @@ function ConferenceRoomPage() {
     return () => clearInterval(interval);
   }, [id]);
 
+  // Poll waiting room queue for host/admin (fetch on load + every 10 seconds)
+  useEffect(() => {
+    const isHost = roomData?.user?.isHost || roomData?.conference?.isHost;
+    if (!roomData || !isHost) return;
+
+    // Initial fetch
+    fetchWaitingQueue();
+
+    // Poll every 10 seconds
+    const interval = setInterval(() => {
+      fetchWaitingQueue();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [roomData, id]);
+
   // Load JaaS (8x8.vc) script and initialize iframe
   useEffect(() => {
     if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current || roomData?.conference?.platform === "teams") return;
