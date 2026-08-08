@@ -949,13 +949,16 @@ export class ConferenceController {
         throw new AppError("Invalid conference ID", 400);
       }
 
+      const conference = await Conference.findById(id).lean();
+      if (!conference) throw new AppError("Conference not found", 404);
+
       const query: any = { conferenceId: id };
 
       if (paymentStatus === "confirmed") {
         query.paymentStatus = { $in: ["paid", "free"] };
       } else if (paymentStatus && paymentStatus !== "All") {
         query.paymentStatus = paymentStatus;
-      } else if (!paymentStatus && (conference.priceType === "paid" || conference.price > 0)) {
+      } else if (!paymentStatus && (conference.priceType === "paid" || (conference.price && conference.price > 0))) {
         query.paymentStatus = { $in: ["paid", "free"] };
       }
 
