@@ -577,7 +577,12 @@ export function AdminConferencesTab() {
                       {posterUploading ? "Uploading poster image..." : "Upload Conference Poster"}
                     </p>
                     <p className="text-[11px] text-slate-400">Click or drag & drop image file</p>
-                    <p className="text-[10px] text-slate-500 mt-1">Supported: JPG, PNG, WEBP, GIF, AVIF | Max size: 10 MB</p>
+                    <p className="text-[10px] text-slate-400 mt-1">Supported: JPG, PNG, WEBP, GIF, AVIF | Max size: 10 MB</p>
+                    
+                    {/* Recommended dimensions recommendation box */}
+                    <div className="mt-2.5 px-3 py-1.5 rounded-xl bg-teal-950/60 border border-teal-500/30 text-[10px] font-semibold text-teal-300 flex items-center gap-1.5 text-center">
+                      <span>📐 Recommended Dimensions: <strong>1200 × 675 px</strong> (16:9) or <strong>1080 × 1080 px</strong> (Square) for best fit</span>
+                    </div>
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
