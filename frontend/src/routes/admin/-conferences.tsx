@@ -862,7 +862,7 @@ export function AdminConferencesTab() {
 function AttendeeManagementModal({ conference, onClose }: { conference: any; onClose: () => void }) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [paymentFilter, setPaymentFilter] = useState("All");
+  const [paymentFilter, setPaymentFilter] = useState("confirmed");
   const [attendanceFilter, setAttendanceFilter] = useState("All");
   const [sortBy, setSortBy] = useState("createdAt");
   const [selectedAttendee, setSelectedAttendee] = useState<any | null>(null);
@@ -1006,22 +1006,44 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
                 className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-teal-500"
               />
             </div>
-            <select
-              value={paymentFilter}
-              onChange={(e) => setPaymentFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white"
-            >
-              <option value="All">All Payment</option>
-              <option value="free">FREE</option>
-              <option value="paid">PAID</option>
-              <option value="pending">PENDING</option>
-            </select>
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl shrink-0">
+              <button
+                onClick={() => setPaymentFilter("confirmed")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  paymentFilter === "confirmed"
+                    ? "bg-emerald-500 text-slate-950 shadow-md font-extrabold"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Confirmed Payments Only
+              </button>
+              <button
+                onClick={() => setPaymentFilter("pending")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  paymentFilter === "pending"
+                    ? "bg-amber-500 text-slate-950 shadow-md font-extrabold"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Pending Payments
+              </button>
+              <button
+                onClick={() => setPaymentFilter("All")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  paymentFilter === "All"
+                    ? "bg-slate-700 text-white shadow-md"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                All
+              </button>
+            </div>
             <select
               value={attendanceFilter}
               onChange={(e) => setAttendanceFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white"
+              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white shrink-0"
             >
-              <option value="All">All Status</option>
+              <option value="All">All Attendance Status</option>
               <option value="waiting">Waiting Room</option>
               <option value="joined">Joined</option>
               <option value="registered">Registered</option>

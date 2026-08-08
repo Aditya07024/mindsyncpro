@@ -951,8 +951,12 @@ export class ConferenceController {
 
       const query: any = { conferenceId: id };
 
-      if (paymentStatus && paymentStatus !== "All") {
+      if (paymentStatus === "confirmed") {
+        query.paymentStatus = { $in: ["paid", "free"] };
+      } else if (paymentStatus && paymentStatus !== "All") {
         query.paymentStatus = paymentStatus;
+      } else if (!paymentStatus && (conference.priceType === "paid" || conference.price > 0)) {
+        query.paymentStatus = { $in: ["paid", "free"] };
       }
 
       if (attendanceStatus && attendanceStatus !== "All") {
