@@ -91,12 +91,12 @@ function ConferencesPage() {
   const { isSignedIn } = useUser();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [statusFilter, setStatusFilter] = useState<"all" | "live" | "upcoming" | "ended">("all");
+  const [timeFilter, setTimeFilter] = useState<"all" | "today" | "future" | "past">("all");
   const [selectedConference, setSelectedConference] = useState<any | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
   const { data: conferences = [], isLoading } = useQuery({
-    queryKey: ["conferences", selectedCategory, search, statusFilter],
+    queryKey: ["conferences", selectedCategory, search],
     queryFn: () =>
       API.conference.list({
         category: selectedCategory,
@@ -105,9 +105,19 @@ function ConferencesPage() {
   });
 
   const filteredConferences = conferences.filter((c: any) => {
-    if (statusFilter === "all") return true;
-    if (statusFilter === "upcoming") return c.computedStatus === "upcoming" || c.computedStatus === "published";
-    return c.computedStatus === statusFilter;
+    const todayStr = new Date().toISOString().split("T")[0];
+    const confDateStr = c.meetingDate ? String(c.meetingDate).split("T")[0] : "";
+
+    if (timeFilter === "today") {
+      return confDateStr === todayStr || c.computedStatus === "live";
+    }
+    if (timeFilter === "future") {
+      return (confDateStr > todayStr || c.computedStatus === "upcoming") && c.computedStatus !== "ended";
+    }
+    if (timeFilter === "past") {
+      return (confDateStr < todayStr && confDateStr !== "") || c.computedStatus === "ended";
+    }
+    return true;
   });
 
   const handleJoinClick = (conf: any) => {
@@ -198,19 +208,24 @@ function ConferencesPage() {
             {/* Filter Pills */}
             <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
               <span className="text-xs text-slate-500 font-semibold flex items-center gap-1 mr-1">
-                <Filter className="w-3.5 h-3.5 text-teal-600" /> Status:
+                <Filter className="w-3.5 h-3.5 text-teal-600" /> Filter:
               </span>
-              {(["all", "live", "upcoming", "ended"] as const).map((st) => (
+              {[
+                { id: "all", label: "All Meetings" },
+                { id: "today", label: "Today's Meetings" },
+                { id: "future", label: "Future Meetings" },
+                { id: "past", label: "Past Meetings" },
+              ].map((tf) => (
                 <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all shrink-0 ${
-                    statusFilter === st
+                  key={tf.id}
+                  onClick={() => setTimeFilter(tf.id as any)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    timeFilter === tf.id
                       ? "bg-[#004038] text-white shadow-md"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  {st === "all" ? "All Status" : st}
+                  {tf.label}
                 </button>
               ))}
             </div>

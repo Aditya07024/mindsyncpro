@@ -41,6 +41,7 @@ export function AdminConferencesTab() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState<"all" | "today" | "future" | "past">("all");
 
   // Modal states
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -243,12 +244,29 @@ export function AdminConferencesTab() {
     }
   };
 
-  const copyInviteLink = (conf: any) => {
-    const origin = window.location.origin;
-    const link = `${origin}/conferences`;
-    navigator.clipboard.writeText(link);
-    toast.success("Conference link copied to clipboard!");
-  };
+  const filteredConferences = (conferences || []).filter((conf: any) => {
+    const matchesSearch =
+      !search ||
+      conf.title?.toLowerCase().includes(search.toLowerCase()) ||
+      conf.hostEmail?.toLowerCase().includes(search.toLowerCase()) ||
+      conf.description?.toLowerCase().includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const confDateStr = conf.meetingDate ? String(conf.meetingDate).split("T")[0] : "";
+
+    if (timeFilter === "today") {
+      return confDateStr === todayStr || conf.computedStatus === "live";
+    }
+    if (timeFilter === "future") {
+      return (confDateStr > todayStr || conf.computedStatus === "upcoming") && conf.computedStatus !== "ended";
+    }
+    if (timeFilter === "past") {
+      return (confDateStr < todayStr && confDateStr !== "") || conf.computedStatus === "ended";
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-8">
@@ -278,42 +296,66 @@ export function AdminConferencesTab() {
 
       {/* Conference Cards List */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by title or host..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-900/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
-            />
-          </div>
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search by title or host..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-slate-900/80 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                />
+              </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => refetch()}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors"
-              title="Refresh list"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+              {/* Time Filter Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
+                <span className="text-xs text-slate-400 font-semibold flex items-center gap-1 mr-1 shrink-0">
+                  <Filter className="w-3.5 h-3.5 text-teal-400" /> Meetings:
+                </span>
+                {[
+                  { id: "all", label: "All Meetings" },
+                  { id: "today", label: "Today's" },
+                  { id: "future", label: "Future / Upcoming" },
+                  { id: "past", label: "Past / Ended" },
+                ].map((tf) => (
+                  <button
+                    key={tf.id}
+                    onClick={() => setTimeFilter(tf.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      timeFilter === tf.id
+                        ? "bg-teal-500 text-slate-950 shadow-md font-extrabold"
+                        : "bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/60"
+                    }`}
+                  >
+                    {tf.label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => refetch()}
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors ml-1 shrink-0"
+                  title="Refresh list"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
 
-        {isLoading ? (
-          <div className="p-8 text-center text-slate-400">Loading conferences...</div>
-        ) : conferences.length === 0 ? (
-          <div className="p-12 text-center bg-slate-900/40 border border-slate-800 rounded-3xl">
-            <Video className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-300 font-semibold">No conferences created yet</p>
-            <p className="text-slate-500 text-xs mt-1">Click 'Create Conference' to set up your first video webinar.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {conferences.map((conf: any) => {
-              const isLive = conf.computedStatus === "live";
-              return (
+            {isLoading ? (
+              <div className="p-8 text-center text-slate-400">Loading conferences...</div>
+            ) : filteredConferences.length === 0 ? (
+              <div className="p-12 text-center bg-slate-900/40 border border-slate-800 rounded-3xl">
+                <Video className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                <p className="text-slate-300 font-semibold">No conferences found</p>
+                <p className="text-slate-500 text-xs mt-1">
+                  No video conferences match the selected filter. Try switching meeting filters.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredConferences.map((conf: any) => {
+                  const isLive = conf.computedStatus === "live";
+                  return (
                 <div
                   key={conf._id}
                   className="bg-slate-900/80 border border-slate-800 hover:border-slate-700 p-6 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all"
