@@ -190,22 +190,33 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
           transition={{ duration: 0.2 }}
           className="relative w-full max-w-lg overflow-hidden bg-slate-900/90 border border-teal-500/20 shadow-2xl rounded-3xl text-slate-100 backdrop-blur-xl"
         >
-          {/* Top Gradient Banner */}
-          <div className="relative h-28 bg-gradient-to-r from-teal-900/80 via-emerald-800/80 to-slate-900 flex items-center px-6 justify-between border-b border-teal-500/10">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-teal-500/20 border border-teal-400/30 rounded-2xl text-teal-300">
-                <Video className="w-6 h-6" />
+          {/* Top Banner & Poster */}
+          {(conference.posterUrl || conference.banner) && (
+            <div className="relative w-full bg-slate-950 flex items-center justify-center p-3 border-b border-teal-500/20 max-h-64 overflow-hidden">
+              <img
+                src={conference.posterUrl || conference.banner}
+                alt={conference.title}
+                className="max-w-full max-h-60 object-contain rounded-2xl shadow-xl"
+              />
+            </div>
+          )}
+
+          {/* Top Header */}
+          <div className="relative py-4 px-6 bg-gradient-to-r from-teal-900/80 via-emerald-800/80 to-slate-900 flex items-center justify-between border-b border-teal-500/10">
+            <div className="flex items-center gap-3 pr-2">
+              <div className="p-2.5 bg-teal-500/20 border border-teal-400/30 rounded-2xl text-teal-300 shrink-0">
+                <Video className="w-5 h-5" />
               </div>
-              <div>
-                <span className="inline-block px-2.5 py-0.5 text-xs font-semibold tracking-wider text-teal-300 uppercase rounded-full bg-teal-500/20 border border-teal-400/20 mb-1">
+              <div className="min-w-0">
+                <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-teal-300 uppercase rounded-full bg-teal-500/20 border border-teal-400/20 mb-1">
                   {isFree ? "Free Conference" : `₹${conference.price} Payment Required`}
                 </span>
-                <h3 className="text-lg font-bold text-white line-clamp-1">{conference.title}</h3>
+                <h3 className="text-base font-bold text-white leading-snug">{conference.title}</h3>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60 hover:bg-slate-700/80 transition-colors"
+              className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60 hover:bg-slate-700/80 transition-colors shrink-0"
             >
               <X className="w-5 h-5" />
             </button>

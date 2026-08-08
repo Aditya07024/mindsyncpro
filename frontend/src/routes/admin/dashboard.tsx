@@ -61,20 +61,6 @@ function SuperAdminDashboard() {
   });
   const [adminPassword, setAdminPassword] = useState('');
 
-  // Authentication & Loading Guard
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="size-10 rounded-full bg-violet-600 animate-pulse" />
-      </div>
-    );
-  }
-
-  if (!isSignedIn) {
-    navigate({ to: '/sign-in', replace: true });
-    return null;
-  }
-
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
     queryKey: ['admin-therapists'],
     queryFn: () => API.admin.pendingTherapists(),
@@ -201,6 +187,20 @@ function SuperAdminDashboard() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Authentication & Loading Guard (MUST be after all hooks to prevent React Error #310)
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="size-10 rounded-full bg-violet-600 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    navigate({ to: '/sign-in', replace: true });
+    return null;
+  }
 
   const therapists: any[] = therapistsData?.therapists ?? [];
   const filteredTherapists = therapists.filter((t) =>

@@ -4,6 +4,7 @@ export interface IConference extends Document {
   title: string;
   description: string;
   banner?: string;
+  posterUrl?: string | null;
   roomName: string;
   meetingDate: string; // YYYY-MM-DD
   meetingTime: string; // HH:mm
@@ -34,6 +35,7 @@ const ConferenceSchema = new Schema<IConference>(
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     banner: { type: String, default: "" },
+    posterUrl: { type: String, default: null },
     roomName: { type: String, required: true, unique: true, trim: true },
     meetingDate: { type: String, required: true },
     meetingTime: { type: String, required: true },

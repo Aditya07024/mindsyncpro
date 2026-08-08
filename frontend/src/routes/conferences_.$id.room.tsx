@@ -752,7 +752,7 @@ function ConferenceRoomPage() {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white line-clamp-1">
+              <h2 className="text-sm font-bold text-white">
                 {roomData?.conference?.title || "Live Video Session"}
               </h2>
               {isMeetingHost && (

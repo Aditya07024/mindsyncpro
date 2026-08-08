@@ -44,9 +44,11 @@ export async function createApp() {
   app.use(cookieParser());
   app.use(morgan("dev"));
 
-  // Clerk middleware — makes auth() available on req, but does NOT enforce auth.
-  // Individual routes use requireAuth() for enforcement.
   app.use(clerkMiddleware());
+
+  // Serve uploaded images statically
+  const { getUploadDirectory } = await import("@/middleware/upload.middleware");
+  app.use("/uploads/images", express.static(getUploadDirectory()));
 
   app.use("/api", apiRouter);
   app.use(errorHandler);

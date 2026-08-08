@@ -5,6 +5,7 @@ import { Conference, ConferenceRegistration, ConferencePayment, User } from "@/m
 import { AppError } from "@/lib/app-error";
 import PaymentService from "@/services/payment.service";
 import { JaasService } from "@/services/jaas.service";
+import { getPublicUrlForFilename, deleteFileFromStorage } from "@/middleware/upload.middleware";
 import mongoose from "mongoose";
 import * as XLSX from "xlsx";
 
@@ -51,6 +52,7 @@ export class ConferenceController {
         title,
         description,
         banner,
+        posterUrl,
         meetingDate,
         meetingTime,
         endTime,
@@ -108,6 +110,7 @@ export class ConferenceController {
         title,
         description,
         banner: banner || "",
+        posterUrl: posterUrl || null,
         roomName: finalRoomName,
         meetingDate,
         meetingTime,
@@ -291,6 +294,64 @@ export class ConferenceController {
   );
 
   /**
+   * POST /api/conferences/upload-poster - Upload conference poster image (Admin)
+   */
+  static uploadPoster = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      if (!req.file) {
+        throw new AppError("No poster image file provided", 400);
+      }
+
+      const posterUrl = getPublicUrlForFilename(req.file.filename);
+
+      res.status(200).json({
+        message: "Poster uploaded successfully",
+        posterUrl,
+        filename: req.file.filename,
+      });
+    }
+  );
+
+  /**
+   * POST /api/conferences/:id/poster - Upload/update conference poster by conference ID (Admin)
+   */
+  static uploadConferencePosterById = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        if (req.file) deleteFileFromStorage(req.file.filename);
+        throw new AppError("Invalid conference ID", 400);
+      }
+
+      if (!req.file) {
+        throw new AppError("No poster image file provided", 400);
+      }
+
+      const conference = await Conference.findById(id);
+      if (!conference) {
+        if (req.file) deleteFileFromStorage(req.file.filename);
+        throw new AppError("Conference not found", 404);
+      }
+
+      // Clean up old poster file if replacing
+      if (conference.posterUrl) {
+        deleteFileFromStorage(conference.posterUrl);
+      }
+
+      const newPosterUrl = getPublicUrlForFilename(req.file.filename);
+      conference.posterUrl = newPosterUrl;
+      await conference.save();
+
+      res.status(200).json({
+        message: "Poster updated successfully",
+        posterUrl: newPosterUrl,
+        conference,
+      });
+    }
+  );
+
+  /**
    * PUT /api/conferences/:id - Update conference (Admin)
    */
   static updateConference = asyncHandler(
@@ -312,6 +373,11 @@ export class ConferenceController {
       }
       if (updates.hostEmail !== undefined) {
         updates.hostEmail = formatHostEmails(updates.hostEmail);
+      }
+
+      // If posterUrl is being removed or replaced via body edit
+      if (updates.posterUrl !== undefined && updates.posterUrl !== conference.posterUrl && conference.posterUrl) {
+        deleteFileFromStorage(conference.posterUrl);
       }
 
       const targetPlatform = updates.platform !== undefined ? updates.platform : conference.platform;
@@ -353,6 +419,11 @@ export class ConferenceController {
       const conference = await Conference.findById(id);
       if (!conference) {
         throw new AppError("Conference not found", 404);
+      }
+
+      // Delete poster file if present
+      if (conference.posterUrl) {
+        deleteFileFromStorage(conference.posterUrl);
       }
 
       await Conference.deleteOne({ _id: id });
@@ -1093,10 +1164,17 @@ export class ConferenceController {
     const conference = await Conference.findById(id).lean();
     if (!conference) throw new AppError("Conference not found", 404);
 
-    const waiting = await ConferenceRegistration.find({
+    const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
+    const filterQuery: any = {
       conferenceId: id,
       admitStatus: "waiting",
-    })
+    };
+
+    if (isPaidConf) {
+      filterQuery.paymentStatus = { $in: ["paid", "free"] };
+    }
+
+    const waiting = await ConferenceRegistration.find(filterQuery)
       .select("_id fullName email currentStatus admitStatus paymentStatus createdAt")
       .sort({ createdAt: 1 })
       .lean();
@@ -1118,6 +1196,9 @@ export class ConferenceController {
     const { id } = req.params;
     const { registrationId, email } = req.body as { registrationId?: string; email?: string };
 
+    const conference = await Conference.findById(id).lean();
+    if (!conference) throw new AppError("Conference not found", 404);
+
     let query: any = { conferenceId: id };
     if (registrationId) {
       query._id = registrationId;
@@ -1127,13 +1208,18 @@ export class ConferenceController {
       throw new AppError("registrationId or email is required", 400);
     }
 
+    const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
+    if (isPaidConf) {
+      query.paymentStatus = { $in: ["paid", "free"] };
+    }
+
     const reg = await ConferenceRegistration.findOneAndUpdate(
       query,
       { $set: { admitted: true, admitStatus: "admitted", currentStatus: "registered" } },
       { new: true }
     );
 
-    if (!reg) throw new AppError("Attendee registration not found", 404);
+    if (!reg) throw new AppError("Attendee registration not found or payment not completed", 404);
 
     res.json({
       message: `Allowed ${reg.fullName} into the conference room`,
@@ -1145,9 +1231,18 @@ export class ConferenceController {
   /** POST /conferences/:id/waiting-room/admit-all — Admit ALL waiting attendees at once */
   static admitAllAttendees = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
+    const conference = await Conference.findById(id).lean();
+    if (!conference) throw new AppError("Conference not found", 404);
+
+    const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
+    const filterQuery: any = { conferenceId: id, admitStatus: "waiting" };
+
+    if (isPaidConf) {
+      filterQuery.paymentStatus = { $in: ["paid", "free"] };
+    }
 
     const result = await ConferenceRegistration.updateMany(
-      { conferenceId: id, admitStatus: "waiting" },
+      filterQuery,
       { $set: { admitted: true, admitStatus: "admitted", currentStatus: "registered" } }
     );
 

@@ -15,9 +15,12 @@ export function setTokenGetter(fn: () => Promise<string | null>) {
 
 async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   // Attach Clerk session token if available
   if (_getToken) {
@@ -359,6 +362,22 @@ const API = {
       return apiCall<any>(`/api/conferences?${params.toString()}`);
     },
     get: (id: string) => apiCall<any>(`/api/conferences/${id}`),
+    uploadPoster: (file: File) => {
+      const formData = new FormData();
+      formData.append("poster", file);
+      return apiCall<{ message: string; posterUrl: string; filename: string }>("/api/conferences/upload-poster", {
+        method: "POST",
+        body: formData,
+      });
+    },
+    uploadPosterForId: (id: string, file: File) => {
+      const formData = new FormData();
+      formData.append("poster", file);
+      return apiCall<{ message: string; posterUrl: string; conference: any }>(`/api/conferences/${id}/poster`, {
+        method: "POST",
+        body: formData,
+      });
+    },
     create: (data: any) => apiCall<any>("/api/conferences", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: any) => apiCall<any>(`/api/conferences/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: string) => apiCall<any>(`/api/conferences/${id}`, { method: "DELETE" }),

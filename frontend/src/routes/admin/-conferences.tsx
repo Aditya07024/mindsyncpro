@@ -31,6 +31,8 @@ import {
   TrendingUp,
   Sparkles,
   ExternalLink,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import API from "@/lib/api";
 import { toast } from "sonner";
@@ -46,11 +48,14 @@ export function AdminConferencesTab() {
   const [attendeesModalOpen, setAttendeesModalOpen] = useState(false);
   const [selectedConferenceForAttendees, setSelectedConferenceForAttendees] = useState<any | null>(null);
 
+  const [posterUploading, setPosterUploading] = useState(false);
+
   // Form state
   const [form, setForm] = useState({
     title: "",
     description: "",
     banner: "",
+    posterUrl: "",
     meetingDate: new Date().toISOString().split("T")[0],
     meetingTime: "18:00",
     endTime: "19:00",
@@ -117,11 +122,42 @@ export function AdminConferencesTab() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const handlePosterUpload = async (file: File) => {
+    if (!file) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Please upload a JPG, PNG, WEBP, GIF, or AVIF image.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size exceeds 10 MB limit.");
+      return;
+    }
+
+    setPosterUploading(true);
+    try {
+      if (editingConference?._id) {
+        const res = await API.conference.uploadPosterForId(editingConference._id, file);
+        setForm((prev) => ({ ...prev, posterUrl: res.posterUrl }));
+        toast.success("Conference poster uploaded ✓");
+      } else {
+        const res = await API.conference.uploadPoster(file);
+        setForm((prev) => ({ ...prev, posterUrl: res.posterUrl }));
+        toast.success("Poster uploaded ✓");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload poster image");
+    } finally {
+      setPosterUploading(false);
+    }
+  };
+
   const resetForm = () => {
     setForm({
       title: "",
       description: "",
       banner: "",
+      posterUrl: "",
       meetingDate: new Date().toISOString().split("T")[0],
       meetingTime: "18:00",
       endTime: "19:00",
@@ -150,6 +186,7 @@ export function AdminConferencesTab() {
       title: conf.title || "",
       description: conf.description || "",
       banner: conf.banner || "",
+      posterUrl: conf.posterUrl || "",
       meetingDate: conf.meetingDate || "",
       meetingTime: conf.meetingTime || "",
       endTime: conf.endTime || "",
@@ -282,15 +319,19 @@ export function AdminConferencesTab() {
                   className="bg-slate-900/80 border border-slate-800 hover:border-slate-700 p-6 rounded-3xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-all"
                 >
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="w-20 h-20 rounded-2xl bg-slate-800 overflow-hidden shrink-0 border border-slate-700 flex items-center justify-center">
-                      {conf.banner ? (
-                        <img src={conf.banner} alt={conf.title} className="w-full h-full object-cover" />
+                    <div className="w-24 h-24 rounded-2xl bg-slate-950 overflow-hidden shrink-0 border border-slate-800 flex items-center justify-center p-1">
+                      {conf.posterUrl || conf.banner ? (
+                        <img
+                          src={conf.posterUrl || conf.banner}
+                          alt={conf.title}
+                          className="max-w-full max-h-full object-contain rounded-lg"
+                        />
                       ) : (
                         <Video className="w-8 h-8 text-teal-400/40" />
                       )}
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-white text-lg">{conf.title}</span>
                         {conf.status === "draft" ? (
@@ -322,7 +363,7 @@ export function AdminConferencesTab() {
                         )}
                       </div>
 
-                      <p className="text-slate-400 text-xs line-clamp-1">{conf.description}</p>
+                      <p className="text-slate-300 text-xs leading-relaxed whitespace-pre-wrap">{conf.description}</p>
 
                       <div className="flex items-center gap-4 text-xs text-slate-400 pt-1 flex-wrap">
                         <span>
@@ -447,6 +488,66 @@ export function AdminConferencesTab() {
                   placeholder="Detailed description of what attendees will learn..."
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:border-teal-500"
                 />
+              </div>
+
+              {/* Conference Poster Upload Section */}
+              <div className="space-y-2 border-t border-slate-800 pt-3">
+                <label className="font-medium text-slate-300 block">Conference Poster / Image</label>
+                {form.posterUrl ? (
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex flex-col items-center gap-3">
+                    <div className="relative max-h-64 w-full flex items-center justify-center bg-slate-900 rounded-xl overflow-hidden p-2">
+                      <img
+                        src={form.posterUrl}
+                        alt="Conference Poster Preview"
+                        className="max-h-60 w-auto max-w-full object-contain rounded-lg shadow-md"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl cursor-pointer transition-colors flex items-center gap-1.5">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Change Poster</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handlePosterUpload(file);
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, posterUrl: "" }))}
+                        className="px-3 py-1.5 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/80 text-rose-300 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove Poster</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="border-2 border-dashed border-slate-700 hover:border-teal-500/60 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-slate-950/50 hover:bg-slate-900/80">
+                    <div className="w-10 h-10 rounded-full bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 mb-2">
+                      {posterUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+                    </div>
+                    <p className="text-xs font-bold text-white mb-1">
+                      {posterUploading ? "Uploading poster image..." : "Upload Conference Poster"}
+                    </p>
+                    <p className="text-[11px] text-slate-400">Click or drag & drop image file</p>
+                    <p className="text-[10px] text-slate-500 mt-1">Supported: JPG, PNG, WEBP, GIF, AVIF | Max size: 10 MB</p>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      className="hidden"
+                      disabled={posterUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePosterUpload(file);
+                      }}
+                    />
+                  </label>
+                )}
               </div>
 
               {/* <div className="grid grid-cols-2 gap-4">

@@ -75,19 +75,6 @@ function TherapistDashboard() {
     { name: 'Rose', value: '#f43f5e' }
   ];
 
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="size-10 rounded-full bg-teal-600 animate-pulse" />
-      </div>
-    );
-  }
-
-  if (!isSignedIn) {
-    navigate({ to: '/sign-in', replace: true });
-    return null;
-  }
-
   const { data: meData } = useQuery({
     queryKey: ['auth-me'],
     queryFn: () => API.auth.me(),
@@ -277,6 +264,20 @@ function TherapistDashboard() {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [memberDetail, setMemberDetail] = useState<any>(null);
   const [memberLoading, setMemberLoading] = useState(false);
+
+  // Authentication & Loading Guard (MUST be after all hooks to prevent React Error #310)
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="size-10 rounded-full bg-teal-600 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    navigate({ to: '/sign-in', replace: true });
+    return null;
+  }
 
   const handleViewMember = async (member: any) => {
     setSelectedMember(member);

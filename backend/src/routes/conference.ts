@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth, requireRole, optionalAuth } from "@/middleware/auth";
 import { ConferenceController } from "@/controllers/conference.controller";
+import { posterUpload } from "@/middleware/upload.middleware";
 
 const router = Router();
 
@@ -24,6 +25,8 @@ router.use(requireAuth);
 // Admin endpoints
 const adminRoles = ["super_admin", "admin", "org_admin"];
 
+router.post("/upload-poster", requireRole(adminRoles), posterUpload.single("poster"), ConferenceController.uploadPoster);
+router.post("/:id/poster", requireRole(adminRoles), posterUpload.single("poster"), ConferenceController.uploadConferencePosterById);
 router.post("/", requireRole(adminRoles), ConferenceController.createConference);
 router.put("/:id", requireRole(adminRoles), ConferenceController.updateConference);
 router.delete("/:id", requireRole(adminRoles), ConferenceController.deleteConference);

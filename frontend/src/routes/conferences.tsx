@@ -273,23 +273,23 @@ function ConferencesPage() {
                   transition={{ duration: 0.2 }}
                   className="group relative flex flex-col bg-white border border-teal-100 hover:border-teal-300 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all"
                 >
-                  {/* Thumbnail Banner */}
-                  <div className="relative h-48 w-full bg-teal-50 overflow-hidden">
-                    {conf.banner ? (
+                  {/* Thumbnail Poster / Banner */}
+                  <div className="relative min-h-[14rem] w-full bg-slate-950 flex items-center justify-center p-3 overflow-hidden border-b border-teal-950/20">
+                    {conf.posterUrl || conf.banner ? (
                       <img
-                        src={conf.banner}
+                        src={conf.posterUrl || conf.banner}
                         alt={conf.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="max-w-full max-h-56 object-contain rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-[1.02]"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-teal-50 via-teal-100/50 to-emerald-50 flex items-center justify-center p-6 text-center">
-                        <Video className="w-12 h-12 text-teal-600/40" />
+                      <div className="w-full h-48 bg-gradient-to-br from-teal-950 via-slate-900 to-emerald-950 flex items-center justify-center p-6 text-center">
+                        <Video className="w-12 h-12 text-teal-400/40" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
 
                     {/* Status Badge */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2 flex-wrap">
+                    <div className="absolute top-4 left-4 flex items-center gap-2 flex-wrap z-10">
                       {isLive && (
                         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md animate-pulse">
                           <span className="w-2 h-2 rounded-full bg-white"></span>
@@ -318,7 +318,7 @@ function ConferencesPage() {
                     </div>
 
                     {/* Price Badge */}
-                    <div className="absolute top-4 right-4">
+                    <div className="absolute top-4 right-4 z-10">
                       {isFree ? (
                         <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500 text-white shadow-md">
                           FREE
@@ -335,7 +335,7 @@ function ConferencesPage() {
                     </div>
 
                     {/* Category pill */}
-                    <div className="absolute bottom-3 left-4 text-xs font-semibold text-white bg-slate-900/60 backdrop-blur-sm px-2.5 py-0.5 rounded-lg border border-white/20">
+                    <div className="absolute bottom-3 left-4 text-xs font-semibold text-teal-200 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-teal-500/30 z-10">
                       {conf.category}
                     </div>
                   </div>
@@ -343,10 +343,10 @@ function ConferencesPage() {
                   {/* Body Content */}
                   <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                     <div>
-                      <h3 className="text-xl font-bold text-[#012620] group-hover:text-teal-700 transition-colors line-clamp-1">
+                      <h3 className="text-xl font-bold text-[#012620] group-hover:text-teal-700 transition-colors">
                         {conf.title}
                       </h3>
-                      <p className="text-slate-600 text-sm mt-2 line-clamp-2 leading-relaxed">
+                      <p className="text-slate-600 text-sm mt-2 leading-relaxed whitespace-pre-line">
                         {conf.description}
                       </p>
                     </div>
