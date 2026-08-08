@@ -1235,17 +1235,25 @@ export class ConferenceController {
     });
   });
 
-  /** POST /conferences/:id/waiting-room/admit-all — Admit ALL waiting attendees at once */
+  /** POST /conferences/:id/waiting-room/admit-all — Admit waiting attendees at once */
   static admitAllAttendees = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
+    const { paymentStatus } = req.body as { paymentStatus?: string };
+
     const conference = await Conference.findById(id).lean();
     if (!conference) throw new AppError("Conference not found", 404);
 
-    const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
     const filterQuery: any = { conferenceId: id, admitStatus: "waiting" };
 
-    if (isPaidConf) {
+    if (paymentStatus === "confirmed") {
       filterQuery.paymentStatus = { $in: ["paid", "free"] };
+    } else if (paymentStatus && paymentStatus !== "All") {
+      filterQuery.paymentStatus = paymentStatus;
+    } else if (!paymentStatus) {
+      const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
+      if (isPaidConf) {
+        filterQuery.paymentStatus = { $in: ["paid", "free"] };
+      }
     }
 
     const result = await ConferenceRegistration.updateMany(

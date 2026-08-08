@@ -913,13 +913,13 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
   });
 
   const allowAllMutation = useMutation({
-    mutationFn: () => API.conference.admitAllAttendees(conference._id),
+    mutationFn: () => API.conference.admitAllAttendees(conference._id, paymentFilter),
     onSuccess: (data) => {
-      toast.success(data.message || "Allowed all waiting members into room ✓");
+      toast.success(data.message || "Allowed waiting members into room ✓");
       refetchAttendees();
       refetchAnalytics();
     },
-    onError: (err: Error) => toast.error(err.message || "Failed to allow all members"),
+    onError: (err: Error) => toast.error(err.message || "Failed to allow members"),
   });
 
   const handleRefresh = () => {
