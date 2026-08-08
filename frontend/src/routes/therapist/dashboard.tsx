@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { UserButton, useClerk } from '@clerk/clerk-react';
+import { UserButton, useClerk, useAuth } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { openSubscriptionCheckout } from "@/lib/razorpay";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
@@ -50,6 +50,7 @@ function moodColor(score: number) {
 function TherapistDashboard() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
+  const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization' | 'reports'>('schedule');
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
@@ -74,14 +75,29 @@ function TherapistDashboard() {
     { name: 'Rose', value: '#f43f5e' }
   ];
 
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="size-10 rounded-full bg-teal-600 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    navigate({ to: '/sign-in', replace: true });
+    return null;
+  }
+
   const { data: meData } = useQuery({
     queryKey: ['auth-me'],
     queryFn: () => API.auth.me(),
+    enabled: !!isLoaded && !!isSignedIn,
   });
 
   const { data: subscriptionData } = useQuery({
     queryKey: ['subscription'],
     queryFn: () => API.subscription.get(),
+    enabled: !!isLoaded && !!isSignedIn,
   });
 
   const hasActiveSub = subscriptionData?.subscription?.status === 'active';

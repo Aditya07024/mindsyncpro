@@ -881,7 +881,7 @@ function Landing() {
               className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-4 py-2 text-sm font-medium text-teal-700 shadow-sm"
             >
               <Sparkles className="size-4" />
-              India’s AI Wellness Companion
+              India's AI Wellness Companion
             </motion.div>
 
             <motion.h1

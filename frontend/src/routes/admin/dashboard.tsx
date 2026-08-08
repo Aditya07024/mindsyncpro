@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { UserButton } from '@clerk/clerk-react';
+import { useAuth, UserButton } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { AdminConferencesTab } from './-conferences';
@@ -21,6 +21,7 @@ export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdmin
 
 function SuperAdminDashboard() {
   const navigate = useNavigate();
+  const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences'>('overview');
 
@@ -60,38 +61,54 @@ function SuperAdminDashboard() {
   });
   const [adminPassword, setAdminPassword] = useState('');
 
+  // Authentication & Loading Guard
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="size-10 rounded-full bg-violet-600 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    navigate({ to: '/sign-in', replace: true });
+    return null;
+  }
+
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
     queryKey: ['admin-therapists'],
     queryFn: () => API.admin.pendingTherapists(),
+    enabled: !!isLoaded && !!isSignedIn,
   });
 
   const { data: subsData } = useQuery({
     queryKey: ['admin-subscriptions'],
     queryFn: () => API.subscription.admin.all(),
-    enabled: tab === 'subscriptions',
+    enabled: !!isLoaded && !!isSignedIn && tab === 'subscriptions',
   });
 
   const { data: orgsData, isLoading: orgsLoading } = useQuery({
     queryKey: ['admin-orgs'],
     queryFn: () => API.admin.pendingOrgs(),
-    enabled: tab === 'organizations' || tab === 'overview',
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'organizations' || tab === 'overview'),
   });
 
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['admin-plans'],
     queryFn: () => API.plan.getAll(),
-    enabled: tab === 'plans',
+    enabled: !!isLoaded && !!isSignedIn && tab === 'plans',
   });
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => API.admin.users(),
-    enabled: tab === 'users',
+    enabled: !!isLoaded && !!isSignedIn && tab === 'users',
   });
 
   const { data: countsData } = useQuery({
     queryKey: ['admin-platform-counts'],
     queryFn: () => API.admin.platformCounts(),
+    enabled: !!isLoaded && !!isSignedIn,
   });
 
   const verifyMutation = useMutation({

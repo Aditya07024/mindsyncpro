@@ -7,7 +7,7 @@ import {
   CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle, UserMinus
 } from 'lucide-react';
 import API from '@/lib/api';
-import { UserButton, useClerk } from '@clerk/clerk-react';
+import { UserButton, useClerk, useAuth } from '@clerk/clerk-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
@@ -123,6 +123,7 @@ function DepartmentHeatmap({ data }: { data: any[] }) {
 function OrgDashboard() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
+  const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
   const [orgData, setOrgData] = useState<any>(null);
@@ -189,8 +190,13 @@ function OrgDashboard() {
     }
   };
 
-  // Verification Gate
+  // Verification & Auth Gate
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      navigate({ to: '/sign-in', replace: true });
+      return;
+    }
     API.org.me()
       .then((res: any) => {
         const org = res?.organization;
@@ -205,7 +211,7 @@ function OrgDashboard() {
         // Fallback if me() fails or user has no orgId
         navigate({ to: '/org/onboarding', replace: true });
       });
-  }, [navigate]);
+  }, [navigate, isSignedIn, isLoaded]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: (data: { coverMemberTherapyFees?: boolean; allowExternalTherapists?: boolean }) =>
