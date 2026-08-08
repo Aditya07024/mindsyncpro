@@ -309,7 +309,7 @@ function ConferenceRoomPage() {
             email: roomData.user.email,
           },
           configOverwrite: {
-            startWithAudioMuted: false,
+            startWithAudioMuted: true,
             startWithVideoMuted: false,
             prejoinPageEnabled: false,
             disableDeepLinking: true,
