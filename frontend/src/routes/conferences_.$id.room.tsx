@@ -110,8 +110,8 @@ function ConferenceRoomPage() {
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
   // Fetch join details with optional passcode
-  const fetchJoinInfo = async (passcode?: string) => {
-    setLoading(true);
+  const fetchJoinInfo = async (passcode?: string, isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setPasswordError(null);
     const guestEmail = localStorage.getItem("guest_conf_email") || undefined;
     try {
@@ -120,7 +120,7 @@ function ConferenceRoomPage() {
       if (data.requiresPassword) {
         setRequiresPassword(true);
         setWaitingForHost(false);
-        setLoading(false);
+        if (!isSilent) setLoading(false);
         return;
       }
 
@@ -128,7 +128,7 @@ function ConferenceRoomPage() {
         setWaitingForHost(true);
         setRequiresPassword(false);
         setRoomData(data);
-        setLoading(false);
+        if (!isSilent) setLoading(false);
         return;
       }
 
@@ -154,10 +154,10 @@ function ConferenceRoomPage() {
           setPasswordError("Incorrect meeting password. Please try again.");
         }
       } else {
-        setError(errMsg || "Failed to load conference room details");
+        if (!isSilent) setError(errMsg || "Failed to load conference room details");
       }
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
       setPasswordSubmitting(false);
     }
   };
@@ -165,6 +165,17 @@ function ConferenceRoomPage() {
   useEffect(() => {
     fetchJoinInfo();
   }, [id]);
+
+  // Auto-check admission status every 3s while waiting in lobby for host approval
+  useEffect(() => {
+    if (!waitingForHost) return;
+
+    const interval = setInterval(() => {
+      fetchJoinInfo(enteredPassword || undefined, true);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [waitingForHost, id, enteredPassword]);
 
   // Auto-redirect to Teams if platform is teams (only when user is admitted and waitingForHost is false)
   useEffect(() => {
