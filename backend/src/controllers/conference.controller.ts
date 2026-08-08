@@ -1165,8 +1165,8 @@ export class ConferenceController {
     }
   );
 
-  /** GET /conferences/:id/waiting-room — List all attendees currently waiting in lobby */
-  static getWaitingRoomAttendees = asyncHandler(async (req: AuthedRequest, res: Response) => {
+  /** GET /conferences/:id/waiting-room — Fetch waiting attendees list */
+  static getWaitingRoom = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
     const conference = await Conference.findById(id).lean();
     if (!conference) throw new AppError("Conference not found", 404);
@@ -1174,7 +1174,8 @@ export class ConferenceController {
     const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
     const filterQuery: any = {
       conferenceId: id,
-      admitStatus: "waiting",
+      admitted: { $ne: true },
+      admitStatus: { $nin: ["admitted", "denied"] },
     };
 
     if (isPaidConf) {
@@ -1197,6 +1198,8 @@ export class ConferenceController {
       count: waiting.length,
     });
   });
+
+  static getWaitingRoomAttendees = ConferenceController.getWaitingRoom;
 
   /** POST /conferences/:id/waiting-room/admit — Admit an individual attendee */
   static admitAttendee = asyncHandler(async (req: AuthedRequest, res: Response) => {
@@ -1243,7 +1246,11 @@ export class ConferenceController {
     const conference = await Conference.findById(id).lean();
     if (!conference) throw new AppError("Conference not found", 404);
 
-    const filterQuery: any = { conferenceId: id, admitStatus: "waiting" };
+    const filterQuery: any = {
+      conferenceId: id,
+      admitted: { $ne: true },
+      admitStatus: { $nin: ["admitted", "denied"] },
+    };
 
     if (paymentStatus === "confirmed") {
       filterQuery.paymentStatus = { $in: ["paid", "free"] };
