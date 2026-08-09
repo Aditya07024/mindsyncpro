@@ -1384,4 +1384,54 @@ export class ConferenceController {
       email: reg.email,
     });
   });
+
+  /** POST /conferences/:id/check-email — Check if email is host or allowed by admin */
+  static checkEmailStatus = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { email } = req.body;
+    if (!email) throw new AppError("Email is required", 400);
+
+    const cleanEmail = String(email).toLowerCase().trim();
+    const conference = await Conference.findById(id).lean();
+    if (!conference) throw new AppError("Conference not found", 404);
+
+    const registration = await ConferenceRegistration.findOne({
+      conferenceId: id,
+      email: cleanEmail,
+    }).lean();
+
+    const isCreator = req.user?.sub && String(conference.createdBy) === String(req.user.sub);
+    const hostEmailsList = conference.hostEmail
+      ? conference.hostEmail.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean)
+      : [];
+    const isDesignatedHost = Boolean(cleanEmail && hostEmailsList.includes(cleanEmail));
+    const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+    const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
+
+    const isAdmittedToMeeting = Boolean(
+      registration && (registration.admitted === true || registration.admitStatus === "admitted")
+    );
+    const isAllowedInWaitingRoom = Boolean(
+      registration && (registration.currentStatus === "waiting" || registration.admitStatus === "waiting")
+    );
+    const isPaidOrFree = Boolean(registration && ["free", "paid"].includes(registration.paymentStatus));
+
+    const isExemptFromPayment = isHost || isAdmittedToMeeting || isAllowedInWaitingRoom || isPaidOrFree;
+
+    let statusMessage = "";
+    if (isHost) statusMessage = "You are a Host for this conference (Free Entry)";
+    else if (isAdmittedToMeeting) statusMessage = "Allowed by Admin! (Direct Meeting Access)";
+    else if (isAllowedInWaitingRoom) statusMessage = "Allowed by Admin into Waiting Room (Free Entry)";
+    else if (isPaidOrFree) statusMessage = "Registration Confirmed";
+
+    res.json({
+      email: cleanEmail,
+      isHost,
+      isAdmittedToMeeting,
+      isAllowedInWaitingRoom,
+      isPaidOrFree,
+      isExemptFromPayment,
+      statusMessage,
+    });
+  });
 }

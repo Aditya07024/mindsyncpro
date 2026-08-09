@@ -54,6 +54,38 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
     }
   }, [user]);
 
+  const [emailStatusInfo, setEmailStatusInfo] = useState<{
+    isExempt: boolean;
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!conference || !emailRegex.test(cleanEmail)) {
+      setEmailStatusInfo(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await API.conference.checkEmailStatus(conference._id, cleanEmail);
+        if (res.isExemptFromPayment) {
+          setEmailStatusInfo({
+            isExempt: true,
+            message: res.statusMessage || "Allowed by Admin / Host (No payment required)",
+          });
+        } else {
+          setEmailStatusInfo(null);
+        }
+      } catch (e) {
+        setEmailStatusInfo(null);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [email, conference]);
+
   // Load Razorpay script dynamically if needed
   useEffect(() => {
     if (!window.Razorpay) {
@@ -295,6 +327,12 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
                 className="w-full px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-white placeholder-slate-500 text-sm transition-all"
               />
               {errors.email && <p className="text-xs text-rose-400 mt-1">{errors.email}</p>}
+              {emailStatusInfo?.isExempt && (
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-emerald-300 text-xs font-semibold mt-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{emailStatusInfo.message}</span>
+                </div>
+              )}
             </div>
 
             {/* Payment / Guarantee notice */}
@@ -328,7 +366,7 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
                   </>
                 ) : (
                   <>
-                    <span>{isFree ? "Join Meeting Now" : `Proceed to Pay ₹${conference.price}`}</span>
+                    <span>{isFree || emailStatusInfo?.isExempt ? "Join Meeting Now (Free Entry)" : `Proceed to Pay ₹${conference.price}`}</span>
                     <Sparkles className="w-4 h-4" />
                   </>
                 )}

@@ -15,6 +15,7 @@ router.get("/:id", optionalAuth, ConferenceController.getConferenceById);
 router.get("/:id/join", optionalAuth, ConferenceController.getJoinInfo);
 router.post("/:id/track", optionalAuth, ConferenceController.trackAttendance);
 router.get("/:id/waiting-room", optionalAuth, ConferenceController.getWaitingRoomAttendees);
+router.post("/:id/check-email", optionalAuth, ConferenceController.checkEmailStatus);
 router.post("/:id/waiting-room/admit", optionalAuth, ConferenceController.admitAttendee);
 router.post("/:id/waiting-room/allow-waiting", optionalAuth, ConferenceController.allowWaitingRoom);
 router.post("/:id/waiting-room/admit-all", optionalAuth, ConferenceController.admitAllAttendees);
