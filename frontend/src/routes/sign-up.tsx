@@ -13,6 +13,11 @@ import {
   Shield,
   Wind,
   CheckCircle2,
+  User,
+  Stethoscope,
+  Building2,
+  ArrowRight,
+  RefreshCw,
 } from "lucide-react";
 import logoUrl from "@/assets/logo.png";
 import API from "@/lib/api";
@@ -20,11 +25,41 @@ import API from "@/lib/api";
 export const Route = createFileRoute("/sign-up")({ component: SignUpPage });
 
 const PORTAL_NAMES: Record<string, string> = {
-  user: "I am a user/patient",
+  user: "I am a User / Patient",
   therapist: "I am a Therapist",
   org_admin: "Organisation Admin",
   super_admin: "Super Admin",
 };
+
+const ROLES = [
+  {
+    id: "user",
+    title: "User / Patient",
+    desc: "Seeking personal mental health support, 24/7 AI companion, CBT tools & therapy",
+    icon: User,
+    color: "from-teal-500 to-emerald-600",
+    bgColor: "bg-teal-50 hover:bg-teal-100/70 border-teal-200",
+    badge: "Personal Account",
+  },
+  {
+    id: "therapist",
+    title: "Therapist",
+    desc: "Licensed mental health professional offering therapy sessions & consultation",
+    icon: Stethoscope,
+    color: "from-blue-500 to-teal-600",
+    bgColor: "bg-blue-50 hover:bg-blue-100/70 border-blue-200",
+    badge: "Professional Account",
+  },
+  {
+    id: "org_admin",
+    title: "Organisation",
+    desc: "Corporate or educational institution managing employee/student wellness",
+    icon: Building2,
+    color: "from-amber-500 to-orange-600",
+    bgColor: "bg-amber-50 hover:bg-amber-100/70 border-amber-200",
+    badge: "Institutional Account",
+  },
+];
 
 const TESTIMONIALS = [
   {
@@ -55,7 +90,9 @@ function SignUpPage() {
       .catch(() => setIsHealthy(false));
 
     const role = localStorage.getItem("mymindtherapyfriend_intent_role");
-    setPortalRole(role);
+    if (role) {
+      setPortalRole(role);
+    }
   }, []);
 
   useEffect(() => {
@@ -64,6 +101,24 @@ function SignUpPage() {
     }, 6000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleSelectRole = (roleId: string) => {
+    setPortalRole(roleId);
+    try {
+      localStorage.setItem("mymindtherapyfriend_intent_role", roleId);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handleResetRole = () => {
+    setPortalRole(null);
+    try {
+      localStorage.removeItem("mymindtherapyfriend_intent_role");
+    } catch (e) {
+      // ignore
+    }
+  };
 
   if (isHealthy === null) {
     return (
@@ -119,7 +174,7 @@ function SignUpPage() {
       <div className="absolute top-[-10%] left-[-10%] size-[450px] bg-teal-300/20 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] size-[450px] bg-amber-300/20 rounded-full blur-[130px] pointer-events-none" />
 
-      {/* LEFT BOX - Floating Rounded Card with Curved Radius */}
+      {/* LEFT BOX - Floating Rounded Showcase Card */}
       <div className="hidden lg:flex lg:w-1/2 h-full rounded-[2.25rem] p-7 xl:p-9 flex-col justify-between relative z-10 border border-white/20 bg-gradient-to-br from-[#0F3836] via-[#145350] to-[#0A2625] text-white shadow-2xl overflow-hidden">
         {/* Vibrant Ambient Glow Layers */}
         <div className="absolute -right-16 -top-16 size-80 rounded-full bg-teal-400/20 blur-3xl pointer-events-none" />
@@ -243,11 +298,17 @@ function SignUpPage() {
           <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-800 hover:text-teal-950 transition">
             <ArrowLeft className="size-3.5" /> Back to Home
           </Link>
+          <div className="text-xs text-slate-500 font-medium">
+            Already have an account?{" "}
+            <Link to="/sign-in" className="text-teal-700 font-bold hover:underline">
+              Sign In
+            </Link>
+          </div>
         </div>
 
-        {/* Auth Card Container */}
-        <div className="w-full max-w-md mx-auto space-y-3.5 my-auto shrink-0">
-          {/* Logo & Heading Header with Rounded Square Box Logo */}
+        {/* Auth Container Area */}
+        <div className="w-full max-w-md mx-auto space-y-4 my-auto shrink-0">
+          {/* Logo & Header */}
           <div className="text-center space-y-1.5">
             <div className="size-14 rounded-2xl bg-white border border-slate-200/90 p-2.5 flex items-center justify-center mx-auto shrink-0 shadow-md aspect-square">
               <img src={logoUrl} alt="MyMindTherapyFriend Logo" className="size-full object-contain rounded-xl" />
@@ -258,58 +319,127 @@ function SignUpPage() {
             <p className="text-teal-700 font-semibold text-xs">Apna Dil Kholo</p>
           </div>
 
-          {/* Original Portal Role Heading (If set from landing page) */}
-          {portalRole && PORTAL_NAMES[portalRole] && (
-            <div className="text-center">
-              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-teal-50 text-teal-900 text-[11px] font-bold border border-teal-200 shadow-sm">
-                <CheckCircle2 className="size-3 text-teal-600" />
-                {PORTAL_NAMES[portalRole]}
-              </span>
-            </div>
-          )}
+          {/* STEP 1: ROLE SELECTION SCREEN (If role not selected yet) */}
+          {!portalRole ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4 pt-1"
+            >
+              <div className="text-center space-y-1">
+                <h2 className="text-base font-bold text-slate-800">
+                  Select Your Account Type
+                </h2>
+                <p className="text-slate-500 text-xs">
+                  Choose how you will be using MyMindTherapyFriend
+                </p>
+              </div>
 
-          {/* Styled Clerk SignUp Card */}
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/15 to-amber-500/15 rounded-[2rem] blur-xl opacity-60 pointer-events-none" />
-            <div className="relative bg-slate-50/60 backdrop-blur-xl rounded-[1.75rem] border border-slate-200/80 shadow-md p-1.5 sm:p-3">
-              <SignUp
-                routing="path"
-                path="/sign-up"
-                fallbackRedirectUrl="/onboarding"
-                signInFallbackRedirectUrl="/dashboard"
-                appearance={{
-                  elements: {
-                    rootBox: "w-full",
-                    cardBox: "shadow-none border-0 w-full bg-transparent",
-                    card: "shadow-none border-0 w-full bg-transparent p-3 sm:p-4",
-                    avatarBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
-                    logoBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
-                    logoImage: "rounded-xl object-contain",
-                    headerTitle: "font-display font-bold text-slate-900 text-lg text-center",
-                    headerSubtitle: "text-slate-500 text-xs text-center",
-                    socialButtonsBlockButton:
-                      "rounded-xl border border-slate-200 bg-white hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 font-medium text-slate-700 h-10 text-xs shadow-sm",
-                    socialButtonsBlockButtonText: "font-semibold text-slate-700 text-xs",
-                    dividerLine: "bg-slate-200",
-                    dividerText: "text-slate-400 text-[10px] uppercase font-medium tracking-wider bg-white px-2",
-                    formButtonPrimary:
-                      "rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold h-10 text-xs shadow-md shadow-teal-700/20 transition-all duration-200 transform active:scale-[0.99]",
-                    footerActionLink: "text-teal-700 font-bold hover:underline",
-                    formFieldInput:
-                      "rounded-xl border-slate-200 bg-white focus:ring-2 focus:ring-teal-600 focus:border-teal-600 h-10 text-xs transition-all shadow-sm",
-                    formFieldLabel: "text-[11px] font-semibold text-slate-700 mb-1",
-                    footer: "bg-transparent border-t border-slate-100 mt-2 pt-2 text-center text-xs",
-                  },
-                  variables: {
-                    colorPrimary: "#2C6B6A",
-                    colorBackground: "#ffffff",
-                    borderRadius: "0.75rem",
-                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                  },
-                }}
-              />
-            </div>
-          </div>
+              <div className="space-y-2.5">
+                {ROLES.map((role) => {
+                  const Icon = role.icon;
+                  return (
+                    <button
+                      key={role.id}
+                      type="button"
+                      onClick={() => handleSelectRole(role.id)}
+                      className={`w-full text-left p-3.5 rounded-2xl border ${role.bgColor} transition-all duration-200 group flex items-start gap-3.5 shadow-sm hover:shadow-md hover:scale-[1.01] cursor-pointer`}
+                    >
+                      <div
+                        className={`size-10 rounded-xl bg-gradient-to-br ${role.color} text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-110 transition duration-200`}
+                      >
+                        <Icon className="size-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-slate-900 text-sm group-hover:text-teal-900 transition">
+                            {role.title}
+                          </h3>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/80 text-teal-800 border border-slate-200/80 shadow-2xs">
+                            {role.badge}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 text-xs mt-0.5 leading-snug">
+                          {role.desc}
+                        </p>
+                      </div>
+                      <ArrowRight className="size-4 text-slate-400 group-hover:text-teal-700 group-hover:translate-x-0.5 transition my-auto shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="text-center text-[11px] text-slate-400 pt-1">
+                Select an option above to proceed to sign up
+              </p>
+            </motion.div>
+          ) : (
+            /* STEP 2: CLERK SIGN UP FORM (When role is selected) */
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-3.5"
+            >
+              {/* Selected Role Badge & Reset Option */}
+              <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-teal-50/90 border border-teal-200/90 text-xs shadow-2xs">
+                <div className="flex items-center gap-1.5 text-teal-900 font-bold">
+                  <CheckCircle2 className="size-4 text-teal-600 shrink-0" />
+                  <span>{PORTAL_NAMES[portalRole] || "Selected Role"}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetRole}
+                  className="text-[11px] font-semibold text-teal-700 hover:text-teal-950 hover:underline flex items-center gap-1 cursor-pointer transition"
+                  title="Choose a different account type"
+                >
+                  <RefreshCw className="size-3" /> Change
+                </button>
+              </div>
+
+              {/* Styled Clerk SignUp Card */}
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/15 to-amber-500/15 rounded-[2rem] blur-xl opacity-60 pointer-events-none" />
+                <div className="relative bg-slate-50/60 backdrop-blur-xl rounded-[1.75rem] border border-slate-200/80 shadow-md p-1.5 sm:p-3">
+                  <SignUp
+                    routing="path"
+                    path="/sign-up"
+                    fallbackRedirectUrl="/onboarding"
+                    signInFallbackRedirectUrl="/dashboard"
+                    appearance={{
+                      elements: {
+                        rootBox: "w-full",
+                        cardBox: "shadow-none border-0 w-full bg-transparent",
+                        card: "shadow-none border-0 w-full bg-transparent p-3 sm:p-4",
+                        avatarBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
+                        logoBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
+                        logoImage: "rounded-xl object-contain",
+                        headerTitle: "font-display font-bold text-slate-900 text-lg text-center",
+                        headerSubtitle: "text-slate-500 text-xs text-center",
+                        socialButtonsBlockButton:
+                          "rounded-xl border border-slate-200 bg-white hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 font-medium text-slate-700 h-10 text-xs shadow-sm",
+                        socialButtonsBlockButtonText: "font-semibold text-slate-700 text-xs",
+                        dividerLine: "bg-slate-200",
+                        dividerText: "text-slate-400 text-[10px] uppercase font-medium tracking-wider bg-white px-2",
+                        formButtonPrimary:
+                          "rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold h-10 text-xs shadow-md shadow-teal-700/20 transition-all duration-200 transform active:scale-[0.99]",
+                        footerActionLink: "text-teal-700 font-bold hover:underline",
+                        formFieldInput:
+                          "rounded-xl border-slate-200 bg-white focus:ring-2 focus:ring-teal-600 focus:border-teal-600 h-10 text-xs transition-all shadow-sm",
+                        formFieldLabel: "text-[11px] font-semibold text-slate-700 mb-1",
+                        footer: "bg-transparent border-t border-slate-100 mt-2 pt-2 text-center text-xs",
+                      },
+                      variables: {
+                        colorPrimary: "#2C6B6A",
+                        colorBackground: "#ffffff",
+                        borderRadius: "0.75rem",
+                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Emergency Crisis Helpline Banner */}
           <div className="p-2.5 rounded-xl bg-rose-50/90 border border-rose-200/80 flex items-center justify-between text-xs shadow-sm">
@@ -347,6 +477,7 @@ function SignUpPage() {
     </div>
   );
 }
+
 
 
 
