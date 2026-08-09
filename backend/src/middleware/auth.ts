@@ -31,7 +31,13 @@ export async function requireAuth(
     }).lean();
 
     if (user && user.deletedAt) {
-      return next(new AppError("This account has been deleted", 401));
+      // Reactivate: user is signing up again after deleting their account
+      await User.updateOne(
+        { _id: user._id },
+        { $unset: { deletedAt: 1 }, $set: { clerkId: clerkUserId } },
+      );
+      user.deletedAt = undefined;
+      user.clerkId = clerkUserId;
     }
 
     if (user && !user.clerkId) {

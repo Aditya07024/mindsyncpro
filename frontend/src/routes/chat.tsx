@@ -46,12 +46,14 @@ function Chat() {
     retry: false,
   });
 
-  const dbMessages = chatData?.messages || [];
+  const dbMessages = chatData?.messages;
   const [localMessages, setLocalMessages] = useState<any[]>([]);
   // Track last sent message to prevent rapid duplicate sends
   const lastSentRef = useRef<{ text: string; time: number }>({ text: '', time: 0 });
 
   useEffect(() => {
+    if (!dbMessages || dbMessages.length === 0) return;
+
     const fifteenDaysAgo = Date.now() - 15 * 24 * 60 * 60 * 1000;
     const filtered = dbMessages.filter((m: any) => {
       const msgTime = m.timestamp ? new Date(m.timestamp).getTime() : (m.createdAt ? new Date(m.createdAt).getTime() : Date.now());
@@ -67,9 +69,12 @@ function Chat() {
 
   const messages = localMessages;
 
+  const scrolledRef = useRef(false);
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, streaming]);
+    if (messages.length === 0 && !streaming) return;
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: scrolledRef.current ? 'smooth' : 'auto' });
+    scrolledRef.current = true;
+  }, [messages.length, streaming]);
 
   const todayStr = new Date().toLocaleDateString('en-CA');
   const dailyLimit = subData?.usage?.dailyLimit !== undefined ? subData.usage.dailyLimit : FREE_DAILY_LIMIT;

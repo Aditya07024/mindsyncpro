@@ -1,5 +1,6 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useClerk } from '@clerk/clerk-react';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';
@@ -20,12 +21,60 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const loc = useLocation();
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
+  const { signOut } = useClerk();
 
-  const { data: walletData } = useQuery({
-    queryKey: ["walletBalance"],
-    queryFn: () => API.payment.getWalletBalance(),
-    enabled: !!isLoaded && !!isSignedIn,
-  });
+  // Preflight auth gate: check if the account is valid before rendering children
+  const [authStatus, setAuthStatus] = useState<'checking' | 'ok' | 'invalid'>('checking');
+  const hasChecked = useRef(false);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    if (hasChecked.current) return;
+    hasChecked.current = true;
+
+    API.auth
+      .me()
+      .then(() => {
+        setAuthStatus('ok');
+      })
+      .catch((err: any) => {
+        const msg = err?.message || '';
+        if (
+          msg.includes('deleted') ||
+          msg.includes('Unauthorized') ||
+          msg.includes('No Clerk User')
+        ) {
+          setAuthStatus('invalid');
+          signOut().then(() => {
+            navigate({ to: '/account-deleted', replace: true });
+          });
+        } else {
+          // Non-auth error (e.g. network issue) — let the app render anyway
+          setAuthStatus('ok');
+        }
+      });
+  }, [isLoaded, isSignedIn, signOut, navigate]);
+
+  // Also listen for 401 events from API calls that happen after the preflight
+  useEffect(() => {
+    const handleUnauthorized = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const msg = customEvent.detail?.message || '';
+      if (
+        msg.includes('deleted') ||
+        msg.includes('Unauthorized') ||
+        msg.includes('No Clerk User')
+      ) {
+        setAuthStatus('invalid');
+        signOut().then(() => {
+          navigate({ to: '/account-deleted', replace: true });
+        });
+      }
+    };
+
+    window.addEventListener('mymind_unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('mymind_unauthorized', handleUnauthorized);
+  }, [signOut, navigate]);
 
   // Still loading Clerk — show minimal spinner
   if (!isLoaded) {
@@ -38,9 +87,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Not signed in — redirect to sign-in
   if (!isSignedIn) {
-    // Use replace to avoid back-button loops
     navigate({ to: '/sign-in', replace: true });
     return null;
+  }
+
+  // Auth preflight still checking or account is invalid — show loading spinner
+  // This prevents child routes from mounting and firing their own 401 queries
+  if (authStatus !== 'ok') {
+    return (
+      <div className="min-h-screen bg-canvas-gradient flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-12 rounded-full bg-warm-gradient animate-pulse" />
+          <p className="text-muted-foreground text-xs font-medium animate-pulse">
+            Verifying your account…
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -91,3 +154,4 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+

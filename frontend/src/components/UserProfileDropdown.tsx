@@ -47,11 +47,20 @@ export function UserProfileDropdown({
           setEmergencyContact(me?.emergencyContact || '');
           setLanguage(me?.language || 'English');
         })
-        .catch((err) => {
+        .catch((err: any) => {
           console.error('Failed to load dbUser profile:', err);
+          if (
+            err.message?.includes('deleted') ||
+            err.message?.includes('Unauthorized') ||
+            err.message?.includes('No Clerk User')
+          ) {
+            signOut().then(() => {
+              navigate({ to: '/account-deleted', replace: true });
+            });
+          }
         });
     }
-  }, [isLoaded, user]);
+  }, [isLoaded, user, signOut, navigate]);
 
   // Close dropdown on click outside
   useEffect(() => {
