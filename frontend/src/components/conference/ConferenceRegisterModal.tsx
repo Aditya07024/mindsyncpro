@@ -113,8 +113,8 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
         phone: phone.trim(),
       });
 
-      if (res.isAlreadyRegistered || !res.isPaid || !res.orderId) {
-        toast.success("Registration confirmed!");
+      if (res.isAlreadyRegistered || res.isAllowedByAdmin || res.isHost || !res.isPaid || !res.orderId) {
+        toast.success(res.message || "Registration confirmed!");
         enterMeeting();
         return;
       }

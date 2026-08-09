@@ -62,7 +62,6 @@ const ConferenceRegistrationSchema = new Schema<IConferenceRegistration>(
     admitStatus: {
       type: String,
       enum: ["waiting", "admitted", "denied"],
-      default: "waiting",
     },
     approvalStatus: {
       type: String,

@@ -21,6 +21,7 @@ import {
   AlertCircle,
   RefreshCw,
   X,
+  Hourglass,
   FileSpreadsheet,
   FileText,
   User,
@@ -905,11 +906,21 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
   const allowAttendeeMutation = useMutation({
     mutationFn: (regId: string) => API.conference.admitAttendee(conference._id, regId),
     onSuccess: (data) => {
-      toast.success(data.message || "Allowed member into room ✓");
+      toast.success(data.message || "Allowed member into meeting ✓");
       refetchAttendees();
       refetchAnalytics();
     },
     onError: (err: Error) => toast.error(err.message || "Failed to allow member"),
+  });
+
+  const allowWaitingRoomMutation = useMutation({
+    mutationFn: (regId: string) => API.conference.allowWaitingRoomAttendee(conference._id, regId),
+    onSuccess: (data) => {
+      toast.success(data.message || "Moved member to Waiting Room lobby ✓");
+      refetchAttendees();
+      refetchAnalytics();
+    },
+    onError: (err: Error) => toast.error(err.message || "Failed to move to waiting room"),
   });
 
   const allowAllMutation = useMutation({
@@ -1156,19 +1167,31 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {(att.currentStatus === "waiting" || att.admitStatus === "waiting" || !att.admitted) ? (
-                          <button
-                            onClick={() => allowAttendeeMutation.mutate(att._id)}
-                            disabled={allowAttendeeMutation.isPending}
-                            className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
-                            title="Allow member into room"
-                          >
-                            <CheckCircle2 className="w-3 h-3" /> Allow Member
-                          </button>
-                        ) : (
+                        {att.admitted ? (
                           <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                            ✓ Allowed
+                            ✓ Allowed in Meeting
                           </span>
+                        ) : (
+                          <>
+                            {att.currentStatus !== "waiting" && att.admitStatus !== "waiting" && (
+                              <button
+                                onClick={() => allowWaitingRoomMutation.mutate(att._id)}
+                                disabled={allowWaitingRoomMutation.isPending}
+                                className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
+                                title="Allow member into Waiting Room lobby"
+                              >
+                                <Hourglass className="w-3 h-3" /> Allow to Waiting Room
+                              </button>
+                            )}
+                            <button
+                              onClick={() => allowAttendeeMutation.mutate(att._id)}
+                              disabled={allowAttendeeMutation.isPending}
+                              className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
+                              title="Allow member directly into Meeting"
+                            >
+                              <CheckCircle2 className="w-3 h-3" /> Allow to Meeting
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => setSelectedAttendee(att)}

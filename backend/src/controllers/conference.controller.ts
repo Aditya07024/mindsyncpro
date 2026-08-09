@@ -502,11 +502,68 @@ export class ConferenceController {
           : [{ email: cleanEmail }],
       });
 
+      // Determine Host / Leader Role:
+      const isCreator = req.user?.sub && String(conference.createdBy) === String(req.user.sub);
+      const hostEmailsList = conference.hostEmail
+        ? conference.hostEmail.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean)
+        : [];
+      const isDesignatedHost = Boolean(cleanEmail && hostEmailsList.includes(cleanEmail));
+      const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+      const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
+
+      // Check if user is Allowed by Admin
+      const isAllowedByAdmin = Boolean(
+        registration && (registration.admitted === true || registration.admitStatus === "admitted")
+      );
+
       if (registration && ["free", "paid"].includes(registration.paymentStatus)) {
         return res.json({
           message: "You are already registered for this conference",
           registration,
           isAlreadyRegistered: true,
+          isPaid: false,
+          isHost,
+          isAllowedByAdmin,
+          roomName: conference.roomName,
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
+        });
+      }
+
+      if (isHost || isAllowedByAdmin) {
+        if (!registration) {
+          registration = await ConferenceRegistration.create({
+            conferenceId: conference._id,
+            userId,
+            fullName,
+            age: numAge,
+            email: cleanEmail,
+            phone: phone || "",
+            paymentStatus: "free",
+            paymentAmount: 0,
+            currentStatus: "registered",
+            approvalStatus: "approved",
+            admitted: true,
+            admitStatus: "admitted",
+          });
+        } else {
+          registration.fullName = fullName;
+          registration.age = numAge;
+          registration.phone = phone || "";
+          registration.admitted = true;
+          registration.admitStatus = "admitted";
+          await registration.save();
+        }
+
+        return res.json({
+          message: isHost
+            ? "Welcome Host! Entering conference room..."
+            : "Allowed by Admin! Entering conference room...",
+          registration,
+          isAlreadyRegistered: true,
+          isPaid: false,
+          isHost,
+          isAllowedByAdmin,
           roomName: conference.roomName,
           platform: conference.platform || "jitsi",
           meetingLink: conference.meetingLink || "",
@@ -1024,7 +1081,7 @@ export class ConferenceController {
 
       const totalRegistered = allRegs.length;
       const currentlyInMeeting = allRegs.filter((r) => r.currentStatus === "joined").length;
-      const usersWaiting = allRegs.filter((r) => r.currentStatus === "waiting" || r.admitStatus === "waiting" || (r.admitted === false && r.currentStatus !== "joined" && r.currentStatus !== "left")).length;
+      const usersWaiting = allRegs.filter((r) => r.currentStatus === "waiting" || r.admitStatus === "waiting").length;
       const usersLeft = allRegs.filter((r) => r.currentStatus === "left").length;
       const noShow = allRegs.filter((r) => r.currentStatus === "no_show" || (!r.joined && r.currentStatus === "registered")).length;
 
@@ -1173,7 +1230,7 @@ export class ConferenceController {
     const filterQuery: any = {
       conferenceId: id,
       admitted: { $ne: true },
-      admitStatus: { $nin: ["admitted", "denied"] },
+      $or: [{ currentStatus: "waiting" }, { admitStatus: "waiting" }],
     };
 
     const waiting = await ConferenceRegistration.find(filterQuery)
@@ -1227,6 +1284,38 @@ export class ConferenceController {
     });
   });
 
+  /** POST /conferences/:id/waiting-room/allow-waiting — Move attendee into waiting room lobby */
+  static allowWaitingRoom = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { registrationId, email } = req.body as { registrationId?: string; email?: string };
+
+    const conference = await Conference.findById(id).lean();
+    if (!conference) throw new AppError("Conference not found", 404);
+
+    let query: any = { conferenceId: id };
+    if (registrationId) {
+      query._id = registrationId;
+    } else if (email) {
+      query.email = email.toLowerCase().trim();
+    } else {
+      throw new AppError("registrationId or email is required", 400);
+    }
+
+    const reg = await ConferenceRegistration.findOneAndUpdate(
+      query,
+      { $set: { admitted: false, admitStatus: "waiting", currentStatus: "waiting" } },
+      { new: true }
+    );
+
+    if (!reg) throw new AppError("Attendee registration not found", 404);
+
+    res.json({
+      message: `Allowed ${reg.fullName} into the Waiting Room lobby`,
+      registrationId: reg._id,
+      email: reg.email,
+    });
+  });
+
   /** POST /conferences/:id/waiting-room/admit-all — Admit waiting attendees at once */
   static admitAllAttendees = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
@@ -1238,7 +1327,7 @@ export class ConferenceController {
     const filterQuery: any = {
       conferenceId: id,
       admitted: { $ne: true },
-      admitStatus: { $nin: ["admitted", "denied"] },
+      $or: [{ currentStatus: "waiting" }, { admitStatus: "waiting" }],
     };
 
     if (paymentStatus === "confirmed") {
