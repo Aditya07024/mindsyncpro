@@ -23,11 +23,13 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
 import { Route as Meeting_workspaceRouteImport } from './routes/meeting_workspace'
 import { Route as JournalRouteImport } from './routes/journal'
+import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConferencesRouteImport } from './routes/conferences'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BreatheRouteImport } from './routes/breathe'
 import { Route as BookingsRouteImport } from './routes/bookings'
+import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TherapistOnboardingRouteImport } from './routes/therapist/onboarding'
@@ -111,6 +113,11 @@ const JournalRoute = JournalRouteImport.update({
   path: '/journal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeleteAccountRoute = DeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -134,6 +141,11 @@ const BreatheRoute = BreatheRouteImport.update({
 const BookingsRoute = BookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountDeletedRoute = AccountDeletedRouteImport.update({
+  id: '/account-deleted',
+  path: '/account-deleted',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -200,11 +212,13 @@ const ConferencesIdRoomRoute = ConferencesIdRoomRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -233,11 +247,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -267,11 +283,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -302,11 +320,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/account-deleted'
     | '/bookings'
     | '/breathe'
     | '/chat'
     | '/conferences'
     | '/dashboard'
+    | '/delete-account'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -335,11 +355,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/account-deleted'
     | '/bookings'
     | '/breathe'
     | '/chat'
     | '/conferences'
     | '/dashboard'
+    | '/delete-account'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -368,11 +390,13 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/account-deleted'
     | '/bookings'
     | '/breathe'
     | '/chat'
     | '/conferences'
     | '/dashboard'
+    | '/delete-account'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -402,11 +426,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AccountDeletedRoute: typeof AccountDeletedRoute
   BookingsRoute: typeof BookingsRoute
   BreatheRoute: typeof BreatheRoute
   ChatRoute: typeof ChatRoute
   ConferencesRoute: typeof ConferencesRoute
   DashboardRoute: typeof DashboardRoute
+  DeleteAccountRoute: typeof DeleteAccountRoute
   JournalRoute: typeof JournalRoute
   Meeting_workspaceRoute: typeof Meeting_workspaceRoute
   MoodRoute: typeof MoodRoute
@@ -531,6 +557,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JournalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/delete-account': {
+      id: '/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof DeleteAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -564,6 +597,13 @@ declare module '@tanstack/react-router' {
       path: '/bookings'
       fullPath: '/bookings'
       preLoaderRoute: typeof BookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account-deleted': {
+      id: '/account-deleted'
+      path: '/account-deleted'
+      fullPath: '/account-deleted'
+      preLoaderRoute: typeof AccountDeletedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -678,11 +718,13 @@ const SignUpRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AccountDeletedRoute: AccountDeletedRoute,
   BookingsRoute: BookingsRoute,
   BreatheRoute: BreatheRoute,
   ChatRoute: ChatRoute,
   ConferencesRoute: ConferencesRoute,
   DashboardRoute: DashboardRoute,
+  DeleteAccountRoute: DeleteAccountRoute,
   JournalRoute: JournalRoute,
   Meeting_workspaceRoute: Meeting_workspaceRoute,
   MoodRoute: MoodRoute,

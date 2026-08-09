@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { useAuth, UserButton } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/clerk-react';
+import { UserProfileDropdown } from './UserProfileDropdown';
 import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';
 import API from '@/lib/api';
@@ -58,14 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Link to="/subscription" className="text-xs font-semibold text-primary/80 hover:text-primary transition">
               Upgrade
             </Link>
-            <UserButton 
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  userButtonAvatarBox: "size-8",
-                }
-              }}
-            />
+            <UserProfileDropdown />
           </div>
         </div>
       </header>

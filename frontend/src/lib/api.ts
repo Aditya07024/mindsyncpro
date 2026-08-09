@@ -77,11 +77,18 @@ const API = {
       apiCall<any>("/api/auth/onboarding", { method: "PATCH", body: JSON.stringify(data) }),
     updateProfile: (data: any) =>
       apiCall<any>("/api/auth/profile", { method: "PATCH", body: JSON.stringify(data) }),
+    deleteProfile: () =>
+      apiCall<any>("/api/auth/profile", { method: "DELETE" }),
     therapistOnboarding: (data: any) =>
       apiCall<any>("/api/auth/therapist/onboarding", {
         method: "POST",
         body: JSON.stringify(data),
       }),
+  },
+
+  account: {
+    delete: () =>
+      apiCall<{ success: boolean; message: string }>("/api/account", { method: "DELETE" }),
   },
 
   admin: {

@@ -173,4 +173,25 @@ export class AuthController {
     }
   );
 
+  static deleteProfile = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const userId = req.user!.sub;
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      user.deletedAt = new Date();
+      await user.save();
+
+      if (user.clerkId) {
+        try {
+          const { clerkClient } = await import("@clerk/express");
+          await clerkClient.users.deleteUser(user.clerkId);
+        } catch (err: any) {
+          console.error(`[Auth] Failed to delete user ${userId} from Clerk:`, err.message);
+        }
+      }
+
+      res.json({ success: true, message: "Profile deleted successfully" });
+    }
+  );
 }

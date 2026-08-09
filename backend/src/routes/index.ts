@@ -14,12 +14,14 @@ import planRoutes from "./plan";
 import notificationRoutes from "./notification";
 import conferenceRoutes from "./conference";
 import videoRoutes from "./video";
+import accountRoutes from "./account";
 
 export const apiRouter = Router();
 
 apiRouter.get("/health", (_req, res) => res.json({ ok: true }));
 
 apiRouter.use("/auth", authRoutes);
+apiRouter.use("/account", accountRoutes);
 apiRouter.use("/chat", chatRoutes);
 apiRouter.use("/user", userRoutes);
 apiRouter.use("/mood", moodRoutes);

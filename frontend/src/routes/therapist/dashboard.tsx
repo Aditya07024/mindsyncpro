@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { UserButton, useClerk, useAuth } from '@clerk/clerk-react';
+import { useClerk, useAuth } from '@clerk/clerk-react';
+import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { toast } from 'sonner';
 import { openSubscriptionCheckout } from "@/lib/razorpay";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
@@ -446,12 +447,7 @@ function TherapistDashboard() {
               </div>
             </div>
           </div>
-          <UserButton 
-            afterSignOutUrl="/"
-            appearance={{
-              elements: { userButtonAvatarBox: "size-8" }
-            }}
-          />
+          <UserProfileDropdown />
         </div>
       </header>
 

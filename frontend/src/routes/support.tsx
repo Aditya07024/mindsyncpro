@@ -58,7 +58,7 @@ function SupportPage() {
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 mb-20">
+        <div className="grid gap-8 md:grid-cols-3 mb-20">
           <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm text-center flex flex-col justify-between items-center">
             <div>
               <div className="size-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-6">
@@ -93,6 +93,23 @@ function SupportPage() {
             >
               Join WhatsApp Group
             </a>
+          </div>
+
+          <div className="bg-rose-50/40 p-8 rounded-3xl border border-rose-200 shadow-sm text-center flex flex-col justify-between items-center">
+            <div>
+              <div className="size-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-6">
+                <HelpCircle className="size-7" />
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-slate-900">Account Management</h3>
+              <p className="text-rose-700 font-bold mb-1">Permanently Delete Account</p>
+              <p className="text-sm text-slate-600">Request complete account and personal data erasure</p>
+            </div>
+            <Link
+              to="/delete-account"
+              className="mt-6 inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition shadow-md shadow-rose-600/20"
+            >
+              Delete My Account
+            </Link>
           </div>
         </div>
 

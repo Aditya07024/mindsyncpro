@@ -7,7 +7,8 @@ import {
   CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle, UserMinus
 } from 'lucide-react';
 import API from '@/lib/api';
-import { UserButton, useClerk, useAuth } from '@clerk/clerk-react';
+import { useClerk, useAuth } from '@clerk/clerk-react';
+import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
@@ -533,10 +534,7 @@ function OrgDashboard() {
               <Download className="size-4" />
               ESG Report
             </button>
-            <UserButton 
-              afterSignOutUrl="/"
-              appearance={{ elements: { userButtonAvatarBox: "size-8" } }}
-            />
+            <UserProfileDropdown />
           </div>
         </div>
       </header>

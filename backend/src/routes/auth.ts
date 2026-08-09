@@ -11,6 +11,7 @@ router.get("/me", requireAuth, AuthController.me);
 router.patch("/onboarding", requireAuth, AuthController.updateOnboarding);
 router.post("/therapist/onboarding", requireAuth, AuthController.therapistOnboarding);
 router.patch("/profile", requireAuth, AuthController.updateProfile);
+router.delete("/profile", requireAuth, AuthController.deleteProfile);
 router.patch("/role", requireAuth, AuthController.setRole);
 router.post("/push-token", requireAuth, AuthController.registerPushToken);
 

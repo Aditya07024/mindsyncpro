@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { useAuth, UserButton } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/clerk-react';
+import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { AdminConferencesTab } from './-conferences';
@@ -257,12 +258,7 @@ function SuperAdminDashboard() {
               <p className="text-xs text-slate-400">Ops · Verification · Analytics</p>
             </div>
           </div>
-          <UserButton 
-            afterSignOutUrl="/"
-            appearance={{
-              elements: { userButtonAvatarBox: "size-8" }
-            }}
-          />
+          <UserProfileDropdown />
         </div>
       </header>
 

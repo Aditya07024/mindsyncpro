@@ -17,7 +17,8 @@ import {
 import API from "@/lib/api";
 import { ConferenceRegisterModal } from "@/components/conference/ConferenceRegisterModal";
 import logoUrl from "@/assets/logo.png";
-import { UserButton, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
+import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 
 export const Route = createFileRoute("/conferences")({
   component: ConferencesPage,
@@ -146,7 +147,7 @@ function ConferencesPage() {
               Dashboard
             </Link>
             {isSignedIn ? (
-              <UserButton afterSignOutUrl="/" />
+              <UserProfileDropdown />
             ) : (
               <Link
                 to="/sign-in"
