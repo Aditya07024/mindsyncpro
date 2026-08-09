@@ -511,10 +511,14 @@ export class ConferenceController {
       const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
       const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
 
-      // Check if user is Allowed by Admin
-      const isAllowedByAdmin = Boolean(
+      // Check if user is Allowed by Admin into Meeting or Waiting Room:
+      const isAdmittedToMeeting = Boolean(
         registration && (registration.admitted === true || registration.admitStatus === "admitted")
       );
+      const isAllowedInWaitingRoom = Boolean(
+        registration && (registration.currentStatus === "waiting" || registration.admitStatus === "waiting")
+      );
+      const isAllowedByAdmin = isAdmittedToMeeting || isAllowedInWaitingRoom;
 
       if (registration && ["free", "paid"].includes(registration.paymentStatus)) {
         return res.json({
@@ -541,24 +545,28 @@ export class ConferenceController {
             phone: phone || "",
             paymentStatus: "free",
             paymentAmount: 0,
-            currentStatus: "registered",
+            currentStatus: isAdmittedToMeeting || isHost ? "registered" : "waiting",
             approvalStatus: "approved",
-            admitted: true,
-            admitStatus: "admitted",
+            admitted: isAdmittedToMeeting || isHost,
+            admitStatus: isAdmittedToMeeting || isHost ? "admitted" : "waiting",
           });
         } else {
           registration.fullName = fullName;
           registration.age = numAge;
           registration.phone = phone || "";
-          registration.admitted = true;
-          registration.admitStatus = "admitted";
+          if (isAdmittedToMeeting || isHost) {
+            registration.admitted = true;
+            registration.admitStatus = "admitted";
+          }
           await registration.save();
         }
 
         return res.json({
           message: isHost
             ? "Welcome Host! Entering conference room..."
-            : "Allowed by Admin! Entering conference room...",
+            : isAdmittedToMeeting
+            ? "Allowed by Admin! Entering conference room..."
+            : "Allowed into Waiting Room! Redirecting...",
           registration,
           isAlreadyRegistered: true,
           isPaid: false,
@@ -806,7 +814,8 @@ export class ConferenceController {
       }
 
       const isAdmittedByAdmin = registration?.admitted === true || registration?.admitStatus === "admitted";
-      if (registration && !isAdmittedByAdmin && !["free", "paid"].includes(registration.paymentStatus) && !isHost && !conference.enableWaitingRoom) {
+      const isAllowedInWaitingRoom = registration?.currentStatus === "waiting" || registration?.admitStatus === "waiting";
+      if (registration && !isAdmittedByAdmin && !isAllowedInWaitingRoom && !["free", "paid"].includes(registration.paymentStatus) && !isHost && !conference.enableWaitingRoom) {
         throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
       }
 
