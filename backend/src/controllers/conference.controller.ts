@@ -748,7 +748,8 @@ export class ConferenceController {
         throw new AppError("Your registration for this conference was rejected by the admin.", 403);
       }
 
-      if (registration && !["free", "paid"].includes(registration.paymentStatus) && !isHost) {
+      const isAdmittedByAdmin = registration?.admitted === true || registration?.admitStatus === "admitted";
+      if (registration && !isAdmittedByAdmin && !["free", "paid"].includes(registration.paymentStatus) && !isHost && !conference.enableWaitingRoom) {
         throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
       }
 
@@ -958,8 +959,6 @@ export class ConferenceController {
         query.paymentStatus = { $in: ["paid", "free"] };
       } else if (paymentStatus && paymentStatus !== "All") {
         query.paymentStatus = paymentStatus;
-      } else if (!paymentStatus && (conference.priceType === "paid" || (conference.price && conference.price > 0))) {
-        query.paymentStatus = { $in: ["paid", "free"] };
       }
 
       if (attendanceStatus && attendanceStatus !== "All") {
@@ -1171,16 +1170,11 @@ export class ConferenceController {
     const conference = await Conference.findById(id).lean();
     if (!conference) throw new AppError("Conference not found", 404);
 
-    const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
     const filterQuery: any = {
       conferenceId: id,
       admitted: { $ne: true },
       admitStatus: { $nin: ["admitted", "denied"] },
     };
-
-    if (isPaidConf) {
-      filterQuery.paymentStatus = { $in: ["paid", "free"] };
-    }
 
     const waiting = await ConferenceRegistration.find(filterQuery)
       .select("_id fullName email currentStatus admitStatus paymentStatus createdAt")
@@ -1218,18 +1212,13 @@ export class ConferenceController {
       throw new AppError("registrationId or email is required", 400);
     }
 
-    const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
-    if (isPaidConf) {
-      query.paymentStatus = { $in: ["paid", "free"] };
-    }
-
     const reg = await ConferenceRegistration.findOneAndUpdate(
       query,
       { $set: { admitted: true, admitStatus: "admitted", currentStatus: "registered" } },
       { new: true }
     );
 
-    if (!reg) throw new AppError("Attendee registration not found or payment not completed", 404);
+    if (!reg) throw new AppError("Attendee registration not found", 404);
 
     res.json({
       message: `Allowed ${reg.fullName} into the conference room`,
@@ -1256,11 +1245,6 @@ export class ConferenceController {
       filterQuery.paymentStatus = { $in: ["paid", "free"] };
     } else if (paymentStatus && paymentStatus !== "All") {
       filterQuery.paymentStatus = paymentStatus;
-    } else if (!paymentStatus) {
-      const isPaidConf = conference.priceType === "paid" || (conference.price && conference.price > 0);
-      if (isPaidConf) {
-        filterQuery.paymentStatus = { $in: ["paid", "free"] };
-      }
     }
 
     const result = await ConferenceRegistration.updateMany(
