@@ -385,14 +385,14 @@ function ConferencesPage() {
                         <span className="font-semibold text-slate-700">{conf.duration} mins</span>
                       </div>
 
-                      <div className="flex items-center justify-between">
+                      {/* <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1.5 text-slate-500 font-medium">
                           <Users className="w-3.5 h-3.5 text-teal-600" /> Registered / Seats
                         </span>
                         <span className="font-semibold text-slate-700">
                           {conf.registeredCount || 0} / {conf.maxParticipants}
                         </span>
-                      </div>
+                      </div> */}
 
                       {/* Countdown Timer for Upcoming */}
                       {isUpcoming && (
