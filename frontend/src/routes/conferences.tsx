@@ -19,6 +19,7 @@ import { ConferenceRegisterModal } from "@/components/conference/ConferenceRegis
 import logoUrl from "@/assets/logo.png";
 import { useUser } from "@clerk/clerk-react";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import { formatTime12Hour } from "@/lib/utils";
 
 export const Route = createFileRoute("/conferences")({
   component: ConferencesPage,
@@ -374,7 +375,7 @@ function ConferencesPage() {
                           <Calendar className="w-3.5 h-3.5 text-teal-600" /> Date & Time
                         </span>
                         <span className="font-bold text-slate-800">
-                          {conf.meetingDate} at {conf.meetingTime} {conf.endTime ? `- ${conf.endTime}` : ""}
+                          {conf.meetingDate} at {formatTime12Hour(conf.meetingTime)} {conf.endTime ? `- ${formatTime12Hour(conf.endTime)}` : ""}
                         </span>
                       </div>
 
