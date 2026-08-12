@@ -28,3 +28,27 @@ export function formatTime12Hour(timeStr?: string): string {
   return `${hours}:${minutes} ${ampm}`;
 }
 
+/**
+ * Formats a date string (e.g., "2026-08-12") into DD/MM/YYYY format (e.g., "12/08/2026").
+ */
+export function formatDateDDMMYYYY(dateStr?: string): string {
+  if (!dateStr) return "";
+  const cleanStr = dateStr.trim().split("T")[0];
+  const parts = cleanStr.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    if (year.length === 4 && month.length === 2 && day.length === 2) {
+      return `${day}/${month}/${year}`;
+    }
+  }
+
+  const dateObj = new Date(dateStr);
+  if (isNaN(dateObj.getTime())) return dateStr;
+
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const year = dateObj.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+

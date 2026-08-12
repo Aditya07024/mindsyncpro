@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import API from "@/lib/api";
 import { toast } from "sonner";
-import { formatTime12Hour } from "@/lib/utils";
+import { formatTime12Hour, formatDateDDMMYYYY } from "@/lib/utils";
 
 
 export function AdminConferencesTab() {
@@ -412,7 +412,7 @@ export function AdminConferencesTab() {
 
                       <div className="flex items-center gap-4 text-xs text-slate-400 pt-1 flex-wrap">
                         <span>
-                          📅 {conf.meetingDate} at {formatTime12Hour(conf.meetingTime)} {conf.endTime ? `- ${formatTime12Hour(conf.endTime)}` : ""} ({conf.duration}m)
+                          📅 {formatDateDDMMYYYY(conf.meetingDate)} at {formatTime12Hour(conf.meetingTime)} {conf.endTime ? `- ${formatTime12Hour(conf.endTime)}` : ""} ({conf.duration}m)
                         </span>
                         <span>👤 Host/Leader: <strong className="text-teal-300">{conf.hostEmail || conf.createdBy?.email || "Admin"}</strong></span>
                         <span>👥 Registered: {conf.registeredCount || 0} / {conf.maxParticipants}</span>
