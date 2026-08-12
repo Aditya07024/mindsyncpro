@@ -323,16 +323,8 @@ function ConferencesPage() {
                           Ended
                         </span>
                       )}
-                      {conf.platform === "teams" ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white shadow-sm flex items-center gap-1">
-                          🔵 Microsoft Teams
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-700 text-white shadow-sm flex items-center gap-1">
-                          🟢 Jitsi Meet
-                        </span>
-                      )}
                     </div>
+
 
                     {/* Price Badge */}
                     <div className="absolute top-4 right-4 z-10">
