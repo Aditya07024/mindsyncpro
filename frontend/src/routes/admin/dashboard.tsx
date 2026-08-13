@@ -299,7 +299,7 @@ function SuperAdminDashboard() {
 
       {/* Tab Nav */}
       <div className="bg-slate-900 border-b border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto">
+        <div className="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {allowedTabs.map((t) => (
             <button
               key={t.key}
