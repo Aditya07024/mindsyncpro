@@ -274,115 +274,116 @@ function ConferenceRoomPage() {
     if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current || roomData?.conference?.platform === "teams") return;
 
     let apiInstance: any = null;
-    const appId = roomData.jaas?.appId;
-    if (!appId) {
-      setError("JaaS App ID is missing from room details. Please verify backend .env configuration.");
-      return;
-    }
 
-    const loadJitsiScript = () => {
-      return new Promise<void>((resolve, reject) => {
-        if (window.JitsiMeetExternalAPI) {
-          resolve();
+    const initializeJaaS = async () => {
+      let jaasInfo = roomData.jaas;
+
+      // If backend didn't pre-attach jaasInfo, fetch token and appId from /api/video/token endpoint
+      if (!jaasInfo || !jaasInfo.appId || !jaasInfo.token) {
+        try {
+          const tokenRes = await API.video.getToken({
+            roomName: roomData.conference.rawRoomName || roomData.conference.roomName,
+            user: {
+              name: roomData.user?.fullName || "Participant",
+              email: roomData.user?.email || "user@mymindtherapyfriend.com",
+            },
+            moderator: roomData.user?.isHost || roomData.conference?.isHost,
+          });
+          jaasInfo = tokenRes;
+        } catch (tokenErr: any) {
+          console.error("[JaaS] Token fetch error:", tokenErr);
+          setError(tokenErr.message || "Failed to fetch video room access token from server.");
           return;
         }
-        const script = document.createElement("script");
-        script.src = `https://8x8.vc/${appId}/official-external-api.js`;
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => {
-          const fallbackScript = document.createElement("script");
-          fallbackScript.src = "https://8x8.vc/external_api.js";
-          fallbackScript.async = true;
-          fallbackScript.onload = () => resolve();
-          fallbackScript.onerror = () => reject(new Error("Failed to load JaaS 8x8.vc External API"));
-          document.body.appendChild(fallbackScript);
-        };
-        document.body.appendChild(script);
+      }
+
+      const appId = jaasInfo?.appId;
+      if (!appId) {
+        setError("JaaS App ID is missing from server response. Please verify backend JAAS_APP_ID in .env");
+        return;
+      }
+
+      const domain = jaasInfo.domain || "8x8.vc";
+      const jwtToken = jaasInfo.token;
+      const formattedRoomName = jaasInfo.roomName || roomData.conference.roomName;
+
+      // Load 8x8 JaaS External API Script
+      if (!window.JitsiMeetExternalAPI) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = `https://8x8.vc/${appId}/official-external-api.js`;
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => {
+            const fallbackScript = document.createElement("script");
+            fallbackScript.src = "https://8x8.vc/external_api.js";
+            fallbackScript.async = true;
+            fallbackScript.onload = () => resolve();
+            fallbackScript.onerror = () => reject(new Error("Failed to load JaaS 8x8.vc External API"));
+            document.body.appendChild(fallbackScript);
+          };
+          document.body.appendChild(script);
+        });
+      }
+
+      if (!jitsiContainerRef.current) return;
+
+      const options = {
+        roomName: formattedRoomName,
+        jwt: jwtToken,
+        width: "100%",
+        height: "100%",
+        parentNode: jitsiContainerRef.current,
+        userInfo: {
+          displayName: roomData.user?.fullName || "Participant",
+          email: roomData.user?.email || "",
+        },
+        configOverwrite: {
+          startWithAudioMuted: true,
+          startWithVideoMuted: false,
+          prejoinPageEnabled: false,
+          disableDeepLinking: true,
+          lobby: {
+            autoKnock: false,
+            enableLobby: false,
+          },
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          TOOLBAR_BUTTONS: [
+            "microphone",
+            "camera",
+            "desktop",
+            "chat",
+            "raisehand",
+            "participants-pane",
+            "fullscreen",
+            "hangup",
+            "settings",
+            "tileview",
+          ],
+        },
+      };
+
+      apiInstance = new window.JitsiMeetExternalAPI(domain, options);
+      jitsiApiRef.current = apiInstance;
+
+      apiInstance.addEventListener("videoConferenceJoined", (participant: any) => {
+        console.log("[JaaS SDK Event] Joined Conference:", participant);
+      });
+
+      apiInstance.addEventListener("readyToClose", () => {
+        toast.info("You left the conference session.");
+        API.conference.trackAttendance(id, { event: "leave" }).catch(() => {});
+        navigate({ to: "/conferences" });
       });
     };
 
-    loadJitsiScript()
-      .then(async () => {
-        if (!jitsiContainerRef.current) return;
-
-        let jwtToken = roomData.jaas?.token;
-        let formattedRoomName = roomData.jaas?.roomName || roomData.conference.roomName;
-
-        if (!jwtToken) {
-          try {
-            const tokenRes = await API.video.getToken({
-              roomName: roomData.conference.rawRoomName || roomData.conference.roomName,
-              user: {
-                name: roomData.user.fullName || "Participant",
-                email: roomData.user.email || "user@mymindtherapyfriend.com",
-              },
-              moderator: roomData.user?.isHost || roomData.conference?.isHost,
-            });
-            jwtToken = tokenRes.token;
-            formattedRoomName = tokenRes.roomName;
-          } catch (tokenErr) {
-            console.error("[JaaS] Token fetch error:", tokenErr);
-          }
-        }
-
-        const domain = roomData.jaas?.domain || "8x8.vc";
-
-        const options = {
-          roomName: formattedRoomName,
-          jwt: jwtToken,
-          width: "100%",
-          height: "100%",
-          parentNode: jitsiContainerRef.current,
-          userInfo: {
-            displayName: roomData.user.fullName,
-            email: roomData.user.email,
-          },
-          configOverwrite: {
-            startWithAudioMuted: true,
-            startWithVideoMuted: false,
-            prejoinPageEnabled: false,
-            disableDeepLinking: true,
-            lobby: {
-              autoKnock: false,
-              enableLobby: false,
-            },
-          },
-          interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            TOOLBAR_BUTTONS: [
-              "microphone",
-              "camera",
-              "desktop",
-              "chat",
-              "raisehand",
-              "participants-pane",
-              "fullscreen",
-              "hangup",
-              "settings",
-              "tileview",
-            ],
-          },
-        };
-
-        apiInstance = new window.JitsiMeetExternalAPI(domain, options);
-        jitsiApiRef.current = apiInstance;
-
-        apiInstance.addEventListener("videoConferenceJoined", (participant: any) => {
-          console.log("[JaaS SDK Event] Joined Conference:", participant);
-        });
-
-        apiInstance.addEventListener("readyToClose", () => {
-          toast.info("You left the conference session.");
-          API.conference.trackAttendance(id, { event: "leave" }).catch(() => {});
-          navigate({ to: "/conferences" });
-        });
-      })
-      .catch((err) => {
-        console.error("Jitsi script error:", err);
-        setError("Unable to launch video room player. Please refresh.");
-      });
+    initializeJaaS().catch((err) => {
+      console.error("Jitsi script error:", err);
+      setError(err.message || "Unable to launch video room player. Please refresh.");
+    });
 
     return () => {
       if (apiInstance) {

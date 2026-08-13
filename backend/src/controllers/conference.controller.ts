@@ -885,18 +885,21 @@ export class ConferenceController {
 
       // Generate JaaS RS256 JWT Token (moderator: isHost)
       let jaasData = null;
-      try {
-        jaasData = JaasService.generateMeetingToken({
-          roomName: conference.roomName,
-          user: {
-            id: String(registration?._id || dbUser?._id || `participant_${Date.now()}`),
-            name: participantName,
-            email: participantEmail,
-          },
-          moderator: isHost,
-        });
-      } catch (jaasErr) {
-        console.error("[JaaS] Token generation error in getJoinInfo:", jaasErr);
+      if (!conference.platform || conference.platform === "jitsi") {
+        try {
+          jaasData = JaasService.generateMeetingToken({
+            roomName: conference.roomName,
+            user: {
+              id: String(registration?._id || dbUser?._id || `participant_${Date.now()}`),
+              name: participantName,
+              email: participantEmail,
+            },
+            moderator: isHost,
+          });
+        } catch (jaasErr: any) {
+          console.error("[JaaS] Token generation error in getJoinInfo:", jaasErr);
+          throw new AppError(`JaaS Token Error: ${jaasErr.message || jaasErr}`, 500);
+        }
       }
 
       res.json({
