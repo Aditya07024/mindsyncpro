@@ -28,44 +28,38 @@ export class JaasService {
   private static privateKeyCache: string | null = null;
 
   /**
-   * Read RSA Private Key strictly from environment variable or key file path specified in env
+   * Read RSA Private Key strictly from environment variable (JAAS_PRIVATE_KEY) or key file path (JAAS_PRIVATE_KEY_PATH)
    */
   public static getPrivateKey(): string {
     if (this.privateKeyCache) return this.privateKeyCache;
 
-    // 1. Check if raw PEM string is provided in env
-    if (process.env.JAAS_PRIVATE_KEY) {
-      this.privateKeyCache = process.env.JAAS_PRIVATE_KEY.replace(/\\n/g, "\n");
+    // 1. Check if raw PEM string is provided in env (e.g. JAAS_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...")
+    if (process.env.JAAS_PRIVATE_KEY && process.env.JAAS_PRIVATE_KEY.trim()) {
+      this.privateKeyCache = process.env.JAAS_PRIVATE_KEY.replace(/\\n/g, "\n").trim();
       return this.privateKeyCache;
     }
 
     // 2. Check file path configured in env (e.g. JAAS_PRIVATE_KEY_PATH=./keys/jaas-private.pem)
-    const keyPath = process.env.JAAS_PRIVATE_KEY_PATH;
-    if (!keyPath) {
-      throw new AppError(
-        "Neither JAAS_PRIVATE_KEY nor JAAS_PRIVATE_KEY_PATH is set in environment variables (.env)",
-        500
-      );
-    }
+    const keyPath = process.env.JAAS_PRIVATE_KEY_PATH || "./keys/jaas-private.pem";
 
-    const absolutePath = path.isAbsolute(keyPath)
-      ? keyPath
-      : path.join(process.cwd(), keyPath);
+    const candidatePaths = [
+      path.isAbsolute(keyPath) ? keyPath : path.resolve(process.cwd(), keyPath),
+      path.resolve(process.cwd(), "backend", keyPath),
+      path.resolve(__dirname, keyPath),
+      path.resolve(__dirname, "..", keyPath),
+      path.resolve(__dirname, "../..", keyPath),
+      path.resolve(__dirname, "../../keys/jaas-private.pem"),
+    ];
 
-    if (fs.existsSync(absolutePath)) {
-      this.privateKeyCache = fs.readFileSync(absolutePath, "utf8");
-      return this.privateKeyCache;
-    }
-
-    // Check relative to backend directory if process ran from workspace root
-    const backendPath = path.join(process.cwd(), "backend", keyPath);
-    if (fs.existsSync(backendPath)) {
-      this.privateKeyCache = fs.readFileSync(backendPath, "utf8");
-      return this.privateKeyCache;
+    for (const candidate of candidatePaths) {
+      if (fs.existsSync(candidate)) {
+        this.privateKeyCache = fs.readFileSync(candidate, "utf8").trim();
+        return this.privateKeyCache;
+      }
     }
 
     throw new AppError(
-      `JaaS private key file not found at: ${keyPath}. Please verify JAAS_PRIVATE_KEY_PATH in your .env file.`,
+      `JaaS private key file not found at: ${keyPath}. Since keys are gitignored, either upload jaas-private.pem to backend/keys/ on your server, or set JAAS_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..." in your server .env file.`,
       500
     );
   }
