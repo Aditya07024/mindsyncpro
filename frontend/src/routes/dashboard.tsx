@@ -59,6 +59,25 @@ function Dashboard() {
         }
       }
 
+      // Check delegated permissions for admin dashboard redirection
+      try {
+        const myAccess = await API.admin.permissions.getMyAccess();
+        if (
+          myAccess &&
+          (myAccess.isSuperAdmin ||
+            myAccess.canHostMeeting ||
+            myAccess.canViewRegistrations ||
+            myAccess.canManageUsers ||
+            myAccess.canManageTherapists ||
+            myAccess.canManageOrganizations ||
+            myAccess.canViewAnalytics)
+        ) {
+          return nav({ to: '/admin/dashboard', replace: true });
+        }
+      } catch (accessErr) {
+        // Not delegated admin, proceed as normal
+      }
+
       // Final redirection based on confirmed role
       if (role === 'therapist') return nav({ to: '/therapist/dashboard', replace: true });
       if (role === 'org_admin') return nav({ to: '/org/dashboard', replace: true });

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Users, BarChart2, CheckCircle, XCircle, Search,
@@ -15,6 +15,7 @@ import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { AdminConferencesTab } from './-conferences';
+import { AdminPermissionsTab } from './-permissions';
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
@@ -24,7 +25,7 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions'>('overview');
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
   const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
@@ -97,6 +98,34 @@ function SuperAdminDashboard() {
     queryFn: () => API.admin.platformCounts(),
     enabled: !!isLoaded && !!isSignedIn,
   });
+
+  const { data: myAccess, isLoading: isAccessLoading } = useQuery({
+    queryKey: ['my-admin-access'],
+    queryFn: () => API.admin.permissions.getMyAccess(),
+    enabled: !!isLoaded && !!isSignedIn,
+  });
+
+  const allowedTabs = [
+    { key: 'overview', label: 'Overview', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
+    { key: 'conferences', label: 'Video Conferences', allowed: Boolean(myAccess?.canHostMeeting || myAccess?.canViewRegistrations || myAccess?.isFullAdmin) },
+    { key: 'users', label: 'Users', allowed: Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin) },
+    { key: 'therapists', label: 'Therapists', allowed: Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin) },
+    { key: 'organizations', label: 'Organizations', allowed: Boolean(myAccess?.canManageOrganizations || myAccess?.isFullAdmin) },
+    { key: 'subscriptions', label: 'Subscriptions', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
+    { key: 'plans', label: 'Subscription Plans', allowed: Boolean(myAccess?.isFullAdmin) },
+    { key: 'earnings', label: 'Financial Earnings', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
+    { key: 'permissions', label: 'Access Control & Delegated Roles', allowed: Boolean(myAccess?.isSuperAdmin || myAccess?.isFullAdmin) },
+  ].filter((t) => t.allowed);
+
+  // Auto-switch tab to first allowed capability if current tab is forbidden
+  useEffect(() => {
+    if (myAccess) {
+      const isCurrentAllowed = allowedTabs.some((t) => t.key === tab);
+      if (!isCurrentAllowed && allowedTabs.length > 0) {
+        setTab(allowedTabs[0].key as any);
+      }
+    }
+  }, [myAccess, tab]);
 
   const verifyMutation = useMutation({
     mutationFn: ({ id, verified, password, type }: { id: string; verified: boolean; password?: string, type: 'therapist' | 'org' }) => {
@@ -254,8 +283,12 @@ function SuperAdminDashboard() {
               <Shield className="size-4 text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-sm">mymindtherapyfriend Super Admin</p>
-              <p className="text-xs text-slate-400">Ops · Verification · Analytics</p>
+              <p className="font-bold text-white text-sm">
+                mymindtherapyfriend {myAccess?.isSuperAdmin ? "Super Admin" : myAccess?.roleTitle || "Delegated Admin"}
+              </p>
+              <p className="text-xs text-slate-400">
+                {myAccess?.isSuperAdmin ? "Ops · Verification · Analytics" : "Delegated Access Control"}
+              </p>
             </div>
           </div>
           <UserProfileDropdown />
@@ -265,18 +298,24 @@ function SuperAdminDashboard() {
       {/* Tab Nav */}
       <div className="bg-slate-900 border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto">
-          {(['overview', 'users', 'therapists', 'organizations', 'subscriptions', 'plans', 'earnings', 'conferences'] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-3 text-sm font-semibold capitalize transition border-b-2 shrink-0 ${
-                tab === t ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
-              }`}>
-              {t === 'conferences' ? 'Video Conferences' : t}
+          {allowedTabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key as any)}
+              className={`px-4 py-3 text-sm font-semibold transition border-b-2 shrink-0 ${
+                tab === t.key ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+        {/* PERMISSIONS TAB */}
+        {tab === 'permissions' && <AdminPermissionsTab />}
 
         {/* CONFERENCES TAB */}
         {tab === 'conferences' && <AdminConferencesTab />}

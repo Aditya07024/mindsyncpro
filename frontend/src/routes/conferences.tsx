@@ -343,25 +343,7 @@ function ConferencesPage() {
                       )}
                     </div>
 
-                    {/* Category & Platform pills */}
-                    <div className="absolute bottom-3 left-4 flex items-center gap-1.5 z-10">
-                      <div className="text-xs font-semibold text-teal-200 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-teal-500/30">
-                        {conf.category}
-                      </div>
-                      {conf.platform === "teams" ? (
-                        <div className="text-xs font-semibold text-blue-200 bg-blue-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-blue-500/30">
-                          🔵 MS Teams
-                        </div>
-                      ) : conf.platform === "google_meet" ? (
-                        <div className="text-xs font-semibold text-rose-200 bg-rose-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-rose-500/30">
-                          🔴 Google Meet
-                        </div>
-                      ) : (
-                        <div className="text-xs font-semibold text-emerald-200 bg-emerald-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
-                          🟢 Jitsi Meet
-                        </div>
-                      )}
-                    </div>
+                    
                   </div>
 
                   {/* Body Content */}

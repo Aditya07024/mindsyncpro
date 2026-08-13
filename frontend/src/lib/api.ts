@@ -161,6 +161,14 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    permissions: {
+      getMyAccess: () => apiCall<any>("/api/admin/permissions/my-access"),
+      list: () => apiCall<any>("/api/admin/permissions"),
+      upsert: (data: any) =>
+        apiCall<any>("/api/admin/permissions", { method: "POST", body: JSON.stringify(data) }),
+      revoke: (id: string) =>
+        apiCall<any>(`/api/admin/permissions/${id}`, { method: "DELETE" }),
+    },
   },
 
   org: {

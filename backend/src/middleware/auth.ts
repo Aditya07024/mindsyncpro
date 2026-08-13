@@ -158,6 +158,37 @@ export function requireRole(roles: string[]) {
   };
 }
 
+export function requirePermission(permissionName: string) {
+  return async (req: AuthedRequest, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError("Authentication required", 401));
+    }
+
+    if (req.user.role === "super_admin" || req.user.role === "admin") {
+      return next();
+    }
+
+    try {
+      const { User } = await import("@/models/user");
+      const { DelegatedAccess } = await import("@/models/delegated-access");
+
+      const dbUser: any = await User.findById(req.user.sub).select("phoneMasked therapistProfile");
+      const userEmail = (dbUser?.email || dbUser?.therapistProfile?.email || dbUser?.phoneMasked || "").toLowerCase().trim();
+
+      if (userEmail) {
+        const access = await DelegatedAccess.findOne({ email: userEmail });
+        if (access && (access.isFullAdmin || (access as any)[permissionName])) {
+          return next();
+        }
+      }
+    } catch (err) {
+      console.error("[requirePermission] Error checking permissions:", err);
+    }
+
+    return next(new AppError("Forbidden: Insufficient delegated permissions", 403));
+  };
+}
+
 export async function optionalAuth(
   req: AuthedRequest,
   res: Response,

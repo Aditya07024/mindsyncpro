@@ -15,4 +15,5 @@ export { TherapistRecommendation, type ITherapistRecommendation } from "./therap
 export { Conference, type IConference } from "./conference";
 export { ConferenceRegistration, type IConferenceRegistration } from "./conference-registration";
 export { ConferencePayment, type IConferencePayment } from "./conference-payment";
+export { DelegatedAccess, type IDelegatedAccess } from "./delegated-access";
 

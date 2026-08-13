@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireRole, optionalAuth } from "@/middleware/auth";
+import { requireAuth, requireRole, requirePermission, optionalAuth } from "@/middleware/auth";
 import { ConferenceController } from "@/controllers/conference.controller";
 import { posterUpload } from "@/middleware/upload.middleware";
 
@@ -21,24 +21,22 @@ router.post("/:id/waiting-room/allow-waiting", optionalAuth, ConferenceControlle
 router.post("/:id/waiting-room/admit-all", optionalAuth, ConferenceController.admitAllAttendees);
 router.post("/:id/waiting-room/deny", optionalAuth, ConferenceController.denyAttendee);
 
-// Admin endpoints require authentication and role checks
+// Admin endpoints require authentication
 router.use(requireAuth);
 
-// Admin endpoints
-const adminRoles = ["super_admin", "admin", "org_admin"];
-
-router.post("/upload-poster", requireRole(adminRoles), posterUpload.single("poster"), ConferenceController.uploadPoster);
-router.post("/:id/poster", requireRole(adminRoles), posterUpload.single("poster"), ConferenceController.uploadConferencePosterById);
-router.post("/", requireRole(adminRoles), ConferenceController.createConference);
-router.put("/:id", requireRole(adminRoles), ConferenceController.updateConference);
-router.delete("/:id", requireRole(adminRoles), ConferenceController.deleteConference);
-router.patch("/:id/publish", requireRole(adminRoles), ConferenceController.togglePublish);
+// Admin endpoints for creation, editing, and publishing conferences
+router.post("/upload-poster", requirePermission("canHostMeeting"), posterUpload.single("poster"), ConferenceController.uploadPoster);
+router.post("/:id/poster", requirePermission("canHostMeeting"), posterUpload.single("poster"), ConferenceController.uploadConferencePosterById);
+router.post("/", requirePermission("canHostMeeting"), ConferenceController.createConference);
+router.put("/:id", requirePermission("canHostMeeting"), ConferenceController.updateConference);
+router.delete("/:id", requirePermission("canHostMeeting"), ConferenceController.deleteConference);
+router.patch("/:id/publish", requirePermission("canHostMeeting"), ConferenceController.togglePublish);
 
 // Admin Attendee & Analytics routes
-router.get("/admin/:id/attendees", requireRole(adminRoles), ConferenceController.getAttendees);
-router.get("/admin/:id/analytics", requireRole(adminRoles), ConferenceController.getAnalytics);
-router.patch("/admin/:id/attendees/:registrationId", requireRole(adminRoles), ConferenceController.updateAttendee);
-router.delete("/admin/:id/attendees/:registrationId", requireRole(adminRoles), ConferenceController.removeAttendee);
-router.get("/admin/:id/export", requireRole(adminRoles), ConferenceController.exportAttendees);
+router.get("/admin/:id/attendees", requirePermission("canViewRegistrations"), ConferenceController.getAttendees);
+router.get("/admin/:id/analytics", requirePermission("canViewRegistrations"), ConferenceController.getAnalytics);
+router.patch("/admin/:id/attendees/:registrationId", requirePermission("canViewRegistrations"), ConferenceController.updateAttendee);
+router.delete("/admin/:id/attendees/:registrationId", requirePermission("canViewRegistrations"), ConferenceController.removeAttendee);
+router.get("/admin/:id/export", requirePermission("canViewRegistrations"), ConferenceController.exportAttendees);
 
 export default router;

@@ -62,6 +62,30 @@ export function UserProfileDropdown({
     }
   }, [isLoaded, user, signOut, navigate]);
 
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      API.admin.permissions
+        .getMyAccess()
+        .then((access) => {
+          if (
+            access &&
+            (access.isSuperAdmin ||
+              access.canHostMeeting ||
+              access.canViewRegistrations ||
+              access.canManageUsers ||
+              access.canManageTherapists ||
+              access.canManageOrganizations ||
+              access.canViewAnalytics)
+          ) {
+            setHasAdminAccess(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isLoaded, user]);
+
   // Close dropdown on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -85,6 +109,8 @@ export function UserProfileDropdown({
       ? 'Org Admin'
       : userRole === 'therapist'
       ? 'Therapist'
+      : hasAdminAccess
+      ? 'Delegated Admin'
       : 'User';
 
   const userInitials = (user.fullName || user.firstName || 'U')
@@ -225,6 +251,19 @@ export function UserProfileDropdown({
 
           {/* Menu Links / Actions */}
           <div className="py-1">
+            {hasAdminAccess && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate({ to: '/admin/dashboard' });
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-xl transition cursor-pointer mb-1 border border-violet-200/60"
+              >
+                <Shield className="size-4 text-violet-600" />
+                Admin Dashboard
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setIsOpen(false);
