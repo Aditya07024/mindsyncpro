@@ -274,7 +274,11 @@ function ConferenceRoomPage() {
     if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current || roomData?.conference?.platform === "teams") return;
 
     let apiInstance: any = null;
-    const appId = roomData.jaas?.appId || "vpaas-magic-cookie-b417268e55554d20b3e8c5a64a71f374";
+    const appId = roomData.jaas?.appId;
+    if (!appId) {
+      setError("JaaS App ID is missing from room details. Please verify backend .env configuration.");
+      return;
+    }
 
     const loadJitsiScript = () => {
       return new Promise<void>((resolve, reject) => {

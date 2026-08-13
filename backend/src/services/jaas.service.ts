@@ -28,7 +28,7 @@ export class JaasService {
   private static privateKeyCache: string | null = null;
 
   /**
-   * Read RSA Private Key from environment variable or file
+   * Read RSA Private Key strictly from environment variable or key file path specified in env
    */
   public static getPrivateKey(): string {
     if (this.privateKeyCache) return this.privateKeyCache;
@@ -39,8 +39,15 @@ export class JaasService {
       return this.privateKeyCache;
     }
 
-    // 2. Check file path (e.g. ./keys/jaas-private.pem or absolute path)
-    const keyPath = process.env.JAAS_PRIVATE_KEY_PATH || "./keys/jaas-private.pem";
+    // 2. Check file path configured in env (e.g. JAAS_PRIVATE_KEY_PATH=./keys/jaas-private.pem)
+    const keyPath = process.env.JAAS_PRIVATE_KEY_PATH;
+    if (!keyPath) {
+      throw new AppError(
+        "Neither JAAS_PRIVATE_KEY nor JAAS_PRIVATE_KEY_PATH is set in environment variables (.env)",
+        500
+      );
+    }
+
     const absolutePath = path.isAbsolute(keyPath)
       ? keyPath
       : path.join(process.cwd(), keyPath);
@@ -50,18 +57,17 @@ export class JaasService {
       return this.privateKeyCache;
     }
 
-    // 3. Check relative to backend directory if running from workspace root
+    // Check relative to backend directory if process ran from workspace root
     const backendPath = path.join(process.cwd(), "backend", keyPath);
     if (fs.existsSync(backendPath)) {
       this.privateKeyCache = fs.readFileSync(backendPath, "utf8");
       return this.privateKeyCache;
     }
 
-    // 4. Default production key fallback (Ensures production server generates valid RS256 JWTs even if gitignored file is absent)
-    const DEFAULT_PEM = `-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCGxsckR7j3m0Fr\nh70xixxI4AyvLoTWugcd/nAq7gmqEaxpiz3dqQqa+3hm5+5rk23Ud18h9OjpMA4D\niBrl+OS0iaoJ9SjAjgmYdld9omU8i7RJ+aUaICLUdRdUKSgx7cKldDuAfpCs6K0n\nLnG4ATeFceGIOU/bKYtt9xKCt43/TDbTEhOVQyUweXDZw30U2wQsAHpIaSZqt6CG\nLV4vBTx553DxfsXQoMkn3c/CDj64nGTo5PLeZUhAU4RvjdJyLbR4QyBO6W8/zXoE\nLaNywv5jWL1T4cImxfzWRYVmQMtyclxIYS3YWy1gafyjA13YuVmFKY4vXYNmhfX4\nR/M8IsEfAgMBAAECggEAWW05o6QHYhvdG5lUerQgD2bCY9aNA+Epachy6rlJJlRV\nvy5J3XMVe2JSMI3CEBUhsfGG6QQVKuzcz5EWr/Mm5XfWoIbQBHv6d/RF9zGy1Kqp\n9M+1shESq0AKO6iXaBGnrpriBE92dZRpl+7kO8Bq85ttlzLX/sahIlTnLl7W1Ebm\n9nj67SQ9vb1XFod/ais8s+l++xu/HB1fdDv679gsPuxPrOWKsTy1WNWle7kas0ox\nWKIjRofnZ7Zl8+ITgyGUw3yT+bvbDXO888aZd+VcuWYbxG4HZ+m97lkHhBD1+9C1\nePLBRGKEqRbHFJuKqyuXfOdhNP/oJXGhGAXTf7FywQKBgQDacliD7IV5MkO5moUT\nWy0xngQdPdVdcZsWVWBY8pLImRQLYVpBfebZ02d5vtK6pSjXmg7sWsRnChbOJ5ua\nOuq+nwqNGFoSYgDZDBZ0PzDhtnRUfsL7DxvU21uiwTz7eotPDd89d4+4gGV5ATT5\nJWK7LJJPMSMa8yVlcmUvZbwrIQKBgQCd8i1tsJ9rNiwIViimFOnKAveJYpvHR0cD\nBP+VaXQGIu86NBQ/VWuUh7ofucIXnahC32WBjmaXkRB19QI66rSQaGATHrrmJsbi\n8VKzjtPWcx+LWGdKOMXVENxklvcqp4Wl6wZQlAOAWG32c5hFkMAL6GC4Hh+sg9/I\nBcoEu9OkPwKBgQCzWFnPxeo3fMsZoQFMyPir2d3q3A9G7rSze1jk7hMQ2o0YYs8l\nIebcQ7Kaw85jKqIDkRpbdpH1PtVGYEJiN6ju48hX2vxoR0oG6OOugQry5UdQ79nJ\nIbhp48ayMxCMLyoct3jnEDhQ9ClbVWBWhRkwLwHYPrFhuOqlBWyJo27/wQKBgCIB\naCJ7qncMvMI2up23VvZ1WRItNtja0cEmrFhg0egYUWU4nTtdisH5zurRtaYb/YQY\nUORp4lCznNWooIhKzAFjV3wGW7r9kkh+KI4cLCO5uYrox6RFQOK0tJ67mg+G7dFh\nHoTuuSpC37n1/UzM82wc5eX+JlegNOf9xxbp0ZFFAoGARkYPjWYBO6dbxPBjJxcU\nrNHHbSA9KwxYoYhAi8FzjMHsv7G8wm5QRuCQuiowsl6/MCsJ1IXmYyMQftco5tgC\nClwL6B+jLZyVzI4YJm4CNQS4Ca0GtcR8X1PGYsHwCDs9XBftEQp4W3vx3KpMCHRU\ng7LNei+y4/YQ7uDiJ9RCorw=\n-----END PRIVATE KEY-----`;
-
-    this.privateKeyCache = DEFAULT_PEM;
-    return this.privateKeyCache;
+    throw new AppError(
+      `JaaS private key file not found at: ${keyPath}. Please verify JAAS_PRIVATE_KEY_PATH in your .env file.`,
+      500
+    );
   }
 
   /**
@@ -89,12 +95,15 @@ export class JaasService {
     }
 
     const domain = process.env.JAAS_DOMAIN || "8x8.vc";
-    const appId =
-      process.env.JAAS_APP_ID ||
-      "vpaas-magic-cookie-b417268e55554d20b3e8c5a64a71f374";
-    const kid =
-      process.env.JAAS_KID ||
-      `${appId}/192f7f`;
+    const appId = process.env.JAAS_APP_ID;
+    if (!appId) {
+      throw new AppError("JAAS_APP_ID is not configured in environment variables (.env)", 500);
+    }
+
+    const kid = process.env.JAAS_KID;
+    if (!kid) {
+      throw new AppError("JAAS_KID is not configured in environment variables (.env)", 500);
+    }
 
     const privateKey = this.getPrivateKey();
 
