@@ -54,7 +54,7 @@ export async function createApp() {
   // Serve uploaded images statically with explicit Cross-Origin headers
   const { getUploadDirectory } = await import("@/middleware/upload.middleware");
   app.use(
-    "/uploads/images",
+    ["/uploads/images", "/api/uploads/images"],
     (req, res, next) => {
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       res.setHeader("Access-Control-Allow-Origin", "*");

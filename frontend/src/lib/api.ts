@@ -456,7 +456,26 @@ const API = {
     getToken: (data: { roomName: string; user: { id?: string; name: string; email?: string }; moderator?: boolean }) =>
       apiCall<any>("/api/video/token", { method: "POST", body: JSON.stringify(data) }),
   },
+
+  popupAnnouncement: {
+    getActive: () => apiCall<{ announcement: any | null }>("/api/popup-announcement/active"),
+    getAdminConfig: () => apiCall<{ announcement: any | null }>("/api/popup-announcement"),
+    updateConfig: (data: any) =>
+      apiCall<{ announcement: any; message: string }>("/api/popup-announcement", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    uploadPoster: async (file: File) => {
+      const formData = new FormData();
+      formData.append("poster", file);
+      return apiCall<{ posterUrl: string; message: string }>("/api/popup-announcement/upload-poster", {
+        method: "POST",
+        body: formData,
+      });
+    },
+  },
 };
 
 
 export default API;
+

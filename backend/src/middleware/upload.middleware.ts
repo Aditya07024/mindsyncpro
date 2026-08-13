@@ -67,10 +67,24 @@ export const posterUpload = multer({
   },
 });
 
-export function getPublicUrlForFilename(filename: string): string {
-  const baseUrl = process.env.VITE_API_URL || process.env.API_URL || "https://api.mymindtherapyfriend.com";
-  return `${baseUrl}/uploads/images/${filename}`;
+export function getPublicUrlForFilename(filename: string, req?: any): string {
+  if (req) {
+    const protocol = req.headers?.["x-forwarded-proto"] || req.protocol || "http";
+    const host = req.headers?.["x-forwarded-host"] || (req.get && req.get("host"));
+    if (host) {
+      return `${protocol}://${host}/uploads/images/${filename}`;
+    }
+  }
+
+  const envUrl = process.env.API_URL || process.env.VITE_API_URL || process.env.BACKEND_URL;
+  if (envUrl) {
+    return `${envUrl.replace(/\/$/, "")}/uploads/images/${filename}`;
+  }
+
+  const port = process.env.PORT || "8080";
+  return `http://localhost:${port}/uploads/images/${filename}`;
 }
+
 
 export function deleteFileFromStorage(posterUrlOrPath?: string | null) {
   if (!posterUrlOrPath) return;

@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { AdminConferencesTab } from './-conferences';
 import { AdminPermissionsTab } from './-permissions';
+import { AdminPopupAnnouncementTab } from './-popup-announcement';
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
@@ -25,7 +26,7 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement'>('overview');
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
   const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
@@ -108,6 +109,7 @@ function SuperAdminDashboard() {
   const allowedTabs = [
     { key: 'overview', label: 'Overview', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
     { key: 'conferences', label: 'Video Conferences', allowed: Boolean(myAccess?.canHostMeeting || myAccess?.canViewRegistrations || myAccess?.isFullAdmin) },
+    { key: 'popup-announcement', label: 'Workshop Popup', allowed: Boolean(myAccess?.canHostMeeting || myAccess?.isFullAdmin) },
     { key: 'users', label: 'Users', allowed: Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin) },
     { key: 'therapists', label: 'Therapists', allowed: Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin) },
     { key: 'organizations', label: 'Organizations', allowed: Boolean(myAccess?.canManageOrganizations || myAccess?.isFullAdmin) },
@@ -319,6 +321,9 @@ function SuperAdminDashboard() {
 
         {/* CONFERENCES TAB */}
         {tab === 'conferences' && <AdminConferencesTab />}
+
+        {/* WORKSHOP POPUP TAB */}
+        {tab === 'popup-announcement' && <AdminPopupAnnouncementTab />}
 
         {/* OVERVIEW TAB */}
         {tab === 'overview' && (

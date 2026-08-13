@@ -40,6 +40,7 @@ import therapist from "@/assets/therapist.avif";
 import org from "@/assets/org.avif";
 import app from "@/assets/app.png";
 import play from "@/assets/play.webp";
+import { LandingPopupModal } from "@/components/LandingPopupModal";
 
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
@@ -709,6 +710,23 @@ function Landing() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [popupAnnouncement, setPopupAnnouncement] = useState<any | null>(null);
+  const [showPopupModal, setShowPopupModal] = useState(false);
+
+  // Fetch active popup announcement on landing page load
+  useEffect(() => {
+    API.popupAnnouncement
+      .getActive()
+      .then((res) => {
+        if (res?.announcement && res.announcement.isActive) {
+          setPopupAnnouncement(res.announcement);
+          setShowPopupModal(true);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch active popup announcement:", err);
+      });
+  }, []);
 
   // Auto-redirect signed-in users to their role's portal
   useEffect(() => {
@@ -1534,6 +1552,14 @@ function Landing() {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Workshop Popup Announcement Modal */}
+      {showPopupModal && popupAnnouncement && (
+        <LandingPopupModal
+          announcement={popupAnnouncement}
+          onClose={() => setShowPopupModal(false)}
+        />
       )}
     </div>
   );

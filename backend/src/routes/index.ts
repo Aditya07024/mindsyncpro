@@ -15,6 +15,7 @@ import notificationRoutes from "./notification";
 import conferenceRoutes from "./conference";
 import videoRoutes from "./video";
 import accountRoutes from "./account";
+import popupAnnouncementRoutes from "./popup-announcement";
 
 export const apiRouter = Router();
 
@@ -38,4 +39,6 @@ apiRouter.use("/plans", planRoutes);
 apiRouter.use("/notifications", notificationRoutes);
 apiRouter.use("/conferences", conferenceRoutes);
 apiRouter.use("/video", videoRoutes);
+apiRouter.use("/popup-announcement", popupAnnouncementRoutes);
+
 
