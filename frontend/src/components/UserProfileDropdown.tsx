@@ -292,18 +292,20 @@ export function UserProfileDropdown({
             </button>
           </div>
 
-          <div className="border-t border-slate-100 pt-1 mt-1">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setShowDeleteModal(true);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
-            >
-              <Trash2 className="size-4 text-rose-500" />
-              Delete Profile
-            </button>
-          </div>
+          {!hasAdminAccess && userRole !== 'super_admin' && (
+            <div className="border-t border-slate-100 pt-1 mt-1">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setShowDeleteModal(true);
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+              >
+                <Trash2 className="size-4 text-rose-500" />
+                Delete Profile
+              </button>
+            </div>
+          )}
         </div>
       )}
 
