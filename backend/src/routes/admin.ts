@@ -13,7 +13,7 @@ const upload = multer({
 });
 
 // My access route (available for any authenticated user to check their permissions)
-router.get("/permissions/my-access", requireAuth, DelegatedAccessController.getMyAccess);
+router.get("/permissions/my-access", optionalAuth, DelegatedAccessController.getMyAccess);
 
 // Analytics & Stats
 router.get("/stats", requirePermission("canViewAnalytics"), AdminController.platformStats);
