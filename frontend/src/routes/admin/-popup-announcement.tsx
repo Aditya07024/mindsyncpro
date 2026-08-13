@@ -137,40 +137,36 @@ export function AdminPopupAnnouncementTab() {
   return (
     <div className="space-y-8">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-emerald-950 p-6 sm:p-8 rounded-3xl border border-teal-500/20 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-500/30 mb-3">
-            <Sparkles className="size-3.5" />
-            <span>Landing Page Announcement Modal</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Workshop Popup Configuration</h2>
-          <p className="mt-1 text-sm text-slate-300 max-w-xl">
-            Configure details for upcoming workshops, upload event poster images, and direct landing page visitors to your conference page.
-          </p>
+      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-emerald-950 p-6 sm:p-8 rounded-3xl border border-teal-500/20 text-white shadow-xl">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-500/30 mb-3">
+          <Sparkles className="size-3.5" />
+          <span>Landing Page Announcement Modal</span>
         </div>
-
-        <div className="flex items-center gap-3 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 self-start sm:self-auto">
-          <div className="flex flex-col">
-            <span className="text-xs text-slate-400 font-medium">Popup Status</span>
-            <span className={`text-sm font-bold ${form.isActive ? "text-emerald-400" : "text-slate-400"}`}>
-              {form.isActive ? "Active (Showing on Landing Page)" : "Inactive (Hidden)"}
-            </span>
-          </div>
-          <Switch
-            checked={form.isActive}
-            onCheckedChange={(checked) => setForm((prev) => ({ ...prev, isActive: checked }))}
-            className="data-[state=checked]:bg-teal-500"
-          />
-        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Workshop Popup Configuration</h2>
+        <p className="mt-1 text-sm text-slate-300 max-w-xl">
+          Configure details for upcoming workshops, upload event poster images, and direct landing page visitors to your conference page.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Form Column */}
         <form onSubmit={handleSubmit} className="lg:col-span-7 space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-4">
-              Popup Details
-            </h3>
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Popup Details
+              </h3>
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/90 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {form.isActive ? "Active (Showing)" : "Inactive (Hidden)"}
+                </span>
+                <Switch
+                  checked={form.isActive}
+                  onCheckedChange={(checked) => setForm((prev) => ({ ...prev, isActive: checked }))}
+                  className="data-[state=checked]:bg-teal-500"
+                />
+              </div>
+            </div>
 
             {/* Title */}
             <div>
@@ -385,11 +381,11 @@ export function AdminPopupAnnouncementTab() {
         {/* Live Preview Column */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Eye className="size-4 text-teal-600" />
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Eye className="size-4 text-teal-400" />
               <span>Live Landing Page Preview</span>
             </h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-300 font-medium">
               Simulated modal overlay
             </span>
           </div>
