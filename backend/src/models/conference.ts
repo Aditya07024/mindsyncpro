@@ -20,7 +20,7 @@ export interface IConference extends Document {
   password?: string;
   hostEmail?: string;
   hostJoined?: boolean;
-  platform: "jitsi" | "teams";
+  platform: "jitsi" | "teams" | "google_meet";
   meetingLink?: string;
   endTime?: string;
   instructions?: string;
@@ -42,7 +42,7 @@ const ConferenceSchema = new Schema<IConference>(
     endTime: { type: String, default: "" },
     platform: {
       type: String,
-      enum: ["jitsi", "teams"],
+      enum: ["jitsi", "teams", "google_meet"],
       default: "jitsi",
     },
     meetingLink: { type: String, default: "" },

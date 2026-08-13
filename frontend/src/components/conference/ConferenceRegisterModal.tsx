@@ -18,6 +18,7 @@ interface ConferenceRegisterModalProps {
     platform?: string;
     meetingLink?: string;
     banner?: string;
+    posterUrl?: string | null;
   } | null;
   isOpen: boolean;
   onClose: () => void;
@@ -184,7 +185,7 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
             });
 
             toast.success("Payment verified!");
-            enterMeeting(verifyRes.platform || res.platform, verifyRes.meetingLink || res.meetingLink);
+            enterMeeting();
           } catch (err: any) {
             toast.error(err.message || "Payment verification failed");
           } finally {

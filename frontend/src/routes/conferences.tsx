@@ -264,7 +264,7 @@ function ConferencesPage() {
             <button
               onClick={() => {
                 setSearch("");
-                setStatusFilter("all");
+                setTimeFilter("all");
               }}
               className="mt-6 px-5 py-2.5 text-sm font-semibold text-teal-800 bg-teal-50 border border-teal-200 rounded-xl hover:bg-teal-100 transition-all"
             >
@@ -343,9 +343,24 @@ function ConferencesPage() {
                       )}
                     </div>
 
-                    {/* Category pill */}
-                    <div className="absolute bottom-3 left-4 text-xs font-semibold text-teal-200 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-teal-500/30 z-10">
-                      {conf.category}
+                    {/* Category & Platform pills */}
+                    <div className="absolute bottom-3 left-4 flex items-center gap-1.5 z-10">
+                      <div className="text-xs font-semibold text-teal-200 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-teal-500/30">
+                        {conf.category}
+                      </div>
+                      {conf.platform === "teams" ? (
+                        <div className="text-xs font-semibold text-blue-200 bg-blue-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-blue-500/30">
+                          🔵 MS Teams
+                        </div>
+                      ) : conf.platform === "google_meet" ? (
+                        <div className="text-xs font-semibold text-rose-200 bg-rose-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-rose-500/30">
+                          🔴 Google Meet
+                        </div>
+                      ) : (
+                        <div className="text-xs font-semibold text-emerald-200 bg-emerald-950/80 backdrop-blur-md px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                          🟢 Jitsi Meet
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -378,20 +393,10 @@ function ConferencesPage() {
                         <span className="font-semibold text-slate-700">{conf.duration} mins</span>
                       </div>
 
-                      {/* <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1.5 text-slate-500 font-medium">
-                          <Users className="w-3.5 h-3.5 text-teal-600" /> Registered / Seats
-                        </span>
-                        <span className="font-semibold text-slate-700">
-                          {conf.registeredCount || 0} / {conf.maxParticipants}
-                        </span>
-                      </div> */}
-
                       {/* Countdown Timer for Upcoming */}
                       {isUpcoming && (
-                        <div className="mt-3 pt-2 flex items-center justify-between border-t border-teal-50">
-                          <span className="text-xs text-slate-500 font-medium">Starts in:</span>
-                          <CountdownTimer targetDateStr={startDateTimeStr} />
+                        <div className="pt-2 text-center text-xs font-semibold text-teal-700 bg-teal-50 py-1.5 rounded-lg">
+                          Starts in {conf.countdownText}
                         </div>
                       )}
                     </div>
@@ -409,7 +414,11 @@ function ConferencesPage() {
                         <button
                           onClick={() => { window.location.href = `/conferences/${conf._id}/room`; }}
                           className={`w-full py-3 px-4 rounded-xl font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
-                            conf.platform === "teams" ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-[#004038] hover:bg-[#00302a] text-white"
+                            conf.platform === "teams"
+                              ? "bg-blue-600 hover:bg-blue-500 text-white"
+                              : conf.platform === "google_meet"
+                              ? "bg-rose-600 hover:bg-rose-500 text-white"
+                              : "bg-[#004038] hover:bg-[#00302a] text-white"
                           }`}
                         >
                           <Play className="w-4 h-4 fill-white" />
@@ -423,6 +432,8 @@ function ConferencesPage() {
                               ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
                               : conf.platform === "teams"
                               ? "bg-blue-600 hover:bg-blue-500 text-white shadow-md hover:scale-[1.02]"
+                              : conf.platform === "google_meet"
+                              ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
                               : "bg-[#004038] hover:bg-[#00302a] text-white shadow-md hover:scale-[1.02]"
                           }`}
                         >

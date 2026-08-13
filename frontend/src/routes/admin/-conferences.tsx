@@ -63,7 +63,7 @@ export function AdminConferencesTab() {
     meetingDate: new Date().toISOString().split("T")[0],
     meetingTime: "18:00",
     endTime: "19:00",
-    platform: "jitsi" as "jitsi" | "teams",
+    platform: "jitsi" as "jitsi" | "teams" | "google_meet",
     meetingLink: "",
     duration: 60,
     meetingType: "public" as "public" | "private" | "webinar" | "workshop",
@@ -240,11 +240,40 @@ export function AdminConferencesTab() {
         return;
       }
     }
+    if (form.platform === "google_meet") {
+      if (!form.meetingLink.trim()) {
+        toast.error("Meeting Link is required for Google Meet meetings.");
+        return;
+      }
+      try {
+        const parsed = new URL(form.meetingLink.trim());
+        const host = parsed.hostname.toLowerCase();
+        const valid =
+          (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+          (host === "meet.google.com" ||
+            host.endsWith(".meet.google.com") ||
+            host === "meet.google.co.in" ||
+            (host.endsWith(".google.com") && host.startsWith("meet")));
+        if (!valid) {
+          toast.error("Please enter a valid Google Meet meeting URL.");
+          return;
+        }
+      } catch {
+        toast.error("Please enter a valid Google Meet meeting URL.");
+        return;
+      }
+    }
     if (editingConference) {
       updateMutation.mutate({ id: editingConference._id, data: form });
     } else {
       createMutation.mutate(form);
     }
+  };
+
+  const handleCopyInviteLink = (conf: any) => {
+    const url = conf.meetingLink || `${window.location.origin}/conferences/${conf._id}/room`;
+    navigator.clipboard.writeText(url);
+    toast.success("Conference join link copied to clipboard!");
   };
 
   const filteredConferences = (conferences || []).filter((conf: any) => {
@@ -401,6 +430,10 @@ export function AdminConferencesTab() {
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
                             🔵 Microsoft Teams
                           </span>
+                        ) : conf.platform === "google_meet" ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
+                            🔴 Google Meet
+                          </span>
                         ) : (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                             🟢 Jitsi Meet
@@ -443,7 +476,7 @@ export function AdminConferencesTab() {
                     </button>
 
                     <button
-                      onClick={() => copyInviteLink(conf)}
+                      onClick={() => handleCopyInviteLink(conf)}
                       className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
                       title="Copy Invite Link"
                     >
@@ -627,7 +660,7 @@ export function AdminConferencesTab() {
               {/* Meeting Platform Selection */}
               <div className="space-y-2 border-y border-slate-800 py-3">
                 <label className="font-medium text-slate-300 block">Meeting Platform *</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, platform: "jitsi", meetingLink: "" })}
@@ -639,8 +672,8 @@ export function AdminConferencesTab() {
                   >
                     <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
                     <div>
-                      <div className="text-xs font-bold text-white">Jitsi Meet (Default)</div>
-                      <div className="text-[10px] text-slate-400">Integrated video conferencing room</div>
+                      <div className="text-xs font-bold text-white">Jitsi Meet</div>
+                      <div className="text-[10px] text-slate-400">Integrated room</div>
                     </div>
                   </button>
 
@@ -655,8 +688,24 @@ export function AdminConferencesTab() {
                   >
                     <span className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
                     <div>
-                      <div className="text-xs font-bold text-white">Microsoft Teams</div>
-                      <div className="text-[10px] text-slate-400">External Teams invitation link</div>
+                      <div className="text-xs font-bold text-white">MS Teams</div>
+                      <div className="text-[10px] text-slate-400">External Teams link</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, platform: "google_meet" })}
+                    className={`p-3 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+                      form.platform === "google_meet"
+                        ? "bg-rose-500/10 border-rose-500 text-rose-300 font-semibold"
+                        : "bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full bg-rose-500 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-white">Google Meet</div>
+                      <div className="text-[10px] text-slate-400">External Meet link</div>
                     </div>
                   </button>
                 </div>
@@ -686,6 +735,36 @@ export function AdminConferencesTab() {
                       />
                       <p className="text-[10px] text-slate-400">
                         Paste the copied Microsoft Teams meeting invitation URL here.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Google Meet Specific Section */}
+                {form.platform === "google_meet" && (
+                  <div className="mt-3 p-4 rounded-2xl bg-rose-950/30 border border-rose-800/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-rose-200">Create meeting in Google Meet:</span>
+                      <button
+                        type="button"
+                        onClick={() => window.open("https://meet.google.com/new", "_blank")}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-md shadow-rose-500/20"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Create Google Meet
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-medium text-slate-200">Meeting Link *</label>
+                      <input
+                        type="url"
+                        required
+                        value={form.meetingLink}
+                        onChange={(e) => setForm({ ...form, meetingLink: e.target.value })}
+                        placeholder="https://meet.google.com/abc-defg-hij"
+                        className="w-full px-3 py-2 bg-slate-900 border border-rose-700/60 rounded-xl text-white text-xs focus:border-rose-400 focus:outline-none"
+                      />
+                      <p className="text-[10px] text-slate-400">
+                        Paste the copied Google Meet invitation URL here.
                       </p>
                     </div>
                   </div>

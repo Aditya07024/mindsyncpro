@@ -177,16 +177,20 @@ function ConferenceRoomPage() {
     return () => clearInterval(interval);
   }, [waitingForHost, id, enteredPassword]);
 
-  // Auto-redirect to Teams if platform is teams (only when user is admitted and waitingForHost is false)
+  // Auto-redirect to Teams or Google Meet if platform is external (only when user is admitted and waitingForHost is false)
   useEffect(() => {
     if (
-      roomData?.conference?.platform === "teams" &&
       roomData?.conference?.meetingLink &&
       !waitingForHost &&
       !requiresPassword
     ) {
-      toast.info("You have been admitted! Redirecting to Microsoft Teams...");
-      window.location.href = roomData.conference.meetingLink;
+      if (roomData.conference.platform === "teams") {
+        toast.info("You have been admitted! Redirecting to Microsoft Teams...");
+        window.location.href = roomData.conference.meetingLink;
+      } else if (roomData.conference.platform === "google_meet") {
+        toast.info("You have been admitted! Redirecting to Google Meet...");
+        window.location.href = roomData.conference.meetingLink;
+      }
     }
   }, [roomData, waitingForHost, requiresPassword]);
 
@@ -271,7 +275,7 @@ function ConferenceRoomPage() {
 
   // Load JaaS (8x8.vc) script and initialize iframe
   useEffect(() => {
-    if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current || roomData?.conference?.platform === "teams") return;
+    if (!roomData || waitingForHost || requiresPassword || !jitsiContainerRef.current || roomData?.conference?.platform === "teams" || roomData?.conference?.platform === "google_meet") return;
 
     let apiInstance: any = null;
 
@@ -581,89 +585,243 @@ function ConferenceRoomPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             >
               <motion.div
-                initial={{ scale: 0.95, y: 10 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 10 }}
-                className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-left"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
               >
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-teal-400" />
+                    <Users className="w-5 h-5 text-amber-400" />
                     <h3 className="text-lg font-bold text-white">Teams Waiting Room Lobby</h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
-                      {waitingQueue.length} Waiting
-                    </span>
                   </div>
                   <button
                     onClick={() => setShowWaitingModal(false)}
-                    className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                {waitingQueue.length > 0 && (
-                  <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-500/30 p-3.5 rounded-2xl">
-                    <div>
-                      <p className="text-xs text-emerald-300 font-bold">Admit All Participants</p>
-                      <p className="text-[11px] text-slate-400">Allow everyone waiting to redirect to Microsoft Teams.</p>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-slate-400">Allow everyone waiting to redirect to Microsoft Teams.</p>
+                  {waitingQueue.length > 0 && (
                     <button
                       onClick={handleAdmitAll}
                       disabled={admittingAll}
-                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow-md transition-all flex items-center gap-1.5"
+                      className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-lg transition-all"
                     >
-                      <CheckCircle2 className="w-4 h-4" /> Allow All ({waitingQueue.length})
+                      Allow All ({waitingQueue.length})
                     </button>
-                  </div>
-                )}
-
-                <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
-                  {waitingQueue.map((item: any) => (
-                    <div
-                      key={item.id}
-                      className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-2xl flex items-center justify-between gap-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="font-bold text-white text-sm truncate">{item.fullName}</p>
-                        <p className="text-xs text-slate-400 truncate">{item.email}</p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => handleAdmitSingle(item.id)}
-                          disabled={admittingId === item.id}
-                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Allow
-                        </button>
-                        <button
-                          onClick={() => handleDenySingle(item.id)}
-                          disabled={admittingId === item.id}
-                          className="px-2.5 py-1.5 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300 font-semibold text-xs rounded-xl transition flex items-center gap-1"
-                        >
-                          <XCircle className="w-3.5 h-3.5" /> Deny
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  {waitingQueue.length === 0 && (
-                    <div className="p-8 text-center text-slate-500 text-sm">
-                      No attendees currently waiting in the lobby.
-                    </div>
                   )}
                 </div>
 
-                <div className="pt-2 flex justify-end">
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                  {waitingQueue.length === 0 ? (
+                    <div className="text-center py-6 text-slate-500 text-xs">
+                      No participants waiting in queue.
+                    </div>
+                  ) : (
+                    waitingQueue.map((item: any) => (
+                      <div
+                        key={item._id || item.id}
+                        className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <div className="font-semibold text-white">{item.fullName}</div>
+                          <div className="text-[10px] text-slate-400">{item.email}</div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleAdmitSingle(item._id || item.id)}
+                            disabled={admittingId === (item._id || item.id)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold"
+                          >
+                            Allow
+                          </button>
+                          <button
+                            onClick={() => handleDenySingle(item._id || item.id)}
+                            disabled={admittingId === (item._id || item.id)}
+                            className="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 rounded-lg text-[10px] font-bold"
+                          >
+                            Deny
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  // GOOGLE MEET MEETING PORTAL UI (Rendered ONLY when user is admitted or host)
+  if (roomData?.conference?.platform === "google_meet") {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4 relative">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
+        >
+          <div className="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
+            <Video className="w-9 h-9 text-rose-400" />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
+                🔴 Google Meet Session
+              </span>
+              {isMeetingHost && (
+                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5" /> Host
+                </span>
+              )}
+            </div>
+            <h3 className="text-2xl font-bold text-white mt-3">
+              {roomData.conference.title}
+            </h3>
+            <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+              {isMeetingHost
+                ? "You are host of this Google Meet session. Click below to launch Google Meet and manage waiting participants."
+                : "You have been admitted! Click the button below to join the Google Meet session."}
+            </p>
+          </div>
+
+          {/* Host Lobby Control Bar inside Google Meet View */}
+          {isMeetingHost && (
+            <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/40 space-y-3">
+              <div className="flex items-center justify-between text-xs text-amber-300">
+                <span className="font-bold flex items-center gap-1.5">
+                  <Users className="w-4 h-4" /> Waiting Room Lobby Queue ({waitingQueue.length})
+                </span>
+                {waitingQueue.length > 0 && (
+                  <button
+                    onClick={handleAdmitAll}
+                    disabled={admittingAll}
+                    className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg transition-all text-xs"
+                  >
+                    Allow All ({waitingQueue.length})
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowWaitingModal(true)}
+                className="w-full py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <Users className="w-4 h-4" /> Open Waiting Room Lobby ({waitingQueue.length} Waiting)
+              </button>
+            </div>
+          )}
+
+          <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2 text-xs text-slate-300 text-left">
+            <div><strong>Date & Time:</strong> {roomData.conference.meetingDate} at {roomData.conference.meetingTime}</div>
+            {roomData.conference.endTime && <div><strong>End Time:</strong> {roomData.conference.endTime}</div>}
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
+            <button
+              onClick={() => navigate({ to: "/conferences" })}
+              className="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Conferences
+            </button>
+            <button
+              onClick={() => {
+                if (roomData.conference.meetingLink) {
+                  window.open(roomData.conference.meetingLink, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20 transition-all flex items-center justify-center gap-2"
+            >
+              <Video className="w-4 h-4" /> Open Google Meet
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Host Waiting Room Management Modal */}
+        <AnimatePresence>
+          {showWaitingModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
+              >
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-lg font-bold text-white">Google Meet Waiting Room Lobby</h3>
+                  </div>
                   <button
                     onClick={() => setShowWaitingModal(false)}
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
                   >
-                    Close Lobby
+                    <X className="w-5 h-5" />
                   </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-slate-400">Allow everyone waiting to redirect to Google Meet.</p>
+                  {waitingQueue.length > 0 && (
+                    <button
+                      onClick={handleAdmitAll}
+                      disabled={admittingAll}
+                      className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-lg transition-all"
+                    >
+                      Allow All ({waitingQueue.length})
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                  {waitingQueue.length === 0 ? (
+                    <div className="text-center py-6 text-slate-500 text-xs">
+                      No participants waiting in queue.
+                    </div>
+                  ) : (
+                    waitingQueue.map((item: any) => (
+                      <div
+                        key={item._id || item.id}
+                        className="p-3 bg-slate-950/60 rounded-xl border border-slate-800 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <div className="font-semibold text-white">{item.fullName}</div>
+                          <div className="text-[10px] text-slate-400">{item.email}</div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleAdmitSingle(item._id || item.id)}
+                            disabled={admittingId === (item._id || item.id)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold"
+                          >
+                            Allow
+                          </button>
+                          <button
+                            onClick={() => handleDenySingle(item._id || item.id)}
+                            disabled={admittingId === (item._id || item.id)}
+                            className="px-2.5 py-1 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 rounded-lg text-[10px] font-bold"
+                          >
+                            Deny
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </motion.div>
             </motion.div>

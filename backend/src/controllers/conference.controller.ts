@@ -33,6 +33,23 @@ export function isValidTeamsUrl(url: string): boolean {
   }
 }
 
+export function isValidGoogleMeetUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  try {
+    const parsed = new URL(url.trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    return (
+      host === "meet.google.com" ||
+      host.endsWith(".meet.google.com") ||
+      host === "meet.google.co.in" ||
+      (host.endsWith(".google.com") && host.startsWith("meet"))
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function formatHostEmails(emailStr?: any): string {
   if (!emailStr) return "";
   return String(emailStr)
@@ -79,7 +96,7 @@ export class ConferenceController {
         throw new AppError("Title, description, date, and time are required", 400);
       }
 
-      const selectedPlatform = platform === "teams" ? "teams" : "jitsi";
+      const selectedPlatform = platform === "teams" ? "teams" : platform === "google_meet" || platform === "google-meet" ? "google_meet" : "jitsi";
       const cleanMeetingLink = (meetingLink || "").trim();
 
       if (selectedPlatform === "teams") {
@@ -88,6 +105,13 @@ export class ConferenceController {
         }
         if (!isValidTeamsUrl(cleanMeetingLink)) {
           throw new AppError("Invalid Microsoft Teams meeting URL. Please enter a valid Teams meeting link.", 400);
+        }
+      } else if (selectedPlatform === "google_meet") {
+        if (!cleanMeetingLink) {
+          throw new AppError("Meeting Link is required for Google Meet meetings.", 400);
+        }
+        if (!isValidGoogleMeetUrl(cleanMeetingLink)) {
+          throw new AppError("Invalid Google Meet meeting URL. Please enter a valid Google Meet link (e.g., https://meet.google.com/abc-defg-hij).", 400);
         }
       }
 
@@ -116,7 +140,7 @@ export class ConferenceController {
         meetingTime,
         endTime: endTime || "",
         platform: selectedPlatform,
-        meetingLink: selectedPlatform === "teams" ? cleanMeetingLink : "",
+        meetingLink: selectedPlatform === "jitsi" ? "" : cleanMeetingLink,
         duration: Number(duration || 60),
         category: category || "",
         meetingType: meetingType || "public",
@@ -389,6 +413,15 @@ export class ConferenceController {
         }
         if (!isValidTeamsUrl(targetMeetingLink)) {
           throw new AppError("Invalid Microsoft Teams meeting URL. Please enter a valid Teams meeting link.", 400);
+        }
+        updates.meetingLink = targetMeetingLink;
+      } else if (targetPlatform === "google_meet" || targetPlatform === "google-meet") {
+        updates.platform = "google_meet";
+        if (!targetMeetingLink) {
+          throw new AppError("Meeting Link is required for Google Meet meetings.", 400);
+        }
+        if (!isValidGoogleMeetUrl(targetMeetingLink)) {
+          throw new AppError("Invalid Google Meet meeting URL. Please enter a valid Google Meet link (e.g., https://meet.google.com/abc-defg-hij).", 400);
         }
         updates.meetingLink = targetMeetingLink;
       } else if (targetPlatform === "jitsi") {
