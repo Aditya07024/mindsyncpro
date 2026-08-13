@@ -42,6 +42,7 @@ export function AdminPermissionsTab() {
     canManageTherapists: false,
     canManageOrganizations: false,
     canViewAnalytics: false,
+    canManageWorkshopPopup: false,
     isFullAdmin: false,
   });
 
@@ -82,6 +83,7 @@ export function AdminPermissionsTab() {
       canManageTherapists: false,
       canManageOrganizations: false,
       canViewAnalytics: false,
+      canManageWorkshopPopup: false,
       isFullAdmin: false,
     });
     setEditingItem(null);
@@ -104,6 +106,7 @@ export function AdminPermissionsTab() {
       canManageTherapists: Boolean(item.canManageTherapists),
       canManageOrganizations: Boolean(item.canManageOrganizations),
       canViewAnalytics: Boolean(item.canViewAnalytics),
+      canManageWorkshopPopup: Boolean(item.canManageWorkshopPopup),
       isFullAdmin: Boolean(item.isFullAdmin),
     });
     setModalOpen(true);
@@ -572,6 +575,21 @@ export function AdminPermissionsTab() {
                         type="checkbox"
                         checked={form.canViewAnalytics}
                         onChange={(e) => setForm({ ...form, canViewAnalytics: e.target.checked })}
+                        className="w-4 h-4 accent-violet-600 rounded"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+                      <div>
+                        <div className="font-bold text-white flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-teal-400" /> Manage Workshop Popup
+                        </div>
+                        <div className="text-[10px] text-slate-400">Allows configuring upcoming workshop popup announcements and poster uploads</div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={form.canManageWorkshopPopup}
+                        onChange={(e) => setForm({ ...form, canManageWorkshopPopup: e.target.checked })}
                         className="w-4 h-4 accent-violet-600 rounded"
                       />
                     </label>

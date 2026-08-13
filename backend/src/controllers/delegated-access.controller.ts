@@ -31,6 +31,7 @@ export class DelegatedAccessController {
       canManageTherapists,
       canManageOrganizations,
       canViewAnalytics,
+      canManageWorkshopPopup,
       isFullAdmin,
     } = req.body;
 
@@ -55,6 +56,7 @@ export class DelegatedAccessController {
       access.canManageTherapists = canManageTherapists !== undefined ? Boolean(canManageTherapists) : access.canManageTherapists;
       access.canManageOrganizations = canManageOrganizations !== undefined ? Boolean(canManageOrganizations) : access.canManageOrganizations;
       access.canViewAnalytics = canViewAnalytics !== undefined ? Boolean(canViewAnalytics) : access.canViewAnalytics;
+      access.canManageWorkshopPopup = canManageWorkshopPopup !== undefined ? Boolean(canManageWorkshopPopup) : access.canManageWorkshopPopup;
       access.isFullAdmin = isFullAdmin !== undefined ? Boolean(isFullAdmin) : access.isFullAdmin;
       if (req.user?.sub && mongoose.Types.ObjectId.isValid(req.user.sub)) {
         access.grantedBy = new mongoose.Types.ObjectId(req.user.sub);
@@ -71,6 +73,7 @@ export class DelegatedAccessController {
         canManageTherapists: Boolean(canManageTherapists),
         canManageOrganizations: Boolean(canManageOrganizations),
         canViewAnalytics: Boolean(canViewAnalytics),
+        canManageWorkshopPopup: Boolean(canManageWorkshopPopup),
         isFullAdmin: Boolean(isFullAdmin),
         grantedBy: req.user?.sub && mongoose.Types.ObjectId.isValid(req.user.sub) ? new mongoose.Types.ObjectId(req.user.sub) : undefined,
       });
@@ -117,6 +120,7 @@ export class DelegatedAccessController {
         canManageTherapists: true,
         canManageOrganizations: true,
         canViewAnalytics: true,
+        canManageWorkshopPopup: true,
       });
     }
 
@@ -137,6 +141,7 @@ export class DelegatedAccessController {
           canManageTherapists: Boolean(delegated.isFullAdmin || delegated.canManageTherapists),
           canManageOrganizations: Boolean(delegated.isFullAdmin || delegated.canManageOrganizations),
           canViewAnalytics: Boolean(delegated.isFullAdmin || delegated.canViewAnalytics),
+          canManageWorkshopPopup: Boolean(delegated.isFullAdmin || delegated.canManageWorkshopPopup),
         });
       }
     }
@@ -153,6 +158,7 @@ export class DelegatedAccessController {
       canManageTherapists: false,
       canManageOrganizations: false,
       canViewAnalytics: false,
+      canManageWorkshopPopup: false,
     });
   });
 }

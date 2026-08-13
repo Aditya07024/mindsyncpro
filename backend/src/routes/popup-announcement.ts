@@ -9,12 +9,12 @@ const router = Router();
 router.get("/active", optionalAuth, PopupAnnouncementController.getActive);
 
 // Admin routes requiring authentication & permissions
-router.get("/", requireAuth, requirePermission("canHostMeeting"), PopupAnnouncementController.getConfig);
-router.post("/", requireAuth, requirePermission("canHostMeeting"), PopupAnnouncementController.updateConfig);
+router.get("/", requireAuth, requirePermission("canManageWorkshopPopup"), PopupAnnouncementController.getConfig);
+router.post("/", requireAuth, requirePermission("canManageWorkshopPopup"), PopupAnnouncementController.updateConfig);
 router.post(
   "/upload-poster",
   requireAuth,
-  requirePermission("canHostMeeting"),
+  requirePermission("canManageWorkshopPopup"),
   posterUpload.single("poster"),
   PopupAnnouncementController.uploadPoster
 );

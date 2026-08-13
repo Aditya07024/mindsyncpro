@@ -109,7 +109,7 @@ function SuperAdminDashboard() {
   const allowedTabs = [
     { key: 'overview', label: 'Overview', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
     { key: 'conferences', label: 'Video Conferences', allowed: Boolean(myAccess?.canHostMeeting || myAccess?.canViewRegistrations || myAccess?.isFullAdmin) },
-    { key: 'popup-announcement', label: 'Workshop Popup', allowed: Boolean(myAccess?.canHostMeeting || myAccess?.isFullAdmin) },
+    { key: 'popup-announcement', label: 'Workshop Popup', allowed: Boolean(myAccess?.canManageWorkshopPopup || myAccess?.canHostMeeting || myAccess?.isFullAdmin) },
     { key: 'users', label: 'Users', allowed: Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin) },
     { key: 'therapists', label: 'Therapists', allowed: Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin) },
     { key: 'organizations', label: 'Organizations', allowed: Boolean(myAccess?.canManageOrganizations || myAccess?.isFullAdmin) },

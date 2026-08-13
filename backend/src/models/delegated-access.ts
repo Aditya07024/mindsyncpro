@@ -10,6 +10,7 @@ export interface IDelegatedAccess extends Document {
   canManageTherapists: boolean;
   canManageOrganizations: boolean;
   canViewAnalytics: boolean;
+  canManageWorkshopPopup: boolean;
   isFullAdmin: boolean;
   grantedBy?: Types.ObjectId;
   createdAt: Date;
@@ -34,6 +35,7 @@ const DelegatedAccessSchema = new Schema<IDelegatedAccess>(
     canManageTherapists: { type: Boolean, default: false },
     canManageOrganizations: { type: Boolean, default: false },
     canViewAnalytics: { type: Boolean, default: false },
+    canManageWorkshopPopup: { type: Boolean, default: false },
     isFullAdmin: { type: Boolean, default: false },
     grantedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
