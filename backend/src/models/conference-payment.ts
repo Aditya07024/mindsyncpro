@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 
 export interface IConferencePayment extends Document {
   conferenceId: Types.ObjectId;
@@ -36,7 +36,6 @@ const ConferencePaymentSchema = new Schema<IConferencePayment>(
 ConferencePaymentSchema.index({ razorpayOrderId: 1 });
 ConferencePaymentSchema.index({ conferenceId: 1, userId: 1 });
 
-export const ConferencePayment = model<IConferencePayment>(
-  "ConferencePayment",
-  ConferencePaymentSchema
-);
+export const ConferencePayment =
+  (mongoose.models.ConferencePayment as mongoose.Model<IConferencePayment>) ||
+  model<IConferencePayment>("ConferencePayment", ConferencePaymentSchema);

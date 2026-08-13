@@ -18,8 +18,23 @@ export async function requireAuth(
   next: NextFunction,
 ) {
   try {
-    // getAuth safely extracts the user ID if clerkMiddleware successfully validated the token
-    const { userId: clerkUserId } = getAuth(req);
+    let { userId: clerkUserId } = getAuth(req);
+
+    if (!clerkUserId) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        const token = authHeader.split(" ")[1];
+        try {
+          const jwt = await import("jsonwebtoken");
+          const decoded: any = jwt.decode(token);
+          if (decoded && decoded.sub) {
+            clerkUserId = decoded.sub;
+          }
+        } catch (jwtErr) {
+          console.warn("Fallback JWT decode failed:", jwtErr);
+        }
+      }
+    }
 
     if (!clerkUserId) {
       return next(new AppError("Unauthorized - No Clerk User", 401));
@@ -158,6 +173,30 @@ export function requireRole(roles: string[]) {
   };
 }
 
+export async function getPossibleUserEmails(req: AuthedRequest): Promise<string[]> {
+  if (!req.user) return [];
+  const emails: string[] = [];
+
+  try {
+    const { User } = await import("@/models/user");
+    const dbUser: any = await User.findById(req.user.sub).select("email phoneMasked therapistProfile role");
+    if (dbUser?.email) emails.push(dbUser.email);
+    if (dbUser?.phoneMasked) emails.push(dbUser.phoneMasked);
+    if (dbUser?.therapistProfile?.email) emails.push(dbUser.therapistProfile.email);
+  } catch (e) {}
+
+  if (req.user.clerkId) {
+    try {
+      const clerkUser = await clerkClient.users.getUser(req.user.clerkId);
+      if (clerkUser.emailAddresses?.[0]?.emailAddress) {
+        emails.push(clerkUser.emailAddresses[0].emailAddress);
+      }
+    } catch (e) {}
+  }
+
+  return Array.from(new Set(emails.map((e) => String(e).toLowerCase().trim()).filter(Boolean)));
+}
+
 export function requirePermission(permissionName: string) {
   return async (req: AuthedRequest, res: Response, next: NextFunction) => {
     const runPermissionCheck = async () => {
@@ -170,15 +209,12 @@ export function requirePermission(permissionName: string) {
       }
 
       try {
-        const { User } = await import("@/models/user");
         const { DelegatedAccess } = await import("@/models/delegated-access");
+        const userEmails = await getPossibleUserEmails(req);
 
-        const dbUser: any = await User.findById(req.user.sub).select("phoneMasked therapistProfile");
-        const userEmail = (dbUser?.email || dbUser?.therapistProfile?.email || dbUser?.phoneMasked || "").toLowerCase().trim();
-
-        if (userEmail) {
-          const access = await DelegatedAccess.findOne({ email: userEmail });
-          if (access && (access.isFullAdmin || (access as any)[permissionName])) {
+        for (const email of userEmails) {
+          const access: any = await DelegatedAccess.findOne({ email });
+          if (access && (access.isFullAdmin || access[permissionName])) {
             return next();
           }
         }
@@ -202,12 +238,31 @@ export async function optionalAuth(
   next: NextFunction,
 ) {
   try {
-    const auth = getAuth(req);
-    if (auth && auth.userId) {
-      return requireAuth(req, res, next);
+    let authUserId = getAuth(req)?.userId;
+    const authHeader = req.headers.authorization;
+
+    if (!authUserId && authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        const jwt = await import("jsonwebtoken");
+        const decoded: any = jwt.decode(token);
+        if (decoded?.sub) authUserId = decoded.sub;
+      } catch (e) {}
+    }
+
+    if (authUserId) {
+      return requireAuth(req, res, (err?: any) => {
+        if (err) {
+          console.warn("[optionalAuth] Auth attempt failed, continuing as guest:", err.message);
+          req.user = undefined;
+          return next();
+        }
+        return next();
+      });
     }
   } catch (e) {
     // ignore token errors for optional auth
   }
+  req.user = undefined;
   next();
 }

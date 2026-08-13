@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireRole } from "@/middleware/auth";
+import { requireAuth, requireRole, requirePermission } from "@/middleware/auth";
 import { SubscriptionController } from "@/controllers/subscription.controller";
 
 const router = Router();
@@ -18,11 +18,11 @@ router.get("/keep-alive", (req, res) => res.json({ status: "ok", message: "Serve
 // Razorpay webhook (no auth — verified by signature)
 router.post("/webhook", SubscriptionController.webhook);
 
-// Super admin
+// Super admin / Delegated Analytics
 router.get(
   "/admin/all",
   requireAuth,
-  requireRole(["super_admin"]),
+  requirePermission("canViewAnalytics"),
   SubscriptionController.adminListAll,
 );
 

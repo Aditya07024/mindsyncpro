@@ -43,7 +43,6 @@ import { formatTime12Hour, formatDateDDMMYYYY } from "@/lib/utils";
 export function AdminConferencesTab() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "future" | "past">("all");
 
   // Modal states
@@ -83,7 +82,7 @@ export function AdminConferencesTab() {
 
   const { data: conferences = [], isLoading, refetch } = useQuery({
     queryKey: ["admin-conferences"],
-    queryFn: () => API.conference.list({ status: statusFilter === "all" ? undefined : statusFilter }),
+    queryFn: () => API.conference.list({ status: "all" }),
   });
 
   const createMutation = useMutation({
@@ -348,8 +347,8 @@ export function AdminConferencesTab() {
                 {[
                   { id: "all", label: "All Meetings" },
                   { id: "today", label: "Today's" },
-                  { id: "future", label: "Future / Upcoming" },
-                  { id: "past", label: "Past / Ended" },
+                  { id: "future", label: "Upcoming" },
+                  { id: "past", label: "Ended" },
                 ].map((tf) => (
                   <button
                     key={tf.id}

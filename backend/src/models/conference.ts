@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 
 export interface IConference extends Document {
   title: string;
@@ -79,4 +79,6 @@ const ConferenceSchema = new Schema<IConference>(
 
 ConferenceSchema.index({ status: 1, meetingDate: 1 });
 
-export const Conference = model<IConference>("Conference", ConferenceSchema);
+export const Conference =
+  (mongoose.models.Conference as mongoose.Model<IConference>) ||
+  model<IConference>("Conference", ConferenceSchema);

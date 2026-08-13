@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 
 export interface IDelegatedAccess extends Document {
   email: string;
@@ -40,4 +40,6 @@ const DelegatedAccessSchema = new Schema<IDelegatedAccess>(
   { timestamps: true }
 );
 
-export const DelegatedAccess = model<IDelegatedAccess>("DelegatedAccess", DelegatedAccessSchema);
+export const DelegatedAccess =
+  (mongoose.models.DelegatedAccess as mongoose.Model<IDelegatedAccess>) ||
+  model<IDelegatedAccess>("DelegatedAccess", DelegatedAccessSchema);

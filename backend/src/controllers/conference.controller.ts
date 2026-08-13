@@ -59,6 +59,47 @@ export function formatHostEmails(emailStr?: any): string {
     .join(", ");
 }
 
+import { clerkClient } from "@clerk/express";
+
+export async function isUserAdminOrDelegated(req: AuthedRequest): Promise<boolean> {
+  if (!req.user) return false;
+  if (["super_admin", "admin", "org_admin"].includes(req.user.role)) return true;
+
+  try {
+    const { DelegatedAccess } = await import("@/models/delegated-access");
+    const dbUser: any = await User.findById(req.user.sub).select("email phoneMasked therapistProfile role");
+
+    let clerkEmail = "";
+    if (req.user.clerkId) {
+      try {
+        const clerkUser = await clerkClient.users.getUser(req.user.clerkId);
+        clerkEmail = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+      } catch (e) {}
+    }
+
+    const possibleEmails = [
+      clerkEmail,
+      dbUser?.email,
+      dbUser?.phoneMasked,
+      dbUser?.therapistProfile?.email,
+    ]
+      .filter(Boolean)
+      .map((e: string) => String(e).toLowerCase().trim());
+
+    for (const email of possibleEmails) {
+      if (email) {
+        const access: any = await DelegatedAccess.findOne({ email });
+        if (access && (access.isFullAdmin || access.canHostMeeting || access.canViewRegistrations)) {
+          return true;
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error in isUserAdminOrDelegated:", err);
+  }
+  return false;
+}
+
 export class ConferenceController {
   /**
    * POST /api/conferences - Create conference (Admin)
@@ -165,7 +206,8 @@ export class ConferenceController {
   );
 
   /**
-   * GET /api/conferences - List all public conferences
+   * GET /api/conferences
+   * List all conferences with optional filters & search
    */
   static getAllConferences = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
@@ -177,7 +219,7 @@ export class ConferenceController {
       const query: any = {};
 
       // Non-admins see all published, live, upcoming, ended or un-drafted conferences
-      const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+      const isAdmin = await isUserAdminOrDelegated(req);
       if (!isAdmin) {
         query.status = { $ne: "draft" };
       } else if (status && status !== "all") {
@@ -236,8 +278,8 @@ export class ConferenceController {
               if (now >= startDateTime && now <= endDateTime) {
                 computedStatus = "live";
               } else if (now > endDateTime) {
-                computedStatus = "ended";
-              } else {
+                computedStatus = conf.status === "draft" ? "draft" : "ended";
+              } else if (conf.status !== "draft") {
                 computedStatus = "upcoming";
               }
             }
@@ -541,7 +583,7 @@ export class ConferenceController {
         ? conference.hostEmail.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean)
         : [];
       const isDesignatedHost = Boolean(cleanEmail && hostEmailsList.includes(cleanEmail));
-      const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+      const isAdmin = await isUserAdminOrDelegated(req);
       const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
 
       // Check if user is Allowed by Admin into Meeting or Waiting Room:
@@ -806,7 +848,7 @@ export class ConferenceController {
         registration = await ConferenceRegistration.findOne({ conferenceId: id, email: emailParam }).lean();
       }
 
-      const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+      const isAdmin = await isUserAdminOrDelegated(req);
 
       // Check if meeting time has passed (ended)
       const now = new Date();
@@ -1441,7 +1483,7 @@ export class ConferenceController {
       ? conference.hostEmail.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean)
       : [];
     const isDesignatedHost = Boolean(cleanEmail && hostEmailsList.includes(cleanEmail));
-    const isAdmin = req.user && ["super_admin", "admin", "org_admin"].includes(req.user.role);
+    const isAdmin = await isUserAdminOrDelegated(req);
     const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
 
     const isAdmittedToMeeting = Boolean(

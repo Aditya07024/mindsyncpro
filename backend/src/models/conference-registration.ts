@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Schema, model, Document, Types } from "mongoose";
 
 export interface IConferenceRegistration extends Document {
   conferenceId: Types.ObjectId;
@@ -75,7 +75,6 @@ const ConferenceRegistrationSchema = new Schema<IConferenceRegistration>(
 ConferenceRegistrationSchema.index({ conferenceId: 1, userId: 1 }, { unique: true });
 ConferenceRegistrationSchema.index({ conferenceId: 1, email: 1 });
 
-export const ConferenceRegistration = model<IConferenceRegistration>(
-  "ConferenceRegistration",
-  ConferenceRegistrationSchema
-);
+export const ConferenceRegistration =
+  (mongoose.models.ConferenceRegistration as mongoose.Model<IConferenceRegistration>) ||
+  model<IConferenceRegistration>("ConferenceRegistration", ConferenceRegistrationSchema);

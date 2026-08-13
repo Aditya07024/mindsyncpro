@@ -103,22 +103,11 @@ export class DelegatedAccessController {
    * GET /api/admin/permissions/my-access - Get permissions for the current user's email
    */
   static getMyAccess = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const userId = req.user?.sub;
     const isSuperAdminRole = req.user?.role === "super_admin" || req.user?.role === "admin";
-
-    let dbUser: any = null;
-    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      dbUser = await User.findById(userId).select("phoneMasked therapistProfile role");
-    }
-
-    const userEmail = (dbUser?.email || dbUser?.therapistProfile?.email || dbUser?.phoneMasked || "").toLowerCase().trim();
-
-    // Check if user is Super Admin or has explicitly assigned DelegatedAccess
-    let delegated = userEmail ? await DelegatedAccess.findOne({ email: userEmail }) : null;
 
     if (isSuperAdminRole) {
       return res.json({
-        email: userEmail || "admin",
+        email: req.user?.clerkId || "admin",
         role: req.user?.role || "super_admin",
         isSuperAdmin: true,
         isFullAdmin: true,
@@ -131,24 +120,30 @@ export class DelegatedAccessController {
       });
     }
 
-    if (delegated) {
-      return res.json({
-        email: delegated.email,
-        role: req.user?.role || "user",
-        isSuperAdmin: Boolean(delegated.isFullAdmin),
-        isFullAdmin: Boolean(delegated.isFullAdmin),
-        canHostMeeting: Boolean(delegated.isFullAdmin || delegated.canHostMeeting),
-        canViewRegistrations: Boolean(delegated.isFullAdmin || delegated.canViewRegistrations),
-        canManageUsers: Boolean(delegated.isFullAdmin || delegated.canManageUsers),
-        canManageTherapists: Boolean(delegated.isFullAdmin || delegated.canManageTherapists),
-        canManageOrganizations: Boolean(delegated.isFullAdmin || delegated.canManageOrganizations),
-        canViewAnalytics: Boolean(delegated.isFullAdmin || delegated.canViewAnalytics),
-      });
+    const { getPossibleUserEmails } = await import("@/middleware/auth");
+    const userEmails = await getPossibleUserEmails(req);
+
+    for (const email of userEmails) {
+      const delegated = await DelegatedAccess.findOne({ email });
+      if (delegated) {
+        return res.json({
+          email: delegated.email,
+          role: req.user?.role || "user",
+          isSuperAdmin: Boolean(delegated.isFullAdmin),
+          isFullAdmin: Boolean(delegated.isFullAdmin),
+          canHostMeeting: Boolean(delegated.isFullAdmin || delegated.canHostMeeting),
+          canViewRegistrations: Boolean(delegated.isFullAdmin || delegated.canViewRegistrations),
+          canManageUsers: Boolean(delegated.isFullAdmin || delegated.canManageUsers),
+          canManageTherapists: Boolean(delegated.isFullAdmin || delegated.canManageTherapists),
+          canManageOrganizations: Boolean(delegated.isFullAdmin || delegated.canManageOrganizations),
+          canViewAnalytics: Boolean(delegated.isFullAdmin || delegated.canViewAnalytics),
+        });
+      }
     }
 
     // Default permissions for non-admin without delegated access
     return res.json({
-      email: userEmail || "",
+      email: userEmails[0] || "",
       role: req.user?.role || "user",
       isSuperAdmin: false,
       isFullAdmin: false,

@@ -63,46 +63,46 @@ function SuperAdminDashboard() {
   });
   const [adminPassword, setAdminPassword] = useState('');
 
+  const { data: myAccess, isLoading: isAccessLoading } = useQuery({
+    queryKey: ['my-admin-access'],
+    queryFn: () => API.admin.permissions.getMyAccess(),
+    enabled: !!isLoaded && !!isSignedIn,
+  });
+
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
     queryKey: ['admin-therapists'],
     queryFn: () => API.admin.pendingTherapists(),
-    enabled: !!isLoaded && !!isSignedIn,
+    enabled: !!isLoaded && !!isSignedIn && tab === 'therapists' && Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin),
   });
 
   const { data: subsData } = useQuery({
     queryKey: ['admin-subscriptions'],
     queryFn: () => API.subscription.admin.all(),
-    enabled: !!isLoaded && !!isSignedIn && tab === 'subscriptions',
+    enabled: !!isLoaded && !!isSignedIn && tab === 'subscriptions' && Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
   });
 
   const { data: orgsData, isLoading: orgsLoading } = useQuery({
     queryKey: ['admin-orgs'],
     queryFn: () => API.admin.pendingOrgs(),
-    enabled: !!isLoaded && !!isSignedIn && (tab === 'organizations' || tab === 'overview'),
+    enabled: !!isLoaded && !!isSignedIn && tab === 'organizations' && Boolean(myAccess?.canManageOrganizations || myAccess?.isFullAdmin),
   });
 
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['admin-plans'],
     queryFn: () => API.plan.getAll(),
-    enabled: !!isLoaded && !!isSignedIn && tab === 'plans',
+    enabled: !!isLoaded && !!isSignedIn && tab === 'plans' && Boolean(myAccess?.isFullAdmin),
   });
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: () => API.admin.users(),
-    enabled: !!isLoaded && !!isSignedIn && tab === 'users',
+    enabled: !!isLoaded && !!isSignedIn && tab === 'users' && Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin),
   });
 
   const { data: countsData } = useQuery({
     queryKey: ['admin-platform-counts'],
     queryFn: () => API.admin.platformCounts(),
-    enabled: !!isLoaded && !!isSignedIn,
-  });
-
-  const { data: myAccess, isLoading: isAccessLoading } = useQuery({
-    queryKey: ['my-admin-access'],
-    queryFn: () => API.admin.permissions.getMyAccess(),
-    enabled: !!isLoaded && !!isSignedIn,
+    enabled: !!isLoaded && !!isSignedIn && tab === 'overview' && Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
   });
 
   const allowedTabs = [
