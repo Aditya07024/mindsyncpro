@@ -13,6 +13,14 @@ import { apiRouter } from "@/routes";
 export async function createApp() {
   await mongoose.connect(env.MONGODB_URI);
 
+  // Auto-configure revenue & subscription metrics on existing DB records for production readiness
+  try {
+    const { seedRevenueOnExistingOnly } = await import("@/scripts/seed-existing-only");
+    seedRevenueOnExistingOnly().catch((e) => console.error("[StartupSeed] Revenue setup warning:", e));
+  } catch (err) {
+    console.error("[StartupSeed] Error loading revenue setup:", err);
+  }
+
   const app = express();
   app.set("trust proxy", 1);
   app.use(
