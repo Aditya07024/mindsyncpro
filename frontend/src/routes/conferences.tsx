@@ -19,7 +19,7 @@ import { ConferenceRegisterModal } from "@/components/conference/ConferenceRegis
 import logoUrl from "@/assets/logo.png";
 import { useUser } from "@clerk/clerk-react";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
-import { formatTime12Hour, formatDateDDMMYYYY } from "@/lib/utils";
+import { formatTime12Hour, formatDateDDMMYYYY, getNormalizedPosterUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/conferences")({
   component: ConferencesPage,
@@ -292,11 +292,14 @@ function ConferencesPage() {
                 >
                   {/* Thumbnail Poster / Banner */}
                   <div className="relative min-h-[14rem] w-full bg-slate-950 flex items-center justify-center p-3 overflow-hidden border-b border-teal-950/20">
-                    {conf.posterUrl || conf.banner ? (
+                    {getNormalizedPosterUrl(conf.posterUrl || conf.banner) ? (
                       <img
-                        src={conf.posterUrl || conf.banner}
+                        src={getNormalizedPosterUrl(conf.posterUrl || conf.banner)}
                         alt={conf.title}
                         className="max-w-full max-h-56 object-contain rounded-xl shadow-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
                       />
                     ) : (
                       <div className="w-full h-48 bg-gradient-to-br from-teal-950 via-slate-900 to-emerald-950 flex items-center justify-center p-6 text-center">

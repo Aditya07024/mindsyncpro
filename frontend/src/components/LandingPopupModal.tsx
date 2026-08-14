@@ -3,30 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, Calendar, ArrowRight, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface LandingPopupModalProps {
-  announcement: {
-    title: string;
-    badgeText?: string;
-    description: string;
-    dateText?: string;
-    posterUrl?: string | null;
-    conferenceUrl?: string;
-    buttonText?: string;
-    isActive?: boolean;
-  } | null;
-  onClose: () => void;
-}
-
-function getNormalizedPosterUrl(url?: string | null): string {
-  if (!url) return "";
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8080";
-  if (url.includes("/uploads/images/")) {
-    const filename = url.split("/uploads/images/").pop();
-    return `${apiBase}/uploads/images/${filename}`;
-  }
-  return url;
-}
+import { getNormalizedPosterUrl } from "@/lib/utils";
 
 export function LandingPopupModal({ announcement, onClose }: LandingPopupModalProps) {
   const navigate = useNavigate();

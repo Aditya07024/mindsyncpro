@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 import API from "@/lib/api";
 import { toast } from "sonner";
-import { formatTime12Hour, formatDateDDMMYYYY } from "@/lib/utils";
+import { formatTime12Hour, formatDateDDMMYYYY, getNormalizedPosterUrl } from "@/lib/utils";
 
 
 export function AdminConferencesTab() {
@@ -393,11 +393,14 @@ export function AdminConferencesTab() {
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className="w-24 h-24 rounded-2xl bg-slate-950 overflow-hidden shrink-0 border border-slate-800 flex items-center justify-center p-1">
-                      {conf.posterUrl || conf.banner ? (
+                      {getNormalizedPosterUrl(conf.posterUrl || conf.banner) ? (
                         <img
-                          src={conf.posterUrl || conf.banner}
+                          src={getNormalizedPosterUrl(conf.posterUrl || conf.banner)}
                           alt={conf.title}
                           className="max-w-full max-h-full object-contain rounded-lg"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
                         />
                       ) : (
                         <Video className="w-8 h-8 text-teal-400/40" />
@@ -574,9 +577,12 @@ export function AdminConferencesTab() {
                   <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex flex-col items-center gap-3">
                     <div className="relative max-h-64 w-full flex items-center justify-center bg-slate-900 rounded-xl overflow-hidden p-2">
                       <img
-                        src={form.posterUrl}
+                        src={getNormalizedPosterUrl(form.posterUrl)}
                         alt="Conference Poster Preview"
                         className="max-h-60 w-auto max-w-full object-contain rounded-lg shadow-md"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
                       />
                     </div>
                     <div className="flex items-center gap-2">

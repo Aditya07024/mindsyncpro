@@ -368,7 +368,7 @@ export class ConferenceController {
         throw new AppError("No poster image file provided", 400);
       }
 
-      const posterUrl = getPublicUrlForFilename(req.file.filename);
+      const posterUrl = getPublicUrlForFilename(req.file.filename, req);
 
       res.status(200).json({
         message: "Poster uploaded successfully",
@@ -405,7 +405,7 @@ export class ConferenceController {
         deleteFileFromStorage(conference.posterUrl);
       }
 
-      const newPosterUrl = getPublicUrlForFilename(req.file.filename);
+      const newPosterUrl = getPublicUrlForFilename(req.file.filename, req);
       conference.posterUrl = newPosterUrl;
       await conference.save();
 

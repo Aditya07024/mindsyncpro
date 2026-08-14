@@ -21,16 +21,7 @@ import API from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-
-function getNormalizedPosterUrl(url?: string | null): string {
-  if (!url) return "";
-  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8080";
-  if (url.includes("/uploads/images/")) {
-    const filename = url.split("/uploads/images/").pop();
-    return `${apiBase}/uploads/images/${filename}`;
-  }
-  return url;
-}
+import { getNormalizedPosterUrl } from "@/lib/utils";
 
 export function AdminPopupAnnouncementTab() {
   const qc = useQueryClient();

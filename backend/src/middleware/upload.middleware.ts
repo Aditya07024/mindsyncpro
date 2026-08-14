@@ -9,9 +9,8 @@ const VPS_UPLOAD_DIR = "/var/www/MindGod-uploads/images";
 const LOCAL_UPLOAD_DIR = path.join(process.cwd(), "uploads", "images");
 
 export function getUploadDirectory(): string {
-  // If running on VPS / linux server where /var/www/MindGod-uploads/images can be created/used
   try {
-    if (fs.existsSync("/var/www/MindGod-uploads") || process.platform === "linux") {
+    if (fs.existsSync("/var/www/MindGod-uploads")) {
       if (!fs.existsSync(VPS_UPLOAD_DIR)) {
         fs.mkdirSync(VPS_UPLOAD_DIR, { recursive: true });
       }
@@ -68,21 +67,25 @@ export const posterUpload = multer({
 });
 
 export function getPublicUrlForFilename(filename: string, req?: any): string {
+  if (!filename) return "";
+
+  const cleanFilename = path.basename(filename);
+
   if (req) {
     const protocol = req.headers?.["x-forwarded-proto"] || req.protocol || "http";
     const host = req.headers?.["x-forwarded-host"] || (req.get && req.get("host"));
     if (host) {
-      return `${protocol}://${host}/uploads/images/${filename}`;
+      return `${protocol}://${host}/uploads/images/${cleanFilename}`;
     }
   }
 
   const envUrl = process.env.API_URL || process.env.VITE_API_URL || process.env.BACKEND_URL;
   if (envUrl) {
-    return `${envUrl.replace(/\/$/, "")}/uploads/images/${filename}`;
+    return `${envUrl.replace(/\/$/, "")}/uploads/images/${cleanFilename}`;
   }
 
   const port = process.env.PORT || "8080";
-  return `http://localhost:${port}/uploads/images/${filename}`;
+  return `http://localhost:${port}/uploads/images/${cleanFilename}`;
 }
 
 

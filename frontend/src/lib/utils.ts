@@ -51,4 +51,41 @@ export function formatDateDDMMYYYY(dateStr?: string): string {
   return `${day}/${month}/${year}`;
 }
 
+/**
+ * Normalizes any poster or image URL (relative filename, legacy localhost URL, or full remote URL)
+ * into a proper, absolute URL served by the backend uploads endpoint.
+ */
+export function getNormalizedPosterUrl(url?: string | null): string {
+  if (!url || typeof url !== "string") return "";
+
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  // Data URLs and blob URLs returned by file inputs or canvas
+  if (trimmed.startsWith("data:") || trimmed.startsWith("blob:")) {
+    return trimmed;
+  }
+
+  const apiBase = (import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/$/, "");
+
+  // If it's already a full HTTP/HTTPS URL
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    if (trimmed.includes("/uploads/images/")) {
+      const filename = trimmed.split("/uploads/images/").pop();
+      return `${apiBase}/uploads/images/${filename}`;
+    }
+    return trimmed;
+  }
+
+  // If relative path containing /uploads/images/
+  if (trimmed.includes("/uploads/images/")) {
+    const filename = trimmed.split("/uploads/images/").pop();
+    return `${apiBase}/uploads/images/${filename}`;
+  }
+
+  // If raw filename like "conference-poster-1786674296151-qytdjkr.jpeg"
+  const filename = trimmed.split("/").pop();
+  return `${apiBase}/uploads/images/${filename}`;
+}
+
 

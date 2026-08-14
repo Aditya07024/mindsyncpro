@@ -5,6 +5,7 @@ import { X, Video, ShieldCheck, Lock, CheckCircle2, AlertCircle, Loader2, Sparkl
 import API from "@/lib/api";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { getNormalizedPosterUrl } from "@/lib/utils";
 
 interface ConferenceRegisterModalProps {
   conference: {
@@ -224,12 +225,15 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
           className="relative w-full max-w-lg overflow-hidden bg-slate-900/90 border border-teal-500/20 shadow-2xl rounded-3xl text-slate-100 backdrop-blur-xl"
         >
           {/* Top Banner & Poster */}
-          {(conference.posterUrl || conference.banner) && (
+          {getNormalizedPosterUrl(conference.posterUrl || conference.banner) && (
             <div className="relative w-full bg-slate-950 flex items-center justify-center p-3 border-b border-teal-500/20 max-h-64 overflow-hidden">
               <img
-                src={conference.posterUrl || conference.banner}
+                src={getNormalizedPosterUrl(conference.posterUrl || conference.banner)}
                 alt={conference.title}
                 className="max-w-full max-h-60 object-contain rounded-2xl shadow-xl"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = "none";
+                }}
               />
             </div>
           )}
