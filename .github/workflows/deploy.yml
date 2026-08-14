@@ -20,5 +20,12 @@ jobs:
           timeout: 15m
           command_timeout: 15m
           script: |
-            bash /root/dp.sh
+            if [ -f /root/dp.sh ]; then
+              bash /root/dp.sh
+            elif [ -f /var/www/MindGod/deploy.sh ]; then
+              bash /var/www/MindGod/deploy.sh
+            else
+              echo "Deployment script not found on VPS."
+              exit 1
+            fi
 
