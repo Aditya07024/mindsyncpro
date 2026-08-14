@@ -274,7 +274,10 @@ function ConferencesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredConferences.map((conf: any) => {
-              const startDateTimeStr = `${conf.meetingDate}T${conf.meetingTime}:00`;
+              const dateOnly = conf.meetingDate ? String(conf.meetingDate).split("T")[0] : "";
+              const timeStr = conf.meetingTime || "00:00";
+              const cleanTime = timeStr.length === 5 ? timeStr + ":00" : timeStr;
+              const startDateTimeStr = `${dateOnly}T${cleanTime}`;
               const isLive = conf.computedStatus === "live";
               const isUpcoming = conf.computedStatus === "upcoming";
               const isEnded = conf.computedStatus === "ended";
@@ -380,8 +383,9 @@ function ConferencesPage() {
 
                       {/* Countdown Timer for Upcoming */}
                       {isUpcoming && (
-                        <div className="pt-2 text-center text-xs font-semibold text-teal-700 bg-teal-50 py-1.5 rounded-lg">
-                          Starts in {conf.countdownText}
+                        <div className="pt-2 flex items-center justify-between">
+                          <span className="text-slate-500 font-medium">Starts in:</span>
+                          <CountdownTimer targetDateStr={startDateTimeStr} />
                         </div>
                       )}
                     </div>

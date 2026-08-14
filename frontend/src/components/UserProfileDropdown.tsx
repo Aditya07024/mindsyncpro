@@ -114,11 +114,13 @@ export function UserProfileDropdown({
       : 'User';
 
   const userInitials = (user.fullName || user.firstName || 'U')
-    .split(' ')
-    .map((n) => n[0])
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((n) => (n && n[0] ? n[0] : ''))
     .join('')
     .substring(0, 2)
-    .toUpperCase();
+    .toUpperCase() || 'U';
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();

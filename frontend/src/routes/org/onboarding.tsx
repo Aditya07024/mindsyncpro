@@ -31,10 +31,11 @@ function OrgOnboarding() {
   });
 
   useEffect(() => {
-    if (user?.emailAddresses[0]?.emailAddress) {
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+    if (userEmail) {
       setFormData((prev) => ({
         ...prev,
-        officialEmail: user.emailAddresses[0].emailAddress,
+        officialEmail: userEmail,
       }));
     }
   }, [user]);
@@ -51,7 +52,7 @@ function OrgOnboarding() {
     "live.com",
   ];
 
-  const emailDomain = formData.officialEmail.split("@")[1]?.toLowerCase() || "";
+  const emailDomain = (formData.officialEmail || "").split("@")[1]?.toLowerCase() || "";
 
   const isPublicEmail = publicEmailDomains.includes(emailDomain);
 
