@@ -1443,7 +1443,7 @@ function OrgLinkedUsersModal({ org, onClose }: { org: any; onClose: () => void }
     }
   };
 
-  const members = data?.linkedUsers || [];
+  const members = (data?.linkedUsers || []).filter((m: any) => m.role !== "org_admin");
   const allowedEmails = data?.allowedEmails || [];
 
   return (

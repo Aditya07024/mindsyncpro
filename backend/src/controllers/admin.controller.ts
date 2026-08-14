@@ -555,8 +555,8 @@ export class AdminController {
     const org = await Organization.findById(id).lean();
     if (!org) return res.status(404).json({ error: "Organization not found" });
 
-    // Fetch users whose orgId matches this org
-    const linkedUsers = await User.find({ orgId: id, deletedAt: null })
+    // Fetch users whose orgId matches this org (excluding org_admin)
+    const linkedUsers = await User.find({ orgId: id, role: { $ne: "org_admin" }, deletedAt: null })
       .select("fullName phoneMasked email role tier department streak lastActiveAt createdAt")
       .sort({ createdAt: -1 })
       .lean();

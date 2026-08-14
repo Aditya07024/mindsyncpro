@@ -128,7 +128,7 @@ function OrgDashboard() {
   const qc = useQueryClient();
   const [isExporting, setIsExporting] = useState(false);
   const [orgData, setOrgData] = useState<any>(null);
-  const [tab, setTab] = useState<'overview' | 'therapists' | 'external-therapists' | 'requests' | 'members' | 'subscriptions'>('overview');
+  const [tab, setTab] = useState<'overview' | 'therapists' | 'external-therapists' | 'requests' | 'members' | 'subscriptions' | 'settings'>('overview');
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   // Excel upload modal
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -583,7 +583,7 @@ function OrgDashboard() {
               <button onClick={() => setTab('subscriptions')} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95">
                 Choose a Plan
               </button>
-              <p className="text-sm text-slate-400">Plans start from ₹199/month per employee</p>
+              {/* <p className="text-sm text-slate-400">Plans start from ₹199/month per employee</p> */}
             </div>
           </div>
         )}
