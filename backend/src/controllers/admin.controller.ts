@@ -644,6 +644,17 @@ export class AdminController {
       allowedEmails: org.allowedEmails,
     });
   });
+
+  /** POST /admin/seed-demo-data — Trigger revenue setup on existing users/therapists/orgs */
+  static seedDemoData = asyncHandler(async (_req: AuthedRequest, res: Response) => {
+    const { seedRevenueOnExistingOnly } = await import("../scripts/seed-existing-only");
+    const result = await seedRevenueOnExistingOnly();
+    res.json({
+      success: true,
+      message: "Revenue data applied to existing users, therapists, and organizations successfully.",
+      data: result,
+    });
+  });
 }
 
 
