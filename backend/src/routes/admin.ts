@@ -41,6 +41,7 @@ router.post("/org/:id/upload-emails", requirePermission("canManageOrganizations"
 router.patch("/org/:id/verify", requirePermission("canManageOrganizations"), AdminController.verifyOrg);
 router.patch("/org/:id/toggle-external-therapists", requirePermission("canManageOrganizations"), AdminController.toggleExternalTherapists);
 router.patch("/org/:id/toggle-cover-therapy", requirePermission("canManageOrganizations"), AdminController.toggleCoverMemberTherapyFees);
+router.delete("/org/:id", requirePermission("canManageOrganizations"), AdminController.deleteOrg);
 
 // Subscription Plans (Super Admin)
 router.post("/plans", requireAuth, requireRole(["super_admin"]), PlanController.createPlan);

@@ -5,6 +5,11 @@ import { X, Sparkles, Calendar, ArrowRight, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getNormalizedPosterUrl } from "@/lib/utils";
 
+interface LandingPopupModalProps {
+  announcement?: any;
+  onClose: () => void;
+}
+
 export function LandingPopupModal({ announcement, onClose }: LandingPopupModalProps) {
   const navigate = useNavigate();
 

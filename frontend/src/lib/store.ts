@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 export type Concern = 'work' | 'family' | 'loneliness' | 'health' | 'relationships' | 'money';
 export type NeedType = 'talk' | 'tools' | 'express';
+export type JournalEntry = any;
 
 type State = {
   hasOnboarded: boolean;

@@ -97,7 +97,7 @@ function OrgOnboarding() {
       await API.org.onboarding(formData);
       sessionStorage.setItem(SUBMIT_GUARD_KEY, "done");
       setStep(4);
-    } catch (err) {
+    } catch (err: any) {
       // allow retry if it failed
       sessionStorage.removeItem(SUBMIT_GUARD_KEY);
       setError(err.message || "Failed to submit application");

@@ -1,5 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { AppError } from "@/lib/app-error";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || "",
@@ -62,7 +63,7 @@ export class PaymentService {
       };
     } catch (error) {
       console.error("Razorpay order creation failed:", error);
-      throw new Error("Failed to create payment order");
+      throw new AppError("Failed to create payment order", 400);
     }
   }
 
@@ -118,7 +119,7 @@ export class PaymentService {
     } catch (error: any) {
       console.error("Razorpay payment link creation failed:", error);
       const errMsg = error.error?.description || error.message || error.description || JSON.stringify(error);
-      throw new Error(`Failed to create payment link: ${errMsg}`);
+      throw new AppError(`Failed to create payment link: ${errMsg}`, 400);
     }
   }
 
@@ -157,9 +158,10 @@ export class PaymentService {
         contact: payment.contact,
         notes: payment.notes,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch payment details:", error);
-      throw new Error("Failed to fetch payment details");
+      const errMsg = error?.error?.description || error?.message || "Failed to fetch payment details from Razorpay";
+      throw new AppError(errMsg, 400);
     }
   }
 

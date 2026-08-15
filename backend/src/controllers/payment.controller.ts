@@ -680,11 +680,14 @@ export class PaymentController {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      // Create a pending report purchase
       let report;
       try {
+        const safeUserId = mongoose.Types.ObjectId.isValid(req.user!.sub)
+          ? new mongoose.Types.ObjectId(req.user!.sub)
+          : req.user!.sub;
+
         report = await AIReport.create({
-          userId: new mongoose.Types.ObjectId(req.user!.sub),
+          userId: safeUserId,
           startDate: start,
           endDate: end,
           paid: false,

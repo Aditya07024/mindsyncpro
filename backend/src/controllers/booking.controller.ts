@@ -145,9 +145,16 @@ export class BookingController {
 
       const isFree = amount === 0;
 
+      const safeUserId = mongoose.Types.ObjectId.isValid(req.user!.sub)
+        ? new mongoose.Types.ObjectId(req.user!.sub)
+        : req.user!.sub;
+      const safeTherapistId = mongoose.Types.ObjectId.isValid(therapistId)
+        ? new mongoose.Types.ObjectId(therapistId)
+        : therapistId;
+
       const booking = await TherapistBooking.create({
-        userId: new mongoose.Types.ObjectId(req.user!.sub),
-        therapistId: new mongoose.Types.ObjectId(therapistId),
+        userId: safeUserId,
+        therapistId: safeTherapistId,
         slot: slotDate,
         status: isFree ? "confirmed" : "pending_payment",
         payment: {

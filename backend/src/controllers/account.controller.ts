@@ -3,6 +3,7 @@ import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
 import {
   User,
+  Organization,
   Mood,
   Conversation,
   JournalEntry,
@@ -22,6 +23,7 @@ export class AccountController {
   /**
    * DELETE /api/account
    * Permanently deletes the authenticated user's database records and Clerk user account.
+   * If the user is an Organization Admin, also purges the Organization entity, unlinks members, and deletes organization subscriptions.
    * Authentication is enforced via requireAuth middleware (Clerk session token).
    * Never accepts target userId or email from request body or query string.
    */
@@ -54,6 +56,29 @@ export class AccountController {
     }
 
     const emailFilter = userEmails.length > 0 ? { $in: userEmails } : null;
+
+    // If user is an Organization Admin or associated with an Organization, perform Organization-level cleanup
+    const orgId = user.orgId;
+    if (orgId) {
+      if (user.role === "org_admin") {
+        await Promise.all([
+          Organization.deleteOne({ _id: orgId }),
+          User.updateMany({ orgId }, { $unset: { orgId: 1 } }),
+          Subscription.deleteMany({ orgId }),
+        ]);
+        console.log(`[Account] Deleted Organization ${orgId} and unlinked its members.`);
+      }
+
+      await Organization.updateMany(
+        {},
+        {
+          $pull: {
+            pendingJoinRequests: { userId },
+            "departments.$[].userIds": userId,
+          },
+        }
+      );
+    }
 
     // Delete all associated user data across all database collections
     await Promise.all([

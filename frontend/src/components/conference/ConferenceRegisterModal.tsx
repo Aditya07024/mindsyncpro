@@ -161,7 +161,7 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
       }
 
       const options = {
-        key: res.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: res.keyId || import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TQ764nZF0N6bzR",
         amount: Math.round(res.amount * 100),
         currency: res.currency || "INR",
         name: "MyMindTherapyFriend",

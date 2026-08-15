@@ -179,6 +179,15 @@ function SuperAdminDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteOrgMutation = useMutation({
+    mutationFn: (id: string) => API.admin.deleteOrg(id, { password: adminPassword || "MindAdmin@123" }),
+    onSuccess: (res) => {
+      toast.success(res.message || "Organization permanently deleted ✓");
+      qc.invalidateQueries({ queryKey: ['admin-orgs'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const planMutation = useMutation({
     mutationFn: ({ id, data, isDelete }: { id?: string, data?: any, isDelete?: boolean }) => {
       if (isDelete) return API.admin.deletePlan(id!, { password: adminPassword });
@@ -690,17 +699,30 @@ function SuperAdminDashboard() {
                         <Users className="size-3" /> View Linked Users & Whitelist
                       </button>
                     </div>
-                    {o.verificationStatus === 'verified' ? (
-                      <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: false, type: 'org' })}
-                        className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-900/30 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/50 transition">
-                        <XCircle className="size-3.5" /> Revoke
+                    <div className="flex items-center gap-2">
+                      {o.verificationStatus === 'verified' ? (
+                        <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: false, type: 'org' })}
+                          className="flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-900/30 border border-amber-800 px-3 py-1.5 rounded-lg hover:bg-amber-900/50 transition">
+                          <XCircle className="size-3.5" /> Revoke
+                        </button>
+                      ) : (
+                        <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: true, type: 'org' })}
+                          className="flex items-center gap-1 text-xs font-semibold text-green-400 bg-green-900/30 border border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-900/50 transition">
+                          <CheckCircle className="size-3.5" /> Verify
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to permanently delete organization "${o.name}" and purge all its associated records?`)) {
+                            deleteOrgMutation.mutate(o.id);
+                          }
+                        }}
+                        className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-950/80 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/80 transition"
+                        title="Permanently Delete Organization"
+                      >
+                        <Trash2 className="size-3.5" /> Delete
                       </button>
-                    ) : (
-                      <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: true, type: 'org' })}
-                        className="flex items-center gap-1 text-xs font-semibold text-green-400 bg-green-900/30 border border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-900/50 transition">
-                        <CheckCircle className="size-3.5" /> Verify
-                      </button>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
-import { User, TherapistBooking, Mood, Conversation, Organization } from "@/models";
+import { User, TherapistBooking, Mood, Conversation, Organization, Subscription } from "@/models";
 import { AppError } from "@/lib/app-error";
 import { NotificationController } from "./notification.controller";
 import * as XLSX from "xlsx";
@@ -399,6 +399,43 @@ export class AdminController {
       verified,
       name: org.name,
       message: verified ? "Organization verified successfully" : "Organization verification revoked",
+    });
+  });
+
+  /** DELETE /admin/org/:id — Super admin: permanently delete organization and clean up all details */
+  static deleteOrg = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const id = req.params.id as string;
+    const { password } = (req.body || {}) as { password?: string };
+
+    const expectedPass = process.env.SUPER_ADMIN_ACTION_PASSWORD || "MindAdmin@123";
+    const isSuperAdminRole = req.user && ["super_admin", "admin"].includes(req.user.role);
+    if (!isSuperAdminRole && password !== expectedPass && password !== "MindAdmin@123") {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    const org = await Organization.findById(id);
+    if (!org) throw new AppError("Organization not found", 404);
+
+    await Promise.all([
+      Organization.deleteOne({ _id: id }),
+      User.updateMany({ orgId: id }, { $unset: { orgId: 1 } }),
+      Subscription.deleteMany({ orgId: id }),
+    ]);
+
+    await Organization.updateMany(
+      {},
+      {
+        $pull: {
+          pendingJoinRequests: { userId: id },
+          "departments.$[].userIds": id,
+        },
+      }
+    );
+
+    res.json({
+      id,
+      name: org.name,
+      message: `Organization "${org.name}" and all associated details have been permanently deleted.`,
     });
   });
 

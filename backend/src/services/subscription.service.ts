@@ -1,5 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { AppError } from "@/lib/app-error";
 
 let _razorpay: Razorpay | null = null;
 function getRazorpay() {
@@ -8,7 +9,7 @@ function getRazorpay() {
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
   
   if (!key_id || !key_secret) {
-    throw new Error("Razorpay keys are missing. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in environment variables.");
+    throw new AppError("Razorpay API keys are missing. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in environment variables.", 400);
   }
   
   _razorpay = new Razorpay({ key_id, key_secret });
@@ -264,9 +265,10 @@ export class SubscriptionService {
     try {
       const subscription = await getRazorpay().subscriptions.fetch(razorpaySubId);
       return subscription;
-    } catch (error) {
+    } catch (error: any) {
       console.error("[SubscriptionService] getSubscriptionDetails failed:", error);
-      throw error;
+      const errMsg = error?.error?.description || error?.message || "Failed to fetch Razorpay subscription details";
+      throw new AppError(errMsg, 400);
     }
   }
 

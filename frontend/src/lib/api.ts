@@ -125,6 +125,11 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    deleteOrg: (id: string, data?: { password?: string }) =>
+      apiCall<any>(`/api/admin/org/${id}`, {
+        method: "DELETE",
+        body: JSON.stringify(data || {}),
+      }),
     orgLinkedUsers: (id: string) => apiCall<any>(`/api/admin/org/${id}/linked-users`),
     uploadOrgEmails: async (id: string, fileOrText: { file?: File; emailText?: string }) => {
       const headers: Record<string, string> = {};

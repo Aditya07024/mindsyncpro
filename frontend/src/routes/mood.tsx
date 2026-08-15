@@ -49,7 +49,7 @@ function MoodPage() {
   const todayScore = todayEntry?.score ?? null;
 
   const recentScores = moods.slice(0, 14).map((m: any) => m.score);
-  const avg = recentScores.length ? recentScores.reduce((a, b) => a + b, 0) / recentScores.length : null;
+  const avg = recentScores.length ? recentScores.reduce((a: number, b: number) => a + b, 0) / recentScores.length : null;
 
   // simple insight
   let insight = 'Log a few days to start spotting patterns.';

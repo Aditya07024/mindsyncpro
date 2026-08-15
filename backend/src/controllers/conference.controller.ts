@@ -815,12 +815,26 @@ export class ConferenceController {
       const conference = await Conference.findById(conferenceId);
       if (!conference) throw new AppError("Conference not found", 404);
 
-      const userId = new mongoose.Types.ObjectId(req.user!.sub);
+      let registration = null;
 
-      const registration = await ConferenceRegistration.findOne({
-        conferenceId,
-        userId,
-      });
+      // 1. Try finding registration by payment record orderId
+      const payment = await ConferencePayment.findOne({ razorpayOrderId: orderId });
+      if (payment && payment.registrationId) {
+        registration = await ConferenceRegistration.findById(payment.registrationId);
+      }
+
+      // 2. If not found by orderId and user is logged in, try finding by userId
+      if (!registration && req.user?.sub) {
+        const rawUserId = req.user.sub;
+        const userId = mongoose.Types.ObjectId.isValid(rawUserId)
+          ? new mongoose.Types.ObjectId(rawUserId)
+          : rawUserId;
+
+        registration = await ConferenceRegistration.findOne({
+          conferenceId,
+          $or: [{ userId }, { userId: rawUserId }],
+        });
+      }
 
       if (!registration) throw new AppError("Registration record not found", 404);
 

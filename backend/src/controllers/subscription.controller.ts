@@ -265,7 +265,9 @@ export class SubscriptionController {
         });
       } catch (error: any) {
         console.error("[Upgrade Error]", error);
-        throw new AppError(error.message || "Failed to create subscription", 500);
+        if (error instanceof AppError) throw error;
+        const errMsg = error.error?.description || error.message || "Failed to create subscription";
+        throw new AppError(errMsg, 400);
       }
     },
   );
@@ -639,7 +641,9 @@ export class SubscriptionController {
         });
       } catch (err: any) {
         console.error("[Subscription Sync Error]", err);
-        throw new AppError(err.message || "Failed to sync subscription status", 500);
+        if (err instanceof AppError) throw err;
+        const errMsg = err.error?.description || err.message || "Failed to sync subscription status";
+        throw new AppError(errMsg, 400);
       }
     }
   );

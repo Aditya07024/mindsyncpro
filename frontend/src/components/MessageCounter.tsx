@@ -75,7 +75,7 @@ export function MessageCounter({ onCrisisMode }: MessageCounterProps) {
               <span className="text-sm font-semibold text-slate-900">
                 {messagesRemaining} of {dailyLimit} messages remaining
               </span>
-              {messagesRemaining <= 1 && messagesRemaining > 0 && (
+              {messagesRemaining !== null && messagesRemaining <= 1 && messagesRemaining > 0 && (
                 <span className="inline-block px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-medium">
                   Running low
                 </span>

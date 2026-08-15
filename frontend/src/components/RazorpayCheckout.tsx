@@ -80,7 +80,7 @@ export default function RazorpayCheckout({
 
     // Step 2: Open Razorpay checkout
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TQ764nZF0N6bzR",
       amount: amount * 100, // Amount in paise
       currency: "INR",
       order_id: paymentData.orderId,

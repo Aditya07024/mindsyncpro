@@ -40,7 +40,7 @@ export async function openSubscriptionCheckout({
   }
 
   const options = {
-    key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+    key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TQ764nZF0N6bzR",
     subscription_id: subscriptionId,
     name: "MyMindTherapyFriend",
     description: `Subscription for ${planName}`,
