@@ -309,24 +309,55 @@ export class PaymentController {
       const event = req.body;
       const signature = req.headers["x-razorpay-signature"];
 
-      // Verify webhook signature
-      const body = JSON.stringify(event);
-      const expectedSignature = require("crypto")
-        .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
-        .update(body)
-        .digest("hex");
+      // Verify webhook signature if secret configured
+      if (process.env.RAZORPAY_WEBHOOK_SECRET) {
+        const body = JSON.stringify(event);
+        const expectedSignature = require("crypto")
+          .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
+          .update(body)
+          .digest("hex");
 
-      if (expectedSignature !== signature) {
-        throw new AppError("Invalid webhook signature", 400);
+        if (expectedSignature !== signature) {
+          throw new AppError("Invalid webhook signature", 400);
+        }
       }
 
-      if (event.event === "payment.captured") {
-        const { id: paymentId, notes } = event.payload.payment.entity;
-        const { bookingId } = notes;
+      const eventName = event.event;
+
+      // Delegate subscription events to SubscriptionController
+      if (
+        eventName.startsWith("subscription.") ||
+        event.payload?.subscription ||
+        event.payload?.invoice?.entity?.subscription_id
+      ) {
+        const { SubscriptionController } = await import(
+          "@/controllers/subscription.controller"
+        );
+        await SubscriptionController.processWebhookEvent(event);
+        return res.json({ received: true });
+      }
+
+      const isSuccessEvent = [
+        "payment.captured",
+        "order.paid",
+        "payment.authorized",
+        "payment_link.paid",
+      ].includes(eventName);
+
+      if (isSuccessEvent) {
+        const paymentEntity =
+          event.payload?.payment?.entity || event.payload?.payment_link?.entity;
+        const orderEntity = event.payload?.order?.entity;
+        const paymentId = paymentEntity?.id;
+        const orderId = paymentEntity?.order_id || orderEntity?.id;
+        const notes = paymentEntity?.notes || orderEntity?.notes || {};
+        const bookingId = notes.bookingId;
 
         if (bookingId && bookingId.startsWith("wallet_")) {
           const txId = bookingId.replace("wallet_", "");
-          const { WalletTransaction } = await import("@/models/wallet-transaction");
+          const { WalletTransaction } = await import(
+            "@/models/wallet-transaction"
+          );
           const tx = await WalletTransaction.findById(txId);
           if (tx && tx.status === "pending") {
             tx.status = "success";
@@ -334,9 +365,11 @@ export class PaymentController {
             await tx.save();
 
             await User.findByIdAndUpdate(tx.userId, {
-              $inc: { walletBalance: tx.amount }
+              $inc: { walletBalance: tx.amount },
             });
-            console.log(`[Webhook] Wallet credit of ₹${tx.amount} successful for userId=${tx.userId}`);
+            console.log(
+              `[Webhook] Wallet credit of ₹${tx.amount} successful for userId=${tx.userId}`
+            );
           }
         } else if (bookingId && bookingId.startsWith("report_")) {
           const reportId = bookingId.replace("report_", "");
@@ -352,44 +385,122 @@ export class PaymentController {
               );
               report.aiAnalysis = analysis;
             } catch (err) {
-              console.error("AI report generation failed during webhook:", err);
-              report.aiAnalysis = "Clinical Report by Dr. Manas:\n\nBased on your weekly activity logs, I notice that you are actively utilizing journaling to reframe negative thoughts, which is a great practice. I highly recommend booking a dedicated session with our professional therapist to delve deeper into these reframing patterns and work on long-term emotional resilience.";
+              console.error(
+                "AI report generation failed during webhook:",
+                err
+              );
+              report.aiAnalysis =
+                "Clinical Report by Dr. Manas:\n\nBased on your weekly activity logs, I notice that you are actively utilizing journaling to reframe negative thoughts, which is a great practice. I highly recommend booking a dedicated session with our professional therapist to delve deeper into these reframing patterns and work on long-term emotional resilience.";
             }
             await report.save();
           }
-        } else {
-          const booking = await TherapistBooking.findById(bookingId);
-          if (booking && !booking.payment.paid) {
-            booking.payment.paid = true;
-            booking.payment.razorpayPaymentId = paymentId;
-            booking.status = "confirmed";
-            await booking.save();
+        } else if (bookingId && bookingId.startsWith("conf_")) {
+          const registrationId = bookingId.replace("conf_", "");
+          const { ConferenceRegistration, ConferencePayment } = await import(
+            "@/models"
+          );
 
-            // Send payment-confirmed email to therapist
-            try {
-              const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
-              const seeker = await User.findById(booking.userId).select("fullName").lean();
-              const therapistEmail = therapist?.therapistProfile?.email;
-              if (therapistEmail) {
-                sendPaymentConfirmedToTherapist({
-                  therapistEmail,
-                  therapistName: therapist?.therapistProfile?.name || "Therapist",
-                  seekerName: seeker?.fullName || "Client",
-                  slot: booking.slot,
-                  fee: booking.payment.amount,
-                  bookingId: booking._id.toString(),
-                }).catch(err => console.error("[Email] Webhook payment confirmed email failed:", err));
+          const registration = await ConferenceRegistration.findById(
+            registrationId
+          );
+          if (registration) {
+            registration.paymentStatus = "paid";
+            await registration.save();
+            console.log(
+              `[Webhook] Conference registration ${registrationId} marked as paid`
+            );
+          }
+
+          if (orderId || paymentId) {
+            await ConferencePayment.findOneAndUpdate(
+              { $or: [{ registrationId }, { razorpayOrderId: orderId }] },
+              {
+                razorpayPaymentId: paymentId || undefined,
+                razorpayOrderId: orderId || undefined,
+                status: "paid",
               }
-            } catch (err) {
-              console.error("[Email] Could not send webhook payment confirmed email:", err);
+            );
+          }
+        } else {
+          // Check if orderId matches a ConferencePayment fallback
+          if (orderId) {
+            const { ConferenceRegistration, ConferencePayment } =
+              await import("@/models");
+            const confPayment = await ConferencePayment.findOne({
+              razorpayOrderId: orderId,
+            });
+            if (confPayment) {
+              confPayment.status = "paid";
+              if (paymentId) confPayment.razorpayPaymentId = paymentId;
+              await confPayment.save();
+
+              await ConferenceRegistration.findByIdAndUpdate(
+                confPayment.registrationId,
+                {
+                  paymentStatus: "paid",
+                }
+              );
+              console.log(
+                `[Webhook] Conference payment synced via orderId ${orderId}`
+              );
+              return res.json({ received: true });
+            }
+          }
+
+          // Otherwise check TherapistBooking if bookingId is valid ObjectId
+          if (bookingId && mongoose.Types.ObjectId.isValid(bookingId)) {
+            const booking = await TherapistBooking.findById(bookingId);
+            if (booking && !booking.payment.paid) {
+              booking.payment.paid = true;
+              booking.payment.razorpayPaymentId = paymentId;
+              booking.status = "confirmed";
+              await booking.save();
+
+              // Send payment-confirmed email to therapist
+              try {
+                const therapist = await User.findById(booking.therapistId)
+                  .select("therapistProfile")
+                  .lean();
+                const seeker = await User.findById(booking.userId)
+                  .select("fullName")
+                  .lean();
+                const therapistEmail = therapist?.therapistProfile?.email;
+                if (therapistEmail) {
+                  sendPaymentConfirmedToTherapist({
+                    therapistEmail,
+                    therapistName:
+                      therapist?.therapistProfile?.name || "Therapist",
+                    seekerName: seeker?.fullName || "Client",
+                    slot: booking.slot,
+                    fee: booking.payment.amount,
+                    bookingId: booking._id.toString(),
+                  }).catch((err) =>
+                    console.error(
+                      "[Email] Webhook payment confirmed email failed:",
+                      err
+                    )
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  "[Email] Could not send webhook payment confirmed email:",
+                  err
+                );
+              }
             }
           }
         }
-      } else if (event.event === "payment.failed") {
-        const { id: paymentId, notes } = event.payload.payment.entity;
-        const { bookingId } = notes;
+      } else if (eventName === "payment.failed") {
+        const paymentEntity = event.payload?.payment?.entity;
+        const notes = paymentEntity?.notes || {};
+        const bookingId = notes.bookingId;
 
-        if (bookingId && !bookingId.startsWith("report_")) {
+        if (
+          bookingId &&
+          mongoose.Types.ObjectId.isValid(bookingId) &&
+          !bookingId.startsWith("report_") &&
+          !bookingId.startsWith("conf_")
+        ) {
           const booking = await TherapistBooking.findById(bookingId);
           if (booking) {
             booking.status = "cancelled";
@@ -416,6 +527,16 @@ export class PaymentController {
 
       if (!booking) {
         throw new AppError("Booking not found", 404);
+      }
+
+      if (!booking.payment.paid && booking.payment.razorpayOrderId) {
+        const { isPaid, paymentId } = await PaymentService.isOrderPaid(booking.payment.razorpayOrderId);
+        if (isPaid) {
+          booking.payment.paid = true;
+          if (paymentId) booking.payment.razorpayPaymentId = paymentId;
+          booking.status = "confirmed";
+          await booking.save();
+        }
       }
 
       res.json({
@@ -721,6 +842,40 @@ export class PaymentController {
       if (!user) throw new AppError("User not found", 404);
 
       const { WalletTransaction } = await import("@/models/wallet-transaction");
+
+      // Auto-check any pending transactions for this user
+      const pendingTxs = await WalletTransaction.find({
+        userId: req.user!.sub,
+        status: "pending",
+        razorpayPaymentLinkId: { $exists: true, $ne: "" },
+      });
+
+      if (pendingTxs.length > 0) {
+        try {
+          const Razorpay = (await import("razorpay")).default;
+          const key_id = process.env.RAZORPAY_KEY_ID;
+          const key_secret = process.env.RAZORPAY_KEY_SECRET;
+          if (key_id && key_secret) {
+            const rzp = new Razorpay({ key_id, key_secret });
+            for (const tx of pendingTxs) {
+              if (tx.razorpayPaymentLinkId) {
+                const linkObj: any = await rzp.paymentLink.fetch(tx.razorpayPaymentLinkId);
+                if (linkObj && linkObj.status === "paid") {
+                  tx.status = "success";
+                  await tx.save();
+                  await User.findByIdAndUpdate(tx.userId, {
+                    $inc: { walletBalance: tx.amount },
+                  });
+                  user.walletBalance = (user.walletBalance || 0) + tx.amount;
+                }
+              }
+            }
+          }
+        } catch (txErr) {
+          console.warn("[Wallet Balance Sync] Error checking pending wallet links:", txErr);
+        }
+      }
+
       const transactions = await WalletTransaction.find({ userId: req.user!.sub })
         .sort({ createdAt: -1 })
         .limit(50)

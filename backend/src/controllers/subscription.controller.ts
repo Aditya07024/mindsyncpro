@@ -43,12 +43,53 @@ export class SubscriptionController {
       // If no active subscription is found, look for any pending subscription to display in the UI metadata
       let displaySub = sub;
       if (!displaySub) {
-        displaySub = await Subscription.findOne({
-          userId: req.user!.sub,
-          status: "pending",
-        })
+        const pendingQuery: any = { status: "pending" };
+        if (user.orgId) {
+          pendingQuery.$or = [{ userId: req.user!.sub }, { orgId: user.orgId }];
+        } else {
+          pendingQuery.userId = req.user!.sub;
+        }
+        displaySub = await Subscription.findOne(pendingQuery)
           .sort({ createdAt: -1 })
           .lean();
+      }
+
+      // If pending, auto-check Razorpay API status
+      if (displaySub && displaySub.status === "pending" && displaySub.razorpaySubscriptionId) {
+        try {
+          const razorpaySub = await SubscriptionService.getSubscriptionDetails(displaySub.razorpaySubscriptionId);
+          const isPaidCountPositive = typeof (razorpaySub as any).paid_count === "number" && (razorpaySub as any).paid_count > 0;
+          let isPaid = ["active", "authenticated", "completed"].includes(razorpaySub.status) || isPaidCountPositive;
+
+          if (!isPaid) {
+            try {
+              const Razorpay = (await import("razorpay")).default;
+              const key_id = process.env.RAZORPAY_KEY_ID;
+              const key_secret = process.env.RAZORPAY_KEY_SECRET;
+              if (key_id && key_secret) {
+                const rzp = new Razorpay({ key_id, key_secret });
+                const invoices = await rzp.invoices.all({ subscription_id: displaySub.razorpaySubscriptionId } as any);
+                if (invoices?.items?.some((inv: any) => inv.status === "paid")) {
+                  isPaid = true;
+                }
+              }
+            } catch (invErr) {}
+          }
+
+          if (isPaid) {
+            await Subscription.findByIdAndUpdate(displaySub._id, { status: "active" });
+            displaySub.status = "active";
+            sub = displaySub;
+            if (!displaySub.orgId && displaySub.userId) {
+              let tier: string | null = SubscriptionService.tierFromPlanId(razorpaySub.plan_id);
+              if (tier) {
+                await User.findByIdAndUpdate(displaySub.userId, { tier });
+              }
+            }
+          }
+        } catch (subCheckErr) {
+          console.warn("[getMySubscription] Auto-sync check error:", subCheckErr);
+        }
       }
 
       const isOrgSub = !!(sub && sub.orgId);
@@ -299,29 +340,26 @@ export class SubscriptionController {
     },
   );
 
-  /** POST /subscription/webhook — Razorpay subscription webhook */
-  static webhook = asyncHandler(async (req: Request, res: Response) => {
-    const signature = req.headers["x-razorpay-signature"] as string;
-    const body = JSON.stringify(req.body);
-
-    if (!SubscriptionService.verifyWebhookSignature(body, signature)) {
-      throw new AppError("Invalid webhook signature", 400);
-    }
-
-    const event = req.body;
-    const subId = event?.payload?.subscription?.entity?.id;
-    const planId = event?.payload?.subscription?.entity?.plan_id;
+  /** Process subscription webhook event logic */
+  static async processWebhookEvent(event: any) {
+    const subId = event?.payload?.subscription?.entity?.id || event?.payload?.invoice?.entity?.subscription_id || event?.payload?.payment?.entity?.subscription_id;
+    const planId = event?.payload?.subscription?.entity?.plan_id || event?.payload?.invoice?.entity?.plan_id;
 
     if (!subId) {
-      return res.json({ received: true });
+      return;
     }
+
+    const { Subscription, User } = await import("@/models");
+    const SubscriptionService = (await import("@/services/subscription.service")).default;
 
     const sub = await Subscription.findOne({
       razorpaySubscriptionId: subId,
     });
 
     switch (event.event) {
-      case "subscription.activated": {
+      case "subscription.authenticated":
+      case "subscription.activated":
+      case "invoice.paid": {
         if (sub) {
           sub.status = "active";
           await sub.save();
@@ -332,8 +370,6 @@ export class SubscriptionController {
               const { SubscriptionPlan } = await import("@/models");
               const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: planId }).lean();
               if (dbPlan) {
-                // Dynamic plans use "apna_therapist" as the tier enum fallback
-                // (actual plan details tracked via Subscription.planId)
                 tier = dbPlan.audience === "user" ? "mann_shanti" : "apna_therapist";
               }
             }
@@ -356,8 +392,8 @@ export class SubscriptionController {
         break;
       }
       case "subscription.charged": {
-        // Subscription renewed — extend endDate by 30 * durationMonths days
         if (sub) {
+          sub.status = "active";
           let durationMonths = 1;
           if (sub.planId) {
             const { SubscriptionPlan } = await import("@/models");
@@ -370,11 +406,36 @@ export class SubscriptionController {
             (sub.endDate ?? new Date()).getTime() + durationMonths * 30 * 24 * 60 * 60 * 1000,
           );
           await sub.save();
+
+          if (!sub.orgId && sub.userId) {
+            let tier: string | null = SubscriptionService.tierFromPlanId(planId);
+            if (!tier && planId) {
+              const { SubscriptionPlan } = await import("@/models");
+              const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: planId }).lean();
+              if (dbPlan) {
+                tier = dbPlan.audience === "user" ? "mann_shanti" : "apna_therapist";
+              }
+            }
+            if (tier) {
+              await User.findByIdAndUpdate(sub.userId, { tier });
+            }
+          }
         }
         break;
       }
     }
+  }
 
+  /** POST /subscription/webhook — Razorpay subscription webhook */
+  static webhook = asyncHandler(async (req: Request, res: Response) => {
+    const signature = req.headers["x-razorpay-signature"] as string;
+    const body = JSON.stringify(req.body);
+
+    if (!SubscriptionService.verifyWebhookSignature(body, signature)) {
+      throw new AppError("Invalid webhook signature", 400);
+    }
+
+    await SubscriptionController.processWebhookEvent(req.body);
     res.json({ received: true });
   });
 
@@ -513,8 +574,28 @@ export class SubscriptionController {
         const oldStatus = sub.status;
         let newStatus = sub.status;
 
-        // Razorpay status can be: "created", "authenticated", "active", "pending", "halted", "cancelled", "completed", "expired"
-        if (["active", "authenticated", "completed"].includes(razorpaySub.status)) {
+        const isPaidCountPositive = typeof (razorpaySub as any).paid_count === "number" && (razorpaySub as any).paid_count > 0;
+        let isPaid = ["active", "authenticated", "completed"].includes(razorpaySub.status) || isPaidCountPositive;
+
+        if (!isPaid) {
+          try {
+            // Check if any paid invoice exists on Razorpay for this subscription
+            const Razorpay = (await import("razorpay")).default;
+            const key_id = process.env.RAZORPAY_KEY_ID;
+            const key_secret = process.env.RAZORPAY_KEY_SECRET;
+            if (key_id && key_secret) {
+              const rzp = new Razorpay({ key_id, key_secret });
+              const invoices = await rzp.invoices.all({ subscription_id: sub.razorpaySubscriptionId } as any);
+              if (invoices?.items?.some((inv: any) => inv.status === "paid")) {
+                isPaid = true;
+              }
+            }
+          } catch (invErr) {
+            console.warn("[Subscription Sync] Invoice check error:", invErr);
+          }
+        }
+
+        if (isPaid) {
           newStatus = "active";
         } else if (["cancelled"].includes(razorpaySub.status)) {
           newStatus = "cancelled";

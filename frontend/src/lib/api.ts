@@ -410,6 +410,8 @@ const API = {
       apiCall<any>("/api/conferences/register", { method: "POST", body: JSON.stringify(data) }),
     verifyPayment: (data: { conferenceId: string; orderId: string; paymentId: string; signature: string }) =>
       apiCall<any>("/api/conferences/payments/verify", { method: "POST", body: JSON.stringify(data) }),
+    syncPayment: (id: string, email?: string) =>
+      apiCall<any>(`/api/conferences/${id}/sync-payment`, { method: "POST", body: JSON.stringify({ email }) }),
     getJoinInfo: (id: string, email?: string, password?: string) => {
       const params = new URLSearchParams();
       if (email) params.append("email", email);

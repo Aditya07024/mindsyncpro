@@ -11,6 +11,7 @@ router.get("/public", optionalAuth, ConferenceController.getAllConferences);
 router.get("/public/:id", optionalAuth, ConferenceController.getConferenceById);
 router.post("/register", optionalAuth, ConferenceController.registerConference);
 router.post("/payments/verify", optionalAuth, ConferenceController.verifyPayment);
+router.post("/:id/sync-payment", optionalAuth, ConferenceController.syncPayment);
 router.get("/:id", optionalAuth, ConferenceController.getConferenceById);
 router.get("/:id/join", optionalAuth, ConferenceController.getJoinInfo);
 router.post("/:id/track", optionalAuth, ConferenceController.trackAttendance);

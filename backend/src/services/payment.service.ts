@@ -184,6 +184,43 @@ export class PaymentService {
       throw new Error("Failed to process refund");
     }
   }
+
+  /**
+   * Fetch payments made for a given Razorpay Order ID
+   */
+  static async fetchOrderPayments(orderId: string) {
+    try {
+      const response = await razorpay.orders.fetchPayments(orderId);
+      return response.items || [];
+    } catch (error) {
+      console.error(`Failed to fetch payments for order ${orderId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if a Razorpay Order is paid
+   */
+  static async isOrderPaid(orderId: string): Promise<{ isPaid: boolean; paymentId?: string }> {
+    try {
+      const order = await razorpay.orders.fetch(orderId);
+      if (order.status === "paid") {
+        const payments = await this.fetchOrderPayments(orderId);
+        const captured = payments.find((p: any) => p.status === "captured" || p.status === "authorized");
+        return { isPaid: true, paymentId: captured?.id };
+      }
+      const payments = await this.fetchOrderPayments(orderId);
+      const captured = payments.find((p: any) => p.status === "captured" || p.status === "authorized");
+      if (captured) {
+        return { isPaid: true, paymentId: captured.id };
+      }
+      return { isPaid: false };
+    } catch (error) {
+      console.error(`Failed to check if order ${orderId} is paid:`, error);
+      return { isPaid: false };
+    }
+  }
 }
 
 export default PaymentService;
+

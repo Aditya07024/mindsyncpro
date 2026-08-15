@@ -715,6 +715,30 @@ export class ConferenceController {
           approvalStatus: "approved",
         });
       } else {
+        // Check if existing registration was paid on Razorpay
+        const existingPayment = await ConferencePayment.findOne({ registrationId: registration._id });
+        if (existingPayment?.razorpayOrderId) {
+          const { isPaid, paymentId } = await PaymentService.isOrderPaid(existingPayment.razorpayOrderId);
+          if (isPaid) {
+            registration.paymentStatus = "paid";
+            registration.paymentAmount = conference.price;
+            await registration.save();
+            existingPayment.status = "paid";
+            if (paymentId) existingPayment.razorpayPaymentId = paymentId;
+            await existingPayment.save();
+
+            return res.json({
+              message: "Payment confirmed! Welcome to the conference.",
+              registration,
+              isAlreadyRegistered: true,
+              isPaid: true,
+              roomName: conference.roomName,
+              platform: conference.platform || "jitsi",
+              meetingLink: conference.meetingLink || "",
+            });
+          }
+        }
+
         registration.fullName = fullName;
         registration.age = numAge;
         registration.phone = phone || "";
@@ -823,6 +847,61 @@ export class ConferenceController {
   );
 
   /**
+   * POST /api/conferences/:id/sync-payment - Verify pending registration with Razorpay
+   */
+  static syncPayment = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+      const emailParam = (req.body.email || req.query.email as string)?.toLowerCase().trim();
+      const userId = req.user?.sub ? new mongoose.Types.ObjectId(req.user.sub) : null;
+
+      let registration = null;
+      if (userId) {
+        registration = await ConferenceRegistration.findOne({ conferenceId: id, userId });
+      }
+      if (!registration && emailParam) {
+        registration = await ConferenceRegistration.findOne({ conferenceId: id, email: emailParam });
+      }
+
+      if (!registration) {
+        throw new AppError("No registration record found for this conference", 404);
+      }
+
+      if (["free", "paid"].includes(registration.paymentStatus)) {
+        return res.json({
+          message: "Registration payment is confirmed!",
+          paymentStatus: registration.paymentStatus,
+          registration,
+        });
+      }
+
+      const payment = await ConferencePayment.findOne({ registrationId: registration._id });
+      if (payment?.razorpayOrderId) {
+        const { isPaid, paymentId } = await PaymentService.isOrderPaid(payment.razorpayOrderId);
+        if (isPaid) {
+          registration.paymentStatus = "paid";
+          await registration.save();
+          payment.status = "paid";
+          if (paymentId) payment.razorpayPaymentId = paymentId;
+          await payment.save();
+
+          return res.json({
+            message: "Payment verified with Razorpay! Status updated to paid.",
+            paymentStatus: "paid",
+            registration,
+          });
+        }
+      }
+
+      res.json({
+        message: "Payment is still pending",
+        paymentStatus: registration.paymentStatus,
+        registration,
+      });
+    }
+  );
+
+  /**
    * GET /api/conferences/:id/join - Get join details for registered user
    */
   static getJoinInfo = asyncHandler(
@@ -891,7 +970,22 @@ export class ConferenceController {
       const isAdmittedByAdmin = registration?.admitted === true || registration?.admitStatus === "admitted";
       const isAllowedInWaitingRoom = registration?.currentStatus === "waiting" || registration?.admitStatus === "waiting";
       if (registration && !isAdmittedByAdmin && !isAllowedInWaitingRoom && !["free", "paid"].includes(registration.paymentStatus) && !isHost && !conference.enableWaitingRoom) {
-        throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
+        // Auto-check Razorpay API for order payment status
+        const payment = await ConferencePayment.findOne({ registrationId: registration._id });
+        if (payment?.razorpayOrderId) {
+          const { isPaid, paymentId } = await PaymentService.isOrderPaid(payment.razorpayOrderId);
+          if (isPaid) {
+            await ConferenceRegistration.findByIdAndUpdate(registration._id, { paymentStatus: "paid" });
+            registration.paymentStatus = "paid";
+            payment.status = "paid";
+            if (paymentId) payment.razorpayPaymentId = paymentId;
+            await payment.save();
+          } else {
+            throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
+          }
+        } else {
+          throw new AppError("Payment pending. Please complete your registration payment to join.", 403);
+        }
       }
 
       // Check password if enabled and user is not host/admin

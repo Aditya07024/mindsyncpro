@@ -138,24 +138,48 @@ export class SubscriptionService {
         try {
           if (sub.razorpaySubscriptionId) {
             const rzSub = await getRazorpay().subscriptions.fetch(sub.razorpaySubscriptionId);
+            const isPaidCountPositive = typeof (rzSub as any).paid_count === "number" && (rzSub as any).paid_count > 0;
             
-            if (rzSub.status === "active" && sub.status !== "active") {
+            let isPaid = ["active", "authenticated", "completed"].includes(rzSub.status) || isPaidCountPositive;
+            
+            if (!isPaid) {
+              try {
+                const invoices = await getRazorpay().invoices.all({ subscription_id: sub.razorpaySubscriptionId } as any);
+                if (invoices?.items?.some((inv: any) => inv.status === "paid")) {
+                  isPaid = true;
+                }
+              } catch (invErr) {
+                // Ignore invoice fetch error
+              }
+            }
+
+            if (isPaid && sub.status !== "active") {
               sub.status = "active";
               sub.startDate = new Date();
               await sub.save();
               activated++;
 
-              // Update user tier
-              if (sub.userId) {
-                await User.findByIdAndUpdate(sub.userId, { tier: sub.plan });
+              // Update user tier if personal sub
+              if (sub.userId && !sub.orgId) {
+                let tier: string | null = this.tierFromPlanId(rzSub.plan_id);
+                if (!tier && rzSub.plan_id) {
+                  const { SubscriptionPlan } = await import("@/models");
+                  const dbPlan = await SubscriptionPlan.findOne({ razorpayPlanId: rzSub.plan_id }).lean();
+                  if (dbPlan) {
+                    tier = dbPlan.audience === "user" ? "mann_shanti" : "apna_therapist";
+                  }
+                }
+                if (tier) {
+                  await User.findByIdAndUpdate(sub.userId, { tier });
+                }
               }
-            } else if (["cancelled", "expired", "completed"].includes(rzSub.status)) {
+            } else if (["cancelled", "expired"].includes(rzSub.status) && !isPaid) {
               if (sub.status !== "cancelled") {
                 sub.status = "cancelled";
                 await sub.save();
                 expired++;
 
-                if (sub.userId) {
+                if (sub.userId && !sub.orgId) {
                   await User.findByIdAndUpdate(sub.userId, { tier: "free" });
                 }
               }
