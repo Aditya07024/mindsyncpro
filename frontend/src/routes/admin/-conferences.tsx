@@ -1036,64 +1036,64 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-hidden">
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-6xl h-[90vh] bg-slate-900 border border-slate-800 rounded-3xl flex flex-col shadow-2xl text-slate-100 overflow-hidden"
+        className="relative w-full max-w-6xl h-[95vh] sm:h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col shadow-2xl text-slate-100 overflow-hidden"
       >
         {/* Modal Top Header */}
-        <div className="p-6 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between shrink-0">
-          <div>
-            <div className="flex items-center gap-2 text-teal-400 font-semibold text-xs uppercase tracking-wider">
-              <Users className="w-4 h-4" /> Live Attendee Management & Analytics
+        <div className="p-4 sm:p-6 border-b border-slate-800 bg-slate-950/50 flex items-start sm:items-center justify-between gap-3 shrink-0">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-teal-400 font-semibold text-[11px] sm:text-xs uppercase tracking-wider">
+              <Users className="w-4 h-4 shrink-0" /> Live Attendee Management & Analytics
             </div>
-            <h3 className="text-xl font-bold text-white mt-1">{conference.title}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white mt-0.5 truncate">{conference.title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/80 transition-colors"
+            className="p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/80 transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Live Meeting Dashboard Metrics Cards */}
-        <div className="p-6 border-b border-slate-800/80 bg-slate-900/40 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 shrink-0">
-          <div className="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60">
-            <span className="text-xs text-slate-400">Total Registered</span>
-            <p className="text-lg font-bold text-white mt-1">{analytics?.totalRegistered || 0}</p>
+        <div className="p-3 sm:p-6 border-b border-slate-800/80 bg-slate-900/40 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2.5 sm:gap-3 shrink-0 max-h-48 sm:max-h-none overflow-y-auto sm:overflow-visible">
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-800/60 border border-slate-700/60">
+            <span className="text-[11px] sm:text-xs text-slate-400 font-medium">Total Registered</span>
+            <p className="text-base sm:text-lg font-bold text-white mt-0.5 sm:mt-1">{analytics?.totalRegistered || 0}</p>
           </div>
-          <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
-            <span className="text-xs text-emerald-400 font-medium">Active in Meeting</span>
-            <p className="text-lg font-bold text-emerald-300 mt-1">{analytics?.currentlyInMeeting || 0}</p>
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+            <span className="text-[11px] sm:text-xs text-emerald-400 font-medium">Active in Meeting</span>
+            <p className="text-base sm:text-lg font-bold text-emerald-300 mt-0.5 sm:mt-1">{analytics?.currentlyInMeeting || 0}</p>
           </div>
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30">
-            <span className="text-xs text-amber-400 font-medium">Waiting Room</span>
-            <p className="text-lg font-bold text-amber-300 mt-1">{analytics?.usersWaiting || 0}</p>
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/30">
+            <span className="text-[11px] sm:text-xs text-amber-400 font-medium">Waiting Room</span>
+            <p className="text-base sm:text-lg font-bold text-amber-300 mt-0.5 sm:mt-1">{analytics?.usersWaiting || 0}</p>
           </div>
-          <div className="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60">
-            <span className="text-xs text-slate-400">Left Meeting</span>
-            <p className="text-lg font-bold text-slate-300 mt-1">{analytics?.usersLeft || 0}</p>
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-800/60 border border-slate-700/60">
+            <span className="text-[11px] sm:text-xs text-slate-400 font-medium">Left Meeting</span>
+            <p className="text-base sm:text-lg font-bold text-slate-300 mt-0.5 sm:mt-1">{analytics?.usersLeft || 0}</p>
           </div>
-          <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30">
-            <span className="text-xs text-rose-400 font-medium">No Show</span>
-            <p className="text-lg font-bold text-rose-300 mt-1">{analytics?.noShow || 0}</p>
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-rose-500/10 border border-rose-500/30">
+            <span className="text-[11px] sm:text-xs text-rose-400 font-medium">No Show</span>
+            <p className="text-base sm:text-lg font-bold text-rose-300 mt-0.5 sm:mt-1">{analytics?.noShow || 0}</p>
           </div>
-          <div className="p-3 rounded-2xl bg-teal-500/10 border border-teal-500/30">
-            <span className="text-xs text-teal-400 font-medium">Total Revenue</span>
-            <p className="text-lg font-bold text-teal-300 mt-1">₹{analytics?.totalRevenue || 0}</p>
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-teal-500/10 border border-teal-500/30">
+            <span className="text-[11px] sm:text-xs text-teal-400 font-medium">Total Revenue</span>
+            <p className="text-base sm:text-lg font-bold text-teal-300 mt-0.5 sm:mt-1">₹{analytics?.totalRevenue || 0}</p>
           </div>
-          <div className="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/60">
-            <span className="text-xs text-slate-400">Avg Duration</span>
-            <p className="text-lg font-bold text-white mt-1">{analytics?.avgSessionDuration || 0}m</p>
+          <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-800/60 border border-slate-700/60 col-span-2 sm:col-span-1">
+            <span className="text-[11px] sm:text-xs text-slate-400 font-medium">Avg Duration</span>
+            <p className="text-base sm:text-lg font-bold text-white mt-0.5 sm:mt-1">{analytics?.avgSessionDuration || 0}m</p>
           </div>
         </div>
 
         {/* Toolbar & Filters */}
-        <div className="p-4 border-b border-slate-800 bg-slate-950/40 flex flex-wrap gap-3 items-center justify-between shrink-0">
-          <div className="flex items-center gap-3 flex-1 min-w-[240px]">
-            <div className="relative flex-1">
+        <div className="p-3 sm:p-4 border-b border-slate-800 bg-slate-950/40 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between shrink-0">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
@@ -1103,10 +1103,10 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
                 className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-teal-500"
               />
             </div>
-            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl shrink-0">
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-xl shrink-0 overflow-x-auto max-w-full">
               <button
                 onClick={() => setPaymentFilter("confirmed")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${
                   paymentFilter === "confirmed"
                     ? "bg-emerald-500 text-slate-950 shadow-md font-extrabold"
                     : "text-slate-400 hover:text-white"
@@ -1116,7 +1116,7 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
               </button>
               <button
                 onClick={() => setPaymentFilter("pending")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${
                   paymentFilter === "pending"
                     ? "bg-amber-500 text-slate-950 shadow-md font-extrabold"
                     : "text-slate-400 hover:text-white"
@@ -1126,7 +1126,7 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
               </button>
               <button
                 onClick={() => setPaymentFilter("All")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${
                   paymentFilter === "All"
                     ? "bg-slate-700 text-white shadow-md"
                     : "text-slate-400 hover:text-white"
@@ -1138,7 +1138,7 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
             <select
               value={attendanceFilter}
               onChange={(e) => setAttendanceFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white shrink-0"
+              className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white shrink-0 w-full sm:w-auto"
             >
               <option value="All">All Attendance Status</option>
               <option value="waiting">Waiting Room</option>
@@ -1149,10 +1149,10 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end border-t border-slate-800/60 pt-2 lg:pt-0 lg:border-t-0">
             <button
               onClick={handleRefresh}
-              className="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow"
+              className="px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow flex-1 sm:flex-initial"
               title="Refresh Live Attendee Data"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
@@ -1162,7 +1162,7 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
               <button
                 onClick={() => allowAllMutation.mutate()}
                 disabled={allowAllMutation.isPending}
-                className="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-colors flex items-center gap-1.5 shadow animate-pulse"
+                className="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-colors flex items-center justify-center gap-1.5 shadow animate-pulse flex-1 sm:flex-initial"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" /> Allow All Waiting ({analytics?.usersWaiting || attendees.filter((a: any) => a.currentStatus === "waiting" || a.admitStatus === "waiting").length})
               </button>
@@ -1170,14 +1170,14 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
 
             <button
               onClick={copyEmails}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors flex items-center gap-1.5"
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 flex-1 sm:flex-initial"
             >
               <Mail className="w-3.5 h-3.5" /> Copy Emails
             </button>
 
             <button
               onClick={handlePrint}
-              className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white transition-colors"
+              className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white transition-colors shrink-0"
               title="Print Attendee List"
             >
               <Printer className="w-4 h-4" />
@@ -1185,142 +1185,249 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
           </div>
         </div>
 
-        {/* Data Table */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Attendee Records: Mobile Cards & Desktop Table */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {isLoading ? (
             <div className="p-8 text-center text-slate-400">Loading attendee records...</div>
           ) : attendees.length === 0 ? (
             <div className="p-12 text-center text-slate-500">No registered attendees matching filters.</div>
           ) : (
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
-                  <th className="p-3">Attendee</th>
-                  <th className="p-3">Email / Phone</th>
-                  <th className="p-3">Payment</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Join / Leave</th>
-                  <th className="p-3">Duration & %</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
+            <>
+              {/* Mobile Layout (Cards) */}
+              <div className="block md:hidden space-y-3">
                 {attendees.map((att: any) => (
-                  <tr key={att._id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="p-3">
-                      <div className="font-bold text-white">{att.fullName}</div>
-                      <div className="text-[10px] text-slate-400">Age: {att.age}</div>
-                    </td>
-                    <td className="p-3">
-                      <div className="text-slate-300">{att.email}</div>
-                      <div className="text-[10px] text-slate-500">{att.phone || "N/A"}</div>
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          att.paymentStatus === "paid"
-                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                            : att.paymentStatus === "free"
-                            ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
-                            : "bg-amber-500/20 text-amber-300"
-                        }`}
+                  <div key={att._id} className="bg-slate-800/50 border border-slate-700/60 p-3.5 rounded-2xl space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-bold text-white text-sm">{att.fullName}</div>
+                        <div className="text-[11px] text-slate-400">Age: {att.age}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            att.paymentStatus === "paid"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              : att.paymentStatus === "free"
+                              ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                              : "bg-amber-500/20 text-amber-300"
+                          }`}
+                        >
+                          {att.paymentStatus.toUpperCase()} (₹{att.paymentAmount || 0})
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            att.currentStatus === "joined"
+                              ? "bg-emerald-500 text-slate-950 font-bold animate-pulse"
+                              : att.currentStatus === "waiting" || att.admitStatus === "waiting"
+                              ? "bg-amber-500 text-slate-950 font-bold animate-pulse"
+                              : att.currentStatus === "left"
+                              ? "bg-slate-800 text-slate-400"
+                              : "bg-slate-800 text-slate-300"
+                          }`}
+                        >
+                          {att.currentStatus === "waiting" || att.admitStatus === "waiting" ? "Waiting Room" : att.currentStatus}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                      <div>
+                        <span className="text-slate-500 block text-[10px]">Email / Phone</span>
+                        <span className="text-slate-300 font-medium break-all">{att.email}</span>
+                        <span className="text-slate-400 block text-[10px]">{att.phone || "N/A"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[10px]">Duration & Attendance</span>
+                        <span className="font-semibold text-slate-200">{att.totalDuration || 0} mins</span>
+                        <span className="text-teal-400 block text-[10px]">{att.attendancePercentage || 0}% session</span>
+                      </div>
+                      <div className="col-span-2 border-t border-slate-800/40 pt-1.5 flex items-center justify-between text-slate-400 text-[10px]">
+                        <span>In: {att.joinTime ? new Date(att.joinTime).toLocaleTimeString() : "N/A"}</span>
+                        <span>Out: {att.leaveTime ? new Date(att.leaveTime).toLocaleTimeString() : "N/A"}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1 border-t border-slate-800/60">
+                      {att.admitted ? (
+                        <span className="text-[10px] text-emerald-400 font-semibold px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">
+                          ✓ Allowed in Meeting
+                        </span>
+                      ) : (
+                        <>
+                          {att.currentStatus !== "waiting" && att.admitStatus !== "waiting" && (
+                            <button
+                              onClick={() => allowWaitingRoomMutation.mutate(att._id)}
+                              disabled={allowWaitingRoomMutation.isPending}
+                              className="px-2.5 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all flex-1 justify-center"
+                              title="Allow member into Waiting Room lobby"
+                            >
+                              <Hourglass className="w-3 h-3" /> Waiting Room
+                            </button>
+                          )}
+                          <button
+                            onClick={() => allowAttendeeMutation.mutate(att._id)}
+                            disabled={allowAttendeeMutation.isPending}
+                            className="px-2.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all flex-1 justify-center"
+                            title="Allow member directly into Meeting"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Allow Meeting
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => setSelectedAttendee(att)}
+                        className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium"
                       >
-                        {att.paymentStatus.toUpperCase()} (₹{att.paymentAmount || 0})
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                          att.currentStatus === "joined"
-                            ? "bg-emerald-500 text-slate-950 animate-pulse font-bold"
-                            : att.currentStatus === "waiting" || att.admitStatus === "waiting"
-                            ? "bg-amber-500 text-slate-950 font-bold animate-pulse"
-                            : att.currentStatus === "left"
-                            ? "bg-slate-800 text-slate-400"
-                            : "bg-slate-800 text-slate-300"
-                        }`}
+                        Details
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm("Remove attendee registration?")) {
+                            removeAttendeeMutation.mutate(att._id);
+                          }
+                        }}
+                        className="p-1.5 text-rose-400 hover:text-rose-300 rounded bg-rose-500/10 hover:bg-rose-500/20"
                       >
-                        {att.currentStatus === "waiting" || att.admitStatus === "waiting" ? "Waiting Room" : att.currentStatus}
-                      </span>
-                    </td>
-                    <td className="p-3 text-[11px] text-slate-400">
-                      <div>In: {att.joinTime ? new Date(att.joinTime).toLocaleTimeString() : "N/A"}</div>
-                      <div>Out: {att.leaveTime ? new Date(att.leaveTime).toLocaleTimeString() : "N/A"}</div>
-                    </td>
-                    <td className="p-3">
-                      <div className="font-semibold text-slate-200">{att.totalDuration || 0} mins</div>
-                      <div className="text-[10px] text-teal-400">{att.attendancePercentage || 0}% session</div>
-                    </td>
-                    <td className="p-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {att.admitted ? (
-                          <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                            ✓ Allowed in Meeting
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-400 font-semibold bg-slate-950/40">
+                      <th className="p-3">Attendee</th>
+                      <th className="p-3">Email / Phone</th>
+                      <th className="p-3">Payment</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Join / Leave</th>
+                      <th className="p-3">Duration & %</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {attendees.map((att: any) => (
+                      <tr key={att._id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3">
+                          <div className="font-bold text-white">{att.fullName}</div>
+                          <div className="text-[10px] text-slate-400">Age: {att.age}</div>
+                        </td>
+                        <td className="p-3">
+                          <div className="text-slate-300">{att.email}</div>
+                          <div className="text-[10px] text-slate-500">{att.phone || "N/A"}</div>
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              att.paymentStatus === "paid"
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                : att.paymentStatus === "free"
+                                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                                : "bg-amber-500/20 text-amber-300"
+                            }`}
+                          >
+                            {att.paymentStatus.toUpperCase()} (₹{att.paymentAmount || 0})
                           </span>
-                        ) : (
-                          <>
-                            {att.currentStatus !== "waiting" && att.admitStatus !== "waiting" && (
-                              <button
-                                onClick={() => allowWaitingRoomMutation.mutate(att._id)}
-                                disabled={allowWaitingRoomMutation.isPending}
-                                className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
-                                title="Allow member into Waiting Room lobby"
-                              >
-                                <Hourglass className="w-3 h-3" /> Allow to Waiting Room
-                              </button>
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              att.currentStatus === "joined"
+                                ? "bg-emerald-500 text-slate-950 animate-pulse font-bold"
+                                : att.currentStatus === "waiting" || att.admitStatus === "waiting"
+                                ? "bg-amber-500 text-slate-950 font-bold animate-pulse"
+                                : att.currentStatus === "left"
+                                ? "bg-slate-800 text-slate-400"
+                                : "bg-slate-800 text-slate-300"
+                            }`}
+                          >
+                            {att.currentStatus === "waiting" || att.admitStatus === "waiting" ? "Waiting Room" : att.currentStatus}
+                          </span>
+                        </td>
+                        <td className="p-3 text-[11px] text-slate-400">
+                          <div>In: {att.joinTime ? new Date(att.joinTime).toLocaleTimeString() : "N/A"}</div>
+                          <div>Out: {att.leaveTime ? new Date(att.leaveTime).toLocaleTimeString() : "N/A"}</div>
+                        </td>
+                        <td className="p-3">
+                          <div className="font-semibold text-slate-200">{att.totalDuration || 0} mins</div>
+                          <div className="text-[10px] text-teal-400">{att.attendancePercentage || 0}% session</div>
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {att.admitted ? (
+                              <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                                ✓ Allowed in Meeting
+                              </span>
+                            ) : (
+                              <>
+                                {att.currentStatus !== "waiting" && att.admitStatus !== "waiting" && (
+                                  <button
+                                    onClick={() => allowWaitingRoomMutation.mutate(att._id)}
+                                    disabled={allowWaitingRoomMutation.isPending}
+                                    className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
+                                    title="Allow member into Waiting Room lobby"
+                                  >
+                                    <Hourglass className="w-3 h-3" /> Allow to Waiting Room
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => allowAttendeeMutation.mutate(att._id)}
+                                  disabled={allowAttendeeMutation.isPending}
+                                  className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
+                                  title="Allow member directly into Meeting"
+                                >
+                                  <CheckCircle2 className="w-3 h-3" /> Allow to Meeting
+                                </button>
+                              </>
                             )}
                             <button
-                              onClick={() => allowAttendeeMutation.mutate(att._id)}
-                              disabled={allowAttendeeMutation.isPending}
-                              className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1 shadow transition-all"
-                              title="Allow member directly into Meeting"
+                              onClick={() => setSelectedAttendee(att)}
+                              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
                             >
-                              <CheckCircle2 className="w-3 h-3" /> Allow to Meeting
+                              Details
                             </button>
-                          </>
-                        )}
-                        <button
-                          onClick={() => setSelectedAttendee(att)}
-                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
-                        >
-                          Details
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm("Remove attendee registration?")) {
-                              removeAttendeeMutation.mutate(att._id);
-                            }
-                          }}
-                          className="p-1 text-rose-400 hover:text-rose-300"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                            <button
+                              onClick={() => {
+                                if (confirm("Remove attendee registration?")) {
+                                  removeAttendeeMutation.mutate(att._id);
+                                }
+                              }}
+                              className="p-1 text-rose-400 hover:text-rose-300"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
         {/* Side Detail Modal */}
         {selectedAttendee && (
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex justify-end z-50">
-            <div className="w-full max-w-md bg-slate-900 border-l border-slate-800 p-6 flex flex-col justify-between overflow-y-auto text-xs">
+            <div className="w-full max-w-full sm:max-w-md bg-slate-900 border-l border-slate-800 p-4 sm:p-6 flex flex-col justify-between overflow-y-auto text-xs">
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <h4 className="font-bold text-white text-base">Attendee Profile</h4>
-                  <button onClick={() => setSelectedAttendee(null)} className="p-1 text-slate-400">
+                  <button onClick={() => setSelectedAttendee(null)} className="p-1 text-slate-400 hover:text-white">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="space-y-2">
                   <p><span className="text-slate-400">Name:</span> <strong className="text-white">{selectedAttendee.fullName}</strong></p>
-                  <p><span className="text-slate-400">Email:</span> {selectedAttendee.email}</p>
+                  <p><span className="text-slate-400">Email:</span> <span className="break-all">{selectedAttendee.email}</span></p>
                   <p><span className="text-slate-400">Phone:</span> {selectedAttendee.phone || "N/A"}</p>
-                  <p><span className="text-slate-400">Payment ID:</span> {selectedAttendee.razorpayPaymentId || "N/A"}</p>
+                  <p><span className="text-slate-400">Payment ID:</span> <span className="break-all">{selectedAttendee.razorpayPaymentId || "N/A"}</span></p>
                   <p><span className="text-slate-400">Device Info:</span> {selectedAttendee.deviceInfo || "N/A"}</p>
                   <p><span className="text-slate-400">Browser:</span> {selectedAttendee.browserInfo || "N/A"}</p>
                   <p><span className="text-slate-400">IP Address:</span> {selectedAttendee.ipAddress || "N/A"}</p>
@@ -1339,7 +1446,7 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
                       })
                     }
                     placeholder="Add private admin notes for this attendee..."
-                    className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs"
+                    className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:border-teal-500"
                   />
                 </div>
               </div>
@@ -1347,7 +1454,7 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
               <div className="pt-4 border-t border-slate-800 flex justify-end">
                 <button
                   onClick={() => setSelectedAttendee(null)}
-                  className="px-4 py-2 bg-slate-800 rounded-xl text-slate-300"
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-semibold"
                 >
                   Close
                 </button>
