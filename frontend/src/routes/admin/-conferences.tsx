@@ -1035,12 +1035,123 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
     window.print();
   };
 
+  const exportCSV = () => {
+    if (!attendees || attendees.length === 0) {
+      toast.error("No meeting members to export.");
+      return;
+    }
+
+    const sanitizeTitle = (conference.title || "Meeting").replace(/[^a-zA-Z0-9 _-]/g, "");
+    const filename = `${sanitizeTitle.toLowerCase().replace(/\s+/g, "_")}_members.csv`;
+
+    let csvContent = `Meeting Name:,"${(conference.title || "").replace(/"/g, '""')}"\n`;
+    if (conference.meetingDate) {
+      csvContent += `Meeting Date:,"${conference.meetingDate}${conference.meetingTime ? ` ${conference.meetingTime}` : ""}"\n`;
+    }
+    csvContent += `Total Members:,"${attendees.length}"\n\n`;
+
+    csvContent += `"S.No","Full Name","Email","Phone","Age","Payment Status","Amount (₹)","Attendance Status","Join Time","Leave Time","Duration (Mins)"\n`;
+
+    attendees.forEach((att: any, idx: number) => {
+      const row = [
+        idx + 1,
+        `"${(att.fullName || "").replace(/"/g, '""')}"`,
+        `"${(att.email || "").replace(/"/g, '""')}"`,
+        `"${(att.phone || "N/A").replace(/"/g, '""')}"`,
+        att.age || "N/A",
+        `"${(att.paymentStatus || "free").toUpperCase()}"`,
+        att.paymentAmount || 0,
+        `"${att.currentStatus === "joined" ? "Joined" : att.currentStatus === "waiting" || att.admitStatus === "waiting" ? "Waiting Room" : att.currentStatus || "Registered"}"`,
+        `"${att.joinTime ? new Date(att.joinTime).toLocaleString() : "N/A"}"`,
+        `"${att.leaveTime ? new Date(att.leaveTime).toLocaleString() : "N/A"}"`,
+        att.totalDuration || 0,
+      ];
+      csvContent += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Exported ${attendees.length} meeting members to CSV!`);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-md overflow-hidden">
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #meeting-schedule-print-section, #meeting-schedule-print-section * {
+            visibility: visible !important;
+          }
+          #meeting-schedule-print-section {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: white !important;
+            color: black !important;
+            padding: 32px !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+            z-index: 999999 !important;
+          }
+        }
+      `}</style>
+
+      {/* Meeting Schedule Print View (Only Meeting Name & Members) */}
+      <div id="meeting-schedule-print-section" className="hidden print:block font-sans text-black bg-white">
+        <div className="border-b-2 border-black pb-4 mb-6">
+          <h1 className="text-2xl font-extrabold text-black tracking-tight">{conference.title}</h1>
+          <p className="text-sm font-semibold text-gray-600 mt-1">
+            Meeting Members List ({attendees.length} {attendees.length === 1 ? "Member" : "Members"})
+          </p>
+        </div>
+
+        <table className="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black font-bold text-black uppercase text-xs tracking-wider">
+              <th className="py-2.5 px-3">#</th>
+              <th className="py-2.5 px-3">Member Name</th>
+              <th className="py-2.5 px-3">Email</th>
+              <th className="py-2.5 px-3">Phone</th>
+              <th className="py-2.5 px-3">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-300">
+            {attendees.map((att: any, idx: number) => (
+              <tr key={att._id || idx} className="border-b border-gray-200">
+                <td className="py-2.5 px-3 text-gray-600 font-mono text-xs">{idx + 1}</td>
+                <td className="py-2.5 px-3 font-bold text-black">{att.fullName || "N/A"}</td>
+                <td className="py-2.5 px-3 text-gray-800">{att.email || "N/A"}</td>
+                <td className="py-2.5 px-3 text-gray-800">{att.phone || "N/A"}</td>
+                <td className="py-2.5 px-3 text-black font-semibold capitalize">
+                  {att.currentStatus === "joined"
+                    ? "Joined"
+                    : att.currentStatus === "waiting" || att.admitStatus === "waiting"
+                    ? "Waiting Room"
+                    : att.currentStatus || "Registered"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-6xl h-[95vh] sm:h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col shadow-2xl text-slate-100 overflow-hidden"
+        className="relative w-full max-w-6xl h-[95vh] sm:h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl flex flex-col shadow-2xl text-slate-100 overflow-hidden print:hidden"
       >
         {/* Modal Top Header */}
         <div className="p-4 sm:p-6 border-b border-slate-800 bg-slate-950/50 flex items-start sm:items-center justify-between gap-3 shrink-0">
@@ -1173,6 +1284,14 @@ function AttendeeManagementModal({ conference, onClose }: { conference: any; onC
               className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors flex items-center justify-center gap-1.5 flex-1 sm:flex-initial"
             >
               <Mail className="w-3.5 h-3.5" /> Copy Emails
+            </button>
+
+            <button
+              onClick={exportCSV}
+              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow flex-1 sm:flex-initial"
+              title="Download Meeting Members CSV / Excel"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" /> Export CSV / Excel
             </button>
 
             <button
