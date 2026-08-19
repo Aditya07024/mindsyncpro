@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, Play } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useUser } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
 import { MessageCounter } from '@/components/MessageCounter';
 import { CrisisOverlay } from '@/components/CrisisButton';
+import { WhatsAppAutoJoinModal } from '@/components/WhatsAppAutoJoinModal';
 import { motion } from 'framer-motion';
 import API from '@/lib/api';
 
@@ -37,6 +38,8 @@ function Dashboard() {
   const displayName = dbUser?.fullName?.split(" ")[0] || clerkUser?.firstName || 'friend';
   const [crisisMode, setCrisisMode] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
+
+  const [showWhatsAppAutoJoin, setShowWhatsAppAutoJoin] = useState(false);
 
   // Auto-redirect therapists and admins based on existing role
   useEffect(() => {
@@ -88,10 +91,30 @@ function Dashboard() {
       }
 
       setIsCheckingRole(false);
+
+      // Trigger post-registration 5s WhatsApp Auto Join action if pending
+      try {
+        const isPending = localStorage.getItem('mymind_auto_join_whatsapp_pending') === 'true';
+        if (isPending) {
+          setShowWhatsAppAutoJoin(true);
+        }
+      } catch (e) {
+        // ignore
+      }
     }).catch(() => {
       setIsCheckingRole(false);
     });
   }, [nav]);
+
+  const handleCloseWhatsAppAutoJoin = () => {
+    setShowWhatsAppAutoJoin(false);
+    try {
+      localStorage.removeItem('mymind_auto_join_whatsapp_pending');
+      localStorage.setItem('mymind_auto_join_whatsapp_done', 'true');
+    } catch (e) {
+      // ignore
+    }
+  };
 
   const { data: bookingsData, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings'],
@@ -401,14 +424,24 @@ function Dashboard() {
                   </p>
                 </div>
               </div>
-              <a
-                href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-sm transition"
-              >
-                Join WhatsApp Group <ChevronRight className="size-4" />
-              </a>
+              <div className="flex gap-2">
+                <a
+                  href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 px-3 rounded-xl shadow-sm transition"
+                >
+                  Join Group <ChevronRight className="size-4" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowWhatsAppAutoJoin(true)}
+                  className="flex items-center justify-center gap-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs font-semibold py-2.5 px-3 rounded-xl border border-emerald-500/30 transition cursor-pointer"
+                  title="Test or trigger the 5-second auto action"
+                >
+                  <Play className="size-3 text-emerald-600" /> Auto-Join (5s)
+                </button>
+              </div>
             </motion.div>
 
             {/* Upgrade nudge for free users */}
@@ -431,6 +464,11 @@ function Dashboard() {
       </div>
 
       <CrisisOverlay open={crisisMode} onClose={() => setCrisisMode(false)} />
+      <WhatsAppAutoJoinModal
+        isOpen={showWhatsAppAutoJoin}
+        onClose={handleCloseWhatsAppAutoJoin}
+        userName={displayName}
+      />
     </AppShell>
   );
 }
