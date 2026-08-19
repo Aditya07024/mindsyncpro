@@ -188,15 +188,7 @@ export class ConferenceController {
 
       const numPrice = priceType === "free" ? 0 : Number(price || 0);
 
-      const isRedirectOnly = Boolean(req.body.isRedirectOnly);
-      if (isRedirectOnly) {
-        if (!cleanMeetingLink) {
-          throw new AppError("WhatsApp Group / Link is required for WhatsApp Redirect Mode.", 400);
-        }
-        if (!isValidWhatsAppUrl(cleanMeetingLink)) {
-          throw new AppError("Invalid WhatsApp link. Redirect Mode is restricted specifically to WhatsApp links (e.g., https://chat.whatsapp.com/...).", 400);
-        }
-      }
+
 
       const conference = await Conference.create({
         title,
@@ -494,19 +486,8 @@ export class ConferenceController {
           throw new AppError("Invalid Google Meet meeting URL. Please enter a valid Google Meet link (e.g., https://meet.google.com/abc-defg-hij).", 400);
         }
         updates.meetingLink = targetMeetingLink;
-      } else if (targetPlatform === "jitsi" && !updates.isRedirectOnly && !conference.isRedirectOnly) {
+      } else if (targetPlatform === "jitsi") {
         updates.meetingLink = "";
-      }
-
-      const effectiveIsRedirectOnly = updates.isRedirectOnly !== undefined ? Boolean(updates.isRedirectOnly) : Boolean(conference.isRedirectOnly);
-      if (effectiveIsRedirectOnly) {
-        if (!targetMeetingLink) {
-          throw new AppError("WhatsApp Group / Link is required for WhatsApp Redirect Mode.", 400);
-        }
-        if (!isValidWhatsAppUrl(targetMeetingLink)) {
-          throw new AppError("Invalid WhatsApp link. Redirect Mode is restricted specifically to WhatsApp links (e.g., https://chat.whatsapp.com/...).", 400);
-        }
-        updates.meetingLink = targetMeetingLink;
       }
 
       Object.assign(conference, updates);

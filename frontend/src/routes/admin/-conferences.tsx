@@ -64,7 +64,6 @@ export function AdminConferencesTab() {
     endTime: "19:00",
     platform: "jitsi" as "jitsi" | "teams" | "google_meet",
     meetingLink: "",
-    isRedirectOnly: false,
     duration: 60,
     meetingType: "public" as "public" | "private" | "webinar" | "workshop",
     priceType: "free" as "free" | "paid" | "custom",
@@ -167,7 +166,6 @@ export function AdminConferencesTab() {
       endTime: "19:00",
       platform: "jitsi",
       meetingLink: "",
-      isRedirectOnly: false,
       duration: 60,
       meetingType: "public",
       priceType: "free",
@@ -197,7 +195,6 @@ export function AdminConferencesTab() {
       endTime: conf.endTime || "",
       platform: conf.platform || "jitsi",
       meetingLink: conf.meetingLink || "",
-      isRedirectOnly: Boolean(conf.isRedirectOnly),
       duration: conf.duration || 60,
       meetingType: conf.meetingType || "public",
       priceType: conf.priceType || "free",
@@ -218,29 +215,6 @@ export function AdminConferencesTab() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.isRedirectOnly) {
-      if (!form.meetingLink.trim()) {
-        toast.error("WhatsApp Link is required for WhatsApp Redirect Mode.");
-        return;
-      }
-      try {
-        const parsed = new URL(form.meetingLink.trim());
-        const host = parsed.hostname.toLowerCase();
-        const isWhatsApp =
-          (parsed.protocol === "http:" || parsed.protocol === "https:") &&
-          (host === "chat.whatsapp.com" ||
-            host.endsWith(".whatsapp.com") ||
-            host === "wa.me" ||
-            host.endsWith(".wa.me"));
-        if (!isWhatsApp) {
-          toast.error("WhatsApp Redirect Mode is restricted to WhatsApp links only (e.g., https://chat.whatsapp.com/...).");
-          return;
-        }
-      } catch {
-        toast.error("Please enter a valid WhatsApp link (e.g., https://chat.whatsapp.com/...).");
-        return;
-      }
-    }
     if (form.platform === "teams") {
       if (!form.meetingLink.trim()) {
         toast.error("Meeting Link is required for Microsoft Teams meetings.");
@@ -454,11 +428,7 @@ export function AdminConferencesTab() {
                           {conf.priceType === "free" ? "FREE" : `₹${conf.price}`}
                         </span>
 
-                        {conf.isRedirectOnly && (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
-                            💬 WhatsApp Redirect
-                          </span>
-                        )}
+
 
                         {conf.platform === "teams" ? (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
@@ -807,53 +777,6 @@ export function AdminConferencesTab() {
                   </div>
                 )}
 
-                {/* WhatsApp Redirect Only Option Toggle */}
-                <div className="mt-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <ExternalLink className="size-4 text-emerald-400 shrink-0" />
-                      <div>
-                        <h4 className="text-xs font-bold text-emerald-200">WhatsApp Redirect Mode (On Waiting Room)</h4>
-                        <p className="text-[11px] text-emerald-300/80">
-                          When enabled for this particular meeting, users placed in the Waiting Room will be automatically redirected to the official WhatsApp Group.
-                        </p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                      <input
-                        type="checkbox"
-                        checked={form.isRedirectOnly}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setForm({
-                            ...form,
-                            isRedirectOnly: checked,
-                            meetingLink: checked && !form.meetingLink ? "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL" : form.meetingLink,
-                          });
-                        }}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
-                  </div>
-
-                  {form.isRedirectOnly && (
-                    <div className="pt-2 border-t border-emerald-500/20 space-y-1">
-                      <label className="font-medium text-xs text-emerald-200 block">Landing Page WhatsApp Group Link *</label>
-                      <input
-                        type="url"
-                        required
-                        value={form.meetingLink || "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"}
-                        onChange={(e) => setForm({ ...form, meetingLink: e.target.value })}
-                        placeholder="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
-                        className="w-full px-3 py-2 bg-slate-900 border border-emerald-500/40 rounded-xl text-white text-xs focus:border-emerald-400 focus:outline-none"
-                      />
-                      <p className="text-[10px] text-emerald-300/70">
-                        When users enter the waiting room for this meeting, they will be automatically redirected to this WhatsApp link after 5 seconds.
-                      </p>
-                    </div>
-                  )}
-                </div>
               </div>
 
               <div className="grid grid-cols-4 gap-3">

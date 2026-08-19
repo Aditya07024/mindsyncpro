@@ -124,12 +124,7 @@ function Onboarding() {
     setNeed(chosenNeed);
     completeOnboarding({ firstName: firstName.trim() || 'friend', mood, concerns, need: chosenNeed });
 
-    // Mark WhatsApp group auto join as pending so auto action runs after redirect
-    try {
-      localStorage.setItem('mymind_auto_join_whatsapp_pending', 'true');
-    } catch (e) {
-      // ignore
-    }
+
 
     // Save to database
     try {

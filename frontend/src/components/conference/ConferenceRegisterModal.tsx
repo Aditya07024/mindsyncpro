@@ -105,10 +105,6 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
   const enterMeeting = () => {
     onClose();
-    if (conference.isRedirectOnly && conference.meetingLink) {
-      window.open(conference.meetingLink, "_blank", "noopener,noreferrer");
-      return;
-    }
     if (onSuccessJoin) {
       onSuccessJoin(conference._id);
     } else {
