@@ -673,8 +673,16 @@ function PrivacyPage() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500">
-        © 2026 MyMindTherapyFriend™. All rights reserved.
+      <footer className="border-t border-slate-200 py-12 text-center text-sm text-slate-500 space-y-3">
+        <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-600 font-medium">
+          <Link to="/" className="hover:text-teal-600 transition">Home</Link>
+          <Link to="/about" className="hover:text-teal-600 transition">About</Link>
+          <Link to="/careers" className="text-teal-600 font-bold hover:underline">Careers</Link>
+          <Link to="/privacy" className="hover:text-teal-600 transition">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-teal-600 transition">Terms & Conditions</Link>
+          <Link to="/support" className="hover:text-teal-600 transition">Support</Link>
+        </div>
+        <p>© 2026 mymindtherapyfriend™. All rights reserved.</p>
       </footer>
     </div>
   );

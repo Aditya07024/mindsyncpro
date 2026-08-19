@@ -27,6 +27,7 @@ import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConferencesRouteImport } from './routes/conferences'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as CareersRouteImport } from './routes/careers'
 import { Route as BreatheRouteImport } from './routes/breathe'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
@@ -133,6 +134,11 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CareersRoute = CareersRouteImport.update({
+  id: '/careers',
+  path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BreatheRoute = BreatheRouteImport.update({
   id: '/breathe',
   path: '/breathe',
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
+  '/careers': typeof CareersRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
+  '/careers': typeof CareersRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
+  '/careers': typeof CareersRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
   '/dashboard': typeof DashboardRoute
@@ -323,6 +332,7 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/bookings'
     | '/breathe'
+    | '/careers'
     | '/chat'
     | '/conferences'
     | '/dashboard'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/bookings'
     | '/breathe'
+    | '/careers'
     | '/chat'
     | '/conferences'
     | '/dashboard'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/bookings'
     | '/breathe'
+    | '/careers'
     | '/chat'
     | '/conferences'
     | '/dashboard'
@@ -429,6 +441,7 @@ export interface RootRouteChildren {
   AccountDeletedRoute: typeof AccountDeletedRoute
   BookingsRoute: typeof BookingsRoute
   BreatheRoute: typeof BreatheRoute
+  CareersRoute: typeof CareersRoute
   ChatRoute: typeof ChatRoute
   ConferencesRoute: typeof ConferencesRoute
   DashboardRoute: typeof DashboardRoute
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/careers': {
+      id: '/careers'
+      path: '/careers'
+      fullPath: '/careers'
+      preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/breathe': {
       id: '/breathe'
       path: '/breathe'
@@ -721,6 +741,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountDeletedRoute: AccountDeletedRoute,
   BookingsRoute: BookingsRoute,
   BreatheRoute: BreatheRoute,
+  CareersRoute: CareersRoute,
   ChatRoute: ChatRoute,
   ConferencesRoute: ConferencesRoute,
   DashboardRoute: DashboardRoute,

@@ -1449,6 +1449,7 @@ function Landing() {
 
             <div className="mt-5 space-y-3 text-sm text-slate-600">
               <Link to="/about" className="block hover:text-teal-600 transition">About mymindtherapyfriend</Link>
+              <Link to="/careers" className="block hover:text-teal-600 transition font-medium text-teal-700">Careers</Link>
               <Link to="/privacy" className="block hover:text-teal-600 transition">Privacy Policy</Link>
               <Link to="/terms" className="block hover:text-teal-600 transition">Terms & Conditions</Link>
               <Link to="/support" className="block hover:text-teal-600 transition">Support Center</Link>
