@@ -201,7 +201,6 @@ export class ConferenceController {
         endTime: endTime || "",
         platform: selectedPlatform,
         meetingLink: cleanMeetingLink,
-        isRedirectOnly,
         duration: Number(duration || 60),
         category: category || "",
         meetingType: meetingType || "public",
