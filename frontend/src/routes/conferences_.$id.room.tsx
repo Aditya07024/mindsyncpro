@@ -440,77 +440,41 @@ function ConferenceRoomPage() {
 
   const isMeetingHost = roomData?.user?.isHost || roomData?.conference?.isHost;
 
-  // WAITING ROOM UI (Must come BEFORE Teams or Jitsi UI so unadmitted participants wait here!)
+  // WAITING ROOM UI (Rendered when participant is in waiting room)
   if (waitingForHost) {
-
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-lg w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
+          className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
         >
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl" />
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 space-y-6">
-            <div className="relative w-20 h-20 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-400 flex items-center justify-center mx-auto">
-              <div className="absolute inset-0 rounded-full border-2 border-teal-400/40 animate-ping" />
-              <Hourglass className="w-9 h-9 text-teal-300" />
+            <div className="relative w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
+              <Hourglass className="w-9 h-9 text-emerald-300 animate-pulse" />
             </div>
 
             <div>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
-                Waiting for Host / Admin Approval
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                Waiting Room
               </span>
-              <h3 className="text-2xl font-bold text-white mt-3">
+              <h3 className="text-xl font-bold text-white mt-3">
                 {roomData?.conference?.title || "Meeting Waiting Room"}
               </h3>
-              <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-                The meeting host or admin has been notified. You will automatically be admitted to the meeting as soon as they allow you in.
-              </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-                <span>Checking admission status (auto every 3s)...</span>
-              </div>
-              <button
-                onClick={() => fetchJoinInfo(enteredPassword || undefined)}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors flex items-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-teal-400" /> Refresh Now
-              </button>
-            </div>
-
-            {/* Permanent WhatsApp Community Group Join Card */}
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-left space-y-2.5">
-              <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
-                <MessageSquare className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Join Official WhatsApp Group for Updates</span>
-              </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed">
-                Stay updated on future meetings, peer discussions & daily wellness support in our official WhatsApp group.
-              </p>
-              <a
-                href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
-              >
-                Join WhatsApp Group <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-
-            <div className="pt-2 flex justify-center gap-4">
-              <button
-                onClick={() => navigate({ to: "/conferences" })}
-                className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" /> Leave Waiting Room
-              </button>
-            </div>
+            {/* ONLY WhatsApp Group Join Button */}
+            <a
+              href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+            >
+              Join WhatsApp Group <ExternalLink className="w-4 h-4" />
+            </a>
           </div>
         </motion.div>
       </div>
