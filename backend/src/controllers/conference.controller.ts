@@ -171,6 +171,8 @@ export class ConferenceController {
 
       const numPrice = priceType === "free" ? 0 : Number(price || 0);
 
+      const isRedirectOnly = Boolean(req.body.isRedirectOnly);
+
       const conference = await Conference.create({
         title,
         description,
@@ -181,7 +183,8 @@ export class ConferenceController {
         meetingTime,
         endTime: endTime || "",
         platform: selectedPlatform,
-        meetingLink: selectedPlatform === "jitsi" ? "" : cleanMeetingLink,
+        meetingLink: cleanMeetingLink,
+        isRedirectOnly,
         duration: Number(duration || 60),
         category: category || "",
         meetingType: meetingType || "public",
@@ -466,7 +469,7 @@ export class ConferenceController {
           throw new AppError("Invalid Google Meet meeting URL. Please enter a valid Google Meet link (e.g., https://meet.google.com/abc-defg-hij).", 400);
         }
         updates.meetingLink = targetMeetingLink;
-      } else if (targetPlatform === "jitsi") {
+      } else if (targetPlatform === "jitsi" && !updates.isRedirectOnly && !conference.isRedirectOnly) {
         updates.meetingLink = "";
       }
 
@@ -1102,6 +1105,7 @@ export class ConferenceController {
           endTime: conference.endTime || "",
           platform: conference.platform || "jitsi",
           meetingLink: conference.meetingLink || "",
+          isRedirectOnly: Boolean(conference.isRedirectOnly),
           endDateTime: endDateTime ? endDateTime.toISOString() : null,
           hostEmail: conference.hostEmail || "",
           isHost,

@@ -18,6 +18,7 @@ interface ConferenceRegisterModalProps {
     roomName: string;
     platform?: string;
     meetingLink?: string;
+    isRedirectOnly?: boolean;
     banner?: string;
     posterUrl?: string | null;
   } | null;
@@ -104,6 +105,10 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
   const enterMeeting = () => {
     onClose();
+    if (conference.isRedirectOnly && conference.meetingLink) {
+      window.open(conference.meetingLink, "_blank", "noopener,noreferrer");
+      return;
+    }
     if (onSuccessJoin) {
       onSuccessJoin(conference._id);
     } else {

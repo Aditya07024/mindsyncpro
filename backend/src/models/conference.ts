@@ -22,6 +22,7 @@ export interface IConference extends Document {
   hostJoined?: boolean;
   platform: "jitsi" | "teams" | "google_meet";
   meetingLink?: string;
+  isRedirectOnly?: boolean;
   endTime?: string;
   instructions?: string;
   status: "draft" | "published" | "upcoming" | "live" | "ended";
@@ -46,6 +47,7 @@ const ConferenceSchema = new Schema<IConference>(
       default: "jitsi",
     },
     meetingLink: { type: String, default: "" },
+    isRedirectOnly: { type: Boolean, default: false },
     duration: { type: Number, default: 60 },
     category: { type: String, default: "Mental Health" },
     meetingType: {

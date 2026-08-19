@@ -136,6 +136,12 @@ function ConferenceRoomPage() {
       setRequiresPassword(false);
       setRoomData(data);
 
+      if ((data.isRedirectOnly || data.conference?.isRedirectOnly) && (data.meetingLink || data.conference?.meetingLink)) {
+        const targetUrl = data.meetingLink || data.conference?.meetingLink;
+        window.location.href = targetUrl;
+        return;
+      }
+
       // Send initial join attendance tracking
       API.conference
         .trackAttendance(id, {

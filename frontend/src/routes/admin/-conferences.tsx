@@ -64,6 +64,7 @@ export function AdminConferencesTab() {
     endTime: "19:00",
     platform: "jitsi" as "jitsi" | "teams" | "google_meet",
     meetingLink: "",
+    isRedirectOnly: false,
     duration: 60,
     meetingType: "public" as "public" | "private" | "webinar" | "workshop",
     priceType: "free" as "free" | "paid" | "custom",
@@ -166,6 +167,7 @@ export function AdminConferencesTab() {
       endTime: "19:00",
       platform: "jitsi",
       meetingLink: "",
+      isRedirectOnly: false,
       duration: 60,
       meetingType: "public",
       priceType: "free",
@@ -195,6 +197,7 @@ export function AdminConferencesTab() {
       endTime: conf.endTime || "",
       platform: conf.platform || "jitsi",
       meetingLink: conf.meetingLink || "",
+      isRedirectOnly: Boolean(conf.isRedirectOnly),
       duration: conf.duration || 60,
       meetingType: conf.meetingType || "public",
       priceType: conf.priceType || "free",
@@ -215,6 +218,22 @@ export function AdminConferencesTab() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.isRedirectOnly) {
+      if (!form.meetingLink.trim()) {
+        toast.error("Redirect Link is required when 'Redirect Only' mode is enabled.");
+        return;
+      }
+      try {
+        const parsed = new URL(form.meetingLink.trim());
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          toast.error("Please enter a valid HTTP or HTTPS redirect URL.");
+          return;
+        }
+      } catch {
+        toast.error("Please enter a valid HTTP or HTTPS redirect URL.");
+        return;
+      }
+    }
     if (form.platform === "teams") {
       if (!form.meetingLink.trim()) {
         toast.error("Meeting Link is required for Microsoft Teams meetings.");
@@ -427,6 +446,12 @@ export function AdminConferencesTab() {
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
                           {conf.priceType === "free" ? "FREE" : `₹${conf.price}`}
                         </span>
+
+                        {conf.isRedirectOnly && (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                            ⚡ Redirect Only
+                          </span>
+                        )}
 
                         {conf.platform === "teams" ? (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
@@ -774,6 +799,47 @@ export function AdminConferencesTab() {
                     </div>
                   </div>
                 )}
+
+                {/* Redirect Only Option Toggle */}
+                <div className="mt-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ExternalLink className="size-4 text-amber-400 shrink-0" />
+                      <div>
+                        <h4 className="text-xs font-bold text-amber-200">Redirect Only Mode (Particular Meeting Option)</h4>
+                        <p className="text-[11px] text-amber-300/80">
+                          When enabled for this particular meeting, users joining will be automatically redirected directly to the link instead of opening Jitsi.
+                        </p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                      <input
+                        type="checkbox"
+                        checked={form.isRedirectOnly}
+                        onChange={(e) => setForm({ ...form, isRedirectOnly: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                    </label>
+                  </div>
+
+                  {form.isRedirectOnly && (
+                    <div className="pt-2 border-t border-amber-500/20 space-y-1">
+                      <label className="font-medium text-xs text-amber-200 block">Redirect URL (WhatsApp / Zoom / Google Meet / Custom Link) *</label>
+                      <input
+                        type="url"
+                        required
+                        value={form.meetingLink}
+                        onChange={(e) => setForm({ ...form, meetingLink: e.target.value })}
+                        placeholder="https://chat.whatsapp.com/... or https://zoom.us/j/... or https://meet.google.com/..."
+                        className="w-full px-3 py-2 bg-slate-900 border border-amber-500/40 rounded-xl text-white text-xs focus:border-amber-400 focus:outline-none"
+                      />
+                      <p className="text-[10px] text-amber-300/70">
+                        Users clicking to join this meeting will be automatically redirected to this URL.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-4 gap-3">
