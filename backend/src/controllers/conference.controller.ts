@@ -50,6 +50,23 @@ export function isValidGoogleMeetUrl(url: string): boolean {
   }
 }
 
+export function isValidWhatsAppUrl(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  try {
+    const parsed = new URL(url.trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    return (
+      host === "chat.whatsapp.com" ||
+      host.endsWith(".whatsapp.com") ||
+      host === "wa.me" ||
+      host.endsWith(".wa.me")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function formatHostEmails(emailStr?: any): string {
   if (!emailStr) return "";
   return String(emailStr)
@@ -172,6 +189,14 @@ export class ConferenceController {
       const numPrice = priceType === "free" ? 0 : Number(price || 0);
 
       const isRedirectOnly = Boolean(req.body.isRedirectOnly);
+      if (isRedirectOnly) {
+        if (!cleanMeetingLink) {
+          throw new AppError("WhatsApp Group / Link is required for WhatsApp Redirect Mode.", 400);
+        }
+        if (!isValidWhatsAppUrl(cleanMeetingLink)) {
+          throw new AppError("Invalid WhatsApp link. Redirect Mode is restricted specifically to WhatsApp links (e.g., https://chat.whatsapp.com/...).", 400);
+        }
+      }
 
       const conference = await Conference.create({
         title,
@@ -471,6 +496,17 @@ export class ConferenceController {
         updates.meetingLink = targetMeetingLink;
       } else if (targetPlatform === "jitsi" && !updates.isRedirectOnly && !conference.isRedirectOnly) {
         updates.meetingLink = "";
+      }
+
+      const effectiveIsRedirectOnly = updates.isRedirectOnly !== undefined ? Boolean(updates.isRedirectOnly) : Boolean(conference.isRedirectOnly);
+      if (effectiveIsRedirectOnly) {
+        if (!targetMeetingLink) {
+          throw new AppError("WhatsApp Group / Link is required for WhatsApp Redirect Mode.", 400);
+        }
+        if (!isValidWhatsAppUrl(targetMeetingLink)) {
+          throw new AppError("Invalid WhatsApp link. Redirect Mode is restricted specifically to WhatsApp links (e.g., https://chat.whatsapp.com/...).", 400);
+        }
+        updates.meetingLink = targetMeetingLink;
       }
 
       Object.assign(conference, updates);

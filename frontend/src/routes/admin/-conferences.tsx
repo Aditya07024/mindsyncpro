@@ -220,17 +220,24 @@ export function AdminConferencesTab() {
     e.preventDefault();
     if (form.isRedirectOnly) {
       if (!form.meetingLink.trim()) {
-        toast.error("Redirect Link is required when 'Redirect Only' mode is enabled.");
+        toast.error("WhatsApp Link is required for WhatsApp Redirect Mode.");
         return;
       }
       try {
         const parsed = new URL(form.meetingLink.trim());
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-          toast.error("Please enter a valid HTTP or HTTPS redirect URL.");
+        const host = parsed.hostname.toLowerCase();
+        const isWhatsApp =
+          (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+          (host === "chat.whatsapp.com" ||
+            host.endsWith(".whatsapp.com") ||
+            host === "wa.me" ||
+            host.endsWith(".wa.me"));
+        if (!isWhatsApp) {
+          toast.error("WhatsApp Redirect Mode is restricted to WhatsApp links only (e.g., https://chat.whatsapp.com/...).");
           return;
         }
       } catch {
-        toast.error("Please enter a valid HTTP or HTTPS redirect URL.");
+        toast.error("Please enter a valid WhatsApp link (e.g., https://chat.whatsapp.com/...).");
         return;
       }
     }
@@ -448,8 +455,8 @@ export function AdminConferencesTab() {
                         </span>
 
                         {conf.isRedirectOnly && (
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                            ⚡ Redirect Only
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                            💬 WhatsApp Redirect
                           </span>
                         )}
 
@@ -800,15 +807,15 @@ export function AdminConferencesTab() {
                   </div>
                 )}
 
-                {/* Redirect Only Option Toggle */}
-                <div className="mt-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                {/* WhatsApp Redirect Only Option Toggle */}
+                <div className="mt-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <ExternalLink className="size-4 text-amber-400 shrink-0" />
+                      <ExternalLink className="size-4 text-emerald-400 shrink-0" />
                       <div>
-                        <h4 className="text-xs font-bold text-amber-200">Redirect Only Mode (Particular Meeting Option)</h4>
-                        <p className="text-[11px] text-amber-300/80">
-                          When enabled for this particular meeting, users joining will be automatically redirected directly to the link instead of opening Jitsi.
+                        <h4 className="text-xs font-bold text-emerald-200">WhatsApp Redirect Mode (On Waiting Room)</h4>
+                        <p className="text-[11px] text-emerald-300/80">
+                          When enabled for this particular meeting, users placed in the Waiting Room will be automatically redirected to the official WhatsApp Group.
                         </p>
                       </div>
                     </div>
@@ -816,26 +823,33 @@ export function AdminConferencesTab() {
                       <input
                         type="checkbox"
                         checked={form.isRedirectOnly}
-                        onChange={(e) => setForm({ ...form, isRedirectOnly: e.target.checked })}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setForm({
+                            ...form,
+                            isRedirectOnly: checked,
+                            meetingLink: checked && !form.meetingLink ? "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL" : form.meetingLink,
+                          });
+                        }}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                     </label>
                   </div>
 
                   {form.isRedirectOnly && (
-                    <div className="pt-2 border-t border-amber-500/20 space-y-1">
-                      <label className="font-medium text-xs text-amber-200 block">Redirect URL (WhatsApp / Zoom / Google Meet / Custom Link) *</label>
+                    <div className="pt-2 border-t border-emerald-500/20 space-y-1">
+                      <label className="font-medium text-xs text-emerald-200 block">Landing Page WhatsApp Group Link *</label>
                       <input
                         type="url"
                         required
-                        value={form.meetingLink}
+                        value={form.meetingLink || "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"}
                         onChange={(e) => setForm({ ...form, meetingLink: e.target.value })}
-                        placeholder="https://chat.whatsapp.com/... or https://zoom.us/j/... or https://meet.google.com/..."
-                        className="w-full px-3 py-2 bg-slate-900 border border-amber-500/40 rounded-xl text-white text-xs focus:border-amber-400 focus:outline-none"
+                        placeholder="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+                        className="w-full px-3 py-2 bg-slate-900 border border-emerald-500/40 rounded-xl text-white text-xs focus:border-emerald-400 focus:outline-none"
                       />
-                      <p className="text-[10px] text-amber-300/70">
-                        Users clicking to join this meeting will be automatically redirected to this URL.
+                      <p className="text-[10px] text-emerald-300/70">
+                        When users enter the waiting room for this meeting, they will be automatically redirected to this WhatsApp link after 5 seconds.
                       </p>
                     </div>
                   )}

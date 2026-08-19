@@ -31,6 +31,81 @@ declare global {
   }
 }
 
+function WhatsAppWaitingRoomCard({ conference, onLeave }: { conference: any; onLeave: () => void }) {
+  const [timeLeft, setTimeLeft] = useState(5);
+  const whatsappUrl = conference?.meetingLink || "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL";
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [timeLeft, whatsappUrl]);
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-lg w-full bg-gradient-to-b from-slate-900 via-emerald-950/80 to-slate-950 border border-emerald-500/30 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden"
+      >
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
+
+        <div className="relative z-10 space-y-6">
+          <div className="relative w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="absolute inset-0 rounded-full border-2 border-emerald-400/40 animate-ping" />
+            <Hourglass className="w-9 h-9 text-emerald-300" />
+          </div>
+
+          <div>
+            <span className="px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+              💬 WhatsApp Group Auto-Redirect
+            </span>
+            <h3 className="text-2xl font-extrabold text-white mt-3 leading-tight">
+              {conference?.title || "Meeting Waiting Room"}
+            </h3>
+            <p className="text-emerald-100/80 text-sm mt-2 leading-relaxed">
+              You are in the waiting room! Auto-redirecting you to our official WhatsApp Community Group in <strong>{timeLeft} seconds</strong>...
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+            <div className="text-4xl font-black text-white font-display">
+              {timeLeft} <span className="text-xs text-emerald-400 font-bold uppercase">sec</span>
+            </div>
+            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                animate={{ width: `${((5 - timeLeft) / 5) * 100}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2.5">
+            <button
+              onClick={() => window.open(whatsappUrl, "_blank", "noopener,noreferrer")}
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-500/25 transition cursor-pointer"
+            >
+              Join WhatsApp Group Now
+            </button>
+            <button
+              onClick={onLeave}
+              className="py-2 text-slate-400 hover:text-white text-xs font-semibold transition cursor-pointer"
+            >
+              Leave Waiting Room
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function ConferenceRoomPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -444,6 +519,15 @@ function ConferenceRoomPage() {
 
   // WAITING ROOM UI (Must come BEFORE Teams or Jitsi UI so unadmitted participants wait here!)
   if (waitingForHost) {
+    if (roomData?.conference?.isRedirectOnly) {
+      return (
+        <WhatsAppWaitingRoomCard
+          conference={roomData?.conference}
+          onLeave={() => navigate({ to: "/conferences" })}
+        />
+      );
+    }
+
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
         <motion.div
