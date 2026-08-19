@@ -13,6 +13,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Filter,
+  ArrowLeft,
 } from "lucide-react";
 import API from "@/lib/api";
 import { ConferenceRegisterModal } from "@/components/conference/ConferenceRegisterModal";
@@ -140,10 +141,16 @@ function ConferencesPage() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-4 h-4 text-teal-600" /> Back to Home
+            </Link>
             <Link
               to="/dashboard"
-              className="text-sm font-semibold text-slate-700 hover:text-teal-700 transition-colors hidden sm:block"
+              className="text-sm font-semibold text-slate-700 hover:text-teal-700 transition-colors hidden md:block"
             >
               Dashboard
             </Link>
@@ -447,6 +454,29 @@ function ConferencesPage() {
           </div>
         )}
       </main>
+
+      {/* Global Footer */}
+      <footer className="mt-20 border-t border-teal-100 bg-white py-12 text-center text-xs text-slate-500 space-y-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-6">
+          <div className="flex items-center gap-2">
+            <img src={logoUrl} alt="Logo" className="h-6 w-auto" />
+            <span className="font-bold text-slate-800">MyMindTherapyFriend™ Conferences</span>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-6 text-slate-600 text-xs font-medium">
+            <Link to="/" className="hover:text-teal-600 transition flex items-center gap-1 font-bold text-teal-700">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+            </Link>
+            <Link to="/about" className="hover:text-teal-600 transition">About</Link>
+            <Link to="/careers" className="hover:text-teal-600 transition">Careers</Link>
+            <Link to="/privacy" className="hover:text-teal-600 transition">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-teal-600 transition">Terms & Conditions</Link>
+            <Link to="/support" className="hover:text-teal-600 transition">Support Center</Link>
+          </div>
+
+          <p>© 2026 mymindtherapyfriend™. All rights reserved.</p>
+        </div>
+      </footer>
 
       {/* Registration Modal */}
       <ConferenceRegisterModal
