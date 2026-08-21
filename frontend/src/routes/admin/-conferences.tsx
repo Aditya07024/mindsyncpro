@@ -34,6 +34,7 @@ import {
   ExternalLink,
   Upload,
   Loader2,
+  Pin,
 } from "lucide-react";
 import API from "@/lib/api";
 import { toast } from "sonner";
@@ -78,6 +79,7 @@ export function AdminConferencesTab() {
     autoGenerateRoomName: true,
     instructions: "",
     status: "published" as "published" | "draft",
+    isPinned: false,
   });
 
   const { data: conferences = [], isLoading, refetch } = useQuery({
@@ -120,6 +122,15 @@ export function AdminConferencesTab() {
     mutationFn: ({ id, status }: { id: string; status: string }) => API.conference.togglePublish(id, status),
     onSuccess: () => {
       toast.success("Conference status updated");
+      qc.invalidateQueries({ queryKey: ["admin-conferences"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const pinMutation = useMutation({
+    mutationFn: ({ id, isPinned }: { id: string; isPinned: boolean }) => API.conference.togglePin(id, isPinned),
+    onSuccess: (data: any) => {
+      toast.success(data.message || "Meeting pin status updated");
       qc.invalidateQueries({ queryKey: ["admin-conferences"] });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -180,6 +191,7 @@ export function AdminConferencesTab() {
       autoGenerateRoomName: true,
       instructions: "",
       status: "published",
+      isPinned: false,
     });
   };
 
@@ -209,6 +221,7 @@ export function AdminConferencesTab() {
       autoGenerateRoomName: false,
       instructions: conf.instructions || "",
       status: conf.status || "published",
+      isPinned: Boolean(conf.isPinned),
     });
     setCreateModalOpen(true);
   };
@@ -410,6 +423,11 @@ export function AdminConferencesTab() {
                     <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-white text-lg">{conf.title}</span>
+                        {conf.isPinned && (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/50 flex items-center gap-1 shadow-sm shadow-amber-500/20 animate-pulse">
+                            <Pin className="w-3 h-3 fill-amber-400 text-amber-400" /> Pinned
+                          </span>
+                        )}
                         {conf.status === "draft" ? (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                             Draft
@@ -427,8 +445,6 @@ export function AdminConferencesTab() {
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
                           {conf.priceType === "free" ? "FREE" : `₹${conf.price}`}
                         </span>
-
-
 
                         {conf.platform === "teams" ? (
                           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1">
@@ -477,6 +493,23 @@ export function AdminConferencesTab() {
                       className="px-4 py-2 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-semibold transition-colors flex items-center gap-1.5"
                     >
                       <Users className="w-3.5 h-3.5" /> View Attendees & Stats
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        pinMutation.mutate({
+                          id: conf._id,
+                          isPinned: !conf.isPinned,
+                        })
+                      }
+                      className={`p-2 rounded-xl border transition-colors ${
+                        conf.isPinned
+                          ? "bg-amber-500/20 border-amber-500/40 text-amber-300 hover:bg-amber-500/30"
+                          : "bg-slate-800 border-slate-700 text-slate-400 hover:text-amber-300 hover:bg-slate-700"
+                      }`}
+                      title={conf.isPinned ? "Unpin Meeting" : "Pin Meeting to Top"}
+                    >
+                      <Pin className={`w-4 h-4 ${conf.isPinned ? "fill-amber-400 text-amber-400" : ""}`} />
                     </button>
 
                     <button
@@ -896,8 +929,8 @@ export function AdminConferencesTab() {
               </div>
 
               {/* Toggles */}
-              <div className="flex items-center gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex items-center gap-6 pt-2 flex-wrap">
+                <label className="flex items-center gap-2 cursor-pointer bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-slate-200">
                   <input
                     type="checkbox"
                     checked={form.enableWaitingRoom}
@@ -907,15 +940,16 @@ export function AdminConferencesTab() {
                   <span>Enable Waiting Room</span>
                 </label>
 
-                {/* <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-xl text-amber-300 font-semibold">
                   <input
                     type="checkbox"
-                    checked={form.enableRecording}
-                    onChange={(e) => setForm({ ...form, enableRecording: e.target.checked })}
-                    className="rounded bg-slate-800 border-slate-700 text-teal-500"
+                    checked={form.isPinned}
+                    onChange={(e) => setForm({ ...form, isPinned: e.target.checked })}
+                    className="rounded bg-slate-800 border-slate-700 text-amber-500 accent-amber-500"
                   />
-                  <span>Enable Recording</span>
-                </label> */}
+                  <Pin className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span>Pin Meeting to Top (Important)</span>
+                </label>
               </div>
 
               <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">

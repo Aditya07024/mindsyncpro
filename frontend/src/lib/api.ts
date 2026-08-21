@@ -411,6 +411,8 @@ const API = {
     delete: (id: string) => apiCall<any>(`/api/conferences/${id}`, { method: "DELETE" }),
     togglePublish: (id: string, status?: string) =>
       apiCall<any>(`/api/conferences/${id}/publish`, { method: "PATCH", body: JSON.stringify({ status }) }),
+    togglePin: (id: string, isPinned?: boolean) =>
+      apiCall<any>(`/api/conferences/${id}/pin`, { method: "PATCH", body: JSON.stringify({ isPinned }) }),
     register: (data: { conferenceId: string; fullName: string; age: number; email: string; phone?: string }) =>
       apiCall<any>("/api/conferences/register", { method: "POST", body: JSON.stringify(data) }),
     verifyPayment: (data: { conferenceId: string; orderId: string; paymentId: string; signature: string }) =>

@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Filter,
   ArrowLeft,
+  Pin,
 } from "lucide-react";
 import API from "@/lib/api";
 import { ConferenceRegisterModal } from "@/components/conference/ConferenceRegisterModal";
@@ -320,6 +321,12 @@ function ConferencesPage() {
 
                     {/* Status Badge */}
                     <div className="absolute top-4 left-4 flex items-center gap-2 flex-wrap z-10">
+                      {conf.isPinned && (
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-slate-950 shadow-md">
+                          <Pin className="w-3.5 h-3.5 fill-slate-950" />
+                          Pinned
+                        </span>
+                      )}
                       {isLive && (
                         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500 text-white shadow-md animate-pulse">
                           <span className="w-2 h-2 rounded-full bg-white"></span>

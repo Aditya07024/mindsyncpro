@@ -148,6 +148,7 @@ export class ConferenceController {
         autoGenerateRoomName,
         instructions,
         status,
+        isPinned,
       } = req.body;
 
       if (!title || !description || !meetingDate || !meetingTime) {
@@ -188,8 +189,6 @@ export class ConferenceController {
 
       const numPrice = priceType === "free" ? 0 : Number(price || 0);
 
-
-
       const conference = await Conference.create({
         title,
         description,
@@ -214,6 +213,8 @@ export class ConferenceController {
         hostEmail: formatHostEmails(hostEmail),
         instructions: instructions || "",
         status: status || "published",
+        isPinned: Boolean(isPinned),
+        pinnedAt: isPinned ? new Date() : undefined,
         createdBy: new mongoose.Types.ObjectId(req.user!.sub),
       });
 
@@ -263,7 +264,7 @@ export class ConferenceController {
 
       const conferences = await Conference.find(query)
         .populate("createdBy", "fullName email")
-        .sort({ createdAt: -1, meetingDate: 1 })
+        .sort({ isPinned: -1, pinnedAt: -1, createdAt: -1, meetingDate: 1 })
         .lean();
 
       // Enhance with registration counts & computed status
@@ -459,6 +460,10 @@ export class ConferenceController {
       if (updates.hostEmail !== undefined) {
         updates.hostEmail = formatHostEmails(updates.hostEmail);
       }
+      if (updates.isPinned !== undefined) {
+        updates.isPinned = Boolean(updates.isPinned);
+        updates.pinnedAt = updates.isPinned ? new Date() : null;
+      }
 
       // If posterUrl is being removed or replaced via body edit
       if (updates.posterUrl !== undefined && updates.posterUrl !== conference.posterUrl && conference.posterUrl) {
@@ -544,6 +549,30 @@ export class ConferenceController {
 
       res.json({
         message: `Conference ${conference.status === "published" ? "published" : "unpublished"} successfully`,
+        conference,
+      });
+    }
+  );
+
+  /**
+   * PATCH /api/conferences/:id/pin - Toggle pin status to pin meeting to top (Admin)
+   */
+  static togglePin = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const id = req.params.id as string;
+      const { isPinned } = req.body as { isPinned?: boolean };
+
+      const conference = await Conference.findById(id);
+      if (!conference) throw new AppError("Conference not found", 404);
+
+      const targetPinned = typeof isPinned === "boolean" ? isPinned : !conference.isPinned;
+      conference.isPinned = targetPinned;
+      conference.pinnedAt = targetPinned ? new Date() : (undefined as any);
+      await conference.save();
+
+      res.json({
+        message: conference.isPinned ? "Meeting pinned to top" : "Meeting unpinned",
+        isPinned: conference.isPinned,
         conference,
       });
     }

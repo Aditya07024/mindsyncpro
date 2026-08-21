@@ -26,6 +26,8 @@ export interface IConference extends Document {
   endTime?: string;
   instructions?: string;
   status: "draft" | "published" | "upcoming" | "live" | "ended";
+  isPinned?: boolean;
+  pinnedAt?: Date;
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -69,6 +71,8 @@ const ConferenceSchema = new Schema<IConference>(
     hostEmail: { type: String, default: "", trim: true, lowercase: true },
     hostJoined: { type: Boolean, default: false },
     instructions: { type: String, default: "" },
+    isPinned: { type: Boolean, default: false },
+    pinnedAt: { type: Date, default: null },
     status: {
       type: String,
       enum: ["draft", "published", "upcoming", "live", "ended"],
@@ -79,6 +83,7 @@ const ConferenceSchema = new Schema<IConference>(
   { timestamps: true }
 );
 
+ConferenceSchema.index({ isPinned: -1, pinnedAt: -1, createdAt: -1 });
 ConferenceSchema.index({ status: 1, meetingDate: 1 });
 
 export const Conference =

@@ -32,6 +32,7 @@ router.post("/", requirePermission("canHostMeeting"), ConferenceController.creat
 router.put("/:id", requirePermission("canHostMeeting"), ConferenceController.updateConference);
 router.delete("/:id", requirePermission("canHostMeeting"), ConferenceController.deleteConference);
 router.patch("/:id/publish", requirePermission("canHostMeeting"), ConferenceController.togglePublish);
+router.patch("/:id/pin", requirePermission("canHostMeeting"), ConferenceController.togglePin);
 
 // Admin Attendee & Analytics routes
 router.get("/admin/:id/attendees", requirePermission("canViewRegistrations"), ConferenceController.getAttendees);
