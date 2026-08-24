@@ -372,7 +372,7 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
                   </>
                 ) : (
                   <>
-                    <span>{isFree || emailStatusInfo?.isExempt ? "Join Meeting Now (Free Entry)" : `Proceed to Pay ₹${conference.price}`}</span>
+                    <span>{isFree || emailStatusInfo?.isExempt ? "Join Meeting Now" : `Proceed to Pay ₹${conference.price}`}</span>
                     <Sparkles className="w-4 h-4" />
                   </>
                 )}
