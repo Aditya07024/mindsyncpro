@@ -447,7 +447,7 @@ function ConferencesPage() {
                             </>
                           ) : (
                             <>
-                              <span>Register to Attend</span>
+                              <span>Join</span>
                               <ArrowRight className="w-4 h-4" />
                             </>
                           )}
