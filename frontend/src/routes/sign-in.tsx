@@ -20,7 +20,7 @@ import API from "@/lib/api";
 export const Route = createFileRoute("/sign-in")({ component: SignInPage });
 
 const PORTAL_NAMES: Record<string, string> = {
-  user: "I am a user/patient",
+  user: "I am a user/Client",
   therapist: "I am a Therapist",
   org_admin: "Organisation Admin",
   super_admin: "Super Admin",

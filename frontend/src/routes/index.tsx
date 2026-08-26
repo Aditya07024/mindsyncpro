@@ -115,7 +115,7 @@ const PORTALS = [
   {
     id: "user",
     icon: MessageCircle,
-    title: "Sign in for User/Patient",
+    title: "Sign in for User/Client",
     subtitle: "For people who want to chat with Manas AI, use mental health tools, track mood, or talk to real therapists.",
     color: "from-teal-500/10 to-teal-600/5 border-teal-200 hover:border-teal-400",
     iconBg: "bg-teal-100 text-teal-700",

@@ -34,7 +34,7 @@ const PORTAL_NAMES: Record<string, string> = {
 const ROLES = [
   {
     id: "user",
-    title: "User / Patient",
+    title: "User / Client",
     desc: "Seeking personal mental health support, 24/7 AI companion, CBT tools & therapy",
     icon: User,
     color: "from-teal-500 to-emerald-600",
