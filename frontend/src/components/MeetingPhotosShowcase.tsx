@@ -19,6 +19,205 @@ import {
 import API from "@/lib/api";
 import { getNormalizedPosterUrl } from "@/lib/utils";
 
+// Category Slider Component — renders 2 cards at a time with smooth sliding and auto-play
+function CategorySlideshow({
+  categoryName,
+  items,
+  onOpenLightbox,
+}: {
+  categoryName: string;
+  items: any[];
+  onOpenLightbox: (photo: any, index?: number) => void;
+}) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-slide right to left every 5 seconds if there are more than 2 items
+  useEffect(() => {
+    if (items.length <= 2) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 2 >= items.length ? 0 : prev + 2));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [items.length]);
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 2 < 0 ? Math.max(0, items.length - 2) : prev - 2));
+  };
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 2 >= items.length ? 0 : prev + 2));
+  };
+
+  // Slice 2 visible cards at a time
+  const visibleItems = items.slice(currentIndex, currentIndex + 2);
+
+  return (
+    <div className="w-full space-y-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md p-6 shadow-xl">
+      {/* Category Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30">
+            <Tag className="size-4 text-teal-400" />
+          </span>
+          <div>
+            <h3 className="text-xl font-extrabold text-white tracking-tight">{categoryName}</h3>
+            <p className="text-xs text-slate-300">
+              {items.length} session photo{items.length > 1 ? "s" : ""} available
+            </p>
+          </div>
+        </div>
+
+        {/* Carousel Navigation Arrows & Page Indicator */}
+        {items.length > 2 && (
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <span className="text-xs font-mono font-bold text-teal-300 bg-slate-950/60 px-3 py-1 rounded-full border border-white/10">
+              {Math.floor(currentIndex / 2) + 1} / {Math.ceil(items.length / 2)}
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={prevSlide}
+                className="flex size-8 items-center justify-center rounded-xl bg-slate-900 border border-white/15 text-slate-200 hover:bg-teal-500 hover:text-slate-950 transition-all"
+                title="Previous 2 Sessions"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="flex size-8 items-center justify-center rounded-xl bg-slate-900 border border-white/15 text-slate-200 hover:bg-teal-500 hover:text-slate-950 transition-all"
+                title="Next 2 Sessions"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2-Card Grid View per Slide */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <AnimatePresence mode="popLayout">
+          {visibleItems.map((photo, idx) => {
+            const imgList: string[] =
+              Array.isArray(photo.imageUrls) && photo.imageUrls.length > 0
+                ? photo.imageUrls
+                : photo.imageUrl
+                ? [photo.imageUrl]
+                : [];
+
+            const primaryUrl = imgList[0] || "";
+            const displayUrl = primaryUrl.startsWith("http") ? primaryUrl : getNormalizedPosterUrl(primaryUrl);
+
+            return (
+              <motion.div
+                key={photo._id || idx}
+                layout
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.3 }}
+                className="group relative overflow-hidden rounded-2xl border border-white/15 bg-slate-950/60 p-4 shadow-lg transition-all duration-300 hover:border-teal-400/50 hover:-translate-y-1"
+              >
+                {/* Image Showcase Container */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-slate-900">
+                  <img
+                    src={displayUrl}
+                    alt={photo.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/20 text-teal-300 text-[11px] font-bold">
+                      {photo.meetingType || categoryName}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      {imgList.length > 1 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-500 text-slate-950 text-[10px] font-black shadow-sm">
+                          <Layers className="size-3" /> {imgList.length} Photos
+                        </span>
+                      )}
+
+                      {photo.rating > 0 && (
+                        <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold backdrop-blur-md">
+                          <Star className="size-3 fill-amber-400 text-amber-400" />
+                          {photo.rating}.0
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expand Lightbox Button */}
+                  <button
+                    onClick={() => onOpenLightbox(photo, 0)}
+                    className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-500/90 text-slate-950 shadow-md backdrop-blur-md opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all hover:bg-teal-400"
+                    title="View Full Screenshot"
+                  >
+                    <Maximize2 className="size-3.5" />
+                  </button>
+
+                  {/* Attendees Count Badge */}
+                  {photo.attendeeCount > 0 && (
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md text-slate-200 text-[11px] font-mono font-medium border border-white/10">
+                      <Users className="size-3 text-emerald-400 mr-1" />
+                      {photo.attendeeCount} Attendees
+                    </div>
+                  )}
+                </div>
+
+                {/* Content Details */}
+                <div className="mt-4 space-y-2.5">
+                  <h4 className="text-lg font-bold text-white group-hover:text-teal-300 transition-colors leading-snug">
+                    {photo.title}
+                  </h4>
+
+                  {photo.caption && (
+                    <div className="relative rounded-xl bg-white/5 p-3 border border-white/10 text-xs text-slate-200 leading-relaxed font-normal">
+                      <MessageSquareQuote className="size-3.5 text-teal-400 mb-0.5 inline mr-1 opacity-80" />
+                      <span className="italic">"{photo.caption}"</span>
+                    </div>
+                  )}
+
+                  {/* Speaker Details */}
+                  {(photo.speakerName || photo.speakerRole || photo.dateText) && (
+                    <div className="flex items-center justify-between gap-3 pt-2 text-xs border-t border-white/10">
+                      {photo.speakerName ? (
+                        <div className="flex items-center gap-2">
+                          <div className="size-7 rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 text-slate-950 font-bold flex items-center justify-center text-xs shadow-xs">
+                            {photo.speakerName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-100">{photo.speakerName}</p>
+                            {photo.speakerRole && <p className="text-[10px] text-teal-300/80">{photo.speakerRole}</p>}
+                          </div>
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      {photo.dateText && (
+                        <span className="text-[10px] font-mono text-slate-400 flex items-center gap-1 shrink-0">
+                          <Calendar className="size-3 text-slate-500" />
+                          {photo.dateText}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 export function MeetingPhotosShowcase() {
   const [photos, setPhotos] = useState<any[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("All");
@@ -47,21 +246,21 @@ export function MeetingPhotosShowcase() {
     };
   }, []);
 
-  // Dynamically extract unique categories ONLY from uploaded photos
-  const availableCategories = Array.from(
-    new Set(
-      photos
-        .map((p) => (p.meetingType ? p.meetingType.trim() : ""))
-        .filter((cat) => cat.length > 0)
-    )
-  );
+  // Group photos by Category/Tag
+  const groupedCategories = photos.reduce((acc: Record<string, any[]>, photo) => {
+    const cat = photo.meetingType ? photo.meetingType.trim() : "General Session";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(photo);
+    return acc;
+  }, {});
 
-  const tags = availableCategories.length > 0 ? ["All", ...availableCategories] : [];
+  const availableCategoryNames = Object.keys(groupedCategories);
+  const tags = availableCategoryNames.length > 0 ? ["All", ...availableCategoryNames] : [];
 
-  // Filter photos strictly based on selected category
-  const filteredPhotos = photos.filter((item) => {
+  // Filter categories to display
+  const displayedCategories = availableCategoryNames.filter((cat) => {
     if (selectedTag === "All") return true;
-    return item.meetingType?.trim().toLowerCase() === selectedTag.toLowerCase();
+    return cat.toLowerCase() === selectedTag.toLowerCase();
   });
 
   const openLightbox = (photo: any, imgIndex: number = 0) => {
@@ -71,7 +270,7 @@ export function MeetingPhotosShowcase() {
 
   return (
     <section className="relative mt-24 overflow-hidden rounded-[36px] border border-teal-100 bg-gradient-to-b from-slate-900 via-[#012620] to-slate-950 p-6 sm:p-10 text-white shadow-2xl">
-      {/* Background Lighting & Glow Accents */}
+      {/* Background Glow */}
       <div className="pointer-events-none absolute -top-32 -left-32 size-96 rounded-full bg-teal-500/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-32 size-96 rounded-full bg-emerald-500/10 blur-3xl" />
 
@@ -113,8 +312,8 @@ export function MeetingPhotosShowcase() {
         )}
       </div>
 
-      {/* Content Area: Photos Grid or Loading State or Empty State */}
-      <div className="relative z-10 mt-12">
+      {/* Full-width Category Slideshow Blocks */}
+      <div className="relative z-10 mt-12 space-y-10">
         {loading ? (
           <div className="flex items-center justify-center py-20 text-slate-400 gap-2">
             <Loader2 className="size-6 text-teal-400 animate-spin" />
@@ -131,137 +330,19 @@ export function MeetingPhotosShowcase() {
               Meeting screenshots and participant testimonials uploaded from the Admin Dashboard will appear here dynamically.
             </p>
           </div>
-        ) : filteredPhotos.length === 0 ? (
-          /* Empty filter result */
+        ) : displayedCategories.length === 0 ? (
           <div className="text-center py-12 text-slate-400 text-sm">
             No meeting photos found in category "<span className="text-teal-300 font-bold">{selectedTag}</span>".
           </div>
         ) : (
-          /* Grid of Admin-Uploaded Photos */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8">
-            <AnimatePresence mode="popLayout">
-              {filteredPhotos.map((photo, index) => {
-                const imgList: string[] =
-                  Array.isArray(photo.imageUrls) && photo.imageUrls.length > 0
-                    ? photo.imageUrls
-                    : photo.imageUrl
-                    ? [photo.imageUrl]
-                    : [];
-
-                const primaryUrl = imgList[0] || "";
-                const displayUrl = primaryUrl.startsWith("http") ? primaryUrl : getNormalizedPosterUrl(primaryUrl);
-
-                return (
-                  <motion.div
-                    key={photo._id || index}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="group relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 backdrop-blur-xl p-5 shadow-xl transition-all duration-300 hover:border-teal-400/50 hover:bg-white/10 hover:-translate-y-1"
-                  >
-                    {/* Image Container */}
-                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-950">
-                      <img
-                        src={displayUrl}
-                        alt={photo.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = "none";
-                        }}
-                      />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-
-                      {/* Top Badges */}
-                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                        {photo.meetingType && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/20 text-teal-300 text-xs font-semibold">
-                            <Tag className="size-3.5 text-teal-400" />
-                            {photo.meetingType}
-                          </span>
-                        )}
-
-                        <div className="flex items-center gap-1.5">
-                          {imgList.length > 1 && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-500/90 text-slate-950 text-xs font-black backdrop-blur-md shadow-sm">
-                              <Layers className="size-3.5" />
-                              {imgList.length} Photos
-                            </span>
-                          )}
-
-                          {photo.rating > 0 && (
-                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold backdrop-blur-md">
-                              <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                              {photo.rating}.0
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Lightbox Expand Button */}
-                      <button
-                        onClick={() => openLightbox(photo, 0)}
-                        className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-xl bg-teal-500/90 text-slate-950 shadow-lg backdrop-blur-md opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all hover:bg-teal-400"
-                        title="View Full Screenshot Gallery"
-                      >
-                        <Maximize2 className="size-4" />
-                      </button>
-
-                      {/* Attendees Badge */}
-                      {photo.attendeeCount > 0 && (
-                        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur-md text-slate-200 text-xs font-mono font-medium border border-white/10">
-                          <Users className="size-3.5 text-emerald-400" />
-                          {photo.attendeeCount} Attendees
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="mt-5 space-y-3">
-                      <h3 className="text-xl font-extrabold text-white group-hover:text-teal-300 transition-colors leading-snug">
-                        {photo.title}
-                      </h3>
-
-                      {photo.caption && (
-                        <div className="relative rounded-2xl bg-white/5 p-4 border border-white/10 text-xs text-slate-200 leading-relaxed font-normal">
-                          <MessageSquareQuote className="size-4 text-teal-400 mb-1 inline mr-1.5 opacity-80" />
-                          <span className="italic">"{photo.caption}"</span>
-                        </div>
-                      )}
-
-                      {/* Speaker / Host Details */}
-                      {(photo.speakerName || photo.speakerRole || photo.dateText) && (
-                        <div className="flex items-center justify-between gap-3 pt-2 text-xs border-t border-white/10">
-                          {photo.speakerName ? (
-                            <div className="flex items-center gap-2">
-                              <div className="size-8 rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 text-slate-950 font-bold flex items-center justify-center text-xs shadow-sm">
-                                {photo.speakerName.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-bold text-slate-100">{photo.speakerName}</p>
-                                {photo.speakerRole && <p className="text-[11px] text-teal-300/80">{photo.speakerRole}</p>}
-                              </div>
-                            </div>
-                          ) : (
-                            <div />
-                          )}
-
-                          {photo.dateText && (
-                            <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 shrink-0">
-                              <Calendar className="size-3 text-slate-500" />
-                              {photo.dateText}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+          displayedCategories.map((catName) => (
+            <CategorySlideshow
+              key={catName}
+              categoryName={catName}
+              items={groupedCategories[catName]}
+              onOpenLightbox={openLightbox}
+            />
+          ))
         )}
       </div>
 
