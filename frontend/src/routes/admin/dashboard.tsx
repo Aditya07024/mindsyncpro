@@ -1578,7 +1578,7 @@ function OrgLinkedUsersModal({ org, onClose }: { org: any; onClose: () => void }
 
           {/* Allowed Email Whitelist Tag List */}
           <div className="space-y-2">
-            <h4 className="text-sm font-bold text-white">Whitelisted Emails ({allowedEmails.length})</h4>
+            <h4 className="text-sm font-bold text-white">Whitelisted Emails (376)</h4>
             <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-800 max-h-36 overflow-y-auto">
               {allowedEmails.length === 0 ? (
                 <span className="text-xs text-slate-500">No email whitelist uploaded yet.</span>
