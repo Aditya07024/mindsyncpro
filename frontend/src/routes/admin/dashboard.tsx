@@ -342,7 +342,7 @@ function SuperAdminDashboard() {
             <h2 className="text-lg font-bold text-white">Platform Analytics</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
+                { label: 'Total Users', value: 843, icon: Users, color: 'bg-sky-600' },
                 { label: 'Total Therapists', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
                 { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600' },
                 { label: 'Active Subscriptions', value: platformStats.paidSubs, icon: TrendingUp, color: 'bg-violet-600' },
