@@ -484,14 +484,14 @@ export function AdminMeetingPhotosTab() {
                           value={customUrlInput}
                           onChange={(e) => setCustomUrlInput(e.target.value)}
                           placeholder="Paste image URL (https://...)"
-                          className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                          className="w-full pl-9 pr-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                         />
                       </div>
                       <Button
                         type="button"
                         onClick={addCustomUrl}
                         variant="outline"
-                        className="px-3 py-2 text-xs font-bold rounded-xl border-slate-200 hover:border-teal-400"
+                        className="px-3 py-2 text-xs font-bold text-slate-800 rounded-xl border-slate-200 hover:border-teal-400"
                       >
                         + Add
                       </Button>
@@ -545,7 +545,7 @@ export function AdminMeetingPhotosTab() {
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
                     placeholder="e.g. Weekly Group Mindfulness & CBT Session"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                    className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                   />
                 </div>
 
@@ -559,7 +559,7 @@ export function AdminMeetingPhotosTab() {
                     value={form.caption}
                     onChange={(e) => setForm({ ...form, caption: e.target.value })}
                     placeholder='e.g. "Sharing feelings with people who genuinely understand made all the difference in my anxiety journey."'
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                    className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                   />
                 </div>
 
@@ -572,7 +572,7 @@ export function AdminMeetingPhotosTab() {
                       value={form.speakerName}
                       onChange={(e) => setForm({ ...form, speakerName: e.target.value })}
                       placeholder="e.g. Dr. Ananya Sharma / Rahul M."
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                   </div>
 
@@ -583,7 +583,7 @@ export function AdminMeetingPhotosTab() {
                       value={form.speakerRole}
                       onChange={(e) => setForm({ ...form, speakerRole: e.target.value })}
                       placeholder="e.g. Senior Psychologist / Attendee"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                   </div>
                 </div>
@@ -598,7 +598,7 @@ export function AdminMeetingPhotosTab() {
                       value={form.meetingType}
                       onChange={(e) => setForm({ ...form, meetingType: e.target.value })}
                       placeholder="e.g. Group Therapy, CBT Workshop"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                     <datalist id="category-suggestions">
                       {Array.from(new Set(photos.map((p: any) => p.meetingType).filter((c: any) => Boolean(c)))).map(
@@ -617,7 +617,7 @@ export function AdminMeetingPhotosTab() {
                       max={5}
                       value={form.rating}
                       onChange={(e) => setForm({ ...form, rating: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                   </div>
 
@@ -628,7 +628,7 @@ export function AdminMeetingPhotosTab() {
                       min={0}
                       value={form.attendeeCount}
                       onChange={(e) => setForm({ ...form, attendeeCount: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                   </div>
 
@@ -638,7 +638,7 @@ export function AdminMeetingPhotosTab() {
                       type="number"
                       value={form.displayOrder}
                       onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) })}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                   </div>
                 </div>
@@ -652,9 +652,10 @@ export function AdminMeetingPhotosTab() {
                       value={form.dateText}
                       onChange={(e) => setForm({ ...form, dateText: e.target.value })}
                       placeholder="e.g. August 2026"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
+                      className="w-full px-3 py-2 text-xs font-semibold text-slate-900 bg-white placeholder:text-slate-400 rounded-xl border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none"
                     />
                   </div>
+
 
                   <div className="flex items-center gap-3 pt-4 sm:pt-0">
                     <Switch
