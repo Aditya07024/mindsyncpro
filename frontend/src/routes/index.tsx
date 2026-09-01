@@ -41,6 +41,8 @@ import org from "@/assets/org.avif";
 import app from "@/assets/app.png";
 import play from "@/assets/play.webp";
 import { LandingPopupModal } from "@/components/LandingPopupModal";
+import { MeetingPhotosShowcase } from "@/components/MeetingPhotosShowcase";
+
 
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
@@ -1250,7 +1252,11 @@ function Landing() {
           </div>
         </section>
 
+        {/* Meeting Photos & Testimonials Showcase Section */}
+        <MeetingPhotosShowcase />
+
         {/* Stats Section */}
+
         <section className="mt-24 rounded-[40px] border border-slate-200 bg-white px-8 py-16 shadow-sm sm:px-12">
           <div className="grid gap-10 text-center sm:grid-cols-2 lg:grid-cols-4">
             {[

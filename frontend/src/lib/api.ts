@@ -483,7 +483,38 @@ const API = {
       });
     },
   },
+
+  meetingPhotos: {
+    getPublic: () => apiCall<{ photos: any[] }>("/api/meeting-photos"),
+    getAdminAll: () => apiCall<{ photos: any[] }>("/api/meeting-photos/admin/all"),
+    uploadPhoto: async (files: File | File[]) => {
+      const formData = new FormData();
+      const fileList = Array.isArray(files) ? files : [files];
+      fileList.forEach((f) => formData.append("photos", f));
+
+      return apiCall<{ imageUrl: string; imageUrls: string[]; message: string }>("/api/meeting-photos/upload", {
+        method: "POST",
+        body: formData,
+      });
+    },
+
+    create: (data: any) =>
+      apiCall<{ photo: any; message: string }>("/api/meeting-photos", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      apiCall<{ photo: any; message: string }>(`/api/meeting-photos/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      apiCall<{ id: string; message: string }>(`/api/meeting-photos/${id}`, {
+        method: "DELETE",
+      }),
+  },
 };
+
 
 
 export default API;

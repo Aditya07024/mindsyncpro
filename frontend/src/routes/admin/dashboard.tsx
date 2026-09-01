@@ -17,6 +17,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 import { AdminConferencesTab } from './-conferences';
 import { AdminPermissionsTab } from './-permissions';
 import { AdminPopupAnnouncementTab } from './-popup-announcement';
+import { AdminMeetingPhotosTab } from './-meeting-photos';
+
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
@@ -26,7 +28,8 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos'>('overview');
+
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
   const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
@@ -110,7 +113,9 @@ function SuperAdminDashboard() {
     { key: 'overview', label: 'Overview', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
     { key: 'conferences', label: 'Video Conferences', allowed: Boolean(myAccess?.canHostMeeting || myAccess?.canViewRegistrations || myAccess?.isFullAdmin) },
     { key: 'popup-announcement', label: 'Workshop Popup', allowed: Boolean(myAccess?.canManageWorkshopPopup || myAccess?.canHostMeeting || myAccess?.isFullAdmin) },
+    { key: 'meeting-photos', label: 'Meeting Screenshots', allowed: Boolean(myAccess?.canManageWorkshopPopup || myAccess?.canHostMeeting || myAccess?.isFullAdmin) },
     { key: 'users', label: 'Users', allowed: Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin) },
+
     { key: 'therapists', label: 'Therapists', allowed: Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin) },
     { key: 'organizations', label: 'Organizations', allowed: Boolean(myAccess?.canManageOrganizations || myAccess?.isFullAdmin) },
     { key: 'subscriptions', label: 'Subscriptions', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
@@ -336,12 +341,17 @@ function SuperAdminDashboard() {
         {/* WORKSHOP POPUP TAB */}
         {tab === 'popup-announcement' && <AdminPopupAnnouncementTab />}
 
+        {/* MEETING PHOTOS & TESTIMONIALS TAB */}
+        {tab === 'meeting-photos' && <AdminMeetingPhotosTab />}
+
+
         {/* OVERVIEW TAB */}
         {tab === 'overview' && (
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-white">Platform Analytics</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
+                // { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
                 { label: 'Total Users', value: 843, icon: Users, color: 'bg-sky-600' },
                 { label: 'Total Therapists', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
                 { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600' },
@@ -1578,7 +1588,9 @@ function OrgLinkedUsersModal({ org, onClose }: { org: any; onClose: () => void }
 
           {/* Allowed Email Whitelist Tag List */}
           <div className="space-y-2">
+            {/* <h4 className="text-sm font-bold text-white">Whitelisted Emails ({allowedEmails.length})</h4> */}
             <h4 className="text-sm font-bold text-white">Whitelisted Emails (376)</h4>
+
             <div className="flex flex-wrap gap-1.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-800 max-h-36 overflow-y-auto">
               {allowedEmails.length === 0 ? (
                 <span className="text-xs text-slate-500">No email whitelist uploaded yet.</span>
