@@ -15,26 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-
-const getYouTubeId = (url: string) => {
-  if (!url) return null;
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
-  return match ? match[1] : null;
-};
-
-const getGoogleDriveId = (url: string) => {
-  if (!url) return null;
-  const usercontentMatch = url.match(/drive\.usercontent\.google\.com\/download\?id=([^&]+)/);
-  if (usercontentMatch) return usercontentMatch[1];
-
-  const fileDMatch = url.match(/drive\.google\.com\/file\/d\/([^/&?]+)/);
-  if (fileDMatch) return fileDMatch[1];
-
-  const idParamMatch = url.match(/drive\.google\.com\/(?:uc|open)\?.*id=([^&]+)/);
-  if (idParamMatch) return idParamMatch[1];
-
-  return null;
-};
+import { IntroVideoPlayer } from "@/components/IntroVideoPlayer";
+import { getYouTubeId, getGoogleDriveId } from "@/lib/video";
 
 export const Route = createFileRoute("/therapists")({
   component: TherapistMarketplace,
@@ -321,36 +303,12 @@ function TherapistMarketplace() {
                   className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden cursor-pointer flex flex-col"
                 >
                   {/* Video Thumbnail or Avatar */}
-                  <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                    {therapist.introVideoUrl ? (
-                      getYouTubeId(therapist.introVideoUrl) ? (
-                        <iframe
-                          src={`https://www.youtube.com/embed/${getYouTubeId(therapist.introVideoUrl)}?autoplay=1&mute=1&loop=1&playlist=${getYouTubeId(therapist.introVideoUrl)}&controls=0`}
-                          className="w-full h-full object-cover pointer-events-none"
-                          allow="autoplay; encrypted-media"
-                          frameBorder="0"
-                        />
-                      ) : getGoogleDriveId(therapist.introVideoUrl) ? (
-                        <iframe
-                          src={`https://drive.google.com/file/d/${getGoogleDriveId(therapist.introVideoUrl)}/preview`}
-                          className="w-full h-full object-cover pointer-events-none"
-                          allow="autoplay"
-                          frameBorder="0"
-                        />
-                      ) : (
-                        <video
-                          src={therapist.introVideoUrl}
-                          autoPlay
-                          muted
-                          loop
-                          className="w-full h-full object-cover"
-                        />
-                      )
-                    ) : (
-                      <div className="text-white text-4xl font-bold">
-                        {therapist.name.charAt(0)}
-                      </div>
-                    )}
+                  <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden">
+                    <IntroVideoPlayer
+                      url={therapist.introVideoUrl}
+                      mode="card"
+                      fallbackName={therapist.name}
+                    />
                   </div>
 
                   {/* Content */}
@@ -456,36 +414,11 @@ function TherapistMarketplace() {
               {/* Video Header (Centered & Medium Sized) */}
               <div className="w-full bg-slate-50 p-6 flex justify-center shrink-0 border-b border-slate-100">
                 <div className="relative w-full max-w-md aspect-video bg-slate-900 rounded-2xl overflow-hidden shadow-md border border-slate-200/80">
-                  {selectedTherapist.introVideoUrl ? (
-                    getYouTubeId(selectedTherapist.introVideoUrl) ? (
-                      <iframe
-                        src={`https://www.youtube.com/embed/${getYouTubeId(selectedTherapist.introVideoUrl)}?autoplay=1&mute=0&rel=0`}
-                        className="w-full h-full object-cover"
-                        allow="autoplay; encrypted-media; fullscreen"
-                        allowFullScreen
-                        frameBorder="0"
-                      />
-                    ) : getGoogleDriveId(selectedTherapist.introVideoUrl) ? (
-                      <iframe
-                        src={`https://drive.google.com/file/d/${getGoogleDriveId(selectedTherapist.introVideoUrl)}/preview`}
-                        className="w-full h-full object-cover"
-                        allow="autoplay; encrypted-media; fullscreen"
-                        allowFullScreen
-                        frameBorder="0"
-                      />
-                    ) : (
-                      <video
-                        src={selectedTherapist.introVideoUrl}
-                        autoPlay
-                        controls
-                        className="w-full h-full object-cover"
-                      />
-                    )
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
-                      No intro video available
-                    </div>
-                  )}
+                  <IntroVideoPlayer
+                    url={selectedTherapist.introVideoUrl}
+                    mode="modal"
+                    fallbackName={selectedTherapist.name}
+                  />
                 </div>
               </div>
               

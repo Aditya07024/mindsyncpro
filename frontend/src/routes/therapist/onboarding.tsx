@@ -319,13 +319,22 @@ function TherapistOnboarding() {
                 <p className="text-sm text-muted-foreground">To build strong trust, please provide a link to a short 1-minute video introducing yourself to potential clients.</p>
                 
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Introduction Video Link</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Introduction Video Link (YouTube, Google Drive, Loom, Vimeo, or Direct Video)</label>
                   <input
                     name="introVideoUrl" value={formData.introVideoUrl} onChange={handleChange}
                     className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
-                    placeholder="https://youtube.com/... or Google Drive"
+                    placeholder="e.g. https://youtube.com/watch?v=... or Google Drive link"
                   />
                 </div>
+
+                {formData.introVideoUrl && (
+                  <div className="mt-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Video Preview:</p>
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-slate-900 border border-border">
+                      <IntroVideoPlayer url={formData.introVideoUrl} mode="modal" fallbackName={formData.fullName} />
+                    </div>
+                  </div>
+                )}
 
                 {error && <div className="text-sm text-red-500 font-medium bg-red-50 p-3 rounded-lg">{error}</div>}
 
@@ -334,7 +343,7 @@ function TherapistOnboarding() {
                     Back
                   </button>
                   <button
-                    disabled={loading || !formData.introVideoUrl}
+                    disabled={loading}
                     onClick={submitOnboarding}
                     className="flex-1 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
                   >

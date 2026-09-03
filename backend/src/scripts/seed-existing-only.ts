@@ -59,6 +59,7 @@ export async function seedRevenueOnExistingOnly() {
       specializations: ["Clinical Psychology", "Cognitive Behavioral Therapy"],
       languages: ["English", "Hindi"],
       bio: t.therapistProfile?.bio || "Experienced clinical therapist dedicated to evidence-based care.",
+      introVideoUrl: t.therapistProfile?.introVideoUrl,
       availability: [
         { day: 1, slots: ["10:00 AM", "02:00 PM"] },
         { day: 3, slots: ["11:00 AM", "04:00 PM"] }

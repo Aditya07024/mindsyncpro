@@ -19,8 +19,156 @@ import {
 import API from "@/lib/api";
 import { getNormalizedPosterUrl } from "@/lib/utils";
 
-// Category Slider Component — Light Theme — renders 2 cards at a time with smooth sliding & auto-play
-function CategorySlideshow({
+// Inline Photo Frame Component for Session Cards — Separates 2 images clearly and auto-animates right-to-left if > 2 images
+function SessionInlinePhotoFrame({
+  photo,
+  imgList,
+  onOpenLightbox,
+}: {
+  photo: any;
+  imgList: string[];
+  onOpenLightbox: (photo: any, index: number) => void;
+}) {
+  const [slideIdx, setSlideIdx] = useState(0);
+
+  // Auto-slide right-to-left every 4 seconds if more than 2 photos are present
+  useEffect(() => {
+    if (imgList.length <= 2) return;
+    const timer = setInterval(() => {
+      setSlideIdx((prev) => (prev + 2 >= imgList.length ? 0 : prev + 2));
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [imgList.length]);
+
+  const prevPair = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSlideIdx((prev) => (prev - 2 < 0 ? Math.max(0, imgList.length - 2) : prev - 2));
+  };
+
+  const nextPair = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSlideIdx((prev) => (prev + 2 >= imgList.length ? 0 : prev + 2));
+  };
+
+  // If only 1 image uploaded
+  if (imgList.length <= 1) {
+    const singleUrl = imgList[0] || "";
+    const displayUrl = singleUrl.startsWith("http") ? singleUrl : getNormalizedPosterUrl(singleUrl);
+
+    return (
+      <div
+        onClick={() => onOpenLightbox(photo, 0)}
+        className="relative aspect-[21/9] sm:aspect-[24/9] w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-md cursor-pointer group/img"
+      >
+        <img
+          src={displayUrl}
+          alt={photo.title}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+          onError={(e) => {
+            (e.target as HTMLElement).style.display = "none";
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60" />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenLightbox(photo, 0);
+          }}
+          className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-all"
+        >
+          <Maximize2 className="size-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  // Slice 2 photos for current display frame
+  const visiblePairIndices = imgList.length === 2 ? [0, 1] : [slideIdx, (slideIdx + 1) % imgList.length];
+
+  return (
+    <div className="relative w-full space-y-2">
+      {/* Slideshow Top Navigation Bar if > 2 photos */}
+      {imgList.length > 2 && (
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200">
+            Auto-sliding Photos ({slideIdx + 1}-{Math.min(slideIdx + 2, imgList.length)} of {imgList.length})
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={prevPair}
+              className="flex size-7 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-teal-600 hover:text-white shadow-xs transition-all"
+              title="Previous Photos"
+            >
+              <ChevronLeft className="size-3.5" />
+            </button>
+            <button
+              onClick={nextPair}
+              className="flex size-7 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-teal-600 hover:text-white shadow-xs transition-all"
+              title="Next Photos"
+            >
+              <ChevronRight className="size-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2 Distinct Separated Image Cards Side-by-Side */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+        <AnimatePresence mode="popLayout">
+          {visiblePairIndices.map((imgIndex, pos) => {
+            const rawUrl = imgList[imgIndex] || "";
+            const displayUrl = rawUrl.startsWith("http") ? rawUrl : getNormalizedPosterUrl(rawUrl);
+
+            return (
+              <motion.div
+                key={`${imgIndex}-${pos}`}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.4 }}
+                onClick={() => onOpenLightbox(photo, imgIndex)}
+                className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-slate-900 border-2 border-slate-200 shadow-md cursor-pointer group/img transition-all hover:border-teal-400 hover:shadow-lg"
+              >
+                <img
+                  src={displayUrl}
+                  alt={`${photo.title} - Photo ${imgIndex + 1}`}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-60" />
+
+                {/* Photo Badge */}
+                <div className="absolute top-2.5 left-2.5">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-bold border border-white/20">
+                    <ImageIcon className="size-3 text-teal-400" /> Photo {imgIndex + 1} of {imgList.length}
+                  </span>
+                </div>
+
+                {/* Expand Lightbox Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenLightbox(photo, imgIndex);
+                  }}
+                  className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                  title="Expand Photo"
+                >
+                  <Maximize2 className="size-3" />
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// Category Section Component — Full-width sessions per category
+function CategorySection({
   categoryName,
   items,
   onOpenLightbox,
@@ -29,190 +177,110 @@ function CategorySlideshow({
   items: any[];
   onOpenLightbox: (photo: any, index?: number) => void;
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Auto-slide right to left every 5 seconds if there are more than 2 items
-  useEffect(() => {
-    if (items.length <= 2) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 2 >= items.length ? 0 : prev + 2));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [items.length]);
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 2 < 0 ? Math.max(0, items.length - 2) : prev - 2));
-  };
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 2 >= items.length ? 0 : prev + 2));
-  };
-
-  // Slice 2 visible cards at a time
-  const visibleItems = items.slice(currentIndex, currentIndex + 2);
-
   return (
-    <div className="w-full space-y-4 rounded-3xl border border-teal-100/90 bg-white p-6 shadow-lg">
+    <div className="w-full space-y-6 rounded-3xl border border-teal-100/90 bg-white p-6 sm:p-8 shadow-lg">
       {/* Category Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-teal-50 text-teal-700 border border-teal-200">
-            <Tag className="size-4 text-teal-600" />
+          <span className="flex size-10 items-center justify-center rounded-xl bg-teal-50 text-teal-700 border border-teal-200 shadow-xs">
+            <Tag className="size-5 text-teal-600" />
           </span>
           <div>
-            <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{categoryName}</h3>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{categoryName}</h3>
             <p className="text-xs text-slate-500 font-medium">
-              {items.length} session photo{items.length > 1 ? "s" : ""} available
+              {items.length} session{items.length > 1 ? "s" : ""} in this category
             </p>
           </div>
         </div>
 
-        {/* Carousel Navigation Arrows & Page Indicator */}
-        {items.length > 2 && (
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <span className="text-xs font-mono font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
-              {Math.floor(currentIndex / 2) + 1} / {Math.ceil(items.length / 2)}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={prevSlide}
-                className="flex size-8 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-teal-600 hover:text-white transition-all shadow-xs"
-                title="Previous 2 Sessions"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="flex size-8 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-teal-600 hover:text-white transition-all shadow-xs"
-                title="Next 2 Sessions"
-              >
-                <ChevronRight className="size-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <span className="text-xs font-mono font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200 shrink-0">
+          {items.length} Entry{items.length > 1 ? "s" : ""}
+        </span>
       </div>
 
-      {/* 2-Card Grid View per Slide */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <AnimatePresence mode="popLayout">
-          {visibleItems.map((photo, idx) => {
-            const imgList: string[] =
-              Array.isArray(photo.imageUrls) && photo.imageUrls.length > 0
-                ? photo.imageUrls
-                : photo.imageUrl
-                ? [photo.imageUrl]
-                : [];
+      {/* Full-width Sequential Session Cards Stack (Each session takes 100% width, next session in next row) */}
+      <div className="flex flex-col gap-8 w-full">
+        {items.map((photo, idx) => {
+          const imgList: string[] =
+            Array.isArray(photo.imageUrls) && photo.imageUrls.length > 0
+              ? photo.imageUrls
+              : photo.imageUrl
+              ? [photo.imageUrl]
+              : [];
 
-            const primaryUrl = imgList[0] || "";
-            const displayUrl = primaryUrl.startsWith("http") ? primaryUrl : getNormalizedPosterUrl(primaryUrl);
+          return (
+            <motion.div
+              key={photo._id || idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: idx * 0.05 }}
+              className="group relative w-full overflow-hidden rounded-3xl border border-slate-200/90 bg-slate-50/50 p-5 sm:p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-teal-300 hover:bg-white"
+            >
+              {/* Header Badges & Attendees */}
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold shadow-2xs">
+                  <Tag className="size-3.5 text-teal-600" />
+                  {photo.meetingType || categoryName}
+                </span>
 
-            return (
-              <motion.div
-                key={photo._id || idx}
-                layout
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.3 }}
-                className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-teal-300 hover:-translate-y-1"
-              >
-                {/* Image Showcase Container */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-slate-900">
-                  <img
-                    src={displayUrl}
-                    alt={photo.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                    }}
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-
-                  {/* Top Badges */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/20 text-teal-300 text-[11px] font-bold">
-                      {photo.meetingType || categoryName}
-                    </span>
-
-                    <div className="flex items-center gap-1.5">
-                      {imgList.length > 1 && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500 text-slate-950 text-[10px] font-black shadow-sm">
-                          <Layers className="size-3" /> {imgList.length} Photos
-                        </span>
-                      )}
-
-                      {photo.rating > 0 && (
-                        <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold backdrop-blur-md">
-                          <Star className="size-3 fill-amber-400 text-amber-400" />
-                          {photo.rating}.0
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Expand Lightbox Button */}
-                  <button
-                    onClick={() => onOpenLightbox(photo, 0)}
-                    className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md backdrop-blur-md opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all hover:bg-teal-500"
-                    title="View Full Screenshot"
-                  >
-                    <Maximize2 className="size-3.5" />
-                  </button>
-
-                  {/* Attendees Count Badge */}
+                <div className="flex items-center gap-2">
                   {photo.attendeeCount > 0 && (
-                    <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-950/80 backdrop-blur-md text-slate-200 text-[11px] font-mono font-medium border border-white/10">
-                      <Users className="size-3 text-emerald-400 mr-1" />
-                      {photo.attendeeCount} Attendees
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono font-bold border border-slate-200">
+                      <Users className="size-3.5 text-teal-600" /> {photo.attendeeCount} Attendees Joined
+                    </span>
+                  )}
+
+                  {photo.rating > 0 && (
+                    <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-extrabold shadow-2xs">
+                      <Star className="size-3.5 fill-amber-400 text-amber-500" />
+                      {photo.rating}.0
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Content Details */}
-                <div className="mt-4 space-y-2.5">
-                  <h4 className="text-lg font-bold text-slate-900 group-hover:text-teal-700 transition-colors leading-snug">
+              {/* Separated 2-Image Inline Photo Frame (Auto-slides Right-to-Left if > 2 Photos) */}
+              <SessionInlinePhotoFrame photo={photo} imgList={imgList} onOpenLightbox={onOpenLightbox} />
+
+              {/* Session Content Details */}
+              <div className="mt-5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h4 className="text-xl sm:text-2xl font-extrabold text-slate-900 group-hover:text-teal-700 transition-colors leading-snug">
                     {photo.title}
                   </h4>
-
-                  {photo.caption && (
-                    <div className="relative rounded-xl bg-slate-50 p-3 border border-slate-100 text-xs text-slate-700 leading-relaxed font-normal">
-                      <MessageSquareQuote className="size-3.5 text-teal-600 mb-0.5 inline mr-1 opacity-80" />
-                      <span className="italic">"{photo.caption}"</span>
-                    </div>
-                  )}
-
-                  {/* Speaker Details */}
-                  {(photo.speakerName || photo.speakerRole || photo.dateText) && (
-                    <div className="flex items-center justify-between gap-3 pt-2 text-xs border-t border-slate-100">
-                      {photo.speakerName ? (
-                        <div className="flex items-center gap-2">
-                          <div className="size-7 rounded-full bg-gradient-to-br from-teal-600 to-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                            {photo.speakerName.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">{photo.speakerName}</p>
-                            {photo.speakerRole && <p className="text-[10px] text-teal-700 font-semibold">{photo.speakerRole}</p>}
-                          </div>
-                        </div>
-                      ) : (
-                        <div />
-                      )}
-
-                      {photo.dateText && (
-                        <span className="text-[10px] font-mono text-slate-500 flex items-center gap-1 shrink-0">
-                          <Calendar className="size-3 text-slate-400" />
-                          {photo.dateText}
-                        </span>
-                      )}
-                    </div>
+                  {photo.dateText && (
+                    <span className="text-xs font-mono text-slate-500 flex items-center gap-1 shrink-0">
+                      <Calendar className="size-3.5 text-slate-400" />
+                      {photo.dateText}
+                    </span>
                   )}
                 </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+
+                {photo.caption && (
+                  <div className="relative rounded-2xl bg-white p-4 border border-slate-200 text-sm text-slate-700 leading-relaxed font-normal shadow-2xs">
+                    <MessageSquareQuote className="size-4 text-teal-600 mb-1 inline mr-2 opacity-80" />
+                    <span className="italic">"{photo.caption}"</span>
+                  </div>
+                )}
+
+                {/* Host / Speaker Details */}
+                {(photo.speakerName || photo.speakerRole) && (
+                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="size-9 rounded-full bg-gradient-to-br from-teal-600 to-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow-xs">
+                        {photo.speakerName ? photo.speakerName.charAt(0).toUpperCase() : "M"}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm">{photo.speakerName || "MindSync Host"}</p>
+                        {photo.speakerRole && <p className="text-xs text-teal-700 font-semibold">{photo.speakerRole}</p>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
@@ -312,8 +380,8 @@ export function MeetingPhotosShowcase() {
         )}
       </div>
 
-      {/* Full-width Category Slideshow Blocks */}
-      <div className="relative z-10 mt-12 space-y-10">
+      {/* Full-width Category Blocks — Each session takes 100% width, sequential sessions in next row */}
+      <div className="relative z-10 mt-12 space-y-12">
         {loading ? (
           <div className="flex items-center justify-center py-20 text-slate-500 gap-2">
             <Loader2 className="size-6 text-teal-600 animate-spin" />
@@ -336,7 +404,7 @@ export function MeetingPhotosShowcase() {
           </div>
         ) : (
           displayedCategories.map((catName) => (
-            <CategorySlideshow
+            <CategorySection
               key={catName}
               categoryName={catName}
               items={groupedCategories[catName]}
@@ -346,7 +414,7 @@ export function MeetingPhotosShowcase() {
         )}
       </div>
 
-      {/* Lightbox Gallery Modal with Multi-Photo Controls — Light Theme */}
+      {/* Lightbox Gallery Modal with Multi-Photo Controls */}
       <AnimatePresence>
         {lightboxPhoto && (() => {
           const gallery: string[] =
@@ -362,7 +430,7 @@ export function MeetingPhotosShowcase() {
             : getNormalizedPosterUrl(currentUrl);
 
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
