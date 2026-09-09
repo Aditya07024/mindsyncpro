@@ -29,7 +29,6 @@ const DEFAULT_PARTNER_CATEGORIES = [
 ];
 
 export const WeArePartOfSection: React.FC = () => {
-  const [selectedCat, setSelectedCat] = useState("all");
   const [activePartnerModal, setActivePartnerModal] = useState<PartnerItem | null>(null);
 
   const { data: configData } = useQuery({
@@ -38,11 +37,10 @@ export const WeArePartOfSection: React.FC = () => {
   });
 
   const partnerConfig = configData?.config;
-  const categories = partnerConfig?.categories?.length ? partnerConfig.categories : DEFAULT_PARTNER_CATEGORIES;
 
   const { data: partnersData, isLoading } = useQuery({
-    queryKey: ["partners", selectedCat],
-    queryFn: () => API.partners.list({ category: selectedCat }),
+    queryKey: ["partners"],
+    queryFn: () => API.partners.list(),
   });
 
   const partners: PartnerItem[] = partnersData?.partners || [];
@@ -68,23 +66,6 @@ export const WeArePartOfSection: React.FC = () => {
             {partnerConfig?.sectionSubtitle ||
               "Proudly collaborating with leading Organizations, NGOs, Student Clubs, Peer Communities, and Global Health Partners to democratize mental wellness in India."}
           </p>
-        </div>
-
-        {/* Category Buttons / Filter Bar */}
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {categories.map((cat: any) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCat(cat.id)}
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 cursor-pointer ${
-                selectedCat === cat.id
-                  ? "bg-[#012620] text-white shadow-lg scale-105"
-                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
         </div>
 
         {/* Partners Showcase Grid */}

@@ -13,7 +13,6 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export const DigitalProductShopSection: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [isPurchased, setIsPurchased] = useState(false);
 
@@ -23,11 +22,10 @@ export const DigitalProductShopSection: React.FC = () => {
   });
 
   const shopConfig = configData?.config;
-  const categories = shopConfig?.categories?.length ? shopConfig.categories : DEFAULT_CATEGORIES;
 
   const { data: productsData, isLoading } = useQuery({
-    queryKey: ["digitalProducts", activeCategory],
-    queryFn: () => API.digitalProducts.list({ category: activeCategory }),
+    queryKey: ["digitalProducts"],
+    queryFn: () => API.digitalProducts.list(),
   });
 
   const products = productsData?.products || [];
@@ -62,23 +60,6 @@ export const DigitalProductShopSection: React.FC = () => {
             {shopConfig?.sectionSubtitle ||
               "Download psychologist-curated CBT workbooks, guided meditation audio suites, emotion journals, and self-help tools instantly."}
           </p>
-        </div>
-
-        {/* Category Filters */}
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {categories.map((cat: any) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 cursor-pointer ${
-                activeCategory === cat.id
-                  ? "bg-[#004038] text-white shadow-lg scale-105"
-                  : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
         </div>
 
         {/* Product Grid */}
