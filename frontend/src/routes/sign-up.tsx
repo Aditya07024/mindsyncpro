@@ -26,7 +26,7 @@ export const Route = createFileRoute("/sign-up")({ component: SignUpPage });
 
 const PORTAL_NAMES: Record<string, string> = {
   user: "I am a User / Patient",
-  therapist: "I am a Therapist",
+  therapist: "I am a Counsellor",
   org_admin: "Organisation Admin",
   super_admin: "Super Admin",
 };
@@ -35,7 +35,7 @@ const ROLES = [
   {
     id: "user",
     title: "User / Client",
-    desc: "Seeking personal mental health support, 24/7 AI companion, CBT tools & therapy",
+    desc: "Seeking personal mental health support, 24/7 AI companion, CBT tools & counselling",
     icon: User,
     color: "from-teal-500 to-emerald-600",
     bgColor: "bg-teal-50 hover:bg-teal-100/70 border-teal-200",
@@ -43,8 +43,8 @@ const ROLES = [
   },
   {
     id: "therapist",
-    title: "Therapist",
-    desc: "Licensed mental health professional offering therapy sessions & consultation",
+    title: "Counsellor",
+    desc: "Licensed mental health professional offering counselling sessions & consultation",
     icon: Stethoscope,
     color: "from-blue-500 to-teal-600",
     bgColor: "bg-blue-50 hover:bg-blue-100/70 border-blue-200",

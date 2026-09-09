@@ -109,28 +109,28 @@ function ReportsPage() {
       case 'Dr. Amy Reid':
         return {
           endorsement: "Endorsement & Analysis: I have carefully reviewed your emotional log trends. Your automated thought patterns show active cognitive distortions (like catastrophizing or all-or-nothing thinking).",
-          therapyNeed: "Why Therapy is Recommended: Engaging in structured CBT sessions with a professional therapist will help you build systematic tools to challenge and restructure these negative thoughts, preventing emotional spiral cycles."
+          therapyNeed: "Why Counselling is Recommended: Engaging in structured CBT sessions with a professional counsellor will help you build systematic tools to challenge and restructure these negative thoughts, preventing emotional spiral cycles."
         };
       case 'Dr. Soniya':
         return {
           endorsement: "Endorsement & Analysis: I have analyzed your mood logs and daily reflections. There is significant variation in your daily stress indicators and tension loops.",
-          therapyNeed: "Why Therapy is Recommended: Taking therapy is highly recommended to build professional mindfulness and grounding practices. A therapist will guide you to observe thoughts without judgment and stabilize emotional reactivity."
+          therapyNeed: "Why Counselling is Recommended: Taking counselling is highly recommended to build professional mindfulness and grounding practices. A counsellor will guide you to observe thoughts without judgment and stabilize emotional reactivity."
         };
       case 'Dr. Lisa':
         return {
           endorsement: "Endorsement & Analysis: Looking at your journaling and chat summaries, there are repeated emotional triggers and deep-seated distress points.",
-          therapyNeed: "Why Therapy is Recommended: Working with a trauma-informed professional therapist is crucial. Therapy provides a structured, safe environment to address core emotional wounds, process triggers, and develop somatic healing strategies."
+          therapyNeed: "Why Counselling is Recommended: Working with a trauma-informed professional counsellor is crucial. Counselling provides a structured, safe environment to address core emotional wounds, process triggers, and develop somatic healing strategies."
         };
       case 'Dr. Mohan':
         return {
           endorsement: "Endorsement & Analysis: Reviewing your coverage period logs shows a tendency to focus on adverse outcomes and self-critical narratives.",
-          therapyNeed: "Why Therapy is Recommended: I recommend taking positive psychology-informed therapy to cultivate optimism, identify character strengths, and build self-compassion. A therapist will help shift your default focus to growth."
+          therapyNeed: "Why Counselling is Recommended: I recommend taking positive psychology-informed counselling to cultivate optimism, identify character strengths, and build self-compassion. A counsellor will help shift your default focus to growth."
         };
       case 'Dr. Ram':
       default:
         return {
           endorsement: "Endorsement & Analysis: Based on the density of your logs and average mood tracking, you are managing considerable day-to-day anxiety and mental workload.",
-          therapyNeed: "Why Therapy is Recommended: Regular clinical therapy is highly recommended. A licensed counselor can provide objective support, validate your experiences, and help you design tailored wellness action plans for sustained recovery."
+          therapyNeed: "Why Counselling is Recommended: Regular clinical counselling is highly recommended. A licensed counsellor can provide objective support, validate your experiences, and help you design tailored wellness action plans for sustained recovery."
         };
     }
   };
@@ -329,7 +329,7 @@ function ReportsPage() {
   const handleShare = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTherapist) {
-      toast.error("Please select a therapist to share with.");
+      toast.error("Please select a counsellor to share with.");
       return;
     }
     shareMutation.mutate({
@@ -526,7 +526,7 @@ function ReportsPage() {
                       {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.initials || 'DM'}
                     </div>
                     <div>
-                      <h3 className="font-display font-bold text-primary-deep text-sm">Therapist Clinical Analysis</h3>
+                      <h3 className="font-display font-bold text-primary-deep text-sm">Counsellor Clinical Analysis</h3>
                       <p className="text-[10px] text-muted-foreground">Drafted by {selectedAIDoctor} • {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.role || 'Emotional Wellness Specialist'}</p>
                     </div>
                   </div>
@@ -537,21 +537,21 @@ function ReportsPage() {
                   </div>
                 </div>
 
-                {/* Therapist Booking Recommendation Callout */}
+                {/* Counsellor Booking Recommendation Callout */}
                 <div className="rounded-2xl bg-secondary/30 border border-border p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <h4 className="font-display font-bold text-primary-deep text-sm flex items-center gap-1.5">
                       <Heart className="size-4 text-accent" /> Ready for deeper guidance?
                     </h4>
                     <p className="text-xs text-muted-foreground max-w-xl">
-                      Based on {selectedAIDoctor}'s analysis of your {period === 'week' ? 'weekly' : '15-day'} logs, scheduling a direct 1-on-1 counseling session with a professional therapist can help you build custom coping mechanisms.
+                      Based on {selectedAIDoctor}'s analysis of your {period === 'week' ? 'weekly' : '15-day'} logs, scheduling a direct 1-on-1 counseling session with a professional counsellor can help you build custom coping mechanisms.
                     </p>
                   </div>
                   <Link
                     to="/therapists"
                     className="bg-accent hover:bg-accent/90 text-white font-bold text-xs py-3 px-5 rounded-xl text-center shadow-md transition whitespace-nowrap"
                   >
-                    Find & Book a Therapist
+                    Find & Book a Counsellor
                   </Link>
                 </div>
               </div>
@@ -573,9 +573,9 @@ function ReportsPage() {
                   </div>
                   <div className="space-y-1.5">
                     <span className="bg-white/20 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full inline-block">
-                      Clinical Therapist Report
+                      Clinical Counsellor Report
                     </span>
-                    <h3 className="font-display font-bold text-lg">Unlock {period === 'week' ? 'Weekly' : '15-Day'} Therapist Clinical Evaluation</h3>
+                    <h3 className="font-display font-bold text-lg">Unlock {period === 'week' ? 'Weekly' : '15-Day'} Counsellor Clinical Evaluation</h3>
                     <p className="text-xs text-white/80 max-w-lg leading-relaxed">
                       Get a comprehensive clinical evaluation of your {period === 'week' ? 'weekly' : '15-day'} emotional patterns, mood trends, and journal reflections reviewed by our expert counselor to guide your healing journey.
                     </p>

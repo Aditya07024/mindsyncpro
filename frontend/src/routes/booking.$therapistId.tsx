@@ -136,7 +136,7 @@ function BookingFlow() {
     return (
       <AppShell>
         <div className="flex items-center justify-center min-h-screen">
-          <p className="text-red-600">Therapist not found</p>
+          <p className="text-red-600">Counsellor not found</p>
         </div>
       </AppShell>
     );
@@ -157,7 +157,7 @@ function BookingFlow() {
               className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
             >
               <ChevronLeft className="w-4 h-4" />
-              Back to Therapists
+              Back to Counsellors
             </button>
 
             {/* Therapist Info Card */}
@@ -167,7 +167,7 @@ function BookingFlow() {
                   {(therapist.name || 'T').charAt(0)}
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-slate-900">{therapist.name || 'Therapist'}</h1>
+                  <h1 className="text-2xl font-bold text-slate-900">{therapist.name || 'Counsellor'}</h1>
                   <p className="text-slate-600">{therapist.specializations?.[0]}</p>
                   <div className="flex items-center gap-4 mt-2">
                     <span className="text-lg font-bold text-slate-900">
@@ -460,8 +460,8 @@ function BookingFlow() {
                 </h2>
                 <p className="text-slate-600 mb-4">
                   {bookingAmount === 0
-                    ? `Your therapy session with ${therapist.name} is confirmed under your organization benefits.`
-                    : `Your therapy session with ${therapist.name} is confirmed.`}
+                    ? `Your counselling session with ${therapist.name} is confirmed under your organization benefits.`
+                    : `Your counselling session with ${therapist.name} is confirmed.`}
                 </p>
                 <p className="text-sm text-slate-500">
                   Check your notifications for session details and video room link.

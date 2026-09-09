@@ -57,7 +57,7 @@ function AboutPage() {
             </h2>
 
             <div className="mt-6 space-y-4 text-left text-base leading-relaxed text-slate-600 sm:text-lg">
-              <p>mymindtherapyfriend is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of verified online therapists.</p>
+              <p>mymindtherapyfriend is an AI-powered mental health and wellness platform built specifically for India. Our platform combines Manas - a culturally aware AI companion trained in Cognitive Behavioural Therapy (CBT) - with mood tracking, breathing exercises, grounding tools, and a marketplace of verified online counsellors.</p>
               <p>Whether you are a student managing exam stress, a professional dealing with burnout, or an organisation looking to support employee mental health - mymindtherapyfriend offers affordable, private, and always-available mental health support starting at ₹0/month.</p>
               <p>We are DPDPA-compliant, store all data in India, and your conversations are always private.</p>
             </div>
@@ -75,7 +75,7 @@ function AboutPage() {
                 <Heart className="size-8 text-rose-500" />
                 <h3 className="mt-4 text-lg font-semibold text-[#012620]">Human-Centered Care</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Connect with therapists and wellness experiences designed for real people.
+                  Connect with counsellors and wellness experiences designed for real people.
                 </p>
               </div>
 
@@ -133,7 +133,7 @@ function AboutPage() {
         <section className="bg-slate-900 rounded-[2.5rem] p-12 text-white text-center">
           <h2 className="text-3xl font-bold mb-6">Join the Wellness Revolution</h2>
           <p className="text-slate-400 mb-10 max-w-2xl mx-auto">
-            Whether you're a student looking for support or a therapist wanting to help, 
+            Whether you're a student looking for support or a counsellor wanting to help, 
             MyMindTherapyFriend has a place for you.
           </p>
           <Link to="/" className="inline-flex items-center justify-center rounded-2xl bg-white px-8 py-4 text-sm font-bold text-slate-900 shadow-xl transition hover:scale-105">

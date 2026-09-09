@@ -173,7 +173,7 @@ export async function sendBookingConfirmationToSeeker(opts: {
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td style="padding:8px 0;border-bottom:1px solid #e2e8f0;">
-                <span style="font-size:13px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Therapist</span>
+                <span style="font-size:13px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Counsellor</span>
                 <p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#0f172a;">Dr. ${therapistName}</p>
               </td>
             </tr>

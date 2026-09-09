@@ -17,6 +17,9 @@ import videoRoutes from "./video";
 import accountRoutes from "./account";
 import popupAnnouncementRoutes from "./popup-announcement";
 import meetingPhotoRoutes from "./meeting-photo";
+import digitalProductRoutes from "./digital-product";
+import partnerRoutes from "./partner";
+import careerProgramRoutes from "./career-program";
 
 export const apiRouter = Router();
 
@@ -42,6 +45,11 @@ apiRouter.use("/conferences", conferenceRoutes);
 apiRouter.use("/video", videoRoutes);
 apiRouter.use("/popup-announcement", popupAnnouncementRoutes);
 apiRouter.use("/meeting-photos", meetingPhotoRoutes);
+apiRouter.use("/digital-products", digitalProductRoutes);
+apiRouter.use("/partners", partnerRoutes);
+apiRouter.use("/career-programs", careerProgramRoutes);
+
+
 
 
 

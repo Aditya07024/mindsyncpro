@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, FileText, Video, CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
 import API from '@/lib/api';
+import { IntroVideoPlayer } from '@/components/IntroVideoPlayer';
 
 export const Route = createFileRoute('/therapist/onboarding')({
   component: TherapistOnboarding,
@@ -76,7 +77,7 @@ function TherapistOnboarding() {
   return (
     <div className="min-h-screen bg-canvas-gradient pb-20">
       <header className="px-6 py-5">
-        <h1 className="font-display text-2xl font-bold text-primary-deep">Therapist Verification</h1>
+        <h1 className="font-display text-2xl font-bold text-primary-deep">Counsellor Verification</h1>
         <p className="text-sm text-muted-foreground mt-1">Join the mymindtherapyfriend network</p>
       </header>
 
@@ -279,7 +280,7 @@ function TherapistOnboarding() {
                 </div>
                 
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">License / Therapist Registration Link</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">License / Counsellor Registration Link</label>
                   <input
                     name="licenseUrl" value={formData.licenseUrl} onChange={handleChange}
                     className="w-full mt-1 rounded-xl border border-input bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"

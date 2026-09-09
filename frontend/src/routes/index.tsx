@@ -31,6 +31,8 @@ import {
   AlertTriangle,
   HeartHandshake,
   Zap,
+  Briefcase,
+  GraduationCap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
@@ -42,6 +44,8 @@ import app from "@/assets/app.png";
 import play from "@/assets/play.webp";
 import { LandingPopupModal } from "@/components/LandingPopupModal";
 import { MeetingPhotosShowcase } from "@/components/MeetingPhotosShowcase";
+import { DigitalProductShopSection } from "@/components/DigitalProductShopSection";
+import { WeArePartOfSection } from "@/components/WeArePartOfSection";
 
 
 
@@ -64,7 +68,7 @@ const PRICING_PLANS = [
     price: "₹0",
     period: "/mo",
     description: "Perfect for starting your mental wellness journey.",
-    features: ["300 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Therapist Listing"],
+    features: ["300 Daily AI Messages", "Basic Mood Tracking", "Community Access", "Public Counsellor Listing"],
     buttonText: "Get Started",
     portalId: "user",
     color: "bg-white",
@@ -74,19 +78,19 @@ const PRICING_PLANS = [
     price: "₹499",
     period: "/mo",
     description: "Deepen your healing with extended AI support.",
-    features: ["Unlimited AI Messages", "Advanced Mood Analytics", "Priority Therapist Booking", "Unlimited Digital Journal"],
+    features: ["Unlimited AI Messages", "Advanced Mood Analytics", "Priority Counsellor Booking", "Unlimited Digital Journal"],
     buttonText: "Upgrade Now",
     portalId: "user",
     color: "bg-teal-50 border-teal-200",
     popular: true,
   },
   {
-    name: "Therapist Pro",
+    name: "Counsellor Pro",
     price: "₹999",
     period: "/6 mo",
     description: "Manage your practice with AI-powered insights.",
-    features: ["Live Video Sessions", "AI Pre-Session Briefs", "Earnings Dashboard", "Therapist Verified Badge"],
-    buttonText: "Join as Therapist",
+    features: ["Live Video Sessions", "AI Pre-Session Briefs", "Earnings Dashboard", "Counsellor Verified Badge"],
+    buttonText: "Join as Counsellor",
     portalId: "therapist",
     color: "bg-white",
   },
@@ -108,7 +112,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "mymindtherapyfriend AI Mental Health Platform India" },
-      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and verified therapists. Private, affordable, and free to start." },
+      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and verified counsellors. Private, affordable, and free to start." },
     ],
   }),
 });
@@ -118,7 +122,7 @@ const PORTALS = [
     id: "user",
     icon: MessageCircle,
     title: "Sign in for User/Client",
-    subtitle: "For people who want to chat with Manas AI, use mental health tools, track mood, or talk to real therapists.",
+    subtitle: "For people who want to chat with Manas AI, use mental health tools, track mood, or talk to real counsellors.",
     color: "from-teal-500/10 to-teal-600/5 border-teal-200 hover:border-teal-400",
     iconBg: "bg-teal-100 text-teal-700",
     dest: "/sign-in",
@@ -126,8 +130,8 @@ const PORTALS = [
   {
     id: "therapist",
     icon: Users,
-    title: "Sign in for Therapists",
-    subtitle: "For professional therapists to manage bookings, read AI summary notes, and do video calls with clients.",
+    title: "Sign in for Counsellors",
+    subtitle: "For professional counsellors to manage bookings, read AI summary notes, and do video calls with clients.",
     color: "from-blue-500/10 to-blue-600/5 border-blue-200 hover:border-blue-400",
     iconBg: "bg-blue-100 text-blue-700",
     dest: "/sign-in",
@@ -147,15 +151,15 @@ const PORTALS = [
 const FAQ_ITEMS = [
   {
     q: "Is mymindtherapyfriend free to use?",
-    a: "Yes. mymindtherapyfriend is a free mental health app for students and everyone else, offering a free plan with 300 daily AI messages, basic mood tracking, and access to our therapist listing. Paid plans start at ₹499/month for unlimited AI support and priority therapist booking."
+    a: "Yes. mymindtherapyfriend is a free mental health app for students and everyone else, offering a free plan with 300 daily AI messages, basic mood tracking, and access to our counsellor listing. Paid plans start at ₹499/month for unlimited AI support and priority counsellor booking."
   },
   {
     q: "How does Manas AI work?",
-    a: "Manas is mymindtherapyfriend's AI mental health companion, trained in Cognitive Behavioural Therapy (CBT). It has emotion-aware conversations, suggests CBT exercises, tracks your mood patterns, and prepares an AI brief for your therapist before each session."
+    a: "Manas is mymindtherapyfriend's AI mental health companion, trained in Cognitive Behavioural Therapy (CBT). It has emotion-aware conversations, suggests CBT exercises, tracks your mood patterns, and prepares an AI brief for your counsellor before each session."
   },
   {
-    q: "Are the therapists on mymindtherapyfriend verified?",
-    a: "Yes. Every therapist on our platform is verified against (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking."
+    q: "Are the counsellors on mymindtherapyfriend verified?",
+    a: "Yes. Every counsellor on our platform is verified against (Rehabilitation Council of India) records before they are listed. You can see their credentials, specialisation, and reviews before booking."
   },
   {
     q: "Is my data private and safe?",
@@ -470,7 +474,7 @@ function MentalHealthLiveShowcase() {
             Realtime Telemetry
           </span>
           <p className="text-sm font-semibold text-slate-800">
-            Millions go through stress every day — therapists & AI help them come out of depression
+            Millions go through stress every day — counsellors & AI help them come out of depression
           </p>
         </div>
 
@@ -927,7 +931,7 @@ function Landing() {
               transition={{ delay: 0.3, duration: 0.7 }}
               className="mt-7 max-w-xl text-lg leading-relaxed text-[#333942]"
             >
-              mymindtherapyfriend is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and verified online therapist booking into one private, affordable wellness experience. Starting free.
+              mymindtherapyfriend is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and verified online counsellor booking into one private, affordable wellness experience. Starting free.
             </motion.p>
 
             <div className="mt-8 flex flex-wrap gap-4 items-center">
@@ -938,12 +942,16 @@ function Landing() {
                 Request a demo →
               </a>
 
-              <button
-                onClick={handleGetStarted}
-                className="rounded-2xl bg-[#004038] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer"
+              <a
+                href="#portals-section"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("portals-section")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="rounded-2xl bg-[#004038] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer inline-flex items-center gap-2"
               >
-                Start a free trial →
-              </button>
+                Choose Your Role →
+              </a>
             </div>
 
             <div className="mt-10 flex flex-wrap gap-6 text-sm text-slate-500">
@@ -959,7 +967,7 @@ function Landing() {
 
               <div className="flex items-center gap-2">
                 <Sparkles className="size-4 text-amber-500" />
-                Therapist Integrated
+                Counsellor Integrated
               </div>
             </div>
           </div>
@@ -989,7 +997,7 @@ function Landing() {
                 </div>
               </div>
 
-              {/* Therapist Card - Top Right */}
+              {/* Counsellor Card - Top Right */}
               <div className="absolute top-8 right-2 min-[400px]:top-14 min-[400px]:right-3 sm:top-25 sm:right-5 z-30 rounded-xl min-[400px]:rounded-2xl sm:rounded-3xl bg-[#e8c1b0] p-1.5 min-[400px]:p-2 sm:p-3 shadow-xl">
                 <div className="h-16 w-16 min-[400px]:h-24 min-[400px]:w-24 sm:h-32 sm:w-32 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
                   <img
@@ -1124,78 +1132,72 @@ function Landing() {
               ))}
             </div>
 
-            {/* <div className="relative z-10 mt-14 grid gap-5 lg:grid-cols-3">
-              {[
-                {
-                  icon: MessageCircle,
-                  title: "AI Conversations",
-                  desc: "Emotion-aware conversations that feel deeply personal and calming.",
-                },
-                {
-                  icon: Activity,
-                  title: "Mental Insights",
-                  desc: "Track mood patterns, emotional states, and wellness progress over time.",
-                },
-                {
-                  icon: Wind,
-                  title: "Calm Experiences",
-                  desc: "Breathing exercises, grounding tools, and mindful recovery support.",
-                },
-              ].map((feature, i) => (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 + i * 0.08 }}
-                  onClick={(e) => handlePortalClick(e, 'user', '/sign-in')}
-                  className="rounded-[28px] border border-teal-100 bg-white/70 p-7 shadow-sm backdrop-blur-xl cursor-pointer transition hover:border-teal-300 hover:shadow-lg"
-                >
-                  <div className="flex size-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
-                    <feature.icon className="size-6" />
+            {/* Programs Section: Career Selection Program & Counseling Training Program */}
+            <div className="relative z-10 mt-14 grid gap-6 lg:grid-cols-2">
+              {/* Portion 1: Career Selection Program */}
+              <div className="group relative overflow-hidden rounded-[32px] border border-teal-200 bg-gradient-to-br from-teal-50/90 via-white to-emerald-50/80 p-8 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-teal-400 hover:shadow-xl">
+                <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-teal-400/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
+                
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-800">
+                      <Briefcase className="size-3.5 text-teal-600" />
+                      Specialized Pathway
+                    </div>
+
+                    <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
+                      Career Selection Program
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
+                      Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.
+                    </p>
                   </div>
 
-                  <h3 className="mt-5 text-xl font-semibold text-[#012620]">{feature.title}</h3>
-
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">{feature.desc}</p>
-                </motion.div>
-              ))}
-            </div> */}
-
-            <div className="relative z-10 mt-14 rounded-[32px] border border-teal-200 bg-gradient-to-r from-teal-50 to-cyan-50 p-8 shadow-sm backdrop-blur-xl">
-              <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.25em] text-teal-700">
-                    Unified Access
-                  </p>
-
-              <h3 className="mt-3 font-display text-3xl font-bold text-[#012620]">
-                    One Login. Smart Role Detection.
-                  </h3>
-
-                  <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                    mymindtherapyfriend automatically detects your assigned role after sign-in and routes you to
-                    the right dashboard experience instantly.
-                  </p>
+                  <div className="mt-8 pt-4 border-t border-teal-100/60 flex items-center justify-between">
+                    <Link
+                      to="/careers"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
+                    >
+                      Explore Career Program →
+                    </Link>
+                  </div>
                 </div>
+              </div>
 
-                <a
-                  href="#portals-section"
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-xl transition hover:scale-[1.03]"
-                >
-                  Continue To Sign In
-                </a>
+              {/* Portion 2: Counseling Training Program */}
+              <div className="group relative overflow-hidden rounded-[32px] border border-cyan-200 bg-gradient-to-br from-cyan-50/90 via-white to-blue-50/80 p-8 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-xl">
+                <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-cyan-400/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
+                
+                <div className="relative z-10 flex flex-col justify-between h-full">
+                  <div>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-cyan-800">
+                      <GraduationCap className="size-3.5 text-cyan-600" />
+                      Professional Training
+                    </div>
+
+                    <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
+                      Counseling Training Program
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
+                      Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.
+                    </p>
+                  </div>
+
+                  <div className="mt-8 pt-4 border-t border-cyan-100/60 flex items-center justify-between">
+                    <Link
+                      to="/careers"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
+                    >
+                      Join Training Program →
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
-
-       
-
-       
-
-        {/* About Section */}
-        
 
         {/* Testimonials Section */}
         <section className="mt-24">
@@ -1223,8 +1225,8 @@ function Landing() {
                 quote: "mymindtherapyfriend helped me calm my anxiety during stressful exam weeks.",
               },
               {
-                name: "Therapist Portal User",
-                quote: "The therapist dashboard feels modern, clean, and emotionally aware.",
+                name: "Counsellor Portal User",
+                quote: "The counsellor dashboard feels modern, clean, and emotionally aware.",
               },
               {
                 name: "HR Wellness Lead",
@@ -1263,7 +1265,7 @@ function Landing() {
               { value: "24/7", label: "AI Support" },
               { value: "10+", label: "Wellness Tools" },
               { value: "100%", label: "Private Sessions" },
-              { value: "4 Roles", label: "Unified Platform" },
+              { value: "5 Roles", label: "Unified Platform" },
             ].map((stat) => (
               <div key={stat.label}>
                 <h3 className="text-4xl font-bold text-teal-600">{stat.value}</h3>
@@ -1275,84 +1277,11 @@ function Landing() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="relative mt-24 overflow-hidden rounded-[42px] bg-[#004038] px-8 py-20 text-white shadow-[0_30px_100px_rgba(15,23,42,0.35)] sm:px-12 lg:px-16">
-          <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-teal-500/20 blur-3xl" />
-          <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+        {/* Section 1: Digital Product Shop (E-Commerce Store) */}
+        <DigitalProductShopSection />
 
-          <div className="relative z-10 flex items-center justify-center">
-            <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.5fr_1fr_1fr]">
-              <a
-                href="#portals-section"
-                className="group relative overflow-hidden rounded-[32px] bg-white min-h-[260px] p-5 shadow-2xl transition hover:scale-[1.03]"
-              >
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="mb-3 flex gap-2">
-                    <div className="h-3 w-3 rounded-full bg-red-400" />
-                    <div className="h-3 w-3 rounded-full bg-yellow-400" />
-                    <div className="h-3 w-3 rounded-full bg-green-400" />
-                  </div>
-
-                  <div className="rounded-xl bg-white p-4 shadow-sm">
-                    <div className="h-24 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 p-3 flex flex-col justify-between">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold text-[#004038]">mymindtherapyfriend Dashboard</span>
-                        <div className="h-2 w-2 rounded-full bg-green-500" />
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between rounded-lg bg-white/70 px-2 py-1 text-[9px] text-slate-700">
-                          <span>Manas AI</span>
-                          <span>Online</span>
-                        </div>
-
-                        <div className="flex items-center justify-between rounded-lg bg-white/70 px-2 py-1 text-[9px] text-slate-700">
-                          <span>Mood Score</span>
-                          <span>92%</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 space-y-2">
-                      <div className="h-2 w-full rounded-full bg-slate-100" />
-                      <div className="h-2 w-4/5 rounded-full bg-slate-100" />
-                      <div className="h-2 w-2/3 rounded-full bg-slate-100" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 text-center">
-                  <h3 className="text-xl font-bold text-[#004038]">Web App</h3>
-                  <p className="text-sm text-slate-500">Available Now</p>
-                </div>
-              </a>
-
-              <a
-                href="#"
-                className="flex min-h-[260px] flex-col items-center justify-center rounded-[32px] border border-white/20 bg-white/10 p-6 backdrop-blur-xl transition hover:scale-[1.03]"
-              >
-                <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-3xl">
-                  <img src={play}/>
-                </div>
-
-                <h3 className="text-xl font-bold text-white">Google Play</h3>
-                <p className="mt-2 text-white/70">Coming Soon</p>
-              </a>
-
-              <a
-                href="#"
-                className="flex min-h-[260px] flex-col items-center justify-center rounded-[32px] border border-white/20 bg-white/10 p-6 backdrop-blur-xl transition hover:scale-[1.03]"
-              >
-                <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-3xl ">
-                  <img src={app}/>
-                </div>
-
-                <h3 className="text-xl font-bold text-white">App Store</h3>
-                <p className="mt-2 text-white/70">Coming Soon</p>
-              </a>
-            </div>
-          </div>
-        </section>
+        {/* Section 2: We Are Part Of (Network & Ecosystem) */}
+        <WeArePartOfSection />
       </main>
 
       {/* WhatsApp Community Section */}
@@ -1439,7 +1368,7 @@ function Landing() {
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Manas AI Companion</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</Link>
-              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book Verified Therapist</Link>
+              <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book Verified Counsellor</Link>
               <a href={WHATSAPP_COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 font-medium transition text-left flex items-center gap-1.5 text-emerald-700">
                 <WhatsAppIcon className="size-4" /> WhatsApp Community
               </a>

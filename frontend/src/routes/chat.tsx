@@ -269,7 +269,7 @@ function Chat() {
             <p className="mt-1 text-muted-foreground">
               {dailyLimit <= 7 
                 ? "Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day."
-                : "Come back tomorrow, or upgrade to Apna Therapist for unlimited messages."}
+                : "Come back tomorrow, or upgrade to Apna Counsellor for unlimited messages."}
             </p>
           </div>
         )}

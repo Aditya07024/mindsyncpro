@@ -107,7 +107,7 @@ const [therapists, setTherapists] = useState<TherapistData[]>([]);
     <View style={styles.container}>
       {/* Marketplace Search Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Find Your Therapist</Text>
+        <Text style={styles.title}>Find Your Counsellor</Text>
         <Text style={styles.subtitle}>Book private sessions with vetted human professionals</Text>
 
         {/* Input Bar */}

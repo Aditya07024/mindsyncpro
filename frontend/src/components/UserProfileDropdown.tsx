@@ -108,7 +108,7 @@ export function UserProfileDropdown({
       : userRole === 'org_admin'
       ? 'Org Admin'
       : userRole === 'therapist'
-      ? 'Therapist'
+      ? 'Counsellor'
       : hasAdminAccess
       ? 'Delegated Admin'
       : 'User';

@@ -513,9 +513,121 @@ const API = {
         method: "DELETE",
       }),
   },
+
+  digitalProducts: {
+    getConfig: () => apiCall<{ success: boolean; config: any }>("/api/digital-products/config"),
+    updateConfig: (data: any) =>
+      apiCall<{ success: boolean; config: any; message: string }>("/api/digital-products/config", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    list: (query?: { category?: string; search?: string }) => {
+      const params = new URLSearchParams();
+      if (query?.category) params.append("category", query.category);
+      if (query?.search) params.append("search", query.search);
+      return apiCall<{ success: boolean; products: any[] }>(`/api/digital-products?${params.toString()}`);
+    },
+    create: (data: any) =>
+      apiCall<{ success: boolean; product: any; message: string }>("/api/digital-products", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      apiCall<{ success: boolean; product: any; message: string }>(`/api/digital-products/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      apiCall<{ success: boolean; message: string }>(`/api/digital-products/${id}`, {
+        method: "DELETE",
+      }),
+  },
+
+  partners: {
+    getConfig: () => apiCall<{ success: boolean; config: any }>("/api/partners/config"),
+    updateConfig: (data: any) =>
+      apiCall<{ success: boolean; config: any; message: string }>("/api/partners/config", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    list: (query?: { category?: string; search?: string }) => {
+      const params = new URLSearchParams();
+      if (query?.category) params.append("category", query.category);
+      if (query?.search) params.append("search", query.search);
+      return apiCall<{ success: boolean; partners: any[] }>(`/api/partners?${params.toString()}`);
+    },
+    create: (data: any) =>
+      apiCall<{ success: boolean; partner: any; message: string }>("/api/partners", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      apiCall<{ success: boolean; partner: any; message: string }>(`/api/partners/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      apiCall<{ success: boolean; message: string }>(`/api/partners/${id}`, {
+        method: "DELETE",
+      }),
+  },
+
+  careerPrograms: {
+    // Career Selection
+    registerCareerSelection: (data: {
+      fullName: string;
+      country: string;
+      state: string;
+      city: string;
+      schoolOrgName: string;
+      age: number;
+      phone: string;
+    }) =>
+      apiCall<{ success: boolean; registration: any; message: string }>("/api/career-programs/career-selection/register", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getCareerSelectionStatus: () =>
+      apiCall<{ success: boolean; registration: any }>("/api/career-programs/career-selection/status"),
+    getCareerSelectionRegistrations: () =>
+      apiCall<{ success: boolean; registrations: any[] }>("/api/career-programs/career-selection/admin-registrations"),
+    updateCareerSelectionStatus: (id: string, data: { status: string; adminNotes?: string }) =>
+      apiCall<{ success: boolean; registration: any; message: string }>(`/api/career-programs/career-selection/admin-registrations/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+
+    // Counseling Training
+    getTrainingPrograms: () =>
+      apiCall<{ success: boolean; programs: any[] }>("/api/career-programs/counseling-training/programs"),
+    createTrainingProgram: (data: any) =>
+      apiCall<{ success: boolean; program: any; message: string }>("/api/career-programs/counseling-training/programs", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    enrollTrainingProgram: (data: {
+      programId: string;
+      fullName: string;
+      country: string;
+      state: string;
+      city: string;
+      orgName: string;
+      profession: string;
+      phone: string;
+    }) =>
+      apiCall<{ success: boolean; enrollment: any; message: string }>("/api/career-programs/counseling-training/enroll", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getTrainingEnrollments: () =>
+      apiCall<{ success: boolean; enrollments: any[] }>("/api/career-programs/counseling-training/admin-enrollments"),
+    updateTrainingEnrollmentStatus: (id: string, data: { status: string }) =>
+      apiCall<{ success: boolean; enrollment: any; message: string }>(`/api/career-programs/counseling-training/admin-enrollments/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+  },
 };
-
-
 
 export default API;
 

@@ -331,7 +331,7 @@ function Dashboard() {
                   <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
                     <Users className="size-5" />
                   </div>
-                  <div className="mt-3 font-display font-semibold">Find therapist</div>
+                  <div className="mt-3 font-display font-semibold">Find counsellor</div>
                   <div className="text-xs text-muted-foreground">Book a session</div>
                 </Link>
                 <Link to="/reports" className="rounded-3xl bg-card p-5 shadow-sm transition hover:shadow-md border border-border/50">

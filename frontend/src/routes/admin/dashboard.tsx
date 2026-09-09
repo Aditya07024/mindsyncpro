@@ -18,6 +18,9 @@ import { AdminConferencesTab } from './-conferences';
 import { AdminPermissionsTab } from './-permissions';
 import { AdminPopupAnnouncementTab } from './-popup-announcement';
 import { AdminMeetingPhotosTab } from './-meeting-photos';
+import { DigitalProductsAdminManager } from '@/components/DigitalProductsAdminManager';
+import { AdminPartnersManager } from '@/components/AdminPartnersManager';
+import { AdminCareerProgramsManager } from '@/components/AdminCareerProgramsManager';
 
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
@@ -28,7 +31,7 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos' | 'digital-products' | 'network-partners' | 'career-selection' | 'counseling-training'>('overview');
 
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
@@ -116,12 +119,16 @@ function SuperAdminDashboard() {
     { key: 'meeting-photos', label: 'Meeting Screenshots', allowed: Boolean(myAccess?.canManageWorkshopPopup || myAccess?.canHostMeeting || myAccess?.isFullAdmin) },
     { key: 'users', label: 'Users', allowed: Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin) },
 
-    { key: 'therapists', label: 'Therapists', allowed: Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin) },
+    { key: 'therapists', label: 'Counsellors', allowed: Boolean(myAccess?.canManageTherapists || myAccess?.isFullAdmin) },
     { key: 'organizations', label: 'Organizations', allowed: Boolean(myAccess?.canManageOrganizations || myAccess?.isFullAdmin) },
     { key: 'subscriptions', label: 'Subscriptions', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
     { key: 'plans', label: 'Subscription Plans', allowed: Boolean(myAccess?.isFullAdmin) },
     { key: 'earnings', label: 'Financial Earnings', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
     { key: 'permissions', label: 'Access Control & Delegated Roles', allowed: Boolean(myAccess?.isSuperAdmin || myAccess?.isFullAdmin) },
+    { key: 'digital-products', label: 'Digital Products Shop', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    { key: 'network-partners', label: 'Network & Ecosystem Partners', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    { key: 'career-selection', label: 'Career Selection', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    { key: 'counseling-training', label: 'Counseling Training', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
   ].filter((t) => t.allowed);
 
   // Auto-switch tab to first allowed capability if current tab is forbidden
@@ -353,7 +360,7 @@ function SuperAdminDashboard() {
               {[
                 // { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
                 { label: 'Total Users', value: 843, icon: Users, color: 'bg-sky-600' },
-                { label: 'Total Therapists', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
+                { label: 'Total Counsellors', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
                 { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600' },
                 { label: 'Active Subscriptions', value: platformStats.paidSubs, icon: TrendingUp, color: 'bg-violet-600' },
               ].map((s, i) => (
@@ -372,7 +379,7 @@ function SuperAdminDashboard() {
             {/* Secondary stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {[
-                { label: 'Therapist Verified Therapists', value: platformStats.verified, color: 'text-green-400' },
+                { label: 'Verified Counsellors', value: platformStats.verified, color: 'text-green-400' },
                 { label: 'Pending Review', value: platformStats.pending, color: 'text-amber-400' },
                 { label: 'Total Gross Revenue', value: `₹${platformStats.totalGrossRevenue.toLocaleString('en-IN')}`, color: 'text-violet-400' },
               ].map((s) => (
@@ -494,11 +501,31 @@ function SuperAdminDashboard() {
           </div>
         )}
 
+        {/* DIGITAL PRODUCTS TAB */}
+        {tab === 'digital-products' && (
+          <DigitalProductsAdminManager />
+        )}
+
+        {/* NETWORK & ECOSYSTEM PARTNERS TAB */}
+        {tab === 'network-partners' && (
+          <AdminPartnersManager />
+        )}
+
+        {/* CAREER SELECTION TAB */}
+        {tab === 'career-selection' && (
+          <AdminCareerProgramsManager activeSubTab="selection" />
+        )}
+
+        {/* COUNSELING TRAINING TAB */}
+        {tab === 'counseling-training' && (
+          <AdminCareerProgramsManager activeSubTab="training" />
+        )}
+
         {/* THERAPISTS TAB */}
         {tab === 'therapists' && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-white flex-1">Therapist Verification</h2>
+              <h2 className="text-lg font-bold text-white flex-1">Counsellor Verification</h2>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
                 <input value={search} onChange={(e) => setSearch(e.target.value)}
@@ -624,7 +651,7 @@ function SuperAdminDashboard() {
                 );
               })}
               {filteredTherapists.length === 0 && !therapistsLoading && (
-                <p className="text-slate-500 text-sm text-center py-8">No therapists found</p>
+                <p className="text-slate-500 text-sm text-center py-8">No counsellors found</p>
               )}
             </div>
           </div>

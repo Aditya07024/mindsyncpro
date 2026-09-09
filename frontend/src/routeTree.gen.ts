@@ -25,9 +25,11 @@ import { Route as Meeting_workspaceRouteImport } from './routes/meeting_workspac
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CounselingTrainingRouteImport } from './routes/counseling-training'
 import { Route as ConferencesRouteImport } from './routes/conferences'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CareersRouteImport } from './routes/careers'
+import { Route as CareerSelectionRouteImport } from './routes/career-selection'
 import { Route as BreatheRouteImport } from './routes/breathe'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
@@ -124,6 +126,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CounselingTrainingRoute = CounselingTrainingRouteImport.update({
+  id: '/counseling-training',
+  path: '/counseling-training',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConferencesRoute = ConferencesRouteImport.update({
   id: '/conferences',
   path: '/conferences',
@@ -137,6 +144,11 @@ const ChatRoute = ChatRouteImport.update({
 const CareersRoute = CareersRouteImport.update({
   id: '/careers',
   path: '/careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareerSelectionRoute = CareerSelectionRouteImport.update({
+  id: '/career-selection',
+  path: '/career-selection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BreatheRoute = BreatheRouteImport.update({
@@ -221,9 +233,11 @@ export interface FileRoutesByFullPath {
   '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
+  '/career-selection': typeof CareerSelectionRoute
   '/careers': typeof CareersRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
+  '/counseling-training': typeof CounselingTrainingRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
   '/journal': typeof JournalRoute
@@ -257,9 +271,11 @@ export interface FileRoutesByTo {
   '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
+  '/career-selection': typeof CareerSelectionRoute
   '/careers': typeof CareersRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
+  '/counseling-training': typeof CounselingTrainingRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
   '/journal': typeof JournalRoute
@@ -294,9 +310,11 @@ export interface FileRoutesById {
   '/account-deleted': typeof AccountDeletedRoute
   '/bookings': typeof BookingsRoute
   '/breathe': typeof BreatheRoute
+  '/career-selection': typeof CareerSelectionRoute
   '/careers': typeof CareersRoute
   '/chat': typeof ChatRoute
   '/conferences': typeof ConferencesRoute
+  '/counseling-training': typeof CounselingTrainingRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
   '/journal': typeof JournalRoute
@@ -332,9 +350,11 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/bookings'
     | '/breathe'
+    | '/career-selection'
     | '/careers'
     | '/chat'
     | '/conferences'
+    | '/counseling-training'
     | '/dashboard'
     | '/delete-account'
     | '/journal'
@@ -368,9 +388,11 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/bookings'
     | '/breathe'
+    | '/career-selection'
     | '/careers'
     | '/chat'
     | '/conferences'
+    | '/counseling-training'
     | '/dashboard'
     | '/delete-account'
     | '/journal'
@@ -404,9 +426,11 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/bookings'
     | '/breathe'
+    | '/career-selection'
     | '/careers'
     | '/chat'
     | '/conferences'
+    | '/counseling-training'
     | '/dashboard'
     | '/delete-account'
     | '/journal'
@@ -441,9 +465,11 @@ export interface RootRouteChildren {
   AccountDeletedRoute: typeof AccountDeletedRoute
   BookingsRoute: typeof BookingsRoute
   BreatheRoute: typeof BreatheRoute
+  CareerSelectionRoute: typeof CareerSelectionRoute
   CareersRoute: typeof CareersRoute
   ChatRoute: typeof ChatRoute
   ConferencesRoute: typeof ConferencesRoute
+  CounselingTrainingRoute: typeof CounselingTrainingRoute
   DashboardRoute: typeof DashboardRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
   JournalRoute: typeof JournalRoute
@@ -584,6 +610,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/counseling-training': {
+      id: '/counseling-training'
+      path: '/counseling-training'
+      fullPath: '/counseling-training'
+      preLoaderRoute: typeof CounselingTrainingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conferences': {
       id: '/conferences'
       path: '/conferences'
@@ -603,6 +636,13 @@ declare module '@tanstack/react-router' {
       path: '/careers'
       fullPath: '/careers'
       preLoaderRoute: typeof CareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/career-selection': {
+      id: '/career-selection'
+      path: '/career-selection'
+      fullPath: '/career-selection'
+      preLoaderRoute: typeof CareerSelectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/breathe': {
@@ -741,9 +781,11 @@ const rootRouteChildren: RootRouteChildren = {
   AccountDeletedRoute: AccountDeletedRoute,
   BookingsRoute: BookingsRoute,
   BreatheRoute: BreatheRoute,
+  CareerSelectionRoute: CareerSelectionRoute,
   CareersRoute: CareersRoute,
   ChatRoute: ChatRoute,
   ConferencesRoute: ConferencesRoute,
+  CounselingTrainingRoute: CounselingTrainingRoute,
   DashboardRoute: DashboardRoute,
   DeleteAccountRoute: DeleteAccountRoute,
   JournalRoute: JournalRoute,

@@ -254,22 +254,22 @@ function OrgDashboard() {
   const handleVerifyTherapist = async (id: string, verified: boolean) => {
     try {
       await API.org.verifyTherapist(id, { verified });
-      toast.success(verified ? 'Therapist approved' : 'Therapist rejected');
+      toast.success(verified ? 'Counsellor approved' : 'Counsellor rejected');
       refetchTherapists();
     } catch (e: any) {
-      toast.error(e.message || 'Failed to verify therapist');
+      toast.error(e.message || 'Failed to verify counsellor');
     }
   };
 
   const handleRemoveTherapist = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to remove Dr. ${name} from your organization?`)) return;
+    if (!confirm(`Are you sure you want to remove ${name} from your organization?`)) return;
     try {
       await API.org.removeTherapist(id);
-      toast.success(`Dr. ${name} removed from organization`);
+      toast.success(`${name} removed from organization`);
       refetchTherapists();
       refetchExtInvitations();
     } catch (e: any) {
-      toast.error(e.message || 'Failed to remove therapist');
+      toast.error(e.message || 'Failed to remove counsellor');
     }
   };
 
@@ -547,8 +547,13 @@ function OrgDashboard() {
             if (t === 'external-therapists' && !orgData?.allowExternalTherapists) return null;
             
             const labels: Record<string, string> = {
+              overview: 'Overview',
+              therapists: 'Counsellors',
               'external-therapists': 'Invite External',
-              'settings': 'Settings & Policy',
+              requests: 'Join Requests',
+              members: 'Members & Access',
+              subscriptions: 'Subscription',
+              settings: 'Org Settings',
             };
 
             return (
@@ -576,7 +581,7 @@ function OrgDashboard() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold text-slate-900">Subscription Required</h2>
               <p className="text-slate-600 max-w-md mx-auto text-lg leading-relaxed">
-                To access employee wellness analytics, manage therapists, and view ESG reports, your organization needs an active subscription.
+                To access employee wellness analytics, manage counsellors, and view ESG reports, your organization needs an active subscription.
               </p>
             </div>
             <div className="flex flex-col items-center gap-3">
@@ -707,10 +712,10 @@ function OrgDashboard() {
 
         {tab === 'therapists' && (
           <div className="space-y-4">
-            <h2 className="font-bold text-slate-900 text-xl mb-4">Therapists Pending Verification</h2>
+            <h2 className="font-bold text-slate-900 text-xl mb-4">Counsellors Pending Verification</h2>
             {therapistsData?.therapists?.length === 0 ? (
               <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-500">
-                No pending therapists require verification at this time.
+                No pending counsellors require verification at this time.
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
@@ -757,15 +762,15 @@ function OrgDashboard() {
         {tab === 'external-therapists' && (
           <div className="space-y-8">
             <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="font-bold text-slate-900 text-xl mb-2">Invite Independent Therapists</h2>
-              <p className="text-sm text-slate-500 mb-6">Search for therapists on the mymindtherapyfriend platform and invite them to join your organization.</p>
+              <h2 className="font-bold text-slate-900 text-xl mb-2">Invite Independent Counsellors</h2>
+              <p className="text-sm text-slate-500 mb-6">Search for counsellors on the mymindtherapyfriend platform and invite them to join your organization.</p>
               
               <div className="flex gap-3 max-w-xl">
                 <input 
                   value={extSearch}
                   onChange={(e) => setExtSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchExternalTherapists()}
-                  placeholder="Search by name, qualification, or Therapist Varification..."
+                  placeholder="Search by name, qualification, or Counsellor Verification..."
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
                 />
                 <button 
@@ -813,7 +818,7 @@ function OrgDashboard() {
                     <div key={inv._id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex items-center justify-between">
                       <div>
                         <p className="font-bold text-slate-900">
-                          {inv.therapistId?.therapistProfile?.name || inv.therapistId?.fullName || 'Therapist'}
+                          {inv.therapistId?.therapistProfile?.name || inv.therapistId?.fullName || 'Counsellor'}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
@@ -840,12 +845,12 @@ function OrgDashboard() {
                         <button 
                           onClick={() => {
                             const therapistId = inv.therapistId?._id || inv.therapistId;
-                            const therapistName = inv.therapistId?.therapistProfile?.name || inv.therapistId?.fullName || 'Therapist';
+                            const therapistName = inv.therapistId?.therapistProfile?.name || inv.therapistId?.fullName || 'Counsellor';
                             handleRemoveTherapist(therapistId, therapistName);
                           }}
                           className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1"
                         >
-                          <UserMinus className="size-3.5" /> Remove Therapist
+                          <UserMinus className="size-3.5" /> Remove Counsellor
                         </button>
                       )}
                     </div>
@@ -927,7 +932,7 @@ function OrgDashboard() {
                       <p className="font-semibold text-slate-900 text-sm flex items-center gap-2">
                         {m.name}
                         {m.role === 'therapist' ? (
-                          <span className="bg-teal-100 text-teal-800 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Therapist</span>
+                          <span className="bg-teal-100 text-teal-800 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Counsellor</span>
                         ) : (
                           <span className="bg-slate-100 text-slate-600 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Employee</span>
                         )}

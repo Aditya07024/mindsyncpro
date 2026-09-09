@@ -17,33 +17,29 @@ const PLAN_LIMITS: Record<IUser["tier"], number> = {
   apna_therapist: Number.POSITIVE_INFINITY,
 };
 
-const MANAS_SYSTEM_PROMPT = `You are Manas — a warm, caring emotional wellness companion who feels like a close friend the user can always turn to.
+const MANAS_SYSTEM_PROMPT = `You are Dr. Manas — a warm, compassionate, and experienced emotional wellness counsellor and therapist.
 
-Your personality:
-- You speak like a thoughtful, empathetic friend — not a robot or a textbook.
-- You use natural, conversational language. Say "I hear you" instead of "I acknowledge your feelings."
-- You show genuine warmth. Use phrases like "That sounds really tough," "I'm glad you shared that with me," "It makes total sense that you'd feel that way."
-- You remember what users have told you before and bring it up naturally. For example: "Last time you mentioned things were tough with your mom — how's that been going?"
-- You mirror the user's energy — if they're casual, be casual. If they're serious, match their depth.
-- You're okay with silence and short answers. You don't over-explain or lecture.
-- You occasionally share gentle observations, not prescriptions.
+Your clinical & communication style:
+- You speak with the gentle authority, deep empathy, and attentive presence of a professional therapist.
+- You provide a safe, non-judgmental space where the user feels truly heard, validated, and held.
+- Use empathetic therapeutic reflection. For example: "It sounds like you're carrying a heavy weight right now," "I can hear how exhausting and overwhelming this has been for you."
+- Validate complex emotions gracefully — normalize that feeling overwhelmed, grieved, anxious, or stuck is a natural human experience.
+- Seamlessly weave together past context the user has shared (work stress, relationships, life events) to help them connect patterns.
+- Gently offer therapeutic reframing or grounding insights without pushing unsolicited advice or bulleted lists.
+- Maintain a calm, reassuring, and present tone.
 
-How you respond:
-1. First, reflect back what you heard — show you truly listened.
-2. Validate their feelings without judgment. Make them feel seen.
-3. If appropriate, gently connect what they're saying to patterns you've noticed from previous chats.
-4. Offer one small, practical thought or reframe — never a list of 5 tips.
-5. End with a warm, open-ended question that invites them to go deeper — not a generic "How does that make you feel?"
+How you structure your response:
+1. Reflect & Validate: Acknowledge what the user shared with deep warmth and validation.
+2. Connect & Reframe: Offer a thoughtful therapeutic observation connecting their current feelings or past context.
+3. Open Invitation: End with a gentle, open therapeutic question that invites reflection and self-discovery.
 
 Rules:
-- Keep responses concise (3-5 sentences usually). Don't write essays.
-- Never sound clinical, robotic, or formulaic. Vary your phrasing every time.
-- Never start with "I understand" or "It sounds like" every single time — mix it up.
-- Never use bullet points or numbered lists in your replies to the user.
-- If you have context from past conversations, weave it in naturally — don't announce "Based on our previous conversation..."
-- Never claim to be a licensed therapist or diagnose conditions.
-- If the user seems in severe distress or mentions self-harm, gently suggest the crisis helpline: 14416 / 1800891446.
-- Always address the user by their first name when you know it — it makes the conversation feel personal.`;
+- Keep responses concise yet meaningful (3-5 well-crafted sentences).
+- Never sound robotic, formulaic, or detached.
+- Never write meta-commentary, internal thoughts, or analysis of your instructions in your output.
+- Never use bullet points or numbered lists in your responses to the user.
+- If the user mentions crisis or self-harm, prioritize safety and gently provide crisis helpline numbers: 14416 / 1800891446.
+- Always address the user by their first name naturally when known.`;
 
 
 export class AIService {
@@ -366,32 +362,50 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     const hfToken = process.env.HF_TOKEN;
 
     const baseUrl = `${process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1"}/chat/completions`;
-    const model = process.env.NVIDIA_MODEL || "meta/llama-3.1-8b-instruct";
+    const model = process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b";
 
     // Helper to attempt NVIDIA non-streaming query
     const tryNvidia = async (modelName: string): Promise<string | null> => {
       if (!nvidiaKey) return null;
       try {
+        const isReasoningModel = modelName.includes("nemotron") || modelName.includes("reasoning") || modelName.includes("thinking");
+        const payload: any = {
+          model: modelName,
+          messages,
+          max_tokens: 2048,
+          temperature: 0.2,
+          top_p: 0.95,
+          stream: false,
+        };
+
+        if (isReasoningModel) {
+          payload.chat_template_kwargs = { enable_thinking: false };
+        }
+
         const response = await this.fetchWithTimeout(baseUrl, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${nvidiaKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            model: modelName,
-            messages,
-            max_tokens: 1024,
-            temperature: 0.2,
-            top_p: 0.7,
-            stream: false,
-          }),
-        }, 30000);
+          body: JSON.stringify(payload),
+        }, 45000);
 
         if (response.ok) {
           const data = await response.json() as any;
-          const text = data.choices?.[0]?.message?.content?.trim();
+          const choice = data.choices?.[0]?.message;
+          let text = choice?.content?.trim() || choice?.reasoning_content?.trim() || "";
+          
+          // Strip internal LLM thinking scratchpad if present
+          if (text.includes("</think>")) {
+            text = text.split("</think>").pop()?.trim() || "";
+          }
+          text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
           if (text) return text;
+        } else {
+          const errBody = await response.text().catch(() => "");
+          console.warn(`NVIDIA queryHF [${modelName}] returned status ${response.status}: ${errBody.slice(0, 100)}`);
         }
       } catch (err) {
         console.warn(`NVIDIA queryHF [${modelName}] failed:`, (err as Error).message);
@@ -405,10 +419,6 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
 
     // 2. Retry once
     result = await tryNvidia(model);
-    if (result) return result;
-
-    // 3. Try secondary NVIDIA 70B model
-    result = await tryNvidia("meta/llama-3.1-70b-instruct");
     if (result) return result;
 
     // 4. Last resort: HuggingFace
@@ -451,12 +461,26 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     let response: Response | null = null;
 
     const baseUrl = `${process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1"}/chat/completions`;
-    const primaryModel = process.env.NVIDIA_MODEL || "meta/llama-3.1-8b-instruct";
+    const primaryModel = process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b";
 
     // Helper to attempt NVIDIA streaming
     const tryNvidia = async (model: string, timeoutMs: number): Promise<Response | null> => {
       if (!nvidiaKey) return null;
       try {
+        const isReasoningModel = model.includes("nemotron") || model.includes("reasoning") || model.includes("thinking");
+        const payload: any = {
+          model,
+          messages,
+          max_tokens: 2048,
+          temperature: 0.7,
+          top_p: 0.95,
+          stream: true,
+        };
+
+        if (isReasoningModel) {
+          payload.chat_template_kwargs = { enable_thinking: false };
+        }
+
         const res = await this.fetchWithTimeout(baseUrl, {
           method: "POST",
           headers: {
@@ -464,14 +488,7 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
             "Content-Type": "application/json",
             "Accept": "text/event-stream",
           },
-          body: JSON.stringify({
-            model,
-            messages,
-            max_tokens: 1024,
-            temperature: 0.2,
-            top_p: 0.7,
-            stream: true,
-          }),
+          body: JSON.stringify(payload),
         }, timeoutMs) as any;
 
         if (res && res.ok) return res;
@@ -485,19 +502,13 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
       return null;
     };
 
-    // 1. Try primary NVIDIA model with 30s timeout
-    response = await tryNvidia(primaryModel, 30000);
+    // 1. Try primary NVIDIA model with 60s timeout
+    response = await tryNvidia(primaryModel, 60000);
 
     // 2. Retry primary model once on failure (transient timeouts)
     if (!response) {
       console.log("Retrying NVIDIA primary model...");
-      response = await tryNvidia(primaryModel, 30000);
-    }
-
-    // 3. Try secondary NVIDIA 70B model
-    if (!response) {
-      console.log("Trying NVIDIA fallback model meta/llama-3.1-70b-instruct...");
-      response = await tryNvidia("meta/llama-3.1-70b-instruct", 30000);
+      response = await tryNvidia(primaryModel, 60000);
     }
 
     // 4. Last resort: HuggingFace (may be quota-limited)
@@ -539,6 +550,8 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     const reader = (response.body as any).getReader();
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
+    let seenThinkEnd = false;
+    let thinkBuffer = "";
 
     try {
       while (true) {
@@ -558,7 +571,23 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
             try {
               const data = JSON.parse(trimmed.slice(6));
               const text = data.choices?.[0]?.delta?.content;
-              if (text) {
+              if (!text) continue;
+
+              // Filter out internal thinking scratchpad before </think>
+              if (!seenThinkEnd) {
+                thinkBuffer += text;
+                if (thinkBuffer.includes("</think>")) {
+                  seenThinkEnd = true;
+                  const actualText = thinkBuffer.split("</think>").pop() || "";
+                  if (actualText) yield actualText;
+                  thinkBuffer = "";
+                } else if (!thinkBuffer.includes("<think>") && !thinkBuffer.toLowerCase().includes("user is") && thinkBuffer.length > 80) {
+                  // Standard response without thinking header
+                  seenThinkEnd = true;
+                  yield thinkBuffer;
+                  thinkBuffer = "";
+                }
+              } else {
                 yield text;
               }
             } catch (e) {
@@ -566,6 +595,12 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
             }
           }
         }
+      }
+
+      // Flush remaining buffer if no </think> tag was found
+      if (!seenThinkEnd && thinkBuffer) {
+        const cleaned = thinkBuffer.includes("</think>") ? thinkBuffer.split("</think>").pop() || "" : thinkBuffer;
+        if (cleaned) yield cleaned;
       }
     } finally {
       reader.releaseLock();
@@ -753,18 +788,18 @@ Format: [{"category": "goal" | "concern" | "relationship" | "trigger" | "event",
     const chatSummaries = conversations.map(c => `- Chat Session Summary: ${c.summary || "N/A"}`).join("\n");
 
     const systemPrompt = `You are a clinical psychologist and emotional counselor writing a weekly wellness report analysis.
-Your analysis must look professional, warm, empathetic, and clinical — as if it was written by the user's personal therapist, Dr. Manas, after reviewing their logs.
+Your analysis must look professional, warm, empathetic, and clinical — as if it was written by the user's personal counsellor, Dr. Manas, after reviewing their logs.
 
 Guidelines:
-1. Address the user directly as their therapist (e.g. "Dear ${userName}", or speaking directly in second person "you/your").
+1. Address the user directly as their counsellor (e.g. "Dear ${userName}", or speaking directly in second person "you/your").
 2. Reflect on their week based on the mood logs, journal entries, and chats provided.
 3. Call out specific patterns, breakthroughs, or areas of concern. Be compassionate but clinical.
 4. Structurally, write:
    - A warm opening greeting.
    - Clinical observations on their emotional state, mood patterns, and journaling.
    - Recommended focus areas or reflections.
-   - **Crucial**: Strongly encourage the user to book a 1-on-1 therapist consultation session on the platform to explore these areas deeper and receive personalized guidance. Make booking a therapist feel like a natural, positive next step for their healing journey.
-5. Keep the total length around 200 to 250 words. Do not use robotic markdown tables or long bullet lists. Keep it structured like a therapist's clinical note or letter.`;
+   - **Crucial**: Strongly encourage the user to book a 1-on-1 counsellor consultation session on the platform to explore these areas deeper and receive personalized guidance. Make booking a counsellor feel like a natural, positive next step for their healing journey.
+5. Keep the total length around 200 to 250 words. Do not use robotic markdown tables or long bullet lists. Keep it structured like a counsellor's clinical note or letter.`;
 
     const userPrompt = `Here is the user's emotional activity for the week (${startDate.toLocaleDateString("en-IN")} to ${endDate.toLocaleDateString("en-IN")}):
 Average Mood Score: ${avgMood}/10
@@ -778,7 +813,7 @@ ${journalDetails || "No journals during this period."}
 AI Chat Sessions:
 ${chatSummaries || "No chat sessions during this period."}
 
-Please generate the therapist report analysis.`;
+Please generate the counsellor report analysis.`;
 
     return await this.queryHF([
       { role: "system", content: systemPrompt },

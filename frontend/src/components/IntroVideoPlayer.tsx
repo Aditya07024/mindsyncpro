@@ -63,7 +63,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
       <div className={`relative w-full h-full bg-black overflow-hidden ${className}`}>
         <iframe
           src={`${parsed.embedUrl}?${embedParams}`}
-          title="Therapist Intro Video"
+          title="Counsellor Intro Video"
           className={`w-full h-full border-0 ${isCard ? "pointer-events-none" : ""}`}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
@@ -78,7 +78,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
       <div className={`relative w-full h-full bg-black overflow-hidden group ${className}`}>
         <iframe
           src={parsed.embedUrl}
-          title="Therapist Intro Video (Google Drive)"
+          title="Counsellor Intro Video (Google Drive)"
           className={`w-full h-full border-0 ${isCard ? "pointer-events-none" : ""}`}
           allow="autoplay; fullscreen"
           allowFullScreen
@@ -105,7 +105,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
       <div className={`relative w-full h-full bg-black overflow-hidden ${className}`}>
         <iframe
           src={parsed.embedUrl}
-          title="Therapist Intro Video (Loom)"
+          title="Counsellor Intro Video (Loom)"
           className={`w-full h-full border-0 ${isCard ? "pointer-events-none" : ""}`}
           allow="autoplay; fullscreen"
           allowFullScreen
@@ -124,7 +124,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
       <div className={`relative w-full h-full bg-black overflow-hidden ${className}`}>
         <iframe
           src={`${parsed.embedUrl}?${embedParams}`}
-          title="Therapist Intro Video (Vimeo)"
+          title="Counsellor Intro Video (Vimeo)"
           className={`w-full h-full border-0 ${isCard ? "pointer-events-none" : ""}`}
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen

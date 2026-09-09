@@ -172,7 +172,7 @@ function MyBookings() {
             <p className="font-display text-lg font-semibold text-primary-deep">No sessions yet</p>
             <p className="text-sm text-muted-foreground">Book your first therapy session</p>
             <Link to="/therapists">
-              <Button className="rounded-xl mt-2">Find a Therapist</Button>
+              <Button className="rounded-xl mt-2">Find a Counsellor</Button>
             </Link>
           </div>
         )}

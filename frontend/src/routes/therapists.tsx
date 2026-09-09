@@ -57,7 +57,7 @@ function TherapistMarketplace() {
     mutationFn: () => API.therapist.recommend(),
     onSuccess: (data) => {
       setRecommendedMatches(data.recommendations);
-      toast.success("We found matching therapists for you!");
+      toast.success("We found matching counsellors for you!");
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to get recommendations");
@@ -137,7 +137,7 @@ function TherapistMarketplace() {
           className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-sm shadow-sm"
         >
           <div className="max-w-6xl mx-auto px-4 py-6">
-            <h1 className="text-3xl font-bold text-slate-900 mb-6">Find a Therapist</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-6">Find a Counsellor</h1>
 
             {/* Search Bar */}
             <div className="flex gap-2 mb-4">
@@ -271,7 +271,7 @@ function TherapistMarketplace() {
           </div>
         </motion.div>
 
-        {/* Therapist Grid */}
+        {/* Counsellor Grid */}
         <div className="max-w-6xl mx-auto px-4 py-8">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -281,11 +281,11 @@ function TherapistMarketplace() {
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-red-600">Failed to load therapists</p>
+              <p className="text-red-600">Failed to load counsellors</p>
             </div>
           ) : filteredTherapists.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-slate-500 text-lg">No therapists found matching your criteria</p>
+              <p className="text-slate-500 text-lg">No counsellors found matching your criteria</p>
             </div>
           ) : (
             <motion.div
@@ -319,7 +319,7 @@ function TherapistMarketplace() {
                         <h3 className="font-bold text-lg text-slate-900">{therapist.name}</h3>
                         {therapist.verified && (
                           <span className="inline-block mt-1 text-xs font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            ✓ Therapist Verified
+                            ✓ Counsellor Verified
                           </span>
                         )}
                       </div>
@@ -430,7 +430,7 @@ function TherapistMarketplace() {
                     <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                       {selectedTherapist.verified && (
                         <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
-                          ✓ Therapist Verified
+                          ✓ Counsellor Verified
                         </span>
                       )}
                       <div className="flex items-center gap-1 font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">

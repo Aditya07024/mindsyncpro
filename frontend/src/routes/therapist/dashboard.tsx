@@ -407,7 +407,7 @@ function TherapistDashboard() {
           <p className="text-slate-500 font-medium leading-relaxed mb-8">
             {verificationStatus === 'pending' 
               ? "We are currently reviewing your documents and video introduction. You'll be notified as soon as you're approved to start taking sessions."
-              : "To maintain a high quality of care, all therapists must be verified before they can start working. Please fill out the verification form to begin."}
+              : "To maintain a high quality of care, all counsellors must be verified before they can start working. Please fill out the verification form to begin."}
           </p>
           
           <div className="space-y-3">
@@ -436,14 +436,14 @@ function TherapistDashboard() {
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white font-bold text-xl shadow-md">
-              {profile?.name?.charAt(0) ?? 'T'}
+              {profile?.name?.charAt(0) ?? 'C'}
             </div>
             <div>
-              <p className="font-display font-bold text-lg text-slate-900 tracking-tight">{profile?.name ?? 'Therapist'}</p>
+              <p className="font-display font-bold text-lg text-slate-900 tracking-tight">{profile?.name ?? 'Counsellor'}</p>
               <div className="flex items-center gap-2">
                 <Star className="size-3 text-amber-400 fill-amber-400" />
                 <span className="text-xs text-slate-500">{profile?.rating?.toFixed(1) ?? '–'} · {stats?.completedSessions ?? 0} sessions</span>
-                {profile?.verified && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">Therapist ✓</span>}
+                {profile?.verified && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">Counsellor ✓</span>}
               </div>
             </div>
           </div>
@@ -504,7 +504,7 @@ function TherapistDashboard() {
             <p className="text-amber-700 max-w-md mx-auto font-medium">
               {isOrgLinked 
                 ? "Your organization's subscription is currently inactive. Please contact your organization administrator to restore access."
-                : "As an independent therapist, you need an active subscription to access your schedule, bookings, and profile."}
+                : "As an independent counsellor, you need an active subscription to access your schedule, bookings, and profile."}
             </p>
             {!isOrgLinked && (
               <Button onClick={() => setTab('subscription')} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl">

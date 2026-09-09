@@ -21,7 +21,7 @@ export const Route = createFileRoute("/sign-in")({ component: SignInPage });
 
 const PORTAL_NAMES: Record<string, string> = {
   user: "I am a user/Client",
-  therapist: "I am a Therapist",
+  therapist: "I am a Counsellor",
   org_admin: "Organisation Admin",
   super_admin: "Super Admin",
 };
@@ -33,7 +33,7 @@ const TESTIMONIALS = [
     role: "Verified User",
   },
   {
-    quote: "The platform connects me with verified therapists seamlessly while keeping everything private and confidential.",
+    quote: "The platform connects me with verified counsellors seamlessly while keeping everything private and confidential.",
     author: "Rahul M.",
     role: "Patient",
   },

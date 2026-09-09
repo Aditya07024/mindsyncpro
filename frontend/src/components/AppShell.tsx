@@ -12,7 +12,7 @@ import logoUrl from '@/assets/logo.png';
 const tabs = [
   { to: '/dashboard', icon: Home, label: 'Home' },
   { to: '/chat', icon: MessageCircle, label: 'Manas' },
-  { to: '/therapists', icon: Users, label: 'Therapists' },
+  { to: '/therapists', icon: Users, label: 'Counsellors' },
   { to: '/bookings', icon: CalendarCheck, label: 'Bookings' },
   { to: '/mood', icon: Heart, label: 'Mood' },
 ] as const;
