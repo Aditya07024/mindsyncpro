@@ -11,6 +11,16 @@ export const Route = createFileRoute("/career-selection")({
   component: CareerSelectionPage,
 });
 
+const COUNSELING_TYPES = [
+  "Clinical Psychology & Psychotherapy",
+  "Child & Adolescent Counseling",
+  "School & College Student Guidance",
+  "CBT & Behavioral Therapy Specialization",
+  "Corporate Wellness & Organizational Psychology",
+  "Marriage & Relationship Counseling",
+  "General Counseling Career Assessment",
+];
+
 function CareerSelectionPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const queryClient = useQueryClient();
@@ -25,6 +35,8 @@ function CareerSelectionPage() {
     schoolOrgName: "",
     age: 21,
     phone: "",
+    counselingType: COUNSELING_TYPES[0],
+    preferredGoals: "",
   });
 
   const { data: statusData, isLoading: isStatusLoading } = useQuery({
@@ -59,13 +71,13 @@ function CareerSelectionPage() {
             <div className="relative z-10 max-w-2xl space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-teal-200 backdrop-blur-md">
                 <Briefcase className="size-4 text-teal-300" />
-                Specialized Career Guidance
+                Specialized Career Guidance & Mentorship
               </div>
               <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-white">
                 Career Selection Program
               </h1>
               <p className="text-teal-100/90 text-sm sm:text-base leading-relaxed">
-                Discover your ideal counseling specialization, assess your psychological competencies, and receive expert mentorship to build a flourishing counseling career.
+                Guidance and specialized tools for mental health aspirants, college students, and professionals to choose, build, and excel in their ideal counseling career path.
               </p>
             </div>
             <div className="absolute -bottom-16 -right-16 size-72 rounded-full bg-white/10 blur-3xl" />
@@ -82,7 +94,7 @@ function CareerSelectionPage() {
               </div>
               <h2 className="text-2xl font-bold text-slate-900">Sign In Required</h2>
               <p className="text-sm text-slate-600">
-                Please sign in to register for the Career Selection Program and access your personalized career assessment portal.
+                First, please sign in to register for the Career Selection Program, select your preferred counseling domain, and get matched with a therapist or senior counselor for a 1-on-1 meeting.
               </p>
               <div className="pt-2">
                 <SignInButton mode="modal">
@@ -93,25 +105,74 @@ function CareerSelectionPage() {
               </div>
             </div>
           ) : registration && registration.status === "approved" ? (
-            /* APPROVED VIEW: Career Selection Program Dashboard */
+            /* APPROVED VIEW: Scheduled Counselor Meeting & Dashboard */
             <div className="space-y-8">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 flex items-center gap-4">
-                <CheckCircle2 className="size-8 text-emerald-600 shrink-0" />
-                <div>
-                  <h3 className="font-bold text-emerald-900 text-lg">Application Approved!</h3>
-                  <p className="text-xs text-emerald-700">Welcome to your Career Selection Program Dashboard. Your personalized career roadmaps and assessment tools are unlocked below.</p>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 border border-emerald-200">
+                    <CheckCircle2 className="size-4 text-emerald-600" /> Application Approved
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-2xl">Your 1-on-1 Counselor Meeting is Scheduled!</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
+                    An admin has reviewed your career guidance application for <strong>{registration.counselingType || "Counseling Guidance"}</strong> and paired you with an expert therapist/counselor.
+                  </p>
                 </div>
+
+                {registration.meetingLink && (
+                  <a
+                    href={registration.meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 rounded-2xl bg-[#004038] px-6 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-[#002f29] transition flex items-center gap-2"
+                  >
+                    Join Video Meeting <ArrowRight className="size-4" />
+                  </a>
+                )}
               </div>
 
-              {/* Career Selection Program Dashboard Grid */}
+              {/* Scheduled Session Card Details */}
+              <div className="bg-white rounded-3xl p-7 border border-teal-100 shadow-md space-y-6">
+                <div className="border-b border-slate-100 pb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-100">
+                    Meeting Confirmation Details
+                  </span>
+                  <h4 className="font-bold text-slate-900 text-xl mt-1">1-on-1 Career Mentorship Session</h4>
+                </div>
+
+                <div className="grid gap-6 sm:grid-cols-3">
+                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-1">
+                    <span className="text-xs text-slate-400 font-semibold block">Assigned Counselor / Therapist</span>
+                    <p className="text-sm font-bold text-slate-900">{registration.assignedCounselor || "Senior Clinical Counselor"}</p>
+                  </div>
+
+                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-1">
+                    <span className="text-xs text-slate-400 font-semibold block">Scheduled Date & Time</span>
+                    <p className="text-sm font-bold text-teal-700">{registration.meetingDate || "Pending Schedule Confirmation"}</p>
+                  </div>
+
+                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-1">
+                    <span className="text-xs text-slate-400 font-semibold block">Counseling Specialization</span>
+                    <p className="text-sm font-bold text-slate-900">{registration.counselingType || "Clinical Psychology"}</p>
+                  </div>
+                </div>
+
+                {registration.adminNotes && (
+                  <div className="bg-cyan-50/60 border border-cyan-100 p-4 rounded-2xl text-xs text-cyan-900 space-y-1">
+                    <strong className="font-bold">Message from Admin / Mentor:</strong>
+                    <p>{registration.adminNotes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Career Assessment Tools Grid */}
               <div className="grid gap-6 md:grid-cols-3">
                 <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
                   <div className="size-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
                     <Sparkles className="size-6" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-lg">Psychological Assessment</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">Evaluate your core counseling strengths, active listening aptitude, and ideal therapy domain fit.</p>
-                  <button className="w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 text-xs shadow transition">Start Assessment</button>
+                  <h3 className="font-bold text-slate-900 text-lg">Psychological Aptitude Test</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">Evaluate your core counseling strengths, active listening aptitude, and therapy domain fit.</p>
+                  <button className="w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 text-xs shadow transition cursor-pointer">Start Assessment</button>
                 </div>
 
                 <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
@@ -120,16 +181,16 @@ function CareerSelectionPage() {
                   </div>
                   <h3 className="font-bold text-slate-900 text-lg">Career Pathway Map</h3>
                   <p className="text-xs text-slate-600 leading-relaxed">Detailed breakdown of Clinical Psychology, School Counseling, Organizational Wellness, and CBT practice.</p>
-                  <button className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 text-xs shadow transition">Explore Pathways</button>
+                  <button className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 text-xs shadow transition cursor-pointer">Explore Pathways</button>
                 </div>
 
                 <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
                   <div className="size-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
                     <Award className="size-6" />
                   </div>
-                  <h3 className="font-bold text-slate-900 text-lg">Mentorship Session</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">Book a 1-on-1 career guidance session with a senior licensed supervisor.</p>
-                  <button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 text-xs shadow transition">Schedule Mentorship</button>
+                  <h3 className="font-bold text-slate-900 text-lg">1-on-1 Guidance Session</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">Review session notes and follow-up recommendations with your assigned therapist.</p>
+                  <button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 text-xs shadow transition cursor-pointer">View Session Notes</button>
                 </div>
               </div>
             </div>
@@ -139,20 +200,20 @@ function CareerSelectionPage() {
               <div className="size-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
                 <Clock className="size-8 animate-spin" />
               </div>
-              <h2 className="text-2xl font-bold text-amber-900">Registration Under Review</h2>
+              <h2 className="text-2xl font-bold text-amber-900">Application Under Review</h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Thank you, <strong>{registration.fullName}</strong>! Your application for <strong>{registration.schoolOrgName}</strong> has been received. Our career counseling team is reviewing your profile and will connect with you within 24 hours.
+                Thank you, <strong>{registration.fullName}</strong>! Your application for <strong>{registration.counselingType || "Career Selection"}</strong> has been received. Our team is reviewing your profile and will assign a counselor/therapist for your 1-on-1 meeting within 24 hours.
               </p>
               <div className="bg-slate-50 p-4 rounded-2xl text-xs text-slate-500 font-medium">
-                Status: Pending Admin Approval • Phone: {registration.phone}
+                Status: Pending Admin Approval & Meeting Schedule • Phone: {registration.phone}
               </div>
             </div>
           ) : (
             /* REGISTRATION FORM VIEW */
             <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl max-w-2xl mx-auto space-y-8">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Career Selection Registration</h2>
-                <p className="text-xs text-slate-500 mt-1">Please fill in your details to apply for personalized career selection mentorship.</p>
+                <h2 className="text-2xl font-bold text-slate-900">Career Selection Application</h2>
+                <p className="text-xs text-slate-500 mt-1">Fill out the details below to choose the counseling domain you wish to explore and schedule a meeting with a therapist or senior counselor.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5 text-sm">
@@ -169,7 +230,36 @@ function CareerSelectionPage() {
                   />
                 </div>
 
-                {/* 2. Country, State, City */}
+                {/* 2. Type of Counseling Desired */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">2. What Type of Counseling / Specialization Do You Want to Pursue?</label>
+                  <select
+                    value={form.counselingType}
+                    onChange={(e) => setForm({ ...form, counselingType: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition font-medium"
+                  >
+                    {COUNSELING_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 3. College / Institution / Org Name */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">3. College / Institution / Organization Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.schoolOrgName}
+                    onChange={(e) => setForm({ ...form, schoolOrgName: e.target.value })}
+                    placeholder="Enter your college or organization name"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition"
+                  />
+                </div>
+
+                {/* 4. Country, State, City */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country</label>
@@ -205,23 +295,10 @@ function CareerSelectionPage() {
                   </div>
                 </div>
 
-                {/* 3. School / Organization Name */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">3. School / Organization Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={form.schoolOrgName}
-                    onChange={(e) => setForm({ ...form, schoolOrgName: e.target.value })}
-                    placeholder="Enter your school, college, or company name"
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition"
-                  />
-                </div>
-
-                {/* 4. Age and Phone No */}
+                {/* 5. Age and Phone No */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">4. Age</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">5. Age</label>
                     <input
                       type="number"
                       required
@@ -233,7 +310,7 @@ function CareerSelectionPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">5. Phone Number</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">6. Contact Phone Number</label>
                     <input
                       type="tel"
                       required
@@ -245,13 +322,25 @@ function CareerSelectionPage() {
                   </div>
                 </div>
 
+                {/* 6. Career Goals / Specific Questions */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">7. Career Aspirations & Questions for Your Counselor</label>
+                  <textarea
+                    rows={3}
+                    value={form.preferredGoals}
+                    onChange={(e) => setForm({ ...form, preferredGoals: e.target.value })}
+                    placeholder="Briefly state your career background, target guidance topics, or questions for your therapist/counselor..."
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition"
+                  />
+                </div>
+
                 <div className="pt-4">
                   <button
                     type="submit"
                     disabled={registerMutation.isPending}
                     className="w-full rounded-2xl bg-[#004038] py-4 text-base font-bold text-white shadow-xl hover:bg-[#002f29] transition cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Register for Career Selection Program <ArrowRight className="size-5" />
+                    Submit Application for Career Selection <ArrowRight className="size-5" />
                   </button>
                 </div>
               </form>
@@ -282,14 +371,14 @@ function CareerSelectionPage() {
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-bold text-2xl text-slate-900">Registration Successful!</h3>
+                <h3 className="font-bold text-2xl text-slate-900">Application Submitted!</h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Our Career Selection Team will connect with you within <strong>24 hours</strong> on your registered phone number.
+                  Our team will review your requested counseling domain and match you with a therapist/counselor for a 1-on-1 meeting within <strong>24 hours</strong>.
                 </p>
               </div>
 
               <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 text-xs text-teal-800 font-medium">
-                Application Status: <strong>Pending Admin Review</strong>
+                Application Status: <strong>Pending Admin Review & Meeting Schedule</strong>
               </div>
 
               <button

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { useAuth, useClerk } from '@clerk/clerk-react';
+import { useAuth, useClerk, SignInButton } from '@clerk/clerk-react';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';
@@ -17,7 +17,7 @@ const tabs = [
   { to: '/mood', icon: Heart, label: 'Mood' },
 ] as const;
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, requireAuth = true }: { children: React.ReactNode; requireAuth?: boolean }) {
   const loc = useLocation();
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
@@ -85,15 +85,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Not signed in — redirect to sign-in
-  if (!isSignedIn) {
+  // Not signed in — redirect to sign-in only if requireAuth is true
+  if (requireAuth && !isSignedIn) {
     navigate({ to: '/sign-in', replace: true });
     return null;
   }
 
-  // Auth preflight still checking or account is invalid — show loading spinner
-  // This prevents child routes from mounting and firing their own 401 queries
-  if (authStatus !== 'ok') {
+  // Auth preflight still checking or account is invalid — show loading spinner if signed in
+  if (isSignedIn && authStatus !== 'ok') {
     return (
       <div className="min-h-screen bg-canvas-gradient flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -115,14 +114,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="font-display text-lg font-bold text-primary-deep">mymindtherapyfriend</span>
           </Link>
           <div className="flex items-center gap-4">
-            {/* <Link to="/wallet" className="flex items-center gap-1 text-xs font-semibold text-slate-800 hover:text-primary transition bg-secondary/80 border border-border px-2.5 py-1 rounded-full">
-              <Wallet className="size-3.5 text-accent" />
-              <span>₹{walletData?.walletBalance !== undefined ? walletData.walletBalance.toFixed(2) : "0.00"}</span>
-            </Link> */}
             <Link to="/subscription" className="text-xs font-semibold text-primary/80 hover:text-primary transition">
               Upgrade
             </Link>
-            <UserProfileDropdown />
+            {isSignedIn ? (
+              <UserProfileDropdown />
+            ) : (
+              <SignInButton mode="modal">
+                <button className="rounded-full bg-primary-deep text-white px-4 py-1.5 text-xs font-bold shadow hover:bg-primary-deep/90 transition cursor-pointer">
+                  Sign In
+                </button>
+              </SignInButton>
+            )}
           </div>
         </div>
       </header>

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, Briefcase, GraduationCap, ArrowRight } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useUser } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
@@ -341,6 +341,72 @@ function Dashboard() {
                   <div className="mt-3 font-display font-semibold">Wellness Reports</div>
                   <div className="text-xs text-muted-foreground">Download & Share</div>
                 </Link>
+              </div>
+            </div>
+
+            {/* Specialized Pathways & Career Programs Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display font-bold text-lg text-primary-deep">Specialized Pathways & Programs</h2>
+                <span className="text-[11px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-100">
+                  Career & Certification
+                </span>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Portion 1: Career Selection Program */}
+                <div className="group relative overflow-hidden rounded-3xl border border-teal-200 bg-gradient-to-br from-teal-50/90 via-white to-emerald-50/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:border-teal-300 flex flex-col justify-between">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-100/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-800">
+                      <Briefcase className="size-3 text-teal-600" />
+                      Specialized Pathway
+                    </div>
+
+                    <h3 className="mt-3 font-display text-base font-bold text-[#012620]">
+                      Career Selection Program
+                    </h3>
+
+                    <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+                      Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-teal-100/60 flex items-center justify-between">
+                    <Link
+                      to="/career-selection"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#004038] px-4 py-2 text-xs font-semibold text-white shadow transition hover:bg-[#002f29] cursor-pointer"
+                    >
+                      Explore Career Program →
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Portion 2: Counseling Training Program */}
+                <div className="group relative overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-cyan-50/90 via-white to-blue-50/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:border-cyan-300 flex flex-col justify-between">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-100/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-800">
+                      <GraduationCap className="size-3 text-cyan-600" />
+                      Clinical Certification
+                    </div>
+
+                    <h3 className="mt-3 font-display text-base font-bold text-[#012620]">
+                      Counseling Training Program
+                    </h3>
+
+                    <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
+                      Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.
+                    </p>
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-cyan-100/60 flex items-center justify-between">
+                    <Link
+                      to="/counseling-training"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#004038] px-4 py-2 text-xs font-semibold text-white shadow transition hover:bg-[#002f29] cursor-pointer"
+                    >
+                      Join Training Program →
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
 

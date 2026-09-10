@@ -5,7 +5,10 @@ import {
   getCareerSelectionRegistrations,
   updateCareerSelectionStatus,
   getCounselingTrainingPrograms,
+  getAdminCounselingTrainingPrograms,
   createCounselingTrainingProgram,
+  updateCounselingTrainingProgram,
+  deleteCounselingTrainingProgram,
   enrollCounselingTraining,
   getCounselingTrainingEnrollments,
   updateCounselingTrainingEnrollmentStatus,
@@ -22,9 +25,13 @@ router.patch("/career-selection/admin-registrations/:id", requireAuth, requireRo
 
 // --- Counseling Training Routes ---
 router.get("/counseling-training/programs", getCounselingTrainingPrograms);
+router.get("/counseling-training/admin-programs", requireAuth, requireRole(["super_admin", "admin"]), getAdminCounselingTrainingPrograms);
 router.post("/counseling-training/programs", requireAuth, requireRole(["super_admin", "admin"]), createCounselingTrainingProgram);
+router.put("/counseling-training/programs/:id", requireAuth, requireRole(["super_admin", "admin"]), updateCounselingTrainingProgram);
+router.delete("/counseling-training/programs/:id", requireAuth, requireRole(["super_admin", "admin"]), deleteCounselingTrainingProgram);
 router.post("/counseling-training/enroll", optionalAuth, enrollCounselingTraining);
 router.get("/counseling-training/admin-enrollments", requireAuth, requireRole(["super_admin", "admin"]), getCounselingTrainingEnrollments);
 router.patch("/counseling-training/admin-enrollments/:id", requireAuth, requireRole(["super_admin", "admin"]), updateCounselingTrainingEnrollmentStatus);
 
 export default router;
+

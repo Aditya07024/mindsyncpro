@@ -570,6 +570,14 @@ const API = {
       apiCall<{ success: boolean; message: string }>(`/api/partners/${id}`, {
         method: "DELETE",
       }),
+    uploadLogo: (file: File) => {
+      const formData = new FormData();
+      formData.append("logo", file);
+      return apiCall<{ success: boolean; logoUrl: string; filename: string; message: string }>(
+        "/api/partners/upload-logo",
+        { method: "POST", body: formData }
+      );
+    },
   },
 
   careerPrograms: {
@@ -582,6 +590,8 @@ const API = {
       schoolOrgName: string;
       age: number;
       phone: string;
+      counselingType?: string;
+      preferredGoals?: string;
     }) =>
       apiCall<{ success: boolean; registration: any; message: string }>("/api/career-programs/career-selection/register", {
         method: "POST",
@@ -591,7 +601,16 @@ const API = {
       apiCall<{ success: boolean; registration: any }>("/api/career-programs/career-selection/status"),
     getCareerSelectionRegistrations: () =>
       apiCall<{ success: boolean; registrations: any[] }>("/api/career-programs/career-selection/admin-registrations"),
-    updateCareerSelectionStatus: (id: string, data: { status: string; adminNotes?: string }) =>
+    updateCareerSelectionStatus: (
+      id: string,
+      data: {
+        status?: string;
+        adminNotes?: string;
+        assignedCounselor?: string;
+        meetingDate?: string;
+        meetingLink?: string;
+      }
+    ) =>
       apiCall<{ success: boolean; registration: any; message: string }>(`/api/career-programs/career-selection/admin-registrations/${id}`, {
         method: "PATCH",
         body: JSON.stringify(data),
@@ -600,10 +619,21 @@ const API = {
     // Counseling Training
     getTrainingPrograms: () =>
       apiCall<{ success: boolean; programs: any[] }>("/api/career-programs/counseling-training/programs"),
+    getAdminTrainingPrograms: () =>
+      apiCall<{ success: boolean; programs: any[] }>("/api/career-programs/counseling-training/admin-programs"),
     createTrainingProgram: (data: any) =>
       apiCall<{ success: boolean; program: any; message: string }>("/api/career-programs/counseling-training/programs", {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    updateTrainingProgram: (id: string, data: any) =>
+      apiCall<{ success: boolean; program: any; message: string }>(`/api/career-programs/counseling-training/programs/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    deleteTrainingProgram: (id: string) =>
+      apiCall<{ success: boolean; message: string }>(`/api/career-programs/counseling-training/programs/${id}`, {
+        method: "DELETE",
       }),
     enrollTrainingProgram: (data: {
       programId: string;
@@ -630,4 +660,5 @@ const API = {
 };
 
 export default API;
+
 

@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Edit3, Sparkles, Globe, Building2, Check } from "lucide-react";
+import { Plus, Trash2, Edit3, Sparkles, Upload, X, ImageIcon } from "lucide-react";
 import API from "@/lib/api";
 
 export const AdminPartnersManager: React.FC = () => {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoUploadError, setLogoUploadError] = useState("");
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: "",
     category: "Organization",
     logoText: "",
+    logoUrl: "",
     description: "",
     impactMetric: "",
     location: "India",
@@ -62,6 +66,7 @@ export const AdminPartnersManager: React.FC = () => {
       name: "",
       category: "Organization",
       logoText: "",
+      logoUrl: "",
       description: "",
       impactMetric: "",
       location: "India",
@@ -78,6 +83,7 @@ export const AdminPartnersManager: React.FC = () => {
       name: partner.name || "",
       category: partner.category || "Organization",
       logoText: partner.logoText || "",
+      logoUrl: partner.logoUrl || "",
       description: partner.description || "",
       impactMetric: partner.impactMetric || "",
       location: partner.location || "India",
@@ -95,6 +101,24 @@ export const AdminPartnersManager: React.FC = () => {
       updateMutation.mutate({ id: editingId, data: form });
     } else {
       createMutation.mutate(form);
+    }
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    setLogoUploading(true);
+    setLogoUploadError("");
+    try {
+      const res = await API.partners.uploadLogo(file);
+      if (res.logoUrl) {
+        setForm((prev) => ({ ...prev, logoUrl: res.logoUrl }));
+      } else {
+        setLogoUploadError("Upload failed — no URL returned.");
+      }
+    } catch (err: any) {
+      setLogoUploadError(err?.message || "Logo upload failed.");
+    } finally {
+      setLogoUploading(false);
     }
   };
 
@@ -192,8 +216,12 @@ export const AdminPartnersManager: React.FC = () => {
                 <tr key={p._id} className="hover:bg-slate-700/30 transition">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className={`flex size-10 items-center justify-center rounded-xl bg-gradient-to-br ${p.color || "from-teal-500 to-emerald-600"} text-white font-bold text-xs shadow-md shrink-0`}>
-                        {p.logoText || p.name?.substring(0, 4)}
+                      <div className={`flex size-10 items-center justify-center rounded-xl bg-gradient-to-br ${p.color || "from-teal-500 to-emerald-600"} text-white font-bold text-xs shadow-md shrink-0 overflow-hidden`}>
+                        {p.logoUrl ? (
+                          <img src={p.logoUrl} alt={p.name} className="size-full object-contain p-1 bg-white/95 rounded-xl" />
+                        ) : (
+                          p.logoText || p.name?.substring(0, 4)
+                        )}
                       </div>
                       <div>
                         <p className="font-bold text-white text-sm line-clamp-1">{p.name}</p>
@@ -262,6 +290,107 @@ export const AdminPartnersManager: React.FC = () => {
                 />
               </div>
 
+              {/* Hidden file input */}
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/avif"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleLogoUpload(file);
+                  e.target.value = "";
+                }}
+              />
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1.5">
+                  Organization Logo <span className="text-slate-500 font-normal">(Optional)</span>
+                </label>
+
+                {/* Upload zone */}
+                {!form.logoUrl ? (
+                  <div
+                    onClick={() => logoInputRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleLogoUpload(file);
+                    }}
+                    className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-600 hover:border-cyan-400 bg-slate-800/60 hover:bg-slate-800 transition cursor-pointer p-5 text-center group"
+                  >
+                    {logoUploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="size-7 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                        <span className="text-cyan-400 text-xs font-semibold">Uploading logo...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="size-10 rounded-xl bg-slate-700 group-hover:bg-cyan-500/20 flex items-center justify-center transition">
+                          <Upload className="size-5 text-slate-400 group-hover:text-cyan-400 transition" />
+                        </div>
+                        <div>
+                          <p className="text-slate-300 font-semibold text-xs">Click to upload or drag & drop</p>
+                          <p className="text-slate-500 text-[10px] mt-0.5">JPG, PNG, WEBP, GIF, AVIF · Max 10 MB</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  /* Logo preview with remove button */
+                  <div className="flex items-center gap-3 bg-slate-800 border border-slate-700 rounded-xl p-3">
+                    <div className="size-14 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-md">
+                      <img
+                        src={form.logoUrl}
+                        alt="Logo preview"
+                        className="size-full object-contain p-1"
+                        onError={(e) => {
+                          (e.currentTarget.parentElement as HTMLElement).innerHTML =
+                            `<div class="flex items-center justify-center size-full"><svg xmlns='http://www.w3.org/2000/svg' class='size-6 text-slate-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'/></svg></div>`;
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-xs font-semibold truncate">Logo uploaded ✓</p>
+                      <p className="text-slate-500 text-[10px] truncate mt-0.5">{form.logoUrl}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, logoUrl: "" })}
+                      className="shrink-0 p-1.5 rounded-lg bg-slate-700 hover:bg-red-500/30 text-slate-400 hover:text-red-400 transition cursor-pointer"
+                      title="Remove logo"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      className="shrink-0 p-1.5 rounded-lg bg-slate-700 hover:bg-cyan-500/20 text-slate-400 hover:text-cyan-400 transition cursor-pointer"
+                      title="Change logo"
+                    >
+                      <Upload className="size-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {logoUploadError && (
+                  <p className="mt-1.5 text-red-400 text-[10px] font-medium">{logoUploadError}</p>
+                )}
+
+                {/* Manual URL fallback */}
+                <div className="mt-2">
+                  <p className="text-slate-500 text-[10px] mb-1">Or paste a logo URL directly:</p>
+                  <input
+                    type="url"
+                    value={form.logoUrl}
+                    onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+                    placeholder="https://example.com/logo.png"
+                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white text-[11px] focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-slate-400 font-semibold mb-1">Category</label>
@@ -279,7 +408,7 @@ export const AdminPartnersManager: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Logo Text Emblem</label>
+                  <label className="block text-slate-400 font-semibold mb-1">Fallback Logo Text Emblem</label>
                   <input
                     type="text"
                     value={form.logoText}

@@ -10,6 +10,7 @@ interface PartnerItem {
   name: string;
   category: "Organization" | "NGO" | "Clubs" | "Community" | "Partners";
   logoText: string;
+  logoUrl?: string;
   description: string;
   impactMetric: string;
   location: string;
@@ -92,9 +93,20 @@ export const WeArePartOfSection: React.FC = () => {
               >
                 <div>
                   <div className="flex items-start justify-between">
-                    {/* Logo Emblem */}
-                    <div className={`flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br ${partner.color || "from-teal-500 to-emerald-600"} text-white font-black text-lg shadow-lg`}>
-                      {partner.logoText || partner.name?.substring(0, 4)}
+                    {/* Logo Emblem / Image */}
+                    <div className={`flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br ${partner.color || "from-teal-500 to-emerald-600"} text-white font-black text-lg shadow-lg shrink-0 overflow-hidden`}>
+                      {partner.logoUrl ? (
+                        <img
+                          src={partner.logoUrl}
+                          alt={partner.name}
+                          className="size-full object-contain p-1.5 bg-white/95 rounded-2xl"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        partner.logoText || partner.name?.substring(0, 4)
+                      )}
                     </div>
 
                     <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-800 border border-cyan-100">
@@ -160,8 +172,19 @@ export const WeArePartOfSection: React.FC = () => {
               </button>
 
               <div className="flex items-center gap-4">
-                <div className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${activePartnerModal.color} text-white font-black text-xl shadow-md shrink-0`}>
-                  {activePartnerModal.logoText}
+                <div className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${activePartnerModal.color} text-white font-black text-xl shadow-md shrink-0 overflow-hidden`}>
+                  {activePartnerModal.logoUrl ? (
+                    <img
+                      src={activePartnerModal.logoUrl}
+                      alt={activePartnerModal.name}
+                      className="size-full object-contain p-1.5 bg-white/95 rounded-2xl"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    activePartnerModal.logoText || activePartnerModal.name?.substring(0, 4)
+                  )}
                 </div>
                 <div>
                   <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-xs font-bold text-cyan-800 border border-cyan-100">

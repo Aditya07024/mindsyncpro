@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Partner, PartnerSectionConfig } from "../models/partner";
+import { getPublicUrlForFilename } from "../middleware/upload.middleware";
 
 const DEFAULT_SEED_PARTNERS = [
   {
@@ -189,5 +190,30 @@ export async function updatePartnerConfig(req: Request, res: Response): Promise<
     res.json({ success: true, config, message: "Partner section configuration updated" });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to update partner config" });
+  }
+}
+
+/**
+ * POST /api/partners/upload-logo
+ * Upload partner organization logo image (Admin)
+ */
+export async function uploadPartnerLogo(req: Request, res: Response): Promise<void> {
+  try {
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ success: false, message: "No logo image file uploaded" });
+      return;
+    }
+
+    const logoUrl = getPublicUrlForFilename(file.filename, req);
+
+    res.json({
+      success: true,
+      logoUrl,
+      filename: file.filename,
+      message: "Logo uploaded successfully",
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to upload logo" });
   }
 }

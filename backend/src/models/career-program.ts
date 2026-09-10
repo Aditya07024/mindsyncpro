@@ -11,6 +11,11 @@ export interface ICareerSelectionRegistration extends Document {
   schoolOrgName: string;
   age: number;
   phone: string;
+  counselingType?: string;
+  preferredGoals?: string;
+  assignedCounselor?: string;
+  meetingDate?: string;
+  meetingLink?: string;
   status: "pending" | "approved" | "rejected";
   adminNotes?: string;
   createdAt: Date;
@@ -28,6 +33,11 @@ const careerSelectionRegistrationSchema = new Schema<ICareerSelectionRegistratio
     schoolOrgName: { type: String, required: true },
     age: { type: Number, required: true },
     phone: { type: String, required: true },
+    counselingType: { type: String, default: "Clinical Psychology & Psychotherapy" },
+    preferredGoals: { type: String, default: "" },
+    assignedCounselor: { type: String, default: "" },
+    meetingDate: { type: String, default: "" },
+    meetingLink: { type: String, default: "" },
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
     adminNotes: { type: String, default: "" },
   },

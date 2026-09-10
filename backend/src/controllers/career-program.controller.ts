@@ -52,7 +52,7 @@ const DEFAULT_TRAINING_PROGRAMS = [
 
 export async function registerCareerSelection(req: AuthedRequest, res: Response): Promise<void> {
   try {
-    const { fullName, country, state, city, schoolOrgName, age, phone } = req.body;
+    const { fullName, country, state, city, schoolOrgName, age, phone, counselingType, preferredGoals } = req.body;
 
     if (!fullName || !state || !city || !schoolOrgName || !age || !phone) {
       res.status(400).json({ success: false, message: "All fields are required" });
@@ -69,6 +69,8 @@ export async function registerCareerSelection(req: AuthedRequest, res: Response)
       schoolOrgName,
       age: Number(age),
       phone,
+      counselingType: counselingType || "Clinical Psychology & Psychotherapy",
+      preferredGoals: preferredGoals || "",
       status: "pending",
     });
 
@@ -109,11 +111,18 @@ export async function getCareerSelectionRegistrations(_req: Request, res: Respon
 export async function updateCareerSelectionStatus(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const { status, adminNotes } = req.body;
+    const { status, adminNotes, assignedCounselor, meetingDate, meetingLink } = req.body;
+
+    const updateFields: any = {};
+    if (status !== undefined) updateFields.status = status;
+    if (adminNotes !== undefined) updateFields.adminNotes = adminNotes;
+    if (assignedCounselor !== undefined) updateFields.assignedCounselor = assignedCounselor;
+    if (meetingDate !== undefined) updateFields.meetingDate = meetingDate;
+    if (meetingLink !== undefined) updateFields.meetingLink = meetingLink;
 
     const registration = await CareerSelectionRegistration.findByIdAndUpdate(
       id,
-      { status, adminNotes },
+      updateFields,
       { new: true }
     );
 
@@ -214,6 +223,69 @@ export async function enrollCounselingTraining(req: AuthedRequest, res: Response
   }
 }
 
+export async function getAdminCounselingTrainingPrograms(_req: Request, res: Response): Promise<void> {
+  try {
+    let programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
+
+    if (programs.length === 0) {
+      await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
+      programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
+    }
+
+    res.json({ success: true, programs });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch admin training programs" });
+  }
+}
+
+export async function updateCounselingTrainingProgram(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { title, description, startDate, duration, fee, instructor, totalSeats, availableSeats, category, tags, isActive } = req.body;
+
+    const updateFields: any = {};
+    if (title !== undefined) updateFields.title = title;
+    if (description !== undefined) updateFields.description = description;
+    if (startDate !== undefined) updateFields.startDate = startDate;
+    if (duration !== undefined) updateFields.duration = duration;
+    if (fee !== undefined) updateFields.fee = Number(fee);
+    if (instructor !== undefined) updateFields.instructor = instructor;
+    if (totalSeats !== undefined) updateFields.totalSeats = Number(totalSeats);
+    if (availableSeats !== undefined) updateFields.availableSeats = Number(availableSeats);
+    if (category !== undefined) updateFields.category = category;
+    if (tags !== undefined) {
+      updateFields.tags = Array.isArray(tags) ? tags : String(tags || "").split(",").map((t) => t.trim()).filter(Boolean);
+    }
+    if (isActive !== undefined) updateFields.isActive = Boolean(isActive);
+
+    const program = await CounselingTrainingProgram.findByIdAndUpdate(id, updateFields, { new: true });
+    if (!program) {
+      res.status(404).json({ success: false, message: "Program not found" });
+      return;
+    }
+
+    res.json({ success: true, program, message: "Training program updated successfully" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to update program" });
+  }
+}
+
+export async function deleteCounselingTrainingProgram(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const program = await CounselingTrainingProgram.findByIdAndDelete(id);
+
+    if (!program) {
+      res.status(404).json({ success: false, message: "Program not found" });
+      return;
+    }
+
+    res.json({ success: true, message: "Training program deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to delete program" });
+  }
+}
+
 export async function getCounselingTrainingEnrollments(_req: Request, res: Response): Promise<void> {
   try {
     const enrollments = await CounselingTrainingEnrollment.find().sort({ createdAt: -1 });
@@ -239,3 +311,4 @@ export async function updateCounselingTrainingEnrollmentStatus(req: Request, res
     res.status(500).json({ success: false, message: error.message || "Failed to update enrollment status" });
   }
 }
+

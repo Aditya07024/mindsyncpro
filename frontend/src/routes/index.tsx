@@ -1156,7 +1156,7 @@ function Landing() {
 
                   <div className="mt-8 pt-4 border-t border-teal-100/60 flex items-center justify-between">
                     <Link
-                      to="/careers"
+                      to="/career-selection"
                       className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
                     >
                       Explore Career Program →
@@ -1187,7 +1187,7 @@ function Landing() {
 
                   <div className="mt-8 pt-4 border-t border-cyan-100/60 flex items-center justify-between">
                     <Link
-                      to="/careers"
+                      to="/counseling-training"
                       className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
                     >
                       Join Training Program →
