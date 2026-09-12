@@ -62,7 +62,7 @@ function CareerSelectionPage() {
   };
 
   return (
-    <AppShell>
+    <AppShell requireAuth={false} hideBottomNav={true} hideSOS={true}>
       <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto space-y-10">
           
@@ -97,9 +97,9 @@ function CareerSelectionPage() {
                 First, please sign in to register for the Career Selection Program, select your preferred counseling domain, and get matched with a therapist or senior counselor for a 1-on-1 meeting.
               </p>
               <div className="pt-2">
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" forceRedirectUrl="/career-selection" signUpForceRedirectUrl="/career-selection">
                   <button className="w-full rounded-2xl bg-[#004038] py-4 text-sm font-bold text-white shadow-xl hover:bg-[#002f29] transition cursor-pointer">
-                    Sign In to Apply
+                    Sign In to Apply for Career Program
                   </button>
                 </SignInButton>
               </div>

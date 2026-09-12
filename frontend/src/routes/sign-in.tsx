@@ -275,8 +275,8 @@ function SignInPage() {
               <SignIn
                 routing="path"
                 path="/sign-in"
-                fallbackRedirectUrl="/dashboard"
-                signUpFallbackRedirectUrl="/onboarding"
+                fallbackRedirectUrl={new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("redirect") || "/dashboard"}
+                signUpFallbackRedirectUrl={new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("redirect") || "/onboarding"}
                 appearance={{
                   elements: {
                     rootBox: "w-full",

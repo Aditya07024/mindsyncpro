@@ -17,7 +17,17 @@ const tabs = [
   { to: '/mood', icon: Heart, label: 'Mood' },
 ] as const;
 
-export function AppShell({ children, requireAuth = true }: { children: React.ReactNode; requireAuth?: boolean }) {
+export function AppShell({
+  children,
+  requireAuth = true,
+  hideSOS = false,
+  hideBottomNav = false,
+}: {
+  children: React.ReactNode;
+  requireAuth?: boolean;
+  hideSOS?: boolean;
+  hideBottomNav?: boolean;
+}) {
   const loc = useLocation();
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
@@ -106,7 +116,7 @@ export function AppShell({ children, requireAuth = true }: { children: React.Rea
   }
 
   return (
-    <div className="min-h-screen bg-canvas-gradient pb-24">
+    <div className={`min-h-screen bg-canvas-gradient ${hideBottomNav ? '' : 'pb-24'}`}>
       <header className="sticky top-0 z-30 border-b border-border/50 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
@@ -132,28 +142,30 @@ export function AppShell({ children, requireAuth = true }: { children: React.Rea
 
       <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-stretch justify-around">
-          {tabs.map((t) => {
-            const active = loc.pathname === t.to || loc.pathname.startsWith(t.to + '/');
-            const Icon = t.icon;
-            return (
-              <Link
-                key={t.to}
-                to={t.to}
-                className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition ${
-                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon className={`size-5 ${active ? 'fill-primary/20' : ''}`} />
-                <span className={active ? 'font-semibold' : ''}>{t.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {!hideBottomNav && (
+        <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/50 bg-background/95 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl items-stretch justify-around">
+            {tabs.map((t) => {
+              const active = loc.pathname === t.to || loc.pathname.startsWith(t.to + '/');
+              const Icon = t.icon;
+              return (
+                <Link
+                  key={t.to}
+                  to={t.to}
+                  className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition ${
+                    active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className={`size-5 ${active ? 'fill-primary/20' : ''}`} />
+                  <span className={active ? 'font-semibold' : ''}>{t.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
-      <CrisisButton />
+      {!hideSOS && <CrisisButton />}
     </div>
   );
 }
