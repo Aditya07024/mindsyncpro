@@ -72,7 +72,7 @@ function CounselingTrainingPage() {
   };
 
   return (
-    <AppShell requireAuth={false} hideSOS={true}>
+    <AppShell requireAuth={false} hideSOS={true} hideBottomNav={true}>
       <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto space-y-12">
           
