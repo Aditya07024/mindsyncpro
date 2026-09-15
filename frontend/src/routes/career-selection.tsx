@@ -230,25 +230,9 @@ function CareerSelectionPage() {
                   />
                 </div>
 
-                {/* 2. Type of Counseling Desired */}
+                {/* 2. College / Institution / Org Name */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">2. What Type of Counseling / Specialization Do You Want to Pursue?</label>
-                  <select
-                    value={form.counselingType}
-                    onChange={(e) => setForm({ ...form, counselingType: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition font-medium"
-                  >
-                    {COUNSELING_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 3. College / Institution / Org Name */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">3. College / Institution / Organization Name</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">2. College / Institution / Organization Name</label>
                   <input
                     type="text"
                     required
@@ -259,7 +243,7 @@ function CareerSelectionPage() {
                   />
                 </div>
 
-                {/* 4. Country, State, City */}
+                {/* Country, State, City */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country</label>
@@ -295,10 +279,10 @@ function CareerSelectionPage() {
                   </div>
                 </div>
 
-                {/* 5. Age and Phone No */}
+                {/* 3. Age and Phone No */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">5. Age</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">3. Age</label>
                     <input
                       type="number"
                       required
@@ -310,7 +294,7 @@ function CareerSelectionPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">6. Contact Phone Number</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">4. Contact Phone Number</label>
                     <input
                       type="tel"
                       required
@@ -322,9 +306,9 @@ function CareerSelectionPage() {
                   </div>
                 </div>
 
-                {/* 6. Career Goals / Specific Questions */}
+                {/* 5. Career Goals / Specific Questions */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">7. Career Aspirations & Questions for Your Counselor</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">5. Career Aspirations & Questions for Your Counselor</label>
                   <textarea
                     rows={3}
                     value={form.preferredGoals}
