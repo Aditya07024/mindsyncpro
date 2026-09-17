@@ -193,7 +193,7 @@ export async function updateCareerSelectionStatus(req: Request, res: Response): 
           ? new Date(registration.meetingDate)
           : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-        let targetTherapistId = registration.therapistId;
+        let targetTherapistId: any = registration.therapistId;
         if (!targetTherapistId) {
           const therapistUser = await User.findOne({ role: "therapist" });
           if (therapistUser) targetTherapistId = therapistUser._id;
@@ -480,7 +480,7 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
           ? new Date(registration.meetingDate)
           : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-        let targetTherapistId = registration.therapistId;
+        let targetTherapistId: any = registration.therapistId;
         if (!targetTherapistId) {
           const therapistUser = await User.findOne({ role: "therapist" });
           if (therapistUser) targetTherapistId = therapistUser._id;
@@ -547,7 +547,7 @@ export async function payAndConfirmGuidanceBooking(req: AuthedRequest, res: Resp
         ? new Date(registration.meetingDate)
         : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      let targetTherapistId = registration.therapistId;
+      let targetTherapistId: any = registration.therapistId;
       if (!targetTherapistId) {
         const therapistUser = await User.findOne({ role: "therapist" });
         if (therapistUser) targetTherapistId = therapistUser._id;
