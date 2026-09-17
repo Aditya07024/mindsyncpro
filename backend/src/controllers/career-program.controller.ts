@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Request, Response } from "express";
 import {
   CareerSelectionRegistration,
@@ -7,6 +8,18 @@ import {
 import { User, TherapistBooking } from "../models";
 import { AuthedRequest } from "../middleware/auth";
 import { AIService } from "../services/ai.service";
+
+async function getValidTherapistId(therapistIdStr?: string): Promise<mongoose.Types.ObjectId | null> {
+  if (therapistIdStr && mongoose.Types.ObjectId.isValid(therapistIdStr)) {
+    return new mongoose.Types.ObjectId(therapistIdStr);
+  }
+  const therapistUser = await User.findOne({ role: "therapist" });
+  if (therapistUser) {
+    return therapistUser._id as mongoose.Types.ObjectId;
+  }
+  const fallbackUser = await User.findOne();
+  return fallbackUser ? (fallbackUser._id as mongoose.Types.ObjectId) : null;
+}
 
 const DEFAULT_TRAINING_PROGRAMS = [
   {
@@ -183,37 +196,37 @@ export async function updateCareerSelectionStatus(req: Request, res: Response): 
 
     // Auto-create TherapistBooking on approval if candidate userId exists
     if (status === "approved" && registration.userId) {
-      const existingBooking = await TherapistBooking.findOne({
-        userId: registration.userId,
-        notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
-      });
+      try {
+        const existingBooking = await TherapistBooking.findOne({
+          userId: registration.userId,
+          notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
+        });
 
-      if (!existingBooking) {
-        const slotTime = registration.meetingDate
-          ? new Date(registration.meetingDate)
-          : new Date(Date.now() + 24 * 60 * 60 * 1000);
+        if (!existingBooking) {
+          const slotTime = registration.meetingDate
+            ? new Date(registration.meetingDate)
+            : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-        let targetTherapistId: any = registration.therapistId;
-        if (!targetTherapistId) {
-          const therapistUser = await User.findOne({ role: "therapist" });
-          if (therapistUser) targetTherapistId = therapistUser._id;
+          const targetTherapistId = await getValidTherapistId(registration.therapistId);
+
+          if (targetTherapistId) {
+            await TherapistBooking.create({
+              userId: registration.userId,
+              therapistId: targetTherapistId,
+              therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
+              slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
+              status: "confirmed",
+              videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
+              notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+              payment: {
+                amount: registration.guidanceFee || 0,
+                paid: true,
+              },
+            });
+          }
         }
-
-        if (targetTherapistId) {
-          await TherapistBooking.create({
-            userId: registration.userId,
-            therapistId: targetTherapistId,
-            therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
-            slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
-            status: "confirmed",
-            videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-            notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
-            payment: {
-              amount: registration.guidanceFee || 0,
-              paid: true,
-            },
-          });
-        }
+      } catch (err) {
+        console.error("Non-fatal TherapistBooking creation error:", err);
       }
     }
 
@@ -470,37 +483,37 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
 
     // Auto-create TherapistBooking if approved & session is free or paid
     if (targetStatus === "approved" && registration.userId) {
-      const existingBooking = await TherapistBooking.findOne({
-        userId: registration.userId,
-        notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
-      });
+      try {
+        const existingBooking = await TherapistBooking.findOne({
+          userId: registration.userId,
+          notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
+        });
 
-      if (!existingBooking) {
-        const slotTime = registration.meetingDate
-          ? new Date(registration.meetingDate)
-          : new Date(Date.now() + 24 * 60 * 60 * 1000);
+        if (!existingBooking) {
+          const slotTime = registration.meetingDate
+            ? new Date(registration.meetingDate)
+            : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-        let targetTherapistId: any = registration.therapistId;
-        if (!targetTherapistId) {
-          const therapistUser = await User.findOne({ role: "therapist" });
-          if (therapistUser) targetTherapistId = therapistUser._id;
+          const targetTherapistId = await getValidTherapistId(registration.therapistId);
+
+          if (targetTherapistId) {
+            await TherapistBooking.create({
+              userId: registration.userId,
+              therapistId: targetTherapistId,
+              therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
+              slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
+              status: "confirmed",
+              videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
+              notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+              payment: {
+                amount: numericFee,
+                paid: true,
+              },
+            });
+          }
         }
-
-        if (targetTherapistId) {
-          await TherapistBooking.create({
-            userId: registration.userId,
-            therapistId: targetTherapistId,
-            therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
-            slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
-            status: "confirmed",
-            videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-            notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
-            payment: {
-              amount: numericFee,
-              paid: true,
-            },
-          });
-        }
+      } catch (err) {
+        console.error("Non-fatal TherapistBooking creation error:", err);
       }
     }
 
@@ -535,39 +548,40 @@ export async function payAndConfirmGuidanceBooking(req: AuthedRequest, res: Resp
     await registration.save();
 
     // Dual Sync: Create a formal TherapistBooking record if not already created
-    const existingBooking = await TherapistBooking.findOne({
-      userId,
-      notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
-      status: { $in: ["pending", "confirmed"] },
-    });
+    let booking = null;
+    try {
+      const existingBooking = await TherapistBooking.findOne({
+        userId,
+        notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
+        status: { $in: ["pending", "confirmed"] },
+      });
 
-    let booking = existingBooking;
-    if (!booking) {
-      const slotTime = registration.meetingDate
-        ? new Date(registration.meetingDate)
-        : new Date(Date.now() + 24 * 60 * 60 * 1000);
+      booking = existingBooking;
+      if (!booking) {
+        const slotTime = registration.meetingDate
+          ? new Date(registration.meetingDate)
+          : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      let targetTherapistId: any = registration.therapistId;
-      if (!targetTherapistId) {
-        const therapistUser = await User.findOne({ role: "therapist" });
-        if (therapistUser) targetTherapistId = therapistUser._id;
+        const targetTherapistId = await getValidTherapistId(registration.therapistId);
+
+        if (targetTherapistId) {
+          booking = await TherapistBooking.create({
+            userId,
+            therapistId: targetTherapistId,
+            therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
+            slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
+            status: "confirmed",
+            videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
+            notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+            payment: {
+              amount: registration.guidanceFee || 0,
+              paid: true,
+            },
+          });
+        }
       }
-
-      if (targetTherapistId) {
-        booking = await TherapistBooking.create({
-          userId,
-          therapistId: targetTherapistId,
-          therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
-          slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
-          status: "confirmed",
-          videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-          notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
-          payment: {
-            amount: registration.guidanceFee || 0,
-            paid: true,
-          },
-        });
-      }
+    } catch (bookingErr) {
+      console.error("Non-fatal TherapistBooking sync error:", bookingErr);
     }
 
     res.json({
