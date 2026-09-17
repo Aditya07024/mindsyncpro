@@ -33,6 +33,7 @@ import {
   Zap,
   Briefcase,
   GraduationCap,
+  ShoppingBag,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
@@ -1277,11 +1278,98 @@ function Landing() {
           </div>
         </section>
 
-        {/* Section 1: Digital Product Shop (E-Commerce Store) */}
-        <DigitalProductShopSection />
+        {/* Dual Side-by-Side Cards: Digital E-Commerce Wellness Store & Ecosystem Network */}
+        <section className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          {/* Div 1: Digital E-Commerce Wellness Store */}
+          <div className="relative overflow-hidden rounded-[40px] border border-teal-100 bg-gradient-to-b from-[#f4fbf9] via-white to-[#edf8f5] p-8 sm:p-10 shadow-lg flex flex-col justify-between transition-all duration-300 hover:border-teal-300 hover:shadow-2xl">
+            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-teal-400/10 blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-xs sm:text-sm font-semibold text-teal-800 shadow-xs">
+                <ShoppingBag className="size-4 text-teal-600" />
+                Digital E-Commerce Wellness Store
+              </div>
 
-        {/* Section 2: We Are Part Of (Network & Ecosystem) */}
-        <WeArePartOfSection />
+              <h2 className="mt-6 font-display text-3xl sm:text-4xl font-bold leading-tight text-[#012620]">
+                Digital Product Shop
+              </h2>
+
+              <p className="mt-4 text-sm sm:text-base leading-relaxed text-slate-600">
+                Download psychologist-curated CBT workbooks, guided meditation audio suites, emotion journals, and self-help tools instantly.
+              </p>
+
+              <div className="mt-6 space-y-2.5">
+                {[
+                  "CBT Workbooks & Action Guides",
+                  "Guided Meditation Audio Suites",
+                  "Emotion Journals & Daily Trackers",
+                  "Instant PDF & Audio Downloads",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-700">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700 font-bold text-xs">
+                      ✓
+                    </span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-8 pt-6 border-t border-teal-100/80">
+              <Link
+                to="/digital-shop"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#004038] px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#002f29] hover:scale-105 active:scale-95"
+              >
+                Click Here <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Div 2: Our Ecosystem & Collaboration Network */}
+          <div className="relative overflow-hidden rounded-[40px] border border-cyan-100 bg-gradient-to-b from-[#f0f9ff] via-white to-[#e6f4ff] p-8 sm:p-10 shadow-lg flex flex-col justify-between transition-all duration-300 hover:border-cyan-300 hover:shadow-2xl">
+            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-cyan-400/10 blur-3xl pointer-events-none" />
+            
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-xs sm:text-sm font-semibold text-cyan-800 shadow-xs">
+                <Sparkles className="size-4 text-cyan-600" />
+                Our Ecosystem & Collaboration Network
+              </div>
+
+              <h2 className="mt-6 font-display text-3xl sm:text-4xl font-bold leading-tight text-[#012620]">
+                We Are Part Of
+              </h2>
+
+              <p className="mt-4 text-sm sm:text-base leading-relaxed text-slate-600">
+                Proudly collaborating with leading Organizations, NGOs, Student Clubs, Peer Communities, and Global Health Partners to democratize mental wellness in India.
+              </p>
+
+              <div className="mt-6 space-y-2.5">
+                {[
+                  "Leading Organizations & Enterprises",
+                  "Non-Profit & Mental Health NGOs",
+                  "Campus & Student Clubs Network",
+                  "Peer Communities & Global Health Partners",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-slate-700">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-cyan-800 font-bold text-xs">
+                      ✓
+                    </span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative z-10 mt-8 pt-6 border-t border-cyan-100/80">
+              <Link
+                to="/ecosystem"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#012620] px-7 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-black hover:scale-105 active:scale-95"
+              >
+                Click Here <ArrowRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* WhatsApp Community Section */}

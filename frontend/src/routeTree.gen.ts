@@ -23,6 +23,8 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
 import { Route as Meeting_workspaceRouteImport } from './routes/meeting_workspace'
 import { Route as JournalRouteImport } from './routes/journal'
+import { Route as EcosystemRouteImport } from './routes/ecosystem'
+import { Route as DigitalShopRouteImport } from './routes/digital-shop'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CounselingTrainingRouteImport } from './routes/counseling-training'
@@ -114,6 +116,16 @@ const Meeting_workspaceRoute = Meeting_workspaceRouteImport.update({
 const JournalRoute = JournalRouteImport.update({
   id: '/journal',
   path: '/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcosystemRoute = EcosystemRouteImport.update({
+  id: '/ecosystem',
+  path: '/ecosystem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DigitalShopRoute = DigitalShopRouteImport.update({
+  id: '/digital-shop',
+  path: '/digital-shop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeleteAccountRoute = DeleteAccountRouteImport.update({
@@ -240,6 +252,8 @@ export interface FileRoutesByFullPath {
   '/counseling-training': typeof CounselingTrainingRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/digital-shop': typeof DigitalShopRoute
+  '/ecosystem': typeof EcosystemRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -278,6 +292,8 @@ export interface FileRoutesByTo {
   '/counseling-training': typeof CounselingTrainingRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/digital-shop': typeof DigitalShopRoute
+  '/ecosystem': typeof EcosystemRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -317,6 +333,8 @@ export interface FileRoutesById {
   '/counseling-training': typeof CounselingTrainingRoute
   '/dashboard': typeof DashboardRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/digital-shop': typeof DigitalShopRoute
+  '/ecosystem': typeof EcosystemRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -357,6 +375,8 @@ export interface FileRouteTypes {
     | '/counseling-training'
     | '/dashboard'
     | '/delete-account'
+    | '/digital-shop'
+    | '/ecosystem'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -395,6 +415,8 @@ export interface FileRouteTypes {
     | '/counseling-training'
     | '/dashboard'
     | '/delete-account'
+    | '/digital-shop'
+    | '/ecosystem'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -433,6 +455,8 @@ export interface FileRouteTypes {
     | '/counseling-training'
     | '/dashboard'
     | '/delete-account'
+    | '/digital-shop'
+    | '/ecosystem'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -472,6 +496,8 @@ export interface RootRouteChildren {
   CounselingTrainingRoute: typeof CounselingTrainingRoute
   DashboardRoute: typeof DashboardRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
+  DigitalShopRoute: typeof DigitalShopRoute
+  EcosystemRoute: typeof EcosystemRoute
   JournalRoute: typeof JournalRoute
   Meeting_workspaceRoute: typeof Meeting_workspaceRoute
   MoodRoute: typeof MoodRoute
@@ -594,6 +620,20 @@ declare module '@tanstack/react-router' {
       path: '/journal'
       fullPath: '/journal'
       preLoaderRoute: typeof JournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ecosystem': {
+      id: '/ecosystem'
+      path: '/ecosystem'
+      fullPath: '/ecosystem'
+      preLoaderRoute: typeof EcosystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/digital-shop': {
+      id: '/digital-shop'
+      path: '/digital-shop'
+      fullPath: '/digital-shop'
+      preLoaderRoute: typeof DigitalShopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/delete-account': {
@@ -788,6 +828,8 @@ const rootRouteChildren: RootRouteChildren = {
   CounselingTrainingRoute: CounselingTrainingRoute,
   DashboardRoute: DashboardRoute,
   DeleteAccountRoute: DeleteAccountRoute,
+  DigitalShopRoute: DigitalShopRoute,
+  EcosystemRoute: EcosystemRoute,
   JournalRoute: JournalRoute,
   Meeting_workspaceRoute: Meeting_workspaceRoute,
   MoodRoute: MoodRoute,
