@@ -592,8 +592,14 @@ const API = {
       phone: string;
       counselingType?: string;
       preferredGoals?: string;
+      intelligenceData?: any;
     }) =>
       apiCall<{ success: boolean; registration: any; message: string }>("/api/career-programs/career-selection/register", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    evaluateAI: (data: any) =>
+      apiCall<{ success: boolean; evaluation: any }>("/api/career-programs/career-selection/evaluate-ai", {
         method: "POST",
         body: JSON.stringify(data),
       }),

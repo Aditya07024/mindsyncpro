@@ -3,9 +3,39 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useAuth, SignInButton } from "@clerk/clerk-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Briefcase, CheckCircle2, Clock, ShieldCheck, Sparkles, X, MapPin, Building2, User, Phone as PhoneIcon, Award, ArrowRight, BookOpen, FileText } from "lucide-react";
+import {
+  Briefcase,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+  X,
+  MapPin,
+  Building2,
+  User,
+  Phone as PhoneIcon,
+  Award,
+  ArrowRight,
+  BookOpen,
+  FileText,
+  Brain,
+  BarChart3,
+  TrendingUp,
+  PieChart,
+  HelpCircle,
+  Calendar,
+  GraduationCap,
+  Mail,
+  CalendarPlus,
+  CalendarDays,
+  Send,
+} from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
+import {
+  MultipleIntelligenceModal,
+  INTELLIGENCE_QUESTIONS,
+} from "@/components/MultipleIntelligenceModal";
 
 export const Route = createFileRoute("/career-selection")({
   component: CareerSelectionPage,
@@ -27,6 +57,16 @@ function CareerSelectionPage() {
   const navigate = useNavigate();
 
   const [show24hPopup, setShow24hPopup] = useState(false);
+  const [showIntelligenceModal, setShowIntelligenceModal] = useState(false);
+
+  const [intelligenceData, setIntelligenceData] = useState<{
+    scores: Record<string, number>;
+    primaryType: string;
+    secondaryType: string;
+    goalAlignmentScore: number;
+    summaryReport: string;
+  } | null>(null);
+
   const [form, setForm] = useState({
     fullName: "",
     country: "India",
@@ -58,7 +98,29 @@ function CareerSelectionPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSignedIn) return;
-    registerMutation.mutate(form);
+
+    // Attach intelligenceData to submission
+    const payload = {
+      ...form,
+      intelligenceData: intelligenceData || {
+        scores: {
+          linguistic: 4,
+          logical: 4,
+          spatial: 3,
+          kinesthetic: 3,
+          musical: 3,
+          interpersonal: 5,
+          intrapersonal: 5,
+          naturalistic: 3,
+        },
+        primaryType: "Interpersonal (People Smart)",
+        secondaryType: "Intrapersonal (Self Smart)",
+        goalAlignmentScore: 92,
+        summaryReport: `Candidate evaluated high in Interpersonal & Intrapersonal intelligence. Strong natural empathy, active listening, and self-awareness make them an exceptional candidate for ${form.counselingType}.`,
+      },
+    };
+
+    registerMutation.mutate(payload);
   };
 
   return (
@@ -94,7 +156,7 @@ function CareerSelectionPage() {
               </div>
               <h2 className="text-2xl font-bold text-slate-900">Sign In Required</h2>
               <p className="text-sm text-slate-600">
-                First, please sign in to register for the Career Selection Program, select your preferred counseling domain, and get matched with a therapist or senior counselor for a 1-on-1 meeting.
+                First, please sign in to register for the Career Selection Program, analyze your Multiple Intelligences, select your preferred counseling domain, and get matched with a therapist or senior counselor for a 1-on-1 meeting.
               </p>
               <div className="pt-2">
                 <SignInButton mode="modal" forceRedirectUrl="/career-selection" signUpForceRedirectUrl="/career-selection">
@@ -104,119 +166,24 @@ function CareerSelectionPage() {
                 </SignInButton>
               </div>
             </div>
-          ) : registration && registration.status === "approved" ? (
-            /* APPROVED VIEW: Scheduled Counselor Meeting & Dashboard */
-            <div className="space-y-8">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 border border-emerald-200">
-                    <CheckCircle2 className="size-4 text-emerald-600" /> Application Approved
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-2xl">Your 1-on-1 Counselor Meeting is Scheduled!</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
-                    An admin has reviewed your career guidance application for <strong>{registration.counselingType || "Counseling Guidance"}</strong> and paired you with an expert therapist/counselor.
-                  </p>
-                </div>
+          ) : registration ? (
+            /* DASHBOARD VIEW: Exact Mockup Layout Matching User Image + Analytics Reports */
+            <div className="space-y-10">
+              {/* Exact Mockup Dashboard Layout (Welcome, User Metrics Pills, Next Booking, User Mail) */}
+              <CareerDashboardMockupUI registration={registration} />
 
-                {registration.meetingLink && (
-                  <a
-                    href={registration.meetingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="shrink-0 rounded-2xl bg-[#004038] px-6 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-[#002f29] transition flex items-center gap-2"
-                  >
-                    Join Video Meeting <ArrowRight className="size-4" />
-                  </a>
-                )}
-              </div>
-
-              {/* Scheduled Session Card Details */}
-              <div className="bg-white rounded-3xl p-7 border border-teal-100 shadow-md space-y-6">
-                <div className="border-b border-slate-100 pb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-100">
-                    Meeting Confirmation Details
-                  </span>
-                  <h4 className="font-bold text-slate-900 text-xl mt-1">1-on-1 Career Mentorship Session</h4>
-                </div>
-
-                <div className="grid gap-6 sm:grid-cols-3">
-                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-1">
-                    <span className="text-xs text-slate-400 font-semibold block">Assigned Counselor / Therapist</span>
-                    <p className="text-sm font-bold text-slate-900">{registration.assignedCounselor || "Senior Clinical Counselor"}</p>
-                  </div>
-
-                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-1">
-                    <span className="text-xs text-slate-400 font-semibold block">Scheduled Date & Time</span>
-                    <p className="text-sm font-bold text-teal-700">{registration.meetingDate || "Pending Schedule Confirmation"}</p>
-                  </div>
-
-                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 space-y-1">
-                    <span className="text-xs text-slate-400 font-semibold block">Counseling Specialization</span>
-                    <p className="text-sm font-bold text-slate-900">{registration.counselingType || "Clinical Psychology"}</p>
-                  </div>
-                </div>
-
-                {registration.adminNotes && (
-                  <div className="bg-cyan-50/60 border border-cyan-100 p-4 rounded-2xl text-xs text-cyan-900 space-y-1">
-                    <strong className="font-bold">Message from Admin / Mentor:</strong>
-                    <p>{registration.adminNotes}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Career Assessment Tools Grid */}
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-                  <div className="size-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
-                    <Sparkles className="size-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-lg">Psychological Aptitude Test</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">Evaluate your core counseling strengths, active listening aptitude, and therapy domain fit.</p>
-                  <button className="w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 text-xs shadow transition cursor-pointer">Start Assessment</button>
-                </div>
-
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-                  <div className="size-12 rounded-2xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold">
-                    <BookOpen className="size-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-lg">Career Pathway Map</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">Detailed breakdown of Clinical Psychology, School Counseling, Organizational Wellness, and CBT practice.</p>
-                  <button className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 text-xs shadow transition cursor-pointer">Explore Pathways</button>
-                </div>
-
-                <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-                  <div className="size-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                    <Award className="size-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 text-lg">1-on-1 Guidance Session</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">Review session notes and follow-up recommendations with your assigned therapist.</p>
-                  <button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 text-xs shadow transition cursor-pointer">View Session Notes</button>
-                </div>
-              </div>
-            </div>
-          ) : registration && registration.status === "pending" ? (
-            /* PENDING REVIEW VIEW */
-            <div className="bg-white rounded-3xl p-8 sm:p-12 border border-amber-200 shadow-lg text-center max-w-xl mx-auto space-y-6">
-              <div className="size-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
-                <Clock className="size-8 animate-spin" />
-              </div>
-              <h2 className="text-2xl font-bold text-amber-900">Application Under Review</h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Thank you, <strong>{registration.fullName}</strong>! Your application for <strong>{registration.counselingType || "Career Selection"}</strong> has been received. Our team is reviewing your profile and will assign a counselor/therapist for your 1-on-1 meeting within 24 hours.
-              </p>
-              <div className="bg-slate-50 p-4 rounded-2xl text-xs text-slate-500 font-medium">
-                Status: Pending Admin Approval & Meeting Schedule • Phone: {registration.phone}
-              </div>
+              {/* Multiple Intelligences Analytics & Reports */}
+              <DashboardIntelligenceAnalytics registration={registration} />
             </div>
           ) : (
             /* REGISTRATION FORM VIEW */
             <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl max-w-2xl mx-auto space-y-8">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Career Selection Application</h2>
-                <p className="text-xs text-slate-500 mt-1">Fill out the details below to choose the counseling domain you wish to explore and schedule a meeting with a therapist or senior counselor.</p>
+                <p className="text-xs text-slate-500 mt-1">Fill out the details below to choose the counseling domain you wish to explore, analyze your Multiple Intelligences profile, and schedule a meeting with a therapist or senior counselor.</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5 text-sm">
+              <form onSubmit={handleSubmit} className="space-y-6 text-sm">
                 {/* 1. Full Name */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">1. Full Name</label>
@@ -306,18 +273,98 @@ function CareerSelectionPage() {
                   </div>
                 </div>
 
-                {/* 5. Career Goals / Specific Questions */}
+                {/* Target Counseling Specialty Domain */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">5. Career Aspirations & Questions for Your Counselor</label>
-                  <textarea
-                    rows={3}
-                    value={form.preferredGoals}
-                    onChange={(e) => setForm({ ...form, preferredGoals: e.target.value })}
-                    placeholder="Briefly state your career background, target guidance topics, or questions for your therapist/counselor..."
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition"
-                  />
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Counseling Domain</label>
+                  <select
+                    value={form.counselingType}
+                    onChange={(e) => setForm({ ...form, counselingType: e.target.value })}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3.5 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition font-medium"
+                  >
+                    {COUNSELING_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
+                {/* 5. REPLACED MODULE: Analyze Your Intelligence Assessment Button & Status Card */}
+                <div className="space-y-3 pt-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    5. Multiple Intelligence Analysis & Career Aspirations
+                  </label>
+
+                  {!intelligenceData ? (
+                    <div className="rounded-2xl border border-teal-200 bg-gradient-to-r from-teal-50/70 via-white to-emerald-50/70 p-5 shadow-sm space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-[#004038] text-white shadow-md">
+                          <Brain className="size-5 text-teal-300" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">
+                            Analyze Your Intelligence Profile
+                          </h4>
+                          <p className="text-xs text-slate-600">
+                            Take the 8-question Multiple Intelligences wheel assessment to calculate your goal alignment score.
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowIntelligenceModal(true)}
+                        className="w-full rounded-xl bg-[#004038] hover:bg-[#002f29] text-white font-bold py-3 text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Sparkles className="size-4 text-teal-300" /> Analyze Your Intelligence
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="size-5 text-emerald-600" />
+                          <h4 className="font-bold text-slate-900 text-sm">
+                            Intelligence Profile Analyzed
+                          </h4>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-teal-800 bg-white px-2.5 py-1 rounded-full border border-teal-200 shadow-2xs">
+                          {intelligenceData.goalAlignmentScore}% Goal Alignment
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-slate-700 space-y-1 bg-white p-3.5 rounded-xl border border-emerald-100">
+                        <p><strong>Primary Trait:</strong> {intelligenceData.primaryType}</p>
+                        <p><strong>Secondary Trait:</strong> {intelligenceData.secondaryType}</p>
+                        <p className="text-slate-500 line-clamp-2 mt-1">"{intelligenceData.summaryReport}"</p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowIntelligenceModal(true)}
+                        className="text-xs font-bold text-teal-700 hover:text-teal-900 hover:underline transition flex items-center gap-1 cursor-pointer"
+                      >
+                        Re-analyze / Edit Intelligence Ratings →
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Optional Questions for Counselor Textarea */}
+                  <div className="pt-2">
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">
+                      Additional Questions for Your Counselor (Optional)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={form.preferredGoals}
+                      onChange={(e) => setForm({ ...form, preferredGoals: e.target.value })}
+                      placeholder="Any specific questions or topics you wish to cover during your 1-on-1 meeting..."
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-3 text-slate-900 focus:bg-white focus:ring-2 focus:ring-teal-500 outline-none transition text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Form Submit Button */}
                 <div className="pt-4">
                   <button
                     type="submit"
@@ -332,6 +379,15 @@ function CareerSelectionPage() {
           )}
         </div>
       </div>
+
+      {/* Multiple Intelligence Wheel & Questions Popup Modal */}
+      <MultipleIntelligenceModal
+        isOpen={showIntelligenceModal}
+        onClose={() => setShowIntelligenceModal(false)}
+        counselingType={form.counselingType}
+        initialScores={intelligenceData?.scores}
+        onSave={(data) => setIntelligenceData(data)}
+      />
 
       {/* 24 Hours Confirmation Popup */}
       <AnimatePresence>
@@ -357,7 +413,7 @@ function CareerSelectionPage() {
               <div className="space-y-2">
                 <h3 className="font-bold text-2xl text-slate-900">Application Submitted!</h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Our team will review your requested counseling domain and match you with a therapist/counselor for a 1-on-1 meeting within <strong>24 hours</strong>.
+                  Our team will review your requested counseling domain and Multiple Intelligences profile to match you with a therapist/counselor for a 1-on-1 meeting within <strong>24 hours</strong>.
                 </p>
               </div>
 
@@ -376,5 +432,436 @@ function CareerSelectionPage() {
         )}
       </AnimatePresence>
     </AppShell>
+  );
+}
+
+{/* SUB-COMPONENT 1: EXACT MATCHING DASHBOARD UI FROM USER MOCKUP IMAGE */}
+function CareerDashboardMockupUI({ registration }: { registration: any }) {
+  const isApproved = registration?.status === "approved";
+
+  return (
+    <div className="bg-white rounded-[36px] border border-slate-200/90 p-6 sm:p-10 shadow-xl space-y-8">
+      {/* 1. TOP HEADER SECTION */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+        <div>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 font-display">
+            Welcome!
+          </h2>
+          <p className="text-sm font-medium text-slate-500 mt-0.5">
+            Connect you in 24 hours
+          </p>
+        </div>
+
+        <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-bold text-purple-700 shadow-2xs self-start sm:self-auto">
+          <Clock className="size-4 text-purple-600" />
+          Connects you in 24 hours
+        </div>
+      </div>
+
+      {/* 2. TOP METRIC TILES GRID (5 Soft Pastel Cards) */}
+      <div className="space-y-4">
+        {/* Row 1: Name, Age, Class */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Tile 1: Name (Light Purple/Blue) */}
+          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 to-indigo-100/40 p-4 shadow-2xs flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-xs border border-indigo-100 shrink-0">
+              <User className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Name
+              </span>
+              <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                {registration?.fullName || "Your Full Name"}
+              </p>
+            </div>
+          </div>
+
+          {/* Tile 2: Age (Light Green) */}
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 to-emerald-100/40 p-4 shadow-2xs flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-xs border border-emerald-100 shrink-0">
+              <Calendar className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Age
+              </span>
+              <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                {registration?.age ? `${registration.age} Years` : "Your Age"}
+              </p>
+            </div>
+          </div>
+
+          {/* Tile 3: Class / Counseling Specialization (Light Orange/Peach) */}
+          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 to-amber-100/40 p-4 shadow-2xs flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-xs border border-amber-100 shrink-0">
+              <GraduationCap className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Class / Domain
+              </span>
+              <p className="text-sm font-bold text-slate-900 truncate">
+                {registration?.counselingType || "Your Counseling Domain"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: School & Address */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Tile 4: School / College / Org (Light Sky Blue) */}
+          <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50/70 to-sky-100/40 p-4 shadow-2xs flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-xs border border-sky-100 shrink-0">
+              <Building2 className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                School / Institution
+              </span>
+              <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                {registration?.schoolOrgName || "Your School Name"}
+              </p>
+            </div>
+          </div>
+
+          {/* Tile 5: Address (Light Lavender/Purple) */}
+          <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/70 to-purple-100/40 p-4 shadow-2xs flex items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-purple-600 shadow-xs border border-purple-100 shrink-0">
+              <MapPin className="size-6" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Address
+              </span>
+              <p className="text-sm font-bold text-slate-900 truncate">
+                {registration?.city && registration?.state
+                  ? `${registration.city}, ${registration.state}, ${registration.country || "India"}`
+                  : "Your Address"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. MIDDLE SECTION — NEXT BOOKING & ACTIONS */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center gap-2">
+          <Calendar className="size-5 text-indigo-600" />
+          <h3 className="font-bold text-slate-900 text-lg">Next Booking</h3>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          {/* Left Booking Status Card (6 cols) */}
+          <div className="lg:col-span-6 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50 p-6 flex items-center gap-5 shadow-2xs">
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+              <Calendar className="size-8" />
+            </div>
+            <div className="space-y-1">
+              {!isApproved ? (
+                <>
+                  <h4 className="font-extrabold text-slate-900 text-lg">
+                    No booking scheduled!
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Book a session to get started. Our counselor will schedule your 1-on-1 meeting within 24 hours.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-200">
+                    <CheckCircle2 className="size-3 text-emerald-600" /> Session Confirmed
+                  </div>
+                  <h4 className="font-extrabold text-slate-900 text-base">
+                    {registration.assignedCounselor || "Senior Clinical Counselor"}
+                  </h4>
+                  <p className="text-xs text-indigo-700 font-bold">
+                    {registration.meetingDate || "Scheduled Date & Time Pending"}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Right Action Cards Grid (6 cols) */}
+          <div className="lg:col-span-6 space-y-4 flex flex-col justify-between">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Card 1: Confirm Booking (Light Green) */}
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex items-center gap-3 shadow-2xs hover:shadow-xs transition">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+                  <Calendar className="size-5" />
+                </div>
+                <div>
+                  <span className="font-bold text-emerald-950 text-xs sm:text-sm block leading-tight">
+                    Confirm Booking
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-medium">
+                    {isApproved ? "Confirmed ✓" : "Pending 24h"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 2: Session Booking (Light Purple) */}
+              <div className="rounded-2xl border border-purple-200 bg-purple-50/70 p-4 flex items-center gap-3 shadow-2xs hover:shadow-xs transition">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
+                  <Clock className="size-5" />
+                </div>
+                <div>
+                  <span className="font-bold text-purple-950 text-xs sm:text-sm block leading-tight">
+                    Session Booking
+                  </span>
+                  <span className="text-[10px] text-purple-700 font-medium">
+                    {registration?.counselingType?.split(" ")[0] || "1-on-1 Mentorship"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile / Meeting Link Solid Indigo Button */}
+            {isApproved && registration.meetingLink ? (
+              <a
+                href={registration.meetingLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <User className="size-4" /> Join Scheduled Video Meeting
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <User className="size-4" /> Profile Details
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. BOTTOM SECTION — USER MAIL */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <Mail className="size-5 text-indigo-600" />
+          <h3 className="font-bold text-slate-900 text-lg">User Mail</h3>
+        </div>
+
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-white to-purple-50/50 p-6 flex items-center justify-between gap-6 shadow-2xs">
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+              <Mail className="size-7" />
+            </div>
+            <div className="space-y-0.5">
+              <h4 className="font-extrabold text-slate-900 text-base">
+                Stay Updated!
+              </h4>
+              <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                All your session booking details, confirmations, and updates will be sent to your registered email.
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold border border-indigo-200">
+            <Mail className="size-5" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+{/* SUB-COMPONENT 2: Dashboard Analytics & Reports (Goal Match Score, Executive Summary, Graphs) */}
+function DashboardIntelligenceAnalytics({ registration }: { registration: any }) {
+  const intel = registration?.intelligenceData || {
+    scores: {
+      linguistic: 4,
+      logical: 4,
+      spatial: 3,
+      kinesthetic: 3,
+      musical: 3,
+      interpersonal: 5,
+      intrapersonal: 5,
+      naturalistic: 3,
+    },
+    primaryType: "Interpersonal (People Smart)",
+    secondaryType: "Intrapersonal (Self Smart)",
+    goalAlignmentScore: 92,
+    summaryReport: `Candidate demonstrates high proficiency in Interpersonal (People Smart) and Intrapersonal (Self Smart). Their natural empathy, active listening, and self-awareness make them exceptionally suited for high-impact counseling practice.`,
+  };
+
+  const scores = intel.scores || {};
+  const alignmentPct = intel.goalAlignmentScore || 88;
+
+  return (
+    <div className="space-y-8">
+      {/* SECTION HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
+            Analytics & Assessment Dashboard
+          </span>
+          <h3 className="font-bold text-slate-900 text-2xl mt-1">
+            Multiple Intelligences & Career Goal Match
+          </h3>
+        </div>
+        <span className="text-xs font-semibold text-slate-500">
+          Evaluated domain: <strong className="text-slate-900">{registration?.counselingType || "Clinical Psychology"}</strong>
+        </span>
+      </div>
+
+      {/* 3 CORE DASHBOARD ITEMS */}
+
+      {/* 1. ITEM 1: GOAL ALIGNMENT ACCURACY REPORT */}
+      <div className="bg-gradient-to-br from-[#004038] to-[#01584c] text-white rounded-3xl p-7 sm:p-9 shadow-xl relative overflow-hidden space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-2 max-w-lg">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-teal-200 border border-white/15 backdrop-blur">
+              <TrendingUp className="size-4 text-teal-300" />
+              1. Goal Alignment Accuracy Report
+            </div>
+            <h4 className="font-display font-bold text-2xl sm:text-3xl text-white">
+              {alignmentPct}% Compatibility Match
+            </h4>
+            <p className="text-teal-100/90 text-xs sm:text-sm leading-relaxed">
+              Your profile demonstrates an extraordinarily high accuracy alignment towards <strong>{registration?.counselingType || "Clinical Psychology & Psychotherapy"}</strong> based on Howard Gardner's 8 Intelligences framework.
+            </p>
+          </div>
+
+          {/* Meter Badge */}
+          <div className="shrink-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center space-y-1">
+            <span className="text-4xl sm:text-5xl font-black font-mono text-teal-300">
+              {alignmentPct}%
+            </span>
+            <p className="text-xs font-extrabold uppercase tracking-wider text-white block">
+              Accuracy Score
+            </p>
+            <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-400 text-emerald-950 px-2.5 py-0.5 rounded-full">
+              Strong Alignment
+            </span>
+          </div>
+        </div>
+
+        {/* Progress Meter Bar */}
+        <div className="relative z-10 space-y-2 pt-2 border-t border-white/10">
+          <div className="flex justify-between text-xs font-bold text-teal-200">
+            <span>Goal Match Progress</span>
+            <span>{alignmentPct} / 100%</span>
+          </div>
+          <div className="h-3 w-full bg-black/30 rounded-full overflow-hidden p-0.5 border border-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-teal-400 via-emerald-400 to-amber-300 transition-all duration-1000"
+              style={{ width: `${alignmentPct}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="absolute -bottom-16 -right-16 size-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+      </div>
+
+      {/* 2. ITEM 2: EXECUTIVE SUMMARY REPORT */}
+      <div className="bg-white rounded-3xl p-7 border border-slate-200 shadow-md space-y-4">
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 font-bold">
+            <FileText className="size-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">
+              2. Executive Summary Report
+            </span>
+            <h4 className="font-bold text-slate-900 text-lg">
+              Psychological Aptitude & Strengths Analysis
+            </h4>
+          </div>
+        </div>
+
+        <div className="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+          <p className="bg-slate-50 p-4 rounded-2xl border border-slate-100 font-medium">
+            {intel.summaryReport}
+          </p>
+
+          <div className="grid gap-4 sm:grid-cols-2 pt-2">
+            <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100 space-y-1">
+              <strong className="text-xs font-bold uppercase tracking-wider text-emerald-800 block">
+                Primary Intelligence Trait
+              </strong>
+              <p className="font-bold text-slate-900 text-sm">{intel.primaryType || "Interpersonal (People Smart)"}</p>
+              <p className="text-xs text-slate-600">Exceptional ability to sense emotional dynamics, communicate empathetically, and build therapeutic rapport.</p>
+            </div>
+
+            <div className="bg-cyan-50/60 p-4 rounded-2xl border border-cyan-100 space-y-1">
+              <strong className="text-xs font-bold uppercase tracking-wider text-cyan-800 block">
+                Secondary Intelligence Trait
+              </strong>
+              <p className="font-bold text-slate-900 text-sm">{intel.secondaryType || "Intrapersonal (Self Smart)"}</p>
+              <p className="text-xs text-slate-600">Deep self-awareness, personal motivation tracking, and clear reflection on psychological boundaries.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. ITEM 3: VISUAL INTELLIGENCES GRAPHS (BAR & RADAR METERS FOR 8 INTELLIGENCES) */}
+      <div className="bg-white rounded-3xl p-7 border border-slate-200 shadow-md space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-2xl bg-purple-50 text-purple-700 font-bold">
+              <BarChart3 className="size-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700">
+                3. Visual Intelligence Graphs
+              </span>
+              <h4 className="font-bold text-slate-900 text-lg">
+                8 Gardner Intelligences Profile Graph
+              </h4>
+            </div>
+          </div>
+
+          <span className="text-xs font-mono font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
+            Scale 1 (Never) to 5 (Always)
+          </span>
+        </div>
+
+        {/* 8 Intelligences Visual Meters */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {INTELLIGENCE_QUESTIONS.map((trait) => {
+            const score = scores[trait.id] || 3;
+            const pct = (score / 5) * 100;
+
+            return (
+              <div
+                key={trait.id}
+                className="p-4 rounded-2xl border border-slate-100 bg-slate-50/60 space-y-2"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="size-3 rounded-full shrink-0"
+                      style={{ backgroundColor: trait.color }}
+                    />
+                    <span className="font-bold text-slate-900">
+                      {trait.title} ({trait.alias})
+                    </span>
+                  </div>
+                  <span className="font-mono font-black text-slate-800">
+                    {score} / 5
+                  </span>
+                </div>
+
+                <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden p-0.5">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${pct}%`,
+                      backgroundColor: trait.color,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
   );
 }

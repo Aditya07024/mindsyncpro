@@ -820,4 +820,86 @@ Please generate the counsellor report analysis.`;
       { role: "user", content: userPrompt }
     ]);
   }
+
+  static async evaluateCareerIntelligence(params: {
+    fullName: string;
+    counselingType: string;
+    scores: Record<string, number>;
+    schoolOrgName?: string;
+    age?: number;
+  }): Promise<{
+    goalAlignmentScore: number;
+    primaryType: string;
+    secondaryType: string;
+    summaryReport: string;
+  }> {
+    const { fullName, counselingType, scores, schoolOrgName, age } = params;
+
+    const systemPrompt = `You are Dr. Manas — a clinical psychologist and career intelligence evaluator at mymindtherapyfriend.
+Analyze the candidate's 8 Multiple Intelligences assessment ratings (1 to 5 scale) and evaluate how accurate, close, and compatible they are towards their target counseling career goal.
+
+Candidate Details:
+Name: ${fullName || "Candidate"}
+Age: ${age || 21}
+Institution/Org: ${schoolOrgName || "N/A"}
+Target Counseling Specialty: ${counselingType}
+
+Scores (1-5):
+- Verbal-Linguistic (Word Smart): ${scores.linguistic || 3}/5
+- Logical-Mathematical (Logic Smart): ${scores.logical || 3}/5
+- Visual-Spatial (Picture Smart): ${scores.spatial || 3}/5
+- Bodily-Kinesthetic (Body Smart): ${scores.kinesthetic || 3}/5
+- Musical (Music Smart): ${scores.musical || 3}/5
+- Interpersonal (People Smart): ${scores.interpersonal || 3}/5
+- Intrapersonal (Self Smart): ${scores.intrapersonal || 3}/5
+- Naturalistic (Nature Smart): ${scores.naturalistic || 3}/5
+
+You MUST reply ONLY with a valid, clean JSON object in this exact format (no markdown tags, no extra prose):
+{
+  "goalAlignmentScore": <integer number between 68 and 98 representing AI-calculated percentage accuracy towards target goal>,
+  "primaryType": "<Primary Intelligence Title (e.g. Interpersonal - People Smart)>",
+  "secondaryType": "<Secondary Intelligence Title (e.g. Intrapersonal - Self Smart)>",
+  "summaryReport": "<2-3 sentence clinical evaluation by Dr. Manas explaining how close and accurate the candidate is towards achieving their target counseling career goal based on their scores>"
+}`;
+
+    try {
+      const rawRes = await this.queryHF([
+        { role: "system", content: "You are a JSON-only evaluator. Return strictly valid JSON." },
+        { role: "user", content: systemPrompt },
+      ]);
+
+      if (rawRes) {
+        const cleaned = rawRes.replace(/```json/g, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+        if (
+          typeof parsed.goalAlignmentScore === "number" &&
+          parsed.primaryType &&
+          parsed.summaryReport
+        ) {
+          return {
+            goalAlignmentScore: Math.max(65, Math.min(99, parsed.goalAlignmentScore)),
+            primaryType: parsed.primaryType,
+            secondaryType: parsed.secondaryType || "Intrapersonal (Self Smart)",
+            summaryReport: parsed.summaryReport,
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("Manas AI career intelligence evaluation fallback:", err);
+    }
+
+    // Mathematical fallback if AI service times out
+    const interpersonal = scores.interpersonal || 3;
+    const intrapersonal = scores.intrapersonal || 3;
+    const linguistic = scores.linguistic || 3;
+    const weightedSum = interpersonal * 3 + intrapersonal * 3 + linguistic * 2;
+    const calcScore = Math.max(68, Math.min(96, Math.round((weightedSum / 40) * 100)));
+
+    return {
+      goalAlignmentScore: calcScore,
+      primaryType: "Interpersonal (People Smart)",
+      secondaryType: "Intrapersonal (Self Smart)",
+      summaryReport: `Dr. Manas Evaluation: ${fullName || "Candidate"} demonstrates strong interpersonal empathy and self-awareness. Their profile indicates a ${calcScore}% accuracy alignment towards mastering ${counselingType}.`,
+    };
+  }
 }

@@ -18,6 +18,13 @@ export interface ICareerSelectionRegistration extends Document {
   meetingLink?: string;
   status: "pending" | "approved" | "rejected";
   adminNotes?: string;
+  intelligenceData?: {
+    scores: Record<string, number>;
+    primaryType: string;
+    secondaryType: string;
+    goalAlignmentScore: number;
+    summaryReport: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +47,7 @@ const careerSelectionRegistrationSchema = new Schema<ICareerSelectionRegistratio
     meetingLink: { type: String, default: "" },
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
     adminNotes: { type: String, default: "" },
+    intelligenceData: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true }
 );

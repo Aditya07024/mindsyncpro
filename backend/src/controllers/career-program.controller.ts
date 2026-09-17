@@ -5,6 +5,7 @@ import {
   CounselingTrainingEnrollment,
 } from "../models/career-program";
 import { AuthedRequest } from "../middleware/auth";
+import { AIService } from "../services/ai.service";
 
 const DEFAULT_TRAINING_PROGRAMS = [
   {
@@ -52,11 +53,36 @@ const DEFAULT_TRAINING_PROGRAMS = [
 
 export async function registerCareerSelection(req: AuthedRequest, res: Response): Promise<void> {
   try {
-    const { fullName, country, state, city, schoolOrgName, age, phone, counselingType, preferredGoals } = req.body;
+    const { fullName, country, state, city, schoolOrgName, age, phone, counselingType, preferredGoals, intelligenceData } = req.body;
 
     if (!fullName || !state || !city || !schoolOrgName || !age || !phone) {
       res.status(400).json({ success: false, message: "All fields are required" });
       return;
+    }
+
+    let finalIntelligenceData = intelligenceData;
+
+    // Use Manas AI model to calculate Goal Alignment Accuracy Score & Summary Analysis
+    if (intelligenceData && intelligenceData.scores) {
+      try {
+        const aiEvaluation = await AIService.evaluateCareerIntelligence({
+          fullName,
+          counselingType: counselingType || "Clinical Psychology & Psychotherapy",
+          scores: intelligenceData.scores,
+          schoolOrgName,
+          age: Number(age),
+        });
+
+        finalIntelligenceData = {
+          scores: intelligenceData.scores,
+          primaryType: aiEvaluation.primaryType,
+          secondaryType: aiEvaluation.secondaryType,
+          goalAlignmentScore: aiEvaluation.goalAlignmentScore,
+          summaryReport: aiEvaluation.summaryReport,
+        };
+      } catch (aiErr) {
+        console.warn("Manas AI calculation fallback:", aiErr);
+      }
     }
 
     const registration = await CareerSelectionRegistration.create({
@@ -71,6 +97,7 @@ export async function registerCareerSelection(req: AuthedRequest, res: Response)
       phone,
       counselingType: counselingType || "Clinical Psychology & Psychotherapy",
       preferredGoals: preferredGoals || "",
+      intelligenceData: finalIntelligenceData || null,
       status: "pending",
     });
 
@@ -81,6 +108,22 @@ export async function registerCareerSelection(req: AuthedRequest, res: Response)
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to register" });
+  }
+}
+
+export async function evaluateIntelligenceAI(req: Request, res: Response): Promise<void> {
+  try {
+    const { fullName, counselingType, scores, schoolOrgName, age } = req.body;
+    const aiEvaluation = await AIService.evaluateCareerIntelligence({
+      fullName: fullName || "Candidate",
+      counselingType: counselingType || "Clinical Psychology & Psychotherapy",
+      scores: scores || {},
+      schoolOrgName,
+      age: Number(age) || 21,
+    });
+    res.json({ success: true, evaluation: aiEvaluation });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Evaluation failed" });
   }
 }
 

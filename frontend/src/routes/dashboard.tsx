@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight, Calendar, GraduationCap, Building2, MapPin, User, Mail } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useUser } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
@@ -204,6 +204,231 @@ function Dashboard() {
               <Wallet className="size-3.5" />
               <span>₹{walletBalance.toFixed(2)}</span>
             </Link>
+          </div>
+        </div>
+
+        {/* EXACT MOCKUP DASHBOARD CARD UI FROM USER IMAGE */}
+        <div className="bg-white rounded-[32px] border border-slate-200/90 p-6 sm:p-9 shadow-xl space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 font-display">
+                Welcome!
+              </h2>
+              <p className="text-sm font-medium text-slate-500 mt-0.5">
+                Connect you in 24 hours
+              </p>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-bold text-purple-700 shadow-2xs self-start sm:self-auto">
+              <Clock className="size-4 text-purple-600" />
+              Connects you in 24 hours
+            </div>
+          </div>
+
+          {/* 5 Soft Pastel Metric Cards */}
+          <div className="space-y-4">
+            {/* Row 1: Name, Age, Class */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Tile 1: Name */}
+              <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 to-indigo-100/40 p-4 shadow-2xs flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-xs border border-indigo-100 shrink-0">
+                  <User className="size-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Name
+                  </span>
+                  <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                    {dbUser?.fullName || clerkUser?.fullName || "Your Full Name"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tile 2: Age */}
+              <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 to-emerald-100/40 p-4 shadow-2xs flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-xs border border-emerald-100 shrink-0">
+                  <Calendar className="size-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Age
+                  </span>
+                  <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                    {dbUser?.onboarding?.age ? `${dbUser.onboarding.age} Years` : "Your Age"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tile 3: Class */}
+              <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 to-amber-100/40 p-4 shadow-2xs flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-xs border border-amber-100 shrink-0">
+                  <GraduationCap className="size-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Class
+                  </span>
+                  <p className="text-sm font-bold text-slate-900 truncate">
+                    {dbUser?.onboarding?.profession || "Your Class"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: School & Address */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Tile 4: School */}
+              <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50/70 to-sky-100/40 p-4 shadow-2xs flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-xs border border-sky-100 shrink-0">
+                  <Building2 className="size-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    School
+                  </span>
+                  <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                    {dbUser?.onboarding?.schoolOrgName || "Your School Name"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tile 5: Address */}
+              <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/70 to-purple-100/40 p-4 shadow-2xs flex items-center gap-4">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-purple-600 shadow-xs border border-purple-100 shrink-0">
+                  <MapPin className="size-6" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Address
+                  </span>
+                  <p className="text-sm font-bold text-slate-900 truncate">
+                    {dbUser?.city && dbUser?.state
+                      ? `${dbUser.city}, ${dbUser.state}`
+                      : "Your Address"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Section — Next Booking */}
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="size-5 text-indigo-600" />
+              <h3 className="font-bold text-slate-900 text-lg">Next Booking</h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+              {/* Left Booking Status Card */}
+              <div className="lg:col-span-6 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/50 via-white to-slate-50 p-6 flex items-center gap-5 shadow-2xs">
+                <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+                  <Calendar className="size-8" />
+                </div>
+                <div className="space-y-1">
+                  {!upcomingBooking ? (
+                    <>
+                      <h4 className="font-extrabold text-slate-900 text-lg">
+                        No booking scheduled!
+                      </h4>
+                      <p className="text-xs text-slate-500 font-medium">
+                        Book a session to get started. Connect with top verified counselors.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 border border-emerald-200">
+                        Confirmed Session
+                      </span>
+                      <h4 className="font-extrabold text-slate-900 text-base">
+                        {upcomingBooking.therapistName}
+                      </h4>
+                      <p className="text-xs text-indigo-700 font-bold">
+                        {new Date(upcomingBooking.slot).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Action Cards Grid */}
+              <div className="lg:col-span-6 space-y-4 flex flex-col justify-between">
+                <div className="grid grid-cols-2 gap-4">
+                  <Link to="/therapists" className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex items-center gap-3 shadow-2xs hover:shadow-xs transition">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-xs">
+                      <Calendar className="size-5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-emerald-950 text-xs sm:text-sm block leading-tight">
+                        Confirm Booking
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-medium">
+                        Find Counselor
+                      </span>
+                    </div>
+                  </Link>
+
+                  <Link to="/bookings" className="rounded-2xl border border-purple-200 bg-purple-50/70 p-4 flex items-center gap-3 shadow-2xs hover:shadow-xs transition">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white shadow-xs">
+                      <Clock className="size-5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-purple-950 text-xs sm:text-sm block leading-tight">
+                        Session Booking
+                      </span>
+                      <span className="text-[10px] text-purple-700 font-medium">
+                        View Schedule
+                      </span>
+                    </div>
+                  </Link>
+                </div>
+
+                {/* Profile / Join Session Solid Indigo Button */}
+                {upcomingBooking && canJoin ? (
+                  <Link
+                    to={`/session/${upcomingBooking.id}`}
+                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <User className="size-4" /> Join Session Now
+                  </Link>
+                ) : (
+                  <Link
+                    to="/therapists"
+                    className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <User className="size-4" /> Profile
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Section — User Mail */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center gap-2">
+              <Mail className="size-5 text-indigo-600" />
+              <h3 className="font-bold text-slate-900 text-lg">User Mail</h3>
+            </div>
+
+            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-white to-purple-50/50 p-6 flex items-center justify-between gap-6 shadow-2xs">
+              <div className="flex items-center gap-4">
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
+                  <Mail className="size-7" />
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="font-extrabold text-slate-900 text-base">
+                    Stay Updated!
+                  </h4>
+                  <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
+                    All your session booking details, confirmations, and updates will be sent to your registered email: <strong>{dbUser?.email || clerkUser?.primaryEmailAddress?.emailAddress || "your registered email"}</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="hidden sm:flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold border border-indigo-200">
+                <Mail className="size-5" />
+              </div>
+            </div>
           </div>
         </div>
 
