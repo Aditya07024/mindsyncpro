@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight, Calendar, GraduationCap, Building2, MapPin, User, Mail } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight, Calendar, GraduationCap, Building2, MapPin, User, Mail, Briefcase, BarChart3 } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { useUser } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
@@ -309,6 +309,34 @@ function Dashboard() {
                   {lastMsg?.content || 'Tap to open up — no judgement, just a listening ear.'}
                 </p>
               </div>
+            </Link>
+
+            {/* Career Guidance & Assessment Report Navigation Banner */}
+            <Link to="/career-selection" className="block">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="rounded-3xl bg-gradient-to-r from-[#004038] via-[#01584c] to-teal-800 p-6 text-white shadow-md transition-transform active:scale-[0.98] hover:shadow-lg space-y-3 relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-11 items-center justify-center rounded-2xl bg-white/10 border border-white/20 text-teal-300">
+                      <Briefcase className="size-6" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-teal-200 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15">
+                        Multiple Intelligences & Career Report
+                      </span>
+                      <h3 className="font-display font-bold text-lg text-white mt-0.5">
+                        Career Guidance & Assessment Report
+                      </h3>
+                    </div>
+                  </div>
+                  <ChevronRight className="size-6 text-teal-300" />
+                </div>
+                <p className="text-xs text-teal-100/90 leading-relaxed max-w-lg relative z-10">
+                  View your 8 Gardner Intelligences wheel analytics, AI goal match score, and book 1-on-1 counselor guidance sessions.
+                </p>
+                <div className="absolute -bottom-10 -right-10 size-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+              </motion.div>
             </Link>
 
             {/* Quick Actions Grid */}

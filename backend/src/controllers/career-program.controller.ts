@@ -4,6 +4,7 @@ import {
   CounselingTrainingProgram,
   CounselingTrainingEnrollment,
 } from "../models/career-program";
+import { User, TherapistBooking } from "../models";
 import { AuthedRequest } from "../middleware/auth";
 import { AIService } from "../services/ai.service";
 
@@ -352,6 +353,137 @@ export async function updateCounselingTrainingEnrollmentStatus(req: Request, res
     res.json({ success: true, enrollment, message: `Enrollment status updated to ${status}` });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to update enrollment status" });
+  }
+}
+
+// --- 3. COUNSELOR GUIDANCE WORKFLOW (REQUEST, ADMIN PROPOSAL, PAYMENT & DUAL BOOKING SYNC) ---
+
+export async function requestCounselorGuidance(req: AuthedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.sub;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const registration = await CareerSelectionRegistration.findOne({ userId }).sort({ createdAt: -1 });
+    if (!registration) {
+      res.status(404).json({ success: false, message: "Registration profile not found" });
+      return;
+    }
+
+    registration.guidanceRequested = true;
+    registration.status = "guidance_requested";
+    await registration.save();
+
+    res.json({
+      success: true,
+      registration,
+      message: "Guidance request submitted! Admin will assign a counselor and guidance fee details shortly.",
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to submit guidance request" });
+  }
+}
+
+export async function adminAssignCounselorAndFee(req: Request, res: Response): Promise<void> {
+  try {
+    const { registrationId, therapistId, assignedCounselor, guidanceFee, meetingDate, meetingLink, adminNotes } = req.body;
+
+    if (!registrationId) {
+      res.status(400).json({ success: false, message: "Registration ID is required" });
+      return;
+    }
+
+    let counselorName = assignedCounselor;
+    if (therapistId && (!counselorName || counselorName === "Senior Clinical Counselor")) {
+      const counselorUser = await User.findById(therapistId);
+      if (counselorUser) counselorName = counselorUser.fullName;
+    }
+
+    const registration = await CareerSelectionRegistration.findByIdAndUpdate(
+      registrationId,
+      {
+        therapistId: therapistId || "",
+        assignedCounselor: counselorName || "Senior Clinical Counselor",
+        guidanceFee: Number(guidanceFee || 0),
+        meetingDate: meetingDate || "",
+        meetingLink: meetingLink || "",
+        adminNotes: adminNotes || "",
+        status: "proposal_sent",
+      },
+      { new: true }
+    );
+
+    if (!registration) {
+      res.status(404).json({ success: false, message: "Registration record not found" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      registration,
+      message: `Proposal sent to ${registration.fullName}! Assigned counselor: ${registration.assignedCounselor}, Fee: ₹${registration.guidanceFee}`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to assign counselor proposal" });
+  }
+}
+
+export async function payAndConfirmGuidanceBooking(req: AuthedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.sub;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const registration = await CareerSelectionRegistration.findOne({ userId }).sort({ createdAt: -1 });
+    if (!registration) {
+      res.status(404).json({ success: false, message: "Registration record not found" });
+      return;
+    }
+
+    registration.paymentStatus = "paid";
+    registration.status = "approved";
+    await registration.save();
+
+    // Dual Sync: Create a formal TherapistBooking record if not already created
+    const existingBooking = await TherapistBooking.findOne({
+      userId,
+      notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
+      status: { $in: ["pending", "confirmed"] },
+    });
+
+    let booking = existingBooking;
+    if (!booking) {
+      const slotTime = registration.meetingDate
+        ? new Date(registration.meetingDate)
+        : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      booking = await TherapistBooking.create({
+        userId,
+        therapistId: registration.therapistId || "",
+        therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
+        slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
+        status: "confirmed",
+        notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+        payment: {
+          amount: registration.guidanceFee || 0,
+          status: "completed",
+          paidAt: new Date(),
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      registration,
+      booking,
+      message: "Payment confirmed! Your counselor guidance session has been booked successfully.",
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to confirm payment and booking" });
   }
 }
 

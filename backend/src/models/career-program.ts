@@ -14,9 +14,13 @@ export interface ICareerSelectionRegistration extends Document {
   counselingType?: string;
   preferredGoals?: string;
   assignedCounselor?: string;
+  therapistId?: string;
   meetingDate?: string;
   meetingLink?: string;
-  status: "pending" | "approved" | "rejected";
+  guidanceRequested?: boolean;
+  guidanceFee?: number;
+  paymentStatus?: "unpaid" | "paid" | "free";
+  status: "pending" | "guidance_requested" | "proposal_sent" | "approved" | "rejected";
   adminNotes?: string;
   intelligenceData?: {
     scores: Record<string, number>;
@@ -43,9 +47,17 @@ const careerSelectionRegistrationSchema = new Schema<ICareerSelectionRegistratio
     counselingType: { type: String, default: "Clinical Psychology & Psychotherapy" },
     preferredGoals: { type: String, default: "" },
     assignedCounselor: { type: String, default: "" },
+    therapistId: { type: String, default: "" },
     meetingDate: { type: String, default: "" },
     meetingLink: { type: String, default: "" },
-    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    guidanceRequested: { type: Boolean, default: false },
+    guidanceFee: { type: Number, default: 0 },
+    paymentStatus: { type: String, enum: ["unpaid", "paid", "free"], default: "unpaid" },
+    status: {
+      type: String,
+      enum: ["pending", "guidance_requested", "proposal_sent", "approved", "rejected"],
+      default: "pending",
+    },
     adminNotes: { type: String, default: "" },
     intelligenceData: { type: Schema.Types.Mixed, default: null },
   },

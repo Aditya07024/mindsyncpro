@@ -605,6 +605,27 @@ const API = {
       }),
     getCareerSelectionStatus: () =>
       apiCall<{ success: boolean; registration: any }>("/api/career-programs/career-selection/status"),
+    requestGuidance: () =>
+      apiCall<{ success: boolean; registration: any; message: string }>("/api/career-programs/career-selection/request-guidance", {
+        method: "POST",
+      }),
+    adminAssign: (data: {
+      registrationId: string;
+      therapistId?: string;
+      assignedCounselor?: string;
+      guidanceFee?: number;
+      meetingDate?: string;
+      meetingLink?: string;
+      adminNotes?: string;
+    }) =>
+      apiCall<{ success: boolean; registration: any; message: string }>("/api/career-programs/career-selection/admin-assign", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    payGuidance: () =>
+      apiCall<{ success: boolean; registration: any; booking: any; message: string }>("/api/career-programs/career-selection/pay-guidance", {
+        method: "POST",
+      }),
     getCareerSelectionRegistrations: () =>
       apiCall<{ success: boolean; registrations: any[] }>("/api/career-programs/career-selection/admin-registrations"),
     updateCareerSelectionStatus: (

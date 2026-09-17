@@ -862,6 +862,175 @@ function DashboardIntelligenceAnalytics({ registration }: { registration: any })
         </div>
       </div>
 
+      {/* 4. ITEM 4: COUNSELOR GUIDANCE REQUEST & BOOKING WORKFLOW CARD */}
+      <CounselorGuidanceBookingCard registration={registration} />
+
+    </div>
+  );
+}
+
+{/* SUB-COMPONENT 3: Counselor Guidance Booking Card & Payment Flow */}
+function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
+  const queryClient = useQueryClient();
+  const [isProcessingPay, setIsProcessingPay] = useState(false);
+
+  const requestGuidanceMutation = useMutation({
+    mutationFn: () => API.careerPrograms.requestGuidance(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["careerSelectionStatus"] });
+    },
+  });
+
+  const payGuidanceMutation = useMutation({
+    mutationFn: () => API.careerPrograms.payGuidance(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["careerSelectionStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+
+  const status = registration?.status || "pending";
+  const fee = registration?.guidanceFee || 0;
+  const counselor = registration?.assignedCounselor || "Senior Clinical Counselor";
+  const meetingDate = registration?.meetingDate;
+
+  // STATE A: Proposal Sent by Admin -> Candidate needs to Pay & Confirm
+  if (status === "proposal_sent") {
+    return (
+      <div className="rounded-3xl border-2 border-indigo-500 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 p-7 sm:p-9 text-white shadow-2xl space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-200 border border-indigo-400/30 backdrop-blur">
+              <Sparkles className="size-4 text-indigo-300" /> Counselor Proposal Ready!
+            </span>
+            <h4 className="font-display font-bold text-2xl sm:text-3xl text-white">
+              1-on-1 Guidance Session Proposal
+            </h4>
+            <p className="text-indigo-200/90 text-xs sm:text-sm leading-relaxed">
+              Super Admin has matched your Multiple Intelligences report with <strong>{counselor}</strong> for a dedicated 1-on-1 guidance consultation.
+            </p>
+          </div>
+
+          {/* Fee & Slot Card */}
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center space-y-1 shrink-0">
+            <span className="text-3xl sm:text-4xl font-black font-mono text-emerald-400">
+              ₹{fee}
+            </span>
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-200 block">
+              Consultation Fee
+            </p>
+            {meetingDate && (
+              <span className="inline-block mt-1 text-[10px] font-bold text-white bg-indigo-600/60 px-3 py-1 rounded-full border border-indigo-400/30">
+                📅 {meetingDate}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="pt-2 flex flex-col sm:flex-row items-center gap-4 border-t border-indigo-800/80">
+          <button
+            disabled={payGuidanceMutation.isPending}
+            onClick={() => payGuidanceMutation.mutate()}
+            className="w-full sm:w-auto flex-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 py-4 px-8 text-base font-extrabold text-slate-950 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
+          >
+            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee} & Confirm Counselor Session`} <ArrowRight className="size-5" />
+          </button>
+          <p className="text-[11px] text-indigo-300 font-medium">
+            * Instant confirmation. Your booking will sync directly to your dashboard & counselor schedule.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // STATE B: Guidance Requested -> Waiting for Admin
+  if (status === "guidance_requested" || (registration?.guidanceRequested && status !== "approved")) {
+    return (
+      <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-7 sm:p-9 shadow-md space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md">
+            <Clock className="size-7" />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-800 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300">
+              Request Under Admin Review
+            </span>
+            <h4 className="font-bold text-slate-900 text-xl">
+              Guidance Counselor Request Submitted!
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Our Super Admin is reviewing your Multiple Intelligences report and assigning a specialist counselor tailored to your domain. You will receive a notification with fee details and proposed time slots shortly.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // STATE C: Approved / Paid -> Session Confirmed
+  if (status === "approved" || registration?.paymentStatus === "paid") {
+    return (
+      <div className="rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-500/10 via-teal-50 to-emerald-500/10 p-7 sm:p-9 shadow-md space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+            <CheckCircle2 className="size-7" />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-900 bg-emerald-100 px-3 py-0.5 rounded-full border border-emerald-300">
+              Guidance Session Active
+            </span>
+            <h4 className="font-bold text-slate-900 text-xl">
+              1-on-1 Counselor Session Confirmed ✓
+            </h4>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Assigned Counselor: <strong>{counselor}</strong> {meetingDate ? `· Date: ${meetingDate}` : ""}
+            </p>
+          </div>
+        </div>
+
+        {registration?.meetingLink ? (
+          <a
+            href={registration.meetingLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3.5 text-xs font-bold text-white shadow-md hover:bg-[#002f29] transition cursor-pointer"
+          >
+            <User className="size-4 text-teal-300" /> Join Counselor Meeting Room
+          </a>
+        ) : (
+          <div className="text-xs font-medium text-slate-500 italic bg-white p-3 rounded-xl border border-emerald-100">
+            * Video meeting link will activate 15 minutes before your scheduled session time.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // STATE D: Initial Default -> Button "Want to Book a Counselor for Guidance?"
+  return (
+    <div className="rounded-3xl border border-teal-200 bg-gradient-to-r from-teal-50/90 via-white to-emerald-50/90 p-7 sm:p-9 shadow-md space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1.5 max-w-xl">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-teal-800 bg-teal-100/80 px-3 py-1 rounded-full border border-teal-200">
+            Personalized Guidance Consultation
+          </span>
+          <h4 className="font-bold text-slate-900 text-xl sm:text-2xl">
+            Want to Book a Counselor for Guidance?
+          </h4>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Get 1-on-1 expert guidance from a senior clinical counselor based on your Multiple Intelligences report. Submit a request and our Admin will assign a matched counselor with fee details.
+          </p>
+        </div>
+
+        <button
+          disabled={requestGuidanceMutation.isPending}
+          onClick={() => requestGuidanceMutation.mutate()}
+          className="rounded-2xl bg-[#004038] hover:bg-[#002f29] text-white font-extrabold py-4 px-7 text-xs sm:text-sm shadow-xl transition cursor-pointer flex items-center justify-center gap-2 shrink-0 self-start sm:self-auto"
+        >
+          <Brain className="size-4 text-teal-300" /> {requestGuidanceMutation.isPending ? "Submitting Request..." : "Book a Counselor for Guidance"} <ArrowRight className="size-4" />
+        </button>
+      </div>
     </div>
   );
 }

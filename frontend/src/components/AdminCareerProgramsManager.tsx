@@ -51,20 +51,29 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   const adminPrograms = adminProgramsData?.programs || [];
   const trainingEnrollments = trainingData?.enrollments || [];
 
+  // 4. Fetch Active Therapists for Admin Assignment
+  const { data: therapistsData } = useQuery({
+    queryKey: ["therapistsList"],
+    queryFn: () => API.therapist.list(),
+  });
+
+  const activeTherapists = therapistsData?.therapists || [];
+
   // Selection meeting schedule state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [scheduleForm, setScheduleForm] = useState({
+    therapistId: "",
     assignedCounselor: "Dr. Ananya Sharma (Senior Clinical Psychologist & Counselor)",
+    guidanceFee: 499,
     meetingDate: "15th October 2026 at 11:00 AM",
     meetingLink: "https://meet.jit.si/MindSyncPro-CareerSession",
-    adminNotes: "Application approved. Meeting scheduled with senior counselor.",
-    status: "approved",
+    adminNotes: "Admin assigned senior counselor for 1-on-1 guidance consultation.",
+    status: "proposal_sent",
   });
 
-  const updateSelectionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      API.careerPrograms.updateCareerSelectionStatus(id, data),
+  const adminAssignMutation = useMutation({
+    mutationFn: (data: any) => API.careerPrograms.adminAssign(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminCareerSelectionRegistrations"] });
       setShowScheduleModal(false);
@@ -74,11 +83,13 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   const handleOpenScheduleModal = (r: any) => {
     setSelectedRecord(r);
     setScheduleForm({
+      therapistId: r.therapistId || "",
       assignedCounselor: r.assignedCounselor || "Dr. Ananya Sharma (Senior Clinical Psychologist & Counselor)",
+      guidanceFee: r.guidanceFee || 499,
       meetingDate: r.meetingDate || "15th October 2026 at 11:00 AM",
       meetingLink: r.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-      adminNotes: r.adminNotes || "Application approved. Meeting scheduled with senior counselor.",
-      status: "approved",
+      adminNotes: r.adminNotes || "Admin assigned senior counselor for 1-on-1 guidance consultation.",
+      status: "proposal_sent",
     });
     setShowScheduleModal(true);
   };
@@ -86,9 +97,9 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRecord) return;
-    updateSelectionMutation.mutate({
-      id: selectedRecord._id,
-      data: scheduleForm,
+    adminAssignMutation.mutate({
+      registrationId: selectedRecord._id,
+      ...scheduleForm,
     });
   };
 
@@ -713,7 +724,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold flex items-center gap-2 text-teal-400">
-              <Calendar className="size-5" /> Schedule 1-on-1 Counselor Meeting
+              <Calendar className="size-5" /> Assign Counselor & Send Fee Proposal
             </h3>
             <p className="text-xs text-slate-400">
               Applicant: <strong className="text-white">{selectedRecord.fullName}</strong> ({selectedRecord.schoolOrgName})
@@ -722,8 +733,32 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
             </p>
 
             <form onSubmit={handleScheduleSubmit} className="space-y-4 text-xs">
+              {/* Therapist Selection Dropdown */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Assigned Counselor / Therapist Name</label>
+                <label className="block text-slate-400 font-semibold mb-1">Select Active System Counselor / Therapist</label>
+                <select
+                  value={scheduleForm.therapistId}
+                  onChange={(e) => {
+                    const selectedTherapist = activeTherapists.find((t: any) => t._id === e.target.value);
+                    setScheduleForm({
+                      ...scheduleForm,
+                      therapistId: e.target.value,
+                      assignedCounselor: selectedTherapist?.fullName || scheduleForm.assignedCounselor,
+                    });
+                  }}
+                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-medium"
+                >
+                  <option value="">-- Custom / Senior Clinical Counselor --</option>
+                  {activeTherapists.map((t: any) => (
+                    <option key={t._id} value={t._id}>
+                      {t.fullName} ({t.specialization || "Psychologist"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Assigned Counselor Display Name</label>
                 <input
                   type="text"
                   required
@@ -731,6 +766,19 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                   onChange={(e) => setScheduleForm({ ...scheduleForm, assignedCounselor: e.target.value })}
                   placeholder="e.g. Dr. Ananya Sharma (Senior Clinical Psychologist)"
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Guidance Booking Amount / Fee (₹)</label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  value={scheduleForm.guidanceFee}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, guidanceFee: Number(e.target.value) })}
+                  placeholder="e.g. 499"
+                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-mono text-sm"
                 />
               </div>
 
@@ -761,10 +809,10 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Admin Notes / Guidance Instructions</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={scheduleForm.adminNotes}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, adminNotes: e.target.value })}
-                  placeholder="Additional guidelines for the student prior to joining the meeting..."
+                  placeholder="Additional guidelines for the candidate..."
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
                 />
               </div>
@@ -779,10 +827,10 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                 </button>
                 <button
                   type="submit"
-                  disabled={updateSelectionMutation.isPending}
+                  disabled={adminAssignMutation.isPending}
                   className="flex-1 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 transition shadow-lg cursor-pointer"
                 >
-                  Approve & Confirm Meeting
+                  {adminAssignMutation.isPending ? "Sending Proposal..." : "Send Proposal & Fee to Candidate"}
                 </button>
               </div>
             </form>

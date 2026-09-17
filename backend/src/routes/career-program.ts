@@ -5,6 +5,9 @@ import {
   getCareerSelectionRegistrations,
   updateCareerSelectionStatus,
   evaluateIntelligenceAI,
+  requestCounselorGuidance,
+  adminAssignCounselorAndFee,
+  payAndConfirmGuidanceBooking,
   getCounselingTrainingPrograms,
   getAdminCounselingTrainingPrograms,
   createCounselingTrainingProgram,
@@ -22,6 +25,9 @@ const router = Router();
 router.post("/career-selection/register", optionalAuth, registerCareerSelection);
 router.post("/career-selection/evaluate-ai", optionalAuth, evaluateIntelligenceAI);
 router.get("/career-selection/status", optionalAuth, getCareerSelectionStatus);
+router.post("/career-selection/request-guidance", requireAuth, requestCounselorGuidance);
+router.post("/career-selection/admin-assign", requireAuth, requireRole(["super_admin", "admin"]), adminAssignCounselorAndFee);
+router.post("/career-selection/pay-guidance", requireAuth, payAndConfirmGuidanceBooking);
 router.get("/career-selection/admin-registrations", requireAuth, requireRole(["super_admin", "admin"]), getCareerSelectionRegistrations);
 router.patch("/career-selection/admin-registrations/:id", requireAuth, requireRole(["super_admin", "admin"]), updateCareerSelectionStatus);
 
