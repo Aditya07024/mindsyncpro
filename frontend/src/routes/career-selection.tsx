@@ -446,16 +446,16 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
     },
   });
 
+  const fee = Number(registration?.guidanceFee ?? 0);
   const isPaid =
     registration?.paymentStatus === "paid" ||
-    registration?.paymentStatus === "free" ||
-    Number(registration?.guidanceFee || 0) === 0;
+    (registration?.paymentStatus === "free" && fee === 0);
   const isApproved = registration?.status === "approved" || registration?.status === "completed";
   const isConfirmedAndPaid = isApproved && isPaid;
   const isProposalPending =
     (registration?.status === "proposal_sent" ||
       registration?.status === "fee_assigned" ||
-      (Number(registration?.guidanceFee || 0) > 0 && registration?.paymentStatus !== "paid")) &&
+      (fee > 0 && registration?.paymentStatus !== "paid")) &&
     !isConfirmedAndPaid;
   const isRequested = registration?.status === "guidance_requested" || registration?.guidanceRequested;
 
@@ -931,21 +931,19 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
     },
   });
 
-  const status = registration?.status || "pending";
-  const fee = registration?.guidanceFee || 0;
+  const fee = Number(registration?.guidanceFee ?? 0);
   const counselor = registration?.assignedCounselor || "Senior Clinical Counselor";
   const meetingDate = registration?.meetingDate;
 
   const isPaid =
     registration?.paymentStatus === "paid" ||
-    registration?.paymentStatus === "free" ||
-    Number(fee || 0) === 0;
+    (registration?.paymentStatus === "free" && fee === 0);
   const isApproved = status === "approved" || status === "completed";
   const isConfirmedAndPaid = isApproved && isPaid;
   const isProposalPending =
     (status === "proposal_sent" ||
       status === "fee_assigned" ||
-      (Number(fee || 0) > 0 && registration?.paymentStatus !== "paid")) &&
+      (fee > 0 && registration?.paymentStatus !== "paid")) &&
     !isConfirmedAndPaid;
 
   // STATE A: Proposal Sent by Admin -> Candidate needs to Pay & Confirm
