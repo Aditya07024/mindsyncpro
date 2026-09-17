@@ -70,3 +70,51 @@ export async function openSubscriptionCheckout({
   const rzp = new window.Razorpay(options);
   rzp.open();
 }
+
+interface OpenGuidanceCheckoutOptions {
+  amount: number;
+  fullName: string;
+  phone?: string;
+  onSuccess: () => void;
+  onCancel?: () => void;
+}
+
+export async function openGuidanceCheckout({
+  amount,
+  fullName,
+  phone,
+  onSuccess,
+  onCancel,
+}: OpenGuidanceCheckoutOptions) {
+  const loaded = await loadRazorpay();
+  if (!loaded || !window.Razorpay) {
+    onSuccess();
+    return;
+  }
+
+  const options = {
+    key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TQ764nZF0N6bzR",
+    amount: (amount || 499) * 100, // Amount in paise
+    currency: "INR",
+    name: "MyMindTherapyFriend",
+    description: "1-on-1 Counselor Guidance Consultation Fee",
+    prefill: {
+      name: fullName || "Candidate",
+      contact: phone || "",
+    },
+    handler: async () => {
+      onSuccess();
+    },
+    modal: {
+      ondismiss: () => {
+        onCancel?.();
+      },
+    },
+    theme: {
+      color: "#0d9488",
+    },
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+}

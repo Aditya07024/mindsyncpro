@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
+import { openGuidanceCheckout } from "@/lib/razorpay";
 import {
   MultipleIntelligenceModal,
   INTELLIGENCE_QUESTIONS,
@@ -692,10 +693,21 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
               <button
                 type="button"
                 disabled={payGuidanceMutation.isPending}
-                onClick={() => payGuidanceMutation.mutate()}
+                onClick={async () => {
+                  try {
+                    await openGuidanceCheckout({
+                      amount: fee || 499,
+                      fullName: registration?.fullName || "",
+                      phone: registration?.phone || "",
+                      onSuccess: () => payGuidanceMutation.mutate(),
+                    });
+                  } catch (err) {
+                    payGuidanceMutation.mutate();
+                  }
+                }}
                 className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
               >
-                <CheckCircle2 className="size-4" /> {payGuidanceMutation.isPending ? "Processing Payment..." : `Pay ₹${registration.guidanceFee || 499} & Unlock Meeting`}
+                <CheckCircle2 className="size-4" /> {payGuidanceMutation.isPending ? "Processing Payment..." : `Pay ₹${fee || 499} with Razorpay & Unlock Meeting`}
               </button>
             ) : (
               <button
@@ -983,13 +995,24 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
         <div className="pt-2 flex flex-col sm:flex-row items-center gap-4 border-t border-indigo-800/80">
           <button
             disabled={payGuidanceMutation.isPending}
-            onClick={() => payGuidanceMutation.mutate()}
+            onClick={async () => {
+              try {
+                await openGuidanceCheckout({
+                  amount: fee || 499,
+                  fullName: registration?.fullName || "",
+                  phone: registration?.phone || "",
+                  onSuccess: () => payGuidanceMutation.mutate(),
+                });
+              } catch (err) {
+                payGuidanceMutation.mutate();
+              }
+            }}
             className="w-full sm:w-auto flex-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 py-4 px-8 text-base font-extrabold text-slate-950 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
           >
-            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee || 499} & Confirm Counselor Session`} <ArrowRight className="size-5" />
+            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee || 499} with Razorpay & Confirm Counselor Session`} <ArrowRight className="size-5" />
           </button>
           <p className="text-[11px] text-indigo-300 font-medium">
-            * Instant confirmation. Your booking will sync directly to your candidate portal & therapist calendar.
+            * Instant Razorpay confirmation. Your booking will sync directly to your candidate portal & therapist calendar.
           </p>
         </div>
       </div>
