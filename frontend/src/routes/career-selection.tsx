@@ -29,6 +29,10 @@ import {
   CalendarPlus,
   CalendarDays,
   Send,
+  CreditCard,
+  Lock,
+  QrCode,
+  Wallet,
 } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
@@ -693,21 +697,13 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
               <button
                 type="button"
                 disabled={payGuidanceMutation.isPending}
-                onClick={async () => {
-                  try {
-                    await openGuidanceCheckout({
-                      amount: fee || 499,
-                      fullName: registration?.fullName || "",
-                      phone: registration?.phone || "",
-                      onSuccess: () => payGuidanceMutation.mutate(),
-                    });
-                  } catch (err) {
-                    payGuidanceMutation.mutate();
-                  }
+                onClick={() => {
+                  const el = document.getElementById("guidance-payment-card");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
               >
-                <CheckCircle2 className="size-4" /> {payGuidanceMutation.isPending ? "Processing Payment..." : `Pay ₹${fee || 499} with Razorpay & Unlock Meeting`}
+                <CheckCircle2 className="size-4" /> {payGuidanceMutation.isPending ? "Processing Payment..." : `Pay ₹${fee || 499} & Unlock Session`}
               </button>
             ) : (
               <button
@@ -926,7 +922,9 @@ function DashboardIntelligenceAnalytics({ registration }: { registration: any })
 // SUB-COMPONENT 3: Counselor Guidance Booking Card & Payment Flow
 function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   const queryClient = useQueryClient();
-  const [isProcessingPay, setIsProcessingPay] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<"upi" | "card" | "netbanking">("upi");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const requestGuidanceMutation = useMutation({
     mutationFn: () => API.careerPrograms.requestGuidance(),
@@ -940,6 +938,11 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["careerSelectionStatus"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      setShowPaymentModal(false);
+      setIsProcessing(false);
+    },
+    onError: () => {
+      setIsProcessing(false);
     },
   });
 
@@ -950,18 +953,33 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   const isPaid =
     registration?.paymentStatus === "paid" ||
     (registration?.paymentStatus === "free" && fee === 0);
-  const isApproved = status === "approved" || status === "completed";
+  const isApproved = registration?.status === "approved" || registration?.status === "completed";
   const isConfirmedAndPaid = isApproved && isPaid;
   const isProposalPending =
-    (status === "proposal_sent" ||
-      status === "fee_assigned" ||
+    (registration?.status === "proposal_sent" ||
+      registration?.status === "fee_assigned" ||
       (fee > 0 && registration?.paymentStatus !== "paid")) &&
     !isConfirmedAndPaid;
+
+  const handleConfirmPay = async () => {
+    setIsProcessing(true);
+    try {
+      await openGuidanceCheckout({
+        amount: fee || 499,
+        fullName: registration?.fullName || "",
+        phone: registration?.phone || "",
+        onSuccess: () => payGuidanceMutation.mutate(),
+        onCancel: () => setIsProcessing(false),
+      });
+    } catch (err) {
+      payGuidanceMutation.mutate();
+    }
+  };
 
   // STATE A: Proposal Sent by Admin -> Candidate needs to Pay & Confirm
   if (isProposalPending) {
     return (
-      <div className="rounded-3xl border-2 border-indigo-500 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 p-7 sm:p-9 text-white shadow-2xl space-y-6">
+      <div id="guidance-payment-card" className="rounded-3xl border-2 border-indigo-500 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 p-7 sm:p-9 text-white shadow-2xl space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-200 border border-indigo-400/30 backdrop-blur">
@@ -994,27 +1012,102 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
         {/* Action Button */}
         <div className="pt-2 flex flex-col sm:flex-row items-center gap-4 border-t border-indigo-800/80">
           <button
-            disabled={payGuidanceMutation.isPending}
-            onClick={async () => {
-              try {
-                await openGuidanceCheckout({
-                  amount: fee || 499,
-                  fullName: registration?.fullName || "",
-                  phone: registration?.phone || "",
-                  onSuccess: () => payGuidanceMutation.mutate(),
-                });
-              } catch (err) {
-                payGuidanceMutation.mutate();
-              }
-            }}
+            disabled={isProcessing || payGuidanceMutation.isPending}
+            onClick={() => setShowPaymentModal(true)}
             className="w-full sm:w-auto flex-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 py-4 px-8 text-base font-extrabold text-slate-950 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
           >
-            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee || 499} with Razorpay & Confirm Counselor Session`} <ArrowRight className="size-5" />
+            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee || 499} & Confirm Counselor Session`} <ArrowRight className="size-5" />
           </button>
           <p className="text-[11px] text-indigo-300 font-medium">
-            * Instant Razorpay confirmation. Your booking will sync directly to your candidate portal & therapist calendar.
+            * Secure 256-bit encrypted checkout. Your booking will sync directly to your candidate portal & therapist calendar.
           </p>
         </div>
+
+        {/* PAYMENT MODAL */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 text-white">
+            <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl relative">
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute top-5 right-5 p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="space-y-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/20 px-3 py-0.5 text-xs font-bold text-teal-300 border border-teal-500/30">
+                  <ShieldCheck className="size-3.5" /> 256-Bit Encrypted Payment Gateway
+                </span>
+                <h3 className="font-display font-bold text-2xl text-white">
+                  Complete Counselor Guidance Payment
+                </h3>
+              </div>
+
+              <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 space-y-3">
+                <div className="flex justify-between items-center text-xs text-slate-300 border-b border-slate-700 pb-2">
+                  <span>Assigned Counselor:</span>
+                  <strong className="text-white font-bold">{counselor}</strong>
+                </div>
+                <div className="flex justify-between items-center text-xs text-slate-300 border-b border-slate-700 pb-2">
+                  <span>Scheduled Date & Time:</span>
+                  <strong className="text-teal-300 font-bold">{meetingDate || "Scheduled Date Pending"}</strong>
+                </div>
+                <div className="flex justify-between items-center text-sm pt-1">
+                  <span className="font-bold text-slate-200">Total Payable Amount:</span>
+                  <span className="text-2xl font-black font-mono text-emerald-400">₹{fee || 499}</span>
+                </div>
+              </div>
+
+              {/* Payment Methods selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">Choose Payment Method</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMethod("upi")}
+                    className={`p-3 rounded-xl border text-center transition cursor-pointer ${
+                      selectedMethod === "upi" ? "bg-teal-950 border-teal-400 text-teal-200" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <QrCode className="size-5 mx-auto mb-1 text-teal-400" />
+                    <span className="text-xs font-bold block">UPI / GPay</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMethod("card")}
+                    className={`p-3 rounded-xl border text-center transition cursor-pointer ${
+                      selectedMethod === "card" ? "bg-teal-950 border-teal-400 text-teal-200" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <CreditCard className="size-5 mx-auto mb-1 text-teal-400" />
+                    <span className="text-xs font-bold block">Cards</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMethod("netbanking")}
+                    className={`p-3 rounded-xl border text-center transition cursor-pointer ${
+                      selectedMethod === "netbanking" ? "bg-teal-950 border-teal-400 text-teal-200" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <Wallet className="size-5 mx-auto mb-1 text-teal-400" />
+                    <span className="text-xs font-bold block">NetBanking</span>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isProcessing || payGuidanceMutation.isPending}
+                onClick={handleConfirmPay}
+                className="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 text-base shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Lock className="size-5" />
+                {isProcessing || payGuidanceMutation.isPending ? "Processing Payment & Confirming..." : `Pay ₹${fee || 499} & Confirm Counselor Session`}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
