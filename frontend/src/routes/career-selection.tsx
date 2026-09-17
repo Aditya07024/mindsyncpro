@@ -435,26 +435,65 @@ function CareerSelectionPage() {
   );
 }
 
-{/* SUB-COMPONENT 1: EXACT MATCHING DASHBOARD UI FROM USER MOCKUP IMAGE */}
+// SUB-COMPONENT 1: EXACT MATCHING DASHBOARD UI FROM USER MOCKUP IMAGE
 function CareerDashboardMockupUI({ registration }: { registration: any }) {
-  const isApproved = registration?.status === "approved";
+  const queryClient = useQueryClient();
+  const payGuidanceMutation = useMutation({
+    mutationFn: () => API.careerPrograms.payGuidance(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["careerSelectionStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+
+  const isPaid =
+    registration?.paymentStatus === "paid" ||
+    registration?.paymentStatus === "free" ||
+    Number(registration?.guidanceFee || 0) === 0;
+  const isApproved = registration?.status === "approved" || registration?.status === "completed";
+  const isConfirmedAndPaid = isApproved && isPaid;
+  const isProposalPending =
+    (registration?.status === "proposal_sent" ||
+      registration?.status === "fee_assigned" ||
+      (Number(registration?.guidanceFee || 0) > 0 && registration?.paymentStatus !== "paid")) &&
+    !isConfirmedAndPaid;
+  const isRequested = registration?.status === "guidance_requested" || registration?.guidanceRequested;
 
   return (
     <div className="bg-white rounded-[36px] border border-slate-200/90 p-6 sm:p-10 shadow-xl space-y-8">
       {/* 1. TOP HEADER SECTION */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-        <div>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 font-display">
-            Welcome!
-          </h2>
-          <p className="text-sm font-medium text-slate-500 mt-0.5">
-            Connect you in 24 hours
-          </p>
+        <div className="flex items-center gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-800 font-bold border border-teal-200">
+            <Sparkles className="size-7 text-teal-700" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-teal-800 bg-teal-50 px-3 py-0.5 rounded-full border border-teal-200">
+                Candidate Portal
+              </span>
+              <span className="text-xs font-semibold text-slate-500">
+                {registration?.phone || "Contact Registered"}
+              </span>
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
+              Welcome, {registration?.fullName || "Candidate"}!
+            </h2>
+          </div>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-4 py-2 text-xs font-bold text-purple-700 shadow-2xs self-start sm:self-auto">
-          <Clock className="size-4 text-purple-600" />
-          Connects you in 24 hours
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <p className="text-xs font-bold text-slate-900">
+              {registration?.schoolOrgName || "Organization Unspecified"}
+            </p>
+            <p className="text-[11px] text-slate-500 font-medium">
+              {registration?.city ? `${registration.city}, ${registration.state}` : "Location On File"}
+            </p>
+          </div>
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-slate-100 border border-slate-200 text-slate-700 font-bold">
+            <User className="size-5" />
+          </div>
         </div>
       </div>
 
@@ -463,47 +502,47 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
         {/* Row 1: Name, Age, Class */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Tile 1: Name (Light Purple/Blue) */}
-          <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 to-indigo-100/40 p-4 shadow-2xs flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-xs border border-indigo-100 shrink-0">
-              <User className="size-6" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Name
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 flex items-center justify-between shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">
+                Full Name
               </span>
-              <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
-                {registration?.fullName || "Your Full Name"}
+              <p className="font-bold text-slate-900 text-sm sm:text-base">
+                {registration?.fullName || "Candidate Name"}
               </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+              <User className="size-4" />
             </div>
           </div>
 
           {/* Tile 2: Age (Light Green) */}
-          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 to-emerald-100/40 p-4 shadow-2xs flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-emerald-600 shadow-xs border border-emerald-100 shrink-0">
-              <Calendar className="size-6" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 flex items-center justify-between shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">
                 Age
               </span>
-              <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
-                {registration?.age ? `${registration.age} Years` : "Your Age"}
+              <p className="font-bold text-slate-900 text-sm sm:text-base">
+                {registration?.age ? `${registration.age} yrs` : "N/A"}
               </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+              <Sparkles className="size-4" />
             </div>
           </div>
 
           {/* Tile 3: Class / Counseling Specialization (Light Orange/Peach) */}
-          <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/70 to-amber-100/40 p-4 shadow-2xs flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-xs border border-amber-100 shrink-0">
-              <GraduationCap className="size-6" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Class / Domain
+          <div className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4 flex items-center justify-between shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-orange-700">
+                Specialization / Speciality
               </span>
-              <p className="text-sm font-bold text-slate-900 truncate">
-                {registration?.counselingType || "Your Counseling Domain"}
+              <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-1">
+                {registration?.counselingType || "Clinical Psychology"}
               </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
+              <Brain className="size-4" />
             </div>
           </div>
         </div>
@@ -511,41 +550,39 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
         {/* Row 2: School & Address */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Tile 4: School / College / Org (Light Sky Blue) */}
-          <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50/70 to-sky-100/40 p-4 shadow-2xs flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-xs border border-sky-100 shrink-0">
-              <Building2 className="size-6" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                School / Institution
+          <div className="rounded-2xl border border-sky-100 bg-sky-50/60 p-4 flex items-center justify-between shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-700">
+                College / Institution / Organization
               </span>
-              <p className="text-sm sm:text-base font-bold text-slate-900 truncate">
-                {registration?.schoolOrgName || "Your School Name"}
+              <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-1">
+                {registration?.schoolOrgName || "Not Specified"}
               </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
+              <Building2 className="size-4" />
             </div>
           </div>
 
           {/* Tile 5: Address (Light Lavender/Purple) */}
-          <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/70 to-purple-100/40 p-4 shadow-2xs flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-white text-purple-600 shadow-xs border border-purple-100 shrink-0">
-              <MapPin className="size-6" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Address
+          <div className="rounded-2xl border border-purple-100 bg-purple-50/60 p-4 flex items-center justify-between shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700">
+                Address / Location
               </span>
-              <p className="text-sm font-bold text-slate-900 truncate">
-                {registration?.city && registration?.state
-                  ? `${registration.city}, ${registration.state}, ${registration.country || "India"}`
-                  : "Your Address"}
+              <p className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-1">
+                {registration?.city ? `${registration.city}, ${registration.state}` : "Location On File"}
               </p>
+            </div>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-purple-100 text-purple-700">
+              <MapPin className="size-4" />
             </div>
           </div>
         </div>
       </div>
 
       {/* 3. MIDDLE SECTION — NEXT BOOKING & ACTIONS */}
-      <div className="space-y-4 pt-2">
+      <div className="space-y-3 pt-2">
         <div className="flex items-center gap-2">
           <Calendar className="size-5 text-indigo-600" />
           <h3 className="font-bold text-slate-900 text-lg">Next Booking</h3>
@@ -558,25 +595,49 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
               <Calendar className="size-8" />
             </div>
             <div className="space-y-1">
-              {!isApproved ? (
-                <>
-                  <h4 className="font-extrabold text-slate-900 text-lg">
-                    No booking scheduled!
-                  </h4>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Book a session to get started. Our counselor will schedule your 1-on-1 meeting within 24 hours.
-                  </p>
-                </>
-              ) : (
+              {isConfirmedAndPaid ? (
                 <>
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-200">
-                    <CheckCircle2 className="size-3 text-emerald-600" /> Session Confirmed
+                    <CheckCircle2 className="size-3 text-emerald-600" /> Session Confirmed & Paid
                   </div>
                   <h4 className="font-extrabold text-slate-900 text-base">
                     {registration.assignedCounselor || "Senior Clinical Counselor"}
                   </h4>
                   <p className="text-xs text-indigo-700 font-bold">
                     {registration.meetingDate || "Scheduled Date & Time Pending"}
+                  </p>
+                </>
+              ) : isProposalPending ? (
+                <>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold px-2.5 py-0.5 border border-purple-200">
+                    <Clock className="size-3 text-purple-600" /> Counselor Proposal Ready (₹{registration.guidanceFee || 499})
+                  </div>
+                  <h4 className="font-extrabold text-slate-900 text-base">
+                    {registration.assignedCounselor || "Senior Clinical Counselor"}
+                  </h4>
+                  <p className="text-xs text-purple-700 font-bold">
+                    Pay fee to confirm appointment ({registration.meetingDate || "Date TBD"})
+                  </p>
+                </>
+              ) : isRequested ? (
+                <>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 border border-amber-200">
+                    <Clock className="size-3 text-amber-600" /> Reviewing Request
+                  </div>
+                  <h4 className="font-extrabold text-slate-900 text-base">
+                    Counselor Assignment Pending
+                  </h4>
+                  <p className="text-xs text-amber-700 font-bold">
+                    Admin is matching a specialist counselor for your profile.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h4 className="font-extrabold text-slate-900 text-lg">
+                    No booking scheduled!
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Book a session to get started. Our counselor will schedule your 1-on-1 meeting within 24 hours.
                   </p>
                 </>
               )}
@@ -596,7 +657,7 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
                     Confirm Booking
                   </span>
                   <span className="text-[10px] text-emerald-700 font-medium">
-                    {isApproved ? "Confirmed ✓" : "Pending 24h"}
+                    {isConfirmedAndPaid ? "Confirmed ✓" : isProposalPending ? "Payment Required" : "Pending Review"}
                   </span>
                 </div>
               </div>
@@ -617,8 +678,8 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
               </div>
             </div>
 
-            {/* Profile / Meeting Link Solid Indigo Button */}
-            {isApproved && registration.meetingLink ? (
+            {/* Profile / Meeting Link / Pay Button */}
+            {isConfirmedAndPaid && registration.meetingLink ? (
               <a
                 href={registration.meetingLink}
                 target="_blank"
@@ -627,42 +688,23 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
               >
                 <User className="size-4" /> Join Scheduled Video Meeting
               </a>
+            ) : isProposalPending ? (
+              <button
+                type="button"
+                disabled={payGuidanceMutation.isPending}
+                onClick={() => payGuidanceMutation.mutate()}
+                className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="size-4" /> {payGuidanceMutation.isPending ? "Processing Payment..." : `Pay ₹${registration.guidanceFee || 499} & Unlock Meeting`}
+              </button>
             ) : (
               <button
                 type="button"
                 className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 px-6 text-sm font-bold text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2"
               >
-                <User className="size-4" /> Profile Details
+                <User className="size-4" /> Profile & Assessment Details
               </button>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* 4. BOTTOM SECTION — USER MAIL */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center gap-2">
-          <Mail className="size-5 text-indigo-600" />
-          <h3 className="font-bold text-slate-900 text-lg">User Mail</h3>
-        </div>
-
-        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-white to-purple-50/50 p-6 flex items-center justify-between gap-6 shadow-2xs">
-          <div className="flex items-center gap-4">
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-md">
-              <Mail className="size-7" />
-            </div>
-            <div className="space-y-0.5">
-              <h4 className="font-extrabold text-slate-900 text-base">
-                Stay Updated!
-              </h4>
-              <p className="text-xs text-slate-600 max-w-xl leading-relaxed">
-                All your session booking details, confirmations, and updates will be sent to your registered email.
-              </p>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold border border-indigo-200">
-            <Mail className="size-5" />
           </div>
         </div>
       </div>
@@ -670,7 +712,7 @@ function CareerDashboardMockupUI({ registration }: { registration: any }) {
   );
 }
 
-{/* SUB-COMPONENT 2: Dashboard Analytics & Reports (Goal Match Score, Executive Summary, Graphs) */}
+// SUB-COMPONENT 2: Dashboard Analytics & Reports (Goal Match Score, Executive Summary, Graphs)
 function DashboardIntelligenceAnalytics({ registration }: { registration: any }) {
   const intel = registration?.intelligenceData || {
     scores: {
@@ -869,7 +911,7 @@ function DashboardIntelligenceAnalytics({ registration }: { registration: any })
   );
 }
 
-{/* SUB-COMPONENT 3: Counselor Guidance Booking Card & Payment Flow */}
+// SUB-COMPONENT 3: Counselor Guidance Booking Card & Payment Flow
 function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   const queryClient = useQueryClient();
   const [isProcessingPay, setIsProcessingPay] = useState(false);
@@ -894,27 +936,39 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   const counselor = registration?.assignedCounselor || "Senior Clinical Counselor";
   const meetingDate = registration?.meetingDate;
 
+  const isPaid =
+    registration?.paymentStatus === "paid" ||
+    registration?.paymentStatus === "free" ||
+    Number(fee || 0) === 0;
+  const isApproved = status === "approved" || status === "completed";
+  const isConfirmedAndPaid = isApproved && isPaid;
+  const isProposalPending =
+    (status === "proposal_sent" ||
+      status === "fee_assigned" ||
+      (Number(fee || 0) > 0 && registration?.paymentStatus !== "paid")) &&
+    !isConfirmedAndPaid;
+
   // STATE A: Proposal Sent by Admin -> Candidate needs to Pay & Confirm
-  if (status === "proposal_sent") {
+  if (isProposalPending) {
     return (
       <div className="rounded-3xl border-2 border-indigo-500 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 p-7 sm:p-9 text-white shadow-2xl space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-200 border border-indigo-400/30 backdrop-blur">
-              <Sparkles className="size-4 text-indigo-300" /> Counselor Proposal Ready!
+              <Sparkles className="size-4 text-indigo-300" /> Counselor Guidance Proposal Ready!
             </span>
             <h4 className="font-display font-bold text-2xl sm:text-3xl text-white">
               1-on-1 Guidance Session Proposal
             </h4>
             <p className="text-indigo-200/90 text-xs sm:text-sm leading-relaxed">
-              Super Admin has matched your Multiple Intelligences report with <strong>{counselor}</strong> for a dedicated 1-on-1 guidance consultation.
+              Super Admin has matched your Multiple Intelligences report with <strong>{counselor}</strong> for a dedicated 1-on-1 guidance consultation. Please complete the fee payment to confirm your booking and unlock the live video room.
             </p>
           </div>
 
           {/* Fee & Slot Card */}
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center space-y-1 shrink-0">
             <span className="text-3xl sm:text-4xl font-black font-mono text-emerald-400">
-              ₹{fee}
+              ₹{fee || 499}
             </span>
             <p className="text-xs font-bold uppercase tracking-wider text-indigo-200 block">
               Consultation Fee
@@ -934,10 +988,10 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
             onClick={() => payGuidanceMutation.mutate()}
             className="w-full sm:w-auto flex-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 py-4 px-8 text-base font-extrabold text-slate-950 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
           >
-            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee} & Confirm Counselor Session`} <ArrowRight className="size-5" />
+            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee || 499} & Confirm Counselor Session`} <ArrowRight className="size-5" />
           </button>
           <p className="text-[11px] text-indigo-300 font-medium">
-            * Instant confirmation. Your booking will sync directly to your dashboard & counselor schedule.
+            * Instant confirmation. Your booking will sync directly to your candidate portal & therapist calendar.
           </p>
         </div>
       </div>
@@ -945,7 +999,7 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   }
 
   // STATE B: Guidance Requested -> Waiting for Admin
-  if (status === "guidance_requested" || (registration?.guidanceRequested && status !== "approved")) {
+  if ((status === "guidance_requested" || registration?.guidanceRequested) && !isConfirmedAndPaid) {
     return (
       <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-7 sm:p-9 shadow-md space-y-4">
         <div className="flex items-center gap-4">
@@ -960,7 +1014,7 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
               Guidance Counselor Request Submitted!
             </h4>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Our Super Admin is reviewing your Multiple Intelligences report and assigning a specialist counselor tailored to your domain. You will receive a notification with fee details and proposed time slots shortly.
+              Our Super Admin is reviewing your Multiple Intelligences report and assigning a specialist counselor tailored to your domain. You will receive a proposal with fee details and proposed time slots shortly.
             </p>
           </div>
         </div>
@@ -969,7 +1023,7 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   }
 
   // STATE C: Approved / Paid -> Session Confirmed
-  if (status === "approved" || registration?.paymentStatus === "paid") {
+  if (isConfirmedAndPaid) {
     return (
       <div className="rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-500/10 via-teal-50 to-emerald-500/10 p-7 sm:p-9 shadow-md space-y-4">
         <div className="flex items-center gap-4">

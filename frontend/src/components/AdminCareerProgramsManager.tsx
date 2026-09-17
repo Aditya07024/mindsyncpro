@@ -72,6 +72,15 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
     status: "proposal_sent",
   });
 
+  const updateSelectionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      API.careerPrograms.updateCareerSelectionStatus(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminCareerSelectionRegistrations"] });
+      setShowScheduleModal(false);
+    },
+  });
+
   const adminAssignMutation = useMutation({
     mutationFn: (data: any) => API.careerPrograms.adminAssign(data),
     onSuccess: () => {
@@ -88,8 +97,8 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
       guidanceFee: r.guidanceFee || 499,
       meetingDate: r.meetingDate || "15th October 2026 at 11:00 AM",
       meetingLink: r.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-      adminNotes: r.adminNotes || "Admin assigned senior counselor for 1-on-1 guidance consultation.",
-      status: "proposal_sent",
+      adminNotes: r.adminNotes || "Application approved. Meeting scheduled with senior counselor.",
+      status: r.status === "rejected" ? "approved" : r.status || "approved",
     });
     setShowScheduleModal(true);
   };
@@ -97,9 +106,13 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   const handleScheduleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRecord) return;
+    const fee = Number(scheduleForm.guidanceFee || 0);
+    const targetStatus = fee > 0 ? "proposal_sent" : "approved";
     adminAssignMutation.mutate({
       registrationId: selectedRecord._id,
       ...scheduleForm,
+      guidanceFee: fee,
+      status: targetStatus,
     });
   };
 
@@ -350,7 +363,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                       {r.status === "approved" ? (
                         <div>
                           <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold block w-fit">
-                            Approved & Scheduled
+                            Approved & Scheduled ✓
                           </span>
                           {r.assignedCounselor && (
                             <div className="text-[10px] text-slate-400 mt-1">
@@ -358,12 +371,25 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                             </div>
                           )}
                         </div>
+                      ) : r.status === "proposal_sent" ? (
+                        <div>
+                          <span className="bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded text-[10px] font-bold block w-fit">
+                            Proposal Sent (₹{r.guidanceFee || 499})
+                          </span>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            Awaiting Candidate Payment
+                          </div>
+                        </div>
+                      ) : r.status === "guidance_requested" || r.guidanceRequested ? (
+                        <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse block w-fit">
+                          ⚡ Guidance Requested
+                        </span>
                       ) : r.status === "rejected" ? (
                         <span className="bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
                           Rejected
                         </span>
                       ) : (
-                        <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                        <span className="bg-slate-700 text-slate-300 border border-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">
                           Pending Review
                         </span>
                       )}
@@ -378,6 +404,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                         </button>
                         {r.status !== "rejected" && (
                           <button
+                            disabled={updateSelectionMutation.isPending}
                             onClick={() => updateSelectionMutation.mutate({ id: r._id, data: { status: "rejected" } })}
                             className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-red-300 font-bold text-[11px] transition cursor-pointer"
                           >
@@ -777,9 +804,12 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                   min={0}
                   value={scheduleForm.guidanceFee}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, guidanceFee: Number(e.target.value) })}
-                  placeholder="e.g. 499"
+                  placeholder="0 for Free, or amount e.g. 499"
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-mono text-sm"
                 />
+                <p className="text-[11px] text-teal-400/90 mt-1 font-medium">
+                  * Enter <strong>₹0</strong> for a Free Session (Instant Meeting Access). If fee &gt; ₹0 (e.g. ₹499), candidate must pay online before meeting room unlocks.
+                </p>
               </div>
 
               <div>
@@ -827,10 +857,14 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                 </button>
                 <button
                   type="submit"
-                  disabled={adminAssignMutation.isPending}
+                  disabled={adminAssignMutation.isPending || updateSelectionMutation.isPending}
                   className="flex-1 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 transition shadow-lg cursor-pointer"
                 >
-                  {adminAssignMutation.isPending ? "Sending Proposal..." : "Send Proposal & Fee to Candidate"}
+                  {adminAssignMutation.isPending || updateSelectionMutation.isPending
+                    ? "Saving Changes..."
+                    : Number(scheduleForm.guidanceFee || 0) > 0
+                    ? `Send ₹${scheduleForm.guidanceFee} Fee Proposal to Candidate`
+                    : "Approve & Schedule Free Session"}
                 </button>
               </div>
             </form>
