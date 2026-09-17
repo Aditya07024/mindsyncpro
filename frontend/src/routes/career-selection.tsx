@@ -979,47 +979,89 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   // STATE A: Proposal Sent by Admin -> Candidate needs to Pay & Confirm
   if (isProposalPending) {
     return (
-      <div id="guidance-payment-card" className="rounded-3xl border-2 border-indigo-500 bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 p-7 sm:p-9 text-white shadow-2xl space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/30 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-indigo-200 border border-indigo-400/30 backdrop-blur">
-              <Sparkles className="size-4 text-indigo-300" /> Counselor Guidance Proposal Ready!
-            </span>
-            <h4 className="font-display font-bold text-2xl sm:text-3xl text-white">
+      <div
+        id="guidance-payment-card"
+        className="rounded-[32px] border border-teal-500/40 bg-gradient-to-br from-slate-950 via-[#003831] to-slate-900 p-7 sm:p-10 text-white shadow-2xl relative overflow-hidden space-y-6"
+      >
+        {/* Background Decorative Glow */}
+        <div className="absolute -top-24 -right-24 size-72 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 size-72 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-teal-400/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-300 border border-teal-400/30 backdrop-blur-md">
+              <span className="size-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+              <Sparkles className="size-4 text-teal-300" /> Counselor Guidance Proposal Ready!
+            </div>
+
+            <h4 className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight">
               1-on-1 Guidance Session Proposal
             </h4>
-            <p className="text-indigo-200/90 text-xs sm:text-sm leading-relaxed">
-              Super Admin has matched your Multiple Intelligences report with <strong>{counselor}</strong> for a dedicated 1-on-1 guidance consultation. Please complete the fee payment to confirm your booking and unlock the live video room.
+
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
+              Super Admin has matched your Multiple Intelligences report with <strong className="text-white font-bold font-sans">{counselor}</strong> for a dedicated 1-on-1 guidance consultation. Please complete the fee payment to confirm your booking and unlock the live video room.
             </p>
+
+            {/* Counselor Detail Card */}
+            <div className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 items-center justify-center rounded-xl bg-teal-400 text-slate-950 font-bold shrink-0 shadow-md">
+                  <User className="size-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-300 block">
+                    Matched Counselor
+                  </span>
+                  <h5 className="font-bold text-white text-sm sm:text-base">
+                    {counselor}
+                  </h5>
+                </div>
+              </div>
+
+              {meetingDate ? (
+                <div className="inline-flex items-center gap-1.5 rounded-xl bg-black/40 px-3.5 py-2 text-xs font-bold text-teal-200 border border-white/10 shrink-0">
+                  <Calendar className="size-4 text-teal-400" /> {meetingDate}
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 rounded-xl bg-black/40 px-3.5 py-2 text-xs font-bold text-teal-200 border border-white/10 shrink-0">
+                  <Calendar className="size-4 text-teal-400" /> 15th October 2026 at 11:00 AM
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Fee & Slot Card */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-center space-y-1 shrink-0">
-            <span className="text-3xl sm:text-4xl font-black font-mono text-emerald-400">
-              ₹{fee || 499}
-            </span>
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-200 block">
+          {/* Fee Card */}
+          <div className="bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl p-6 sm:p-7 text-center space-y-2 shrink-0 lg:w-64 shadow-xl">
+            <span className="text-xs font-bold uppercase tracking-widest text-teal-300 block">
               Consultation Fee
-            </p>
-            {meetingDate && (
-              <span className="inline-block mt-1 text-[10px] font-bold text-white bg-indigo-600/60 px-3 py-1 rounded-full border border-indigo-400/30">
-                📅 {meetingDate}
-              </span>
-            )}
+            </span>
+            <span className="text-4xl sm:text-5xl font-black font-mono text-emerald-400 block tracking-tight">
+              ₹{(fee || 10000).toLocaleString('en-IN')}
+            </span>
+            <span className="inline-block text-[11px] font-semibold text-slate-300 bg-white/10 px-3 py-1 rounded-full border border-white/15">
+              1-on-1 Session + Report Review
+            </span>
           </div>
         </div>
 
         {/* Action Button */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center gap-4 border-t border-indigo-800/80">
-          <button
-            disabled={isProcessing || payGuidanceMutation.isPending}
-            onClick={() => setShowPaymentModal(true)}
-            className="w-full sm:w-auto flex-1 rounded-2xl bg-emerald-500 hover:bg-emerald-600 py-4 px-8 text-base font-extrabold text-slate-950 shadow-xl transition cursor-pointer flex items-center justify-center gap-2"
-          >
-            {payGuidanceMutation.isPending ? "Processing Payment & Booking..." : `Pay ₹${fee || 499} & Confirm Counselor Session`} <ArrowRight className="size-5" />
-          </button>
-          <p className="text-[11px] text-indigo-300 font-medium">
-            * Secure 256-bit encrypted checkout. Your booking will sync directly to your candidate portal & therapist calendar.
+        <div className="pt-4 flex flex-col items-start gap-3 border-t border-white/10 relative z-10">
+          <div className="w-full flex flex-col sm:flex-row items-center gap-4">
+            <button
+              disabled={isProcessing || payGuidanceMutation.isPending}
+              onClick={handleConfirmPay}
+              className="w-full sm:w-auto flex-1 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black py-4 px-8 text-base sm:text-lg shadow-xl hover:shadow-2xl transition cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Lock className="size-5" />
+              {payGuidanceMutation.isPending || isProcessing
+                ? "Processing Payment & Booking..."
+                : `Pay ₹${(fee || 10000).toLocaleString('en-IN')} with Razorpay & Confirm Counselor Session`} <ArrowRight className="size-5" />
+            </button>
+          </div>
+
+          <p className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+            <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
+            <span>* Instant Razorpay confirmation. Your booking will sync directly to your candidate portal &amp; therapist calendar.</span>
           </p>
         </div>
 
