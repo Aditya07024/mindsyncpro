@@ -125,7 +125,7 @@ export const AdminPartnersManager: React.FC = () => {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [configForm, setConfigForm] = useState({
     badgeText: "Our Ecosystem & Collaboration Network",
-    sectionTitle: "We Are Part Of",
+    sectionTitle: "Organizations & Partners We Work With",
     sectionSubtitle:
       "Proudly collaborating with leading Organizations, NGOs, Student Clubs, Peer Communities, and Global Health Partners to democratize mental wellness in India.",
   });
@@ -148,7 +148,7 @@ export const AdminPartnersManager: React.FC = () => {
     if (configData?.config) {
       setConfigForm({
         badgeText: configData.config.badgeText || "Our Ecosystem & Collaboration Network",
-        sectionTitle: configData.config.sectionTitle || "We Are Part Of",
+        sectionTitle: configData.config.sectionTitle || "Organizations & Partners We Work With",
         sectionSubtitle:
           configData.config.sectionSubtitle ||
           "Proudly collaborating with leading Organizations, NGOs, Student Clubs, Peer Communities, and Global Health Partners to democratize mental wellness in India.",
@@ -170,7 +170,7 @@ export const AdminPartnersManager: React.FC = () => {
             <Sparkles className="size-5 text-cyan-400" /> Network & Ecosystem Partners Manager
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Manage partner organizations, NGOs, student clubs, communities, and global health alliances showcased on "We Are Part Of".
+            Manage partner organizations, NGOs, student clubs, communities, and global health alliances showcased on "Organizations & Partners We Work With".
           </p>
         </div>
 
@@ -528,7 +528,7 @@ export const AdminPartnersManager: React.FC = () => {
                   required
                   value={configForm.sectionTitle}
                   onChange={(e) => setConfigForm({ ...configForm, sectionTitle: e.target.value })}
-                  placeholder="e.g. We Are Part Of"
+                  placeholder="e.g. Organizations & Partners We Work With"
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
                 />
               </div>

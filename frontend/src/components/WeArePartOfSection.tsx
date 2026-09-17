@@ -60,7 +60,7 @@ export const WeArePartOfSection: React.FC = () => {
           </div>
 
           <h2 className="mt-6 font-display text-4xl font-bold leading-tight text-[#012620] sm:text-5xl">
-            {partnerConfig?.sectionTitle || "We Are Part Of"}
+            {partnerConfig?.sectionTitle || "Organizations & Partners We Work With"}
           </h2>
 
           <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">

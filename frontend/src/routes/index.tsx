@@ -1336,7 +1336,7 @@ function Landing() {
               </div>
 
               <h2 className="mt-6 font-display text-3xl sm:text-4xl font-bold leading-tight text-[#012620]">
-                We Are Part Of
+                Organizations & Partners We Work With
               </h2>
 
               <p className="mt-4 text-sm sm:text-base leading-relaxed text-slate-600">
