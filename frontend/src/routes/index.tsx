@@ -53,12 +53,22 @@ import { WeArePartOfSection } from "@/components/WeArePartOfSection";
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
 const ENTERPRISE_EMAIL ="contact@mymindtherapyfriend.com";
 const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL";
+const LINKEDIN_PROFILE_URL = "https://www.linkedin.com/in/mymindtherapyfriend-mmtf-752866434/";
+const REDDIT_PROFILE_URL = "https://www.reddit.com/user/MyMindTherapyFriend/";
 
 function WhatsAppIcon({ className = "size-5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347z"/>
       <path d="M12 2C6.477 2 2 6.477 2 12c0 2.159.682 4.16 1.848 5.805L2 22l4.305-1.734A9.946 9.946 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.78 0-3.444-.467-4.887-1.285l-.35-.2-.2.08-2.583 1.04.996-2.476.096-.238-.177-.323A7.954 7.954 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
+    </svg>
+  );
+}
+
+function RedditIcon({ className = "size-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.196-.491.956 0 1.732.776 1.732 1.731 0 .684-.396 1.272-.97 1.547.031.233.048.47.048.71 0 3.208-3.704 5.808-8.274 5.808-4.57 0-8.274-2.6-8.274-5.808 0-.236.015-.468.044-.697-.6-.275-.02-.872-.02-1.56 0-.955.776-1.731 1.732-1.731.458 0 .875.18 1.184.484 1.192-.857 2.842-1.42 4.66-1.493l.942-4.41 3.2.673c.046-.66.606-1.18 1.282-1.18zm-7.07 7.74c-.732 0-1.326.595-1.326 1.327 0 .732.594 1.326 1.326 1.326.732 0 1.326-.594 1.326-1.326 0-.732-.594-1.327-1.326-1.327zm6.12 0c-.732 0-1.326.595-1.326 1.327 0 .732.594 1.326 1.326 1.326.732 0 1.326-.594 1.326-1.326 0-.732-.594-1.327-1.326-1.327zm-6.072 3.82c-.125 0-.244.049-.333.138a.473.473 0 0 0 0 .668c.889.889 2.502 1.155 4.316 1.155 1.815 0 3.428-.266 4.317-1.155a.473.473 0 0 0 0-.668.473.473 0 0 0-.668 0c-.66.66-2.02.894-3.649.894-1.628 0-2.988-.234-3.648-.894a.465.465 0 0 0-.335-.138z"/>
     </svg>
   );
 }
@@ -1484,7 +1494,7 @@ function Landing() {
               Stay Connected
             </h3>
 
-            <div className="mt-5 flex items-center gap-3">
+            <div className="mt-5 flex flex-wrap items-center gap-3">
               <a 
                 href={WHATSAPP_COMMUNITY_URL}
                 target="_blank" 
@@ -1499,22 +1509,35 @@ function Landing() {
                 href="https://www.instagram.com/mymindtherapyfriend/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
+                title="Follow us on Instagram"
+                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-pink-200 hover:text-pink-600"
               >
                 <Instagram className="size-5" />
               </a>
 
               <a 
-                href="https://www.linkedin.com/company/107088242" 
+                href={LINKEDIN_PROFILE_URL} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
+                title="Connect on LinkedIn"
+                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-sky-200 hover:text-sky-600"
               >
                 <Linkedin className="size-5" />
               </a>
 
               <a 
+                href={REDDIT_PROFILE_URL} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                title="Join us on Reddit"
+                className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-orange-200 hover:text-orange-600"
+              >
+                <RedditIcon className="size-5 text-orange-600" />
+              </a>
+
+              <a 
                 href={`mailto:${ENTERPRISE_EMAIL}`}
+                title="Send us an Email"
                 className="flex size-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-teal-200 hover:text-teal-600"
               >
                 <Mail className="size-5" />
