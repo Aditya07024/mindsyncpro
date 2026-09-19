@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useAuth, SignInButton } from "@clerk/clerk-react";
+import { useAuth, useUser, SignInButton } from "@clerk/clerk-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import {
   Briefcase,
   CheckCircle2,
@@ -33,6 +34,7 @@ import {
   Lock,
   QrCode,
   Wallet,
+  Loader2,
 } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
@@ -58,6 +60,7 @@ const COUNSELING_TYPES = [
 
 function CareerSelectionPage() {
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -84,6 +87,15 @@ function CareerSelectionPage() {
     preferredGoals: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        ...prev,
+        fullName: prev.fullName || user.fullName || user.firstName || "",
+      }));
+    }
+  }, [user]);
+
   const { data: statusData, isLoading: isStatusLoading } = useQuery({
     queryKey: ["careerSelectionStatus"],
     queryFn: () => API.careerPrograms.getCareerSelectionStatus(),
@@ -97,12 +109,33 @@ function CareerSelectionPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["careerSelectionStatus"] });
       setShow24hPopup(true);
+      toast.success("Career selection application submitted!");
+    },
+    onError: (err: any) => {
+      console.error("Career selection registration error:", err);
+      toast.error(
+        err?.response?.data?.message || err?.message || "Failed to submit application. Please check required fields."
+      );
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isSignedIn) return;
+    if (!isSignedIn) {
+      toast.error("Please sign in first to submit your application.");
+      return;
+    }
+
+    if (
+      !form.fullName.trim() ||
+      !form.schoolOrgName.trim() ||
+      !form.state.trim() ||
+      !form.city.trim() ||
+      !form.phone.trim()
+    ) {
+      toast.error("Please fill in all required fields (Full Name, College/Org, State, City, Phone).");
+      return;
+    }
 
     // Attach intelligenceData to submission
     const payload = {
@@ -374,9 +407,17 @@ function CareerSelectionPage() {
                   <button
                     type="submit"
                     disabled={registerMutation.isPending}
-                    className="w-full rounded-2xl bg-[#004038] py-4 text-base font-bold text-white shadow-xl hover:bg-[#002f29] transition cursor-pointer flex items-center justify-center gap-2"
+                    className="w-full rounded-2xl bg-[#004038] py-4 text-base font-bold text-white shadow-xl hover:bg-[#002f29] transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                   >
-                    Submit Application for Career Selection <ArrowRight className="size-5" />
+                    {registerMutation.isPending ? (
+                      <>
+                        <Loader2 className="size-5 animate-spin text-teal-300" /> Submitting Application...
+                      </>
+                    ) : (
+                      <>
+                        Submit Application for Career Selection <ArrowRight className="size-5" />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
