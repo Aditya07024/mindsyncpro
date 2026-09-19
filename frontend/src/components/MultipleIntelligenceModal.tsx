@@ -168,6 +168,7 @@ export const MultipleIntelligenceModal: React.FC<Props> = ({
   });
 
   const [activeTabId, setActiveTabId] = useState<string>("linguistic");
+  const [isEvaluating, setIsEvaluating] = useState(false);
 
   if (!isOpen) return null;
 
@@ -201,7 +202,7 @@ export const MultipleIntelligenceModal: React.FC<Props> = ({
     return Math.max(60, Math.min(99, weightedPct));
   };
 
-  const [isEvaluating, setIsEvaluating] = useState(false);
+  const alignmentPct = computeAlignmentScore();
 
   const generateSummaryReport = () => {
     return `Candidate demonstrates high proficiency in ${primaryTrait.title} (${primaryTrait.alias}) and ${secondaryTrait.title} (${secondaryTrait.alias}). With a ${alignmentPct}% goal compatibility match for ${counselingType}, their natural empathy, self-reflection, and problem-solving skills make them exceptionally suited for high-impact therapeutic practice and client guidance.`;

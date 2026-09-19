@@ -949,6 +949,7 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
   const fee = Number(registration?.guidanceFee ?? 0);
   const counselor = registration?.assignedCounselor || "Senior Clinical Counselor";
   const meetingDate = registration?.meetingDate;
+  const status = registration?.status;
 
   const isPaid =
     registration?.paymentStatus === "paid" ||
