@@ -14,6 +14,7 @@ import {
   updateCounselingTrainingProgram,
   deleteCounselingTrainingProgram,
   enrollCounselingTraining,
+  getMyCounselingTrainingEnrollments,
   getCounselingTrainingEnrollments,
   updateCounselingTrainingEnrollmentStatus,
 } from "../controllers/career-program.controller";
@@ -38,6 +39,7 @@ router.post("/counseling-training/programs", requireAuth, requireRole(["super_ad
 router.put("/counseling-training/programs/:id", requireAuth, requireRole(["super_admin", "admin"]), updateCounselingTrainingProgram);
 router.delete("/counseling-training/programs/:id", requireAuth, requireRole(["super_admin", "admin"]), deleteCounselingTrainingProgram);
 router.post("/counseling-training/enroll", optionalAuth, enrollCounselingTraining);
+router.get("/counseling-training/my-enrollments", optionalAuth, getMyCounselingTrainingEnrollments);
 router.get("/counseling-training/admin-enrollments", requireAuth, requireRole(["super_admin", "admin"]), getCounselingTrainingEnrollments);
 router.patch("/counseling-training/admin-enrollments/:id", requireAuth, requireRole(["super_admin", "admin"]), updateCounselingTrainingEnrollmentStatus);
 

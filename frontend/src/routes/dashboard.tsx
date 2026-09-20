@@ -312,7 +312,7 @@ function Dashboard() {
             </Link>
 
             {/* Career Guidance & Assessment Report Navigation Banner */}
-            <Link to="/career-selection" className="block">
+            {/* <Link to="/career-selection" className="block">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="rounded-3xl bg-gradient-to-r from-[#004038] via-[#01584c] to-teal-800 p-6 text-white shadow-md transition-transform active:scale-[0.98] hover:shadow-lg space-y-3 relative overflow-hidden"
               >
@@ -337,7 +337,7 @@ function Dashboard() {
                 </p>
                 <div className="absolute -bottom-10 -right-10 size-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
               </motion.div>
-            </Link>
+            </Link> */}
 
             {/* Quick Actions Grid */}
             <div className="space-y-3">

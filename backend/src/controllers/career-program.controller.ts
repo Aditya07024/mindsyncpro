@@ -279,7 +279,7 @@ export async function createCounselingTrainingProgram(req: Request, res: Respons
 
 export async function enrollCounselingTraining(req: AuthedRequest, res: Response): Promise<void> {
   try {
-    const { programId, fullName, country, state, city, orgName, profession, phone } = req.body;
+    const { programId, fullName, country, state, city, orgName, profession, phone, paymentStatus, paymentId, fee } = req.body;
 
     if (!programId || !fullName || !state || !city || !orgName || !profession || !phone) {
       res.status(400).json({ success: false, message: "All fields are required" });
@@ -303,7 +303,10 @@ export async function enrollCounselingTraining(req: AuthedRequest, res: Response
       orgName,
       profession,
       phone,
-      status: "pending",
+      paymentStatus: paymentStatus || (program.fee > 0 ? "paid" : "free"),
+      paymentId: paymentId || "",
+      fee: fee !== undefined ? Number(fee) : program.fee,
+      status: "pending", // Pending Admin Approval!
     });
 
     // Decrease available seat
@@ -315,10 +318,28 @@ export async function enrollCounselingTraining(req: AuthedRequest, res: Response
     res.status(201).json({
       success: true,
       enrollment,
-      message: "Enrollment submitted successfully! Our team will connect with you within 24 hours.",
+      message: "Enrollment submitted successfully with payment! Awaiting Admin Approval.",
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to enroll" });
+  }
+}
+
+export async function getMyCounselingTrainingEnrollments(req: AuthedRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.sub;
+    if (!userId) {
+      res.json({ success: true, enrollments: [] });
+      return;
+    }
+
+    const enrollments = await CounselingTrainingEnrollment.find({ userId })
+      .populate("programId")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, enrollments });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch my enrollments" });
   }
 }
 

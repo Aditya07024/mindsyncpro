@@ -121,7 +121,10 @@ export interface ICounselingTrainingEnrollment extends Document {
   orgName: string;
   profession: string;
   phone: string;
-  status: "pending" | "confirmed" | "completed";
+  paymentStatus?: "unpaid" | "paid" | "free";
+  paymentId?: string;
+  fee?: number;
+  status: "pending" | "confirmed" | "approved" | "completed" | "rejected";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -139,7 +142,10 @@ const counselingTrainingEnrollmentSchema = new Schema<ICounselingTrainingEnrollm
     orgName: { type: String, required: true },
     profession: { type: String, required: true },
     phone: { type: String, required: true },
-    status: { type: String, enum: ["pending", "confirmed", "completed"], default: "pending" },
+    paymentStatus: { type: String, enum: ["unpaid", "paid", "free"], default: "paid" },
+    paymentId: { type: String, default: "" },
+    fee: { type: Number, default: 0 },
+    status: { type: String, enum: ["pending", "confirmed", "approved", "completed", "rejected"], default: "pending" },
   },
   { timestamps: true }
 );

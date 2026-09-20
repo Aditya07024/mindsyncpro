@@ -118,3 +118,53 @@ export async function openGuidanceCheckout({
   const rzp = new window.Razorpay(options);
   rzp.open();
 }
+
+interface OpenTrainingEnrollmentCheckoutOptions {
+  amount: number;
+  programTitle: string;
+  fullName: string;
+  phone?: string;
+  onSuccess: (paymentId?: string) => void;
+  onCancel?: () => void;
+}
+
+export async function openTrainingEnrollmentCheckout({
+  amount,
+  programTitle,
+  fullName,
+  phone,
+  onSuccess,
+  onCancel,
+}: OpenTrainingEnrollmentCheckoutOptions) {
+  const loaded = await loadRazorpay();
+  if (!loaded || !window.Razorpay) {
+    onSuccess("pay_demo_" + Date.now());
+    return;
+  }
+
+  const options = {
+    key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TQ764nZF0N6bzR",
+    amount: (amount || 3999) * 100, // Amount in paise
+    currency: "INR",
+    name: "MyMindTherapyFriend",
+    description: `Enrollment Fee: ${programTitle}`,
+    prefill: {
+      name: fullName || "Candidate",
+      contact: phone || "",
+    },
+    handler: async (response: any) => {
+      onSuccess(response?.razorpay_payment_id || "pay_" + Date.now());
+    },
+    modal: {
+      ondismiss: () => {
+        onCancel?.();
+      },
+    },
+    theme: {
+      color: "#004038",
+    },
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+}

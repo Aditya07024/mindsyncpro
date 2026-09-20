@@ -671,11 +671,16 @@ const API = {
       orgName: string;
       profession: string;
       phone: string;
+      paymentStatus?: string;
+      paymentId?: string;
+      fee?: number;
     }) =>
       apiCall<{ success: boolean; enrollment: any; message: string }>("/api/career-programs/counseling-training/enroll", {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    getMyTrainingEnrollments: () =>
+      apiCall<{ success: boolean; enrollments: any[] }>("/api/career-programs/counseling-training/my-enrollments"),
     getTrainingEnrollments: () =>
       apiCall<{ success: boolean; enrollments: any[] }>("/api/career-programs/counseling-training/admin-enrollments"),
     updateTrainingEnrollmentStatus: (id: string, data: { status: string }) =>
