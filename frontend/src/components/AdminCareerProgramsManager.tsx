@@ -51,13 +51,35 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   const adminPrograms = adminProgramsData?.programs || [];
   const trainingEnrollments = trainingData?.enrollments || [];
 
-  // 4. Fetch Active Therapists for Admin Assignment
-  const { data: therapistsData } = useQuery({
-    queryKey: ["therapistsList"],
-    queryFn: () => API.therapist.list(),
+  // 4. Fetch Active Admin-Verified/Approved Therapists ONLY for Admin Assignment
+  const { data: adminTherapistsData } = useQuery({
+    queryKey: ["adminTherapistsListAll"],
+    queryFn: () => API.admin.pendingTherapists(),
   });
 
-  const activeTherapists = therapistsData?.therapists || [];
+  const { data: publicTherapistsData } = useQuery({
+    queryKey: ["therapistsListPublicVerified"],
+    queryFn: () => API.therapist.list({ verified: "true" }),
+  });
+
+  const rawTherapistList = [
+    ...(adminTherapistsData?.therapists || []),
+    ...(publicTherapistsData?.therapists || []),
+  ];
+
+  // Strictly include ONLY therapists where Admin has verified them (verified === true or verificationStatus === "verified"/"approved")
+  const activeTherapists = Array.from(
+    new Map(
+      rawTherapistList
+        .filter(
+          (t: any) =>
+            t.verified === true ||
+            t.verificationStatus === "verified" ||
+            t.verificationStatus === "approved"
+        )
+        .map((t: any) => [String(t.id || t._id), t])
+    ).values()
+  );
 
   // Selection meeting schedule state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -766,21 +788,30 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                 <select
                   value={scheduleForm.therapistId}
                   onChange={(e) => {
-                    const selectedTherapist = activeTherapists.find((t: any) => t._id === e.target.value);
+                    const selectedTherapist = activeTherapists.find((t: any) => (t.id || t._id) === e.target.value);
+                    const tName = selectedTherapist?.name || selectedTherapist?.fullName || selectedTherapist?.therapistProfile?.name;
                     setScheduleForm({
                       ...scheduleForm,
                       therapistId: e.target.value,
-                      assignedCounselor: selectedTherapist?.fullName || scheduleForm.assignedCounselor,
+                      assignedCounselor: tName ? `${tName} (Clinical Counselor)` : scheduleForm.assignedCounselor,
                     });
                   }}
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-medium"
                 >
                   <option value="">-- Custom / Senior Clinical Counselor --</option>
-                  {activeTherapists.map((t: any) => (
-                    <option key={t._id} value={t._id}>
-                      {t.fullName} ({t.specialization || "Psychologist"})
-                    </option>
-                  ))}
+                  {activeTherapists.map((t: any, idx: number) => {
+                    const tId = t.id || t._id || `therapist-${idx}`;
+                    const tName = t.name || t.fullName || t.therapistProfile?.name || "Therapist";
+                    const tSpecs = Array.isArray(t.specializations)
+                      ? t.specializations.join(", ")
+                      : t.specializations || t.qualification || "Psychologist";
+
+                    return (
+                      <option key={tId} value={tId}>
+                        {tName} ({tSpecs})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 

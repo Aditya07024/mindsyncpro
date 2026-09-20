@@ -42,38 +42,48 @@ export async function seedRevenueOnExistingOnly() {
     throw new Error("No existing users found in database.");
   }
 
-  // 3. Mark all existing therapists as Verified (Verified Therapists = existingTherapists.length, e.g. 3)
+  // 3. Mark existing therapists as Verified ONLY if verification status is uninitialized
   for (const t of existingTherapists) {
+    const isUnset = t.therapistProfile?.verified === undefined && t.therapistProfile?.verificationStatus === undefined;
+    const isVerified = isUnset ? true : Boolean(t.therapistProfile?.verified);
+    const vStatus = isUnset ? "verified" : (t.therapistProfile?.verificationStatus || (isVerified ? "verified" : "rejected"));
+
     t.therapistProfile = {
-      name: t.fullName || "Verified Therapist",
-      email: t.phoneMasked?.includes("@") ? t.phoneMasked : `therapist_${t._id}@mymindtherapyfriend.com`,
-      phone: t.phoneMasked || "+91 98000 00000",
+      name: t.therapistProfile?.name || t.fullName || "Verified Therapist",
+      email: t.therapistProfile?.email || (t.phoneMasked?.includes("@") ? t.phoneMasked : `therapist_${t._id}@mymindtherapyfriend.com`),
+      phone: t.therapistProfile?.phone || t.phoneMasked || "+91 98000 00000",
       rciNumber: t.therapistProfile?.rciNumber || `CRR/${t._id.toString().slice(-6).toUpperCase()}/2022`,
-      verified: true,
-      verificationStatus: "verified",
+      verified: isVerified,
+      verificationStatus: vStatus,
       qualification: t.therapistProfile?.qualification || "M.Phil / Ph.D. Clinical Psychology",
       experienceYears: t.therapistProfile?.experienceYears || 8,
       sessionFee: t.therapistProfile?.sessionFee || 1500,
-      rating: 4.9,
-      sessionCount: 10,
-      specializations: ["Clinical Psychology", "Cognitive Behavioral Therapy"],
-      languages: ["English", "Hindi"],
+      rating: t.therapistProfile?.rating || 4.9,
+      sessionCount: t.therapistProfile?.sessionCount || 10,
+      specializations: t.therapistProfile?.specializations?.length ? t.therapistProfile.specializations : ["Clinical Psychology", "Cognitive Behavioral Therapy"],
+      languages: t.therapistProfile?.languages?.length ? t.therapistProfile.languages : ["English", "Hindi"],
       bio: t.therapistProfile?.bio || "Experienced clinical therapist dedicated to evidence-based care.",
       introVideoUrl: t.therapistProfile?.introVideoUrl,
-      availability: [
+      availability: t.therapistProfile?.availability?.length ? t.therapistProfile.availability : [
         { day: 1, slots: ["10:00 AM", "02:00 PM"] },
         { day: 3, slots: ["11:00 AM", "04:00 PM"] }
       ],
     };
     await t.save();
   }
-  console.log(`[SeedExisting] Set all ${existingTherapists.length} existing therapists to VERIFIED status.`);
+  console.log(`[SeedExisting] Processed ${existingTherapists.length} existing therapists.`);
 
-  // Mark existing orgs as verified
+  // Mark existing orgs as verified ONLY if verificationStatus is unset
   for (const org of existingOrgs) {
-    org.verificationStatus = "verified";
-    org.coverMemberTherapyFees = true;
-    org.allowExternalTherapists = true;
+    if (!org.verificationStatus) {
+      org.verificationStatus = "verified";
+    }
+    if (org.coverMemberTherapyFees === undefined) {
+      org.coverMemberTherapyFees = true;
+    }
+    if (org.allowExternalTherapists === undefined) {
+      org.allowExternalTherapists = true;
+    }
     if (!org.contract || !org.contract.start) {
       org.contract = {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),

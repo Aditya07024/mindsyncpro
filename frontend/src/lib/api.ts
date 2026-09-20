@@ -35,7 +35,7 @@ async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "API Error" }));
-    const message = error.message || `HTTP ${response.status}`;
+    const message = error.message || error.error || `HTTP ${response.status}`;
     if (response.status === 401 && typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("mymind_unauthorized", {
