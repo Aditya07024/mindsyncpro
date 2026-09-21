@@ -541,6 +541,31 @@ const API = {
       apiCall<{ success: boolean; message: string }>(`/api/digital-products/${id}`, {
         method: "DELETE",
       }),
+    uploadPdf: (file: File) => {
+      const formData = new FormData();
+      formData.append("pdfFile", file);
+      return apiCall<{ success: boolean; fileKey: string; originalName: string; message: string }>(
+        "/api/digital-products/upload-pdf",
+        { method: "POST", body: formData }
+      );
+    },
+    uploadImages: (files: File[]) => {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("images", file));
+      return apiCall<{ success: boolean; imageUrls: string[]; message: string }>(
+        "/api/digital-products/upload-images",
+        { method: "POST", body: formData }
+      );
+    },
+    purchaseProduct: (id: string) =>
+      apiCall<{ success: boolean; purchaseToken: string; product: any; message: string }>(
+        `/api/digital-products/${id}/purchase`,
+        { method: "POST" }
+      ),
+    getSecurePdfUrl: (id: string, token?: string) => {
+      const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
+      return `${API_BASE}/api/digital-products/${id}/secure-download${token ? `?token=${token}` : ""}`;
+    },
   },
 
   partners: {

@@ -89,6 +89,55 @@ export function getPublicUrlForFilename(filename: string, req?: any): string {
 }
 
 
+// Target VPS protected directory
+const VPS_PROTECTED_DIR = "/var/www/MindGod-uploads/protected_docs";
+const LOCAL_PROTECTED_DIR = path.join(process.cwd(), "uploads", "protected_docs");
+
+export function getProtectedDirectory(): string {
+  try {
+    if (fs.existsSync("/var/www/MindGod-uploads")) {
+      if (!fs.existsSync(VPS_PROTECTED_DIR)) {
+        fs.mkdirSync(VPS_PROTECTED_DIR, { recursive: true });
+      }
+      return VPS_PROTECTED_DIR;
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  if (!fs.existsSync(LOCAL_PROTECTED_DIR)) {
+    fs.mkdirSync(LOCAL_PROTECTED_DIR, { recursive: true });
+  }
+  return LOCAL_PROTECTED_DIR;
+}
+
+const protectedStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const targetDir = getProtectedDirectory();
+    cb(null, targetDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || ".pdf";
+    const uniqueFilename = `workbook-${Date.now()}-${Math.random().toString(36).substring(2, 9)}${ext}`;
+    cb(null, uniqueFilename);
+  },
+});
+
+export const protectedPdfUpload = multer({
+  storage: protectedStorage,
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (file.mimetype === "application/pdf" || ext === ".pdf") {
+      cb(null, true);
+    } else {
+      cb(new AppError("Invalid file type. Only PDF documents are allowed.", 400));
+    }
+  },
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50 MB PDF limit
+  },
+});
+
 export function deleteFileFromStorage(posterUrlOrPath?: string | null) {
   if (!posterUrlOrPath) return;
 
@@ -104,3 +153,4 @@ export function deleteFileFromStorage(posterUrlOrPath?: string | null) {
     console.error("Error deleting file from storage:", err);
   }
 }
+

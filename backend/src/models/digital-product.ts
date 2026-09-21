@@ -7,7 +7,11 @@ export interface IDigitalProduct extends Document {
   price: number;
   originalPrice?: number;
   imageUrl?: string;
+  images?: string[];
+  whatsInside?: string[];
+  pageCount?: string;
   fileUrl?: string;
+  protectedFileKey?: string;
   previewUrl?: string;
   isFeatured?: boolean;
   salesCount?: number;
@@ -25,7 +29,11 @@ const digitalProductSchema = new Schema<IDigitalProduct>(
     price: { type: Number, required: true, min: 0 },
     originalPrice: { type: Number, default: 0 },
     imageUrl: { type: String, default: "" },
+    images: [{ type: String }],
+    whatsInside: [{ type: String }],
+    pageCount: { type: String, default: "32 pages" },
     fileUrl: { type: String, default: "" },
+    protectedFileKey: { type: String, default: "" },
     previewUrl: { type: String, default: "" },
     isFeatured: { type: Boolean, default: false },
     salesCount: { type: Number, default: 0 },
