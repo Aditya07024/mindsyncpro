@@ -369,11 +369,14 @@ export async function downloadSecurePdf(req: Request, res: Response): Promise<vo
 
     const protectedDir = getProtectedDirectory();
 
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "application/pdf");
+
     // If protected file exists, send it
     if (product.protectedFileKey) {
       const filePath = path.join(protectedDir, product.protectedFileKey);
       if (fs.existsSync(filePath)) {
-        res.setHeader("Content-Type", "application/pdf");
         res.setHeader(
           "Content-Disposition",
           `inline; filename="${product.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf"`
@@ -419,7 +422,6 @@ startxref
       fs.writeFileSync(samplePdfPath, minimalPdfContent);
     }
 
-    res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `inline; filename="${product.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf"`

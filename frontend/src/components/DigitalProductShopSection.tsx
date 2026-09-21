@@ -18,12 +18,14 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import API from "@/lib/api";
+import { openDigitalProductCheckout } from "@/lib/razorpay";
 
 export const DigitalProductShopSection: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
   const [isPurchased, setIsPurchased] = useState<boolean>(false);
   const [purchaseToken, setPurchaseToken] = useState<string | null>(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [isBuying, setIsBuying] = useState<boolean>(false);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
@@ -46,20 +48,50 @@ export const DigitalProductShopSection: React.FC = () => {
     setSelectedImageIndex(0);
     setIsPurchased(false);
     setPurchaseToken(null);
+    if (pdfBlobUrl) {
+      URL.revokeObjectURL(pdfBlobUrl);
+      setPdfBlobUrl(null);
+    }
   };
 
   const handleCompleteCheckout = async () => {
     if (!selectedProduct) return;
     try {
       setIsBuying(true);
-      const res = await API.digitalProducts.purchaseProduct(selectedProduct._id);
-      if (res.success) {
-        setPurchaseToken(res.purchaseToken);
-        setIsPurchased(true);
-      }
+      await openDigitalProductCheckout({
+        productTitle: selectedProduct.title,
+        price: selectedProduct.price,
+        onSuccess: async () => {
+          try {
+            const res = await API.digitalProducts.purchaseProduct(selectedProduct._id);
+            if (res.success) {
+              setPurchaseToken(res.purchaseToken);
+              // Fetch secure PDF blob URL for guaranteed iframe rendering
+              try {
+                const secureUrl = API.digitalProducts.getSecurePdfUrl(selectedProduct._id, res.purchaseToken);
+                const pdfRes = await fetch(secureUrl);
+                if (pdfRes.ok) {
+                  const blob = await pdfRes.blob();
+                  const blobUrl = URL.createObjectURL(blob);
+                  setPdfBlobUrl(blobUrl);
+                }
+              } catch (e) {
+                console.error("PDF blob fetch failed:", e);
+              }
+              setIsPurchased(true);
+            }
+          } catch (err: any) {
+            alert(err.message || "Purchase verification failed");
+          } finally {
+            setIsBuying(false);
+          }
+        },
+        onCancel: () => {
+          setIsBuying(false);
+        },
+      });
     } catch (err: any) {
-      alert(err.message || "Payment process failed");
-    } finally {
+      alert(err.message || "Payment initialization failed");
       setIsBuying(false);
     }
   };
@@ -67,6 +99,16 @@ export const DigitalProductShopSection: React.FC = () => {
   const handleDownloadPdf = async () => {
     if (!selectedProduct || !purchaseToken) return;
     try {
+      if (pdfBlobUrl) {
+        const a = document.createElement("a");
+        a.href = pdfBlobUrl;
+        a.download = `${selectedProduct.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+      }
+
       const url = API.digitalProducts.getSecurePdfUrl(selectedProduct._id, purchaseToken);
       const res = await fetch(url);
       if (!res.ok) {
@@ -456,7 +498,7 @@ export const DigitalProductShopSection: React.FC = () => {
                         className="w-full rounded-2xl bg-[#004038] py-3.5 px-4 text-sm font-extrabold text-white shadow-xl hover:bg-[#002f29] hover:scale-[1.02] active:scale-95 transition cursor-pointer flex items-center justify-center gap-2 border border-teal-600"
                       >
                         {isBuying ? (
-                          <span className="animate-pulse">Processing Payment...</span>
+                          <span className="animate-pulse">Opening Payment Gateway...</span>
                         ) : (
                           <>
                             Complete Checkout ₹{selectedProduct.price}
@@ -490,11 +532,19 @@ export const DigitalProductShopSection: React.FC = () => {
 
                   {/* Integrated Secure PDF Reader Box */}
                   <div className="rounded-2xl border border-slate-300 bg-slate-900 overflow-hidden shadow-2xl h-[540px] relative">
-                    <iframe
-                      src={API.digitalProducts.getSecurePdfUrl(selectedProduct._id, purchaseToken!)}
-                      title="Secure PDF Reader"
-                      className="w-full h-full border-none"
-                    />
+                    {pdfBlobUrl ? (
+                      <iframe
+                        src={pdfBlobUrl}
+                        title="Secure PDF Reader"
+                        className="w-full h-full border-none bg-white"
+                      />
+                    ) : (
+                      <iframe
+                        src={API.digitalProducts.getSecurePdfUrl(selectedProduct._id, purchaseToken!)}
+                        title="Secure PDF Reader"
+                        className="w-full h-full border-none bg-white"
+                      />
+                    )}
                   </div>
 
                   {/* Actions */}
