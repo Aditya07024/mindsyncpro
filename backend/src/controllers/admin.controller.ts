@@ -782,21 +782,8 @@ export class AdminController {
   /** GET /admin/ad-banner (Publicly accessible for dashboard) */
   static getAdBanner = asyncHandler(async (_req: any, res: Response) => {
     const { AdBanner } = await import("@/models/ad-banner");
-    let banner = await AdBanner.findOne();
-    if (!banner) {
-      banner = await AdBanner.create({
-        title: "Exclusive Student & Professional Therapy Workshop 2026",
-        badgeText: "Featured Announcement",
-        description:
-          "Book 1-on-1 confidential counseling sessions with RCI certified psychologists, explore self-care toolkits, and join live clinical webinars.",
-        imageUrl:
-          "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80",
-        buttonText: "Explore Programs & Book",
-        targetUrl: "#counseling",
-        isActive: true,
-      });
-    }
-    res.json({ success: true, banner });
+    const banner = await AdBanner.findOne().lean();
+    res.json({ success: true, banner: banner || null });
   });
 
   /** PUT /admin/ad-banner */

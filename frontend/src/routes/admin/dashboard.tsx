@@ -128,7 +128,7 @@ function SuperAdminDashboard() {
     { key: 'digital-products', label: 'Digital Products Shop', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'network-partners', label: 'Network & Ecosystem Partners', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'career-selection', label: 'Career Selection', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
-    { key: 'counseling-selection', label: 'Counseling Training', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    // { key: 'counseling-selection', label: 'Counseling Training', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'counseling-pricing', label: 'Counseling Category Fees', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'student-verifications', label: 'Student ID Verifications', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageUsers) },
     { key: 'ad-banner', label: 'Homepage Ad Banner', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageWorkshopPopup) },

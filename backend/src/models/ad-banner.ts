@@ -14,25 +14,12 @@ export interface IAdBanner extends Document {
 
 const adBannerSchema = new Schema<IAdBanner>(
   {
-    title: {
-      type: String,
-      required: true,
-      default: "Exclusive Student & Professional Therapy Workshop 2026",
-    },
-    badgeText: { type: String, default: "Featured Announcement" },
-    description: {
-      type: String,
-      required: true,
-      default:
-        "Book 1-on-1 confidential counseling sessions with RCI certified psychologists, explore self-care toolkits, and join live clinical webinars.",
-    },
-    imageUrl: {
-      type: String,
-      default:
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80",
-    },
-    buttonText: { type: String, default: "Explore Programs & Book" },
-    targetUrl: { type: String, default: "#counseling" },
+    title: { type: String, default: "" },
+    badgeText: { type: String, default: "" },
+    description: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
+    buttonText: { type: String, default: "" },
+    targetUrl: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
