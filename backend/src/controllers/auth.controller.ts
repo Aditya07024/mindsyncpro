@@ -12,6 +12,10 @@ function serializeUser(user: any) {
     language: user.language,
     phoneMasked: user.phoneMasked,
     fullName: user.fullName,
+    userType: user.userType || "regular",
+    studentIdCardUrl: user.studentIdCardUrl || "",
+    studentIdVerificationStatus: user.studentIdVerificationStatus || "none",
+    schoolCollegeName: user.schoolCollegeName || "",
     isAnonymous: user.isAnonymous,
     streak: user.streak,
     onboarding: user.onboarding,
@@ -30,13 +34,27 @@ export class AuthController {
 
   static updateOnboarding = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      const { moodScore, concerns, primaryNeed, completed } = req.body;
+      const { moodScore, concerns, primaryNeed, completed, userType, studentIdCardUrl, schoolCollegeName } = req.body;
       const user = await AuthService.updateOnboarding(req.user!.sub, {
         moodScore,
         concerns,
         primaryNeed,
         completed,
       });
+
+      if (user) {
+        if (userType) user.userType = userType;
+        if (studentIdCardUrl !== undefined) user.studentIdCardUrl = studentIdCardUrl;
+        if (schoolCollegeName !== undefined) user.schoolCollegeName = schoolCollegeName;
+
+        if (userType === "school_student" || userType === "college_student") {
+          user.studentIdVerificationStatus = "pending";
+        } else if (userType === "regular") {
+          user.studentIdVerificationStatus = "approved";
+        }
+        await user.save();
+      }
+
       res.json(serializeUser(user));
     },
   );
@@ -192,6 +210,17 @@ export class AuthController {
       }
 
       res.json({ success: true, message: "Profile deleted successfully" });
+    }
+  );
+
+  static uploadStudentIdCard = asyncHandler(
+    async (req: Request, res: Response) => {
+      if (!req.file) {
+        return res.status(400).json({ error: "No student ID card image uploaded" });
+      }
+      const { getPublicUrlForFilename } = await import("@/middleware/upload.middleware");
+      const imageUrl = getPublicUrlForFilename(req.file.filename, req);
+      res.json({ success: true, imageUrl });
     }
   );
 }

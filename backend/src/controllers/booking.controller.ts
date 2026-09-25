@@ -84,10 +84,28 @@ export class BookingController {
       });
       if (conflict) throw new AppError("This slot is already booked", 409);
 
-      // Calculate amount based on user subscription or organization benefits
-      let amount = therapist.therapistProfile.sessionFee ?? 0;
+      // Calculate amount based on Admin-managed category pricing
+      const { CounselingPricing } = await import("@/models/counseling-pricing");
+      let pricing = await CounselingPricing.findOne();
+      if (!pricing) {
+        pricing = await CounselingPricing.create({
+          schoolStudentFee: 299,
+          collegeStudentFee: 499,
+          regularPersonFee: 799,
+        });
+      }
 
-      const seekerUser = await User.findById(req.user!.sub).select("orgId phoneMasked fullName");
+      const seekerUser = await User.findById(req.user!.sub).select("orgId phoneMasked fullName userType studentIdVerificationStatus");
+
+      let amount = pricing.regularPersonFee;
+      if (seekerUser?.userType === "school_student") {
+        amount = pricing.schoolStudentFee;
+      } else if (seekerUser?.userType === "college_student") {
+        amount = pricing.collegeStudentFee;
+      } else {
+        amount = pricing.regularPersonFee;
+      }
+
       let isOrgCovered = false;
 
       const seekerEmail = (seekerUser?.phoneMasked?.includes("@") ? seekerUser.phoneMasked : "").toLowerCase().trim();

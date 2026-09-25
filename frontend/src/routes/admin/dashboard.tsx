@@ -31,7 +31,7 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos' | 'digital-products' | 'network-partners' | 'career-selection' | 'counseling-training'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos' | 'digital-products' | 'network-partners' | 'career-selection' | 'counseling-training' | 'counseling-pricing' | 'student-verifications' | 'ad-banner'>('overview');
 
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
@@ -128,7 +128,10 @@ function SuperAdminDashboard() {
     { key: 'digital-products', label: 'Digital Products Shop', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'network-partners', label: 'Network & Ecosystem Partners', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'career-selection', label: 'Career Selection', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
-    { key: 'counseling-training', label: 'Counseling Training', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    { key: 'counseling-selection', label: 'Counseling Training', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    { key: 'counseling-pricing', label: 'Counseling Category Fees', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
+    { key: 'student-verifications', label: 'Student ID Verifications', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageUsers) },
+    { key: 'ad-banner', label: 'Homepage Ad Banner', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageWorkshopPopup) },
   ].filter((t) => t.allowed);
 
   // Auto-switch tab to first allowed capability if current tab is forbidden
@@ -1094,6 +1097,9 @@ function SuperAdminDashboard() {
             </div>
           </div>
         )}
+        {tab === 'counseling-pricing' && <AdminCounselingPricingTab />}
+        {tab === 'student-verifications' && <AdminStudentVerificationsTab />}
+        {tab === 'ad-banner' && <AdminAdBannerTab />}
 
       </div>
 
@@ -1636,6 +1642,376 @@ function OrgLinkedUsersModal({ org, onClose }: { org: any; onClose: () => void }
           <button onClick={onClose} className="px-5 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white font-semibold text-xs">
             Close
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminCounselingPricingTab() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-counseling-pricing'],
+    queryFn: () => API.admin.counselingPricing.get(),
+  });
+  const pricing = data?.pricing;
+  const [form, setForm] = useState({
+    schoolStudentFee: 299,
+    collegeStudentFee: 499,
+    regularPersonFee: 799,
+  });
+
+  useEffect(() => {
+    if (pricing) {
+      setForm({
+        schoolStudentFee: pricing.schoolStudentFee ?? 299,
+        collegeStudentFee: pricing.collegeStudentFee ?? 499,
+        regularPersonFee: pricing.regularPersonFee ?? 799,
+      });
+    }
+  }, [pricing]);
+
+  const saveMutation = useMutation({
+    mutationFn: (data: any) => API.admin.counselingPricing.update(data),
+    onSuccess: () => {
+      toast.success('Counseling pricing updated successfully!');
+      qc.invalidateQueries({ queryKey: ['admin-counseling-pricing'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update pricing'),
+  });
+
+  if (isLoading) return <div className="p-8 text-slate-400">Loading counseling pricing...</div>;
+
+  return (
+    <div className="space-y-6 max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-xl">
+      <div>
+        <h2 className="text-2xl font-bold text-white font-display">Counseling Session Category Fees</h2>
+        <p className="text-sm text-slate-400 mt-1">
+          Set platform counseling session prices based on user categories. Counselors will no longer manage fees directly; these rates are automatically applied upon booking.
+        </p>
+      </div>
+
+      <div className="space-y-5 pt-4 border-t border-slate-800">
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            School Student Fee (₹)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={form.schoolStudentFee}
+            onChange={(e) => setForm({ ...form, schoolStudentFee: Number(e.target.value) })}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            College Student Fee (₹)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={form.collegeStudentFee}
+            onChange={(e) => setForm({ ...form, collegeStudentFee: Number(e.target.value) })}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            Regular Person Fee (₹)
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={form.regularPersonFee}
+            onChange={(e) => setForm({ ...form, regularPersonFee: Number(e.target.value) })}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+          />
+        </div>
+
+        <button
+          onClick={() => saveMutation.mutate(form)}
+          disabled={saveMutation.isPending}
+          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg disabled:opacity-50"
+        >
+          {saveMutation.isPending ? 'Saving Pricing...' : 'Save Counseling Pricing'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdminStudentVerificationsTab() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-student-verifications'],
+    queryFn: () => API.admin.studentVerifications.list(),
+  });
+  const verifications: any[] = data?.verifications ?? [];
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ userId, status, rejectionReason }: { userId: string; status: string; rejectionReason?: string }) =>
+      API.admin.studentVerifications.update(userId, { status, rejectionReason }),
+    onSuccess: () => {
+      toast.success('Verification status updated ✓');
+      qc.invalidateQueries({ queryKey: ['admin-student-verifications'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update verification status'),
+  });
+
+  if (isLoading) return <div className="p-8 text-slate-400">Loading student ID verifications...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white font-display">Student ID Verification Requests</h2>
+          <p className="text-sm text-slate-400 mt-1">Review student ID card photos uploaded during onboarding to verify eligibility.</p>
+        </div>
+        <span className="px-3 py-1 bg-violet-900/40 text-violet-300 border border-violet-800 rounded-full text-xs font-bold">
+          {verifications.length} Total Submissions
+        </span>
+      </div>
+
+      {verifications.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500">
+          No student ID verification requests found.
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4">
+          {verifications.map((v: any) => (
+            <div key={v._id || v.id} className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-white text-lg">{v.fullName || 'User'}</h3>
+                  <p className="text-xs text-slate-400">{v.email}</p>
+                  <p className="text-xs text-violet-400 mt-1 font-semibold uppercase">{v.userType?.replace('_', ' ')}</p>
+                  {v.schoolCollegeName && (
+                    <p className="text-xs text-slate-300 mt-0.5 font-medium">Institution: {v.schoolCollegeName}</p>
+                  )}
+                </div>
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  v.studentIdVerificationStatus === 'approved' ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-800' :
+                  v.studentIdVerificationStatus === 'rejected' ? 'bg-red-900/40 text-red-400 border border-red-800' :
+                  'bg-amber-900/40 text-amber-400 border border-amber-800'
+                }`}>
+                  {v.studentIdVerificationStatus || 'pending'}
+                </span>
+              </div>
+
+              {v.studentIdCardUrl && (
+                <div className="relative group cursor-pointer overflow-hidden rounded-2xl border border-slate-800 bg-slate-950" onClick={() => setSelectedImage(v.studentIdCardUrl)}>
+                  <img src={v.studentIdCardUrl} alt="Student ID Card" className="w-full h-48 object-cover group-hover:scale-105 transition duration-300" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold">
+                    Click to Enlarge
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => updateStatusMutation.mutate({ userId: v._id || v.id, status: 'approved' })}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs shadow-md transition disabled:opacity-50"
+                >
+                  Approve ID
+                </button>
+                <button
+                  disabled={updateStatusMutation.isPending}
+                  onClick={() => {
+                    const reason = prompt('Reason for rejection (optional):') || '';
+                    updateStatusMutation.mutate({ userId: v._id || v.id, status: 'rejected', rejectionReason: reason });
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl text-xs shadow-md transition disabled:opacity-50"
+                >
+                  Reject ID
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
+          <div className="relative max-w-3xl max-h-[90vh] overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 p-2">
+            <img src={selectedImage} alt="Enlarged ID Card" className="max-w-full max-h-[85vh] object-contain rounded-2xl" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminAdBannerTab() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-ad-banner'],
+    queryFn: () => API.admin.adBanner.get(),
+  });
+  const adBanner = data?.adBanner;
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    imageUrl: '',
+    buttonText: '',
+    buttonLink: '',
+    badgeText: '',
+    isActive: true,
+  });
+
+  useEffect(() => {
+    if (adBanner) {
+      setForm({
+        title: adBanner.title || '',
+        description: adBanner.description || '',
+        imageUrl: adBanner.imageUrl || '',
+        buttonText: adBanner.buttonText || '',
+        buttonLink: adBanner.buttonLink || '',
+        badgeText: adBanner.badgeText || '',
+        isActive: adBanner.isActive !== false,
+      });
+    }
+  }, [adBanner]);
+
+  const saveMutation = useMutation({
+    mutationFn: (data: any) => API.admin.adBanner.update(data),
+    onSuccess: () => {
+      toast.success('Homepage Advertisement Banner saved ✓');
+      qc.invalidateQueries({ queryKey: ['admin-ad-banner'] });
+      qc.invalidateQueries({ queryKey: ['adBanner'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update ad banner'),
+  });
+
+  if (isLoading) return <div className="p-8 text-slate-400">Loading homepage ad banner settings...</div>;
+
+  return (
+    <div className="grid lg:grid-cols-2 gap-8">
+      {/* Editor Form */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-5 shadow-xl">
+        <div>
+          <h2 className="text-2xl font-bold text-white font-display">Homepage Advertisement Banner</h2>
+          <p className="text-sm text-slate-400 mt-1">Create and manage the advertisement card shown on the user dashboard homepage.</p>
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-slate-800">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Badge Text</label>
+            <input
+              value={form.badgeText}
+              onChange={(e) => setForm({ ...form, badgeText: e.target.value })}
+              placeholder="e.g. SPECIAL OFFER"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Headline Title</label>
+            <input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. 50% Off Counseling for Students"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
+            <textarea
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="e.g. Book 1-on-1 confidential therapy sessions with certified experts."
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Banner Image URL (Optional)</label>
+            <input
+              value={form.imageUrl}
+              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+              placeholder="https://example.com/ad-banner.jpg"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Text</label>
+              <input
+                value={form.buttonText}
+                onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
+                placeholder="e.g. Book Now"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Target Link</label>
+              <input
+                value={form.buttonLink}
+                onChange={(e) => setForm({ ...form, buttonLink: e.target.value })}
+                placeholder="e.g. /therapists"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isActive}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="size-4 text-violet-600 rounded bg-slate-950 border-slate-700 focus:ring-violet-500"
+              />
+              <span className="text-sm font-bold text-white">Banner Active on User Dashboard</span>
+            </label>
+          </div>
+
+          <button
+            onClick={() => saveMutation.mutate(form)}
+            disabled={saveMutation.isPending}
+            className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg disabled:opacity-50 mt-2"
+          >
+            {saveMutation.isPending ? 'Saving Banner...' : 'Save Advertisement Banner'}
+          </button>
+        </div>
+      </div>
+
+      {/* Live Preview */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-white font-display">Live Preview (User Dashboard View)</h3>
+        <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-xl relative overflow-hidden">
+          {form.imageUrl && (
+            <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
+              <img src={form.imageUrl} alt="Ad Preview" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="relative z-10 space-y-3 max-w-xl">
+            {form.badgeText && (
+              <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                {form.badgeText}
+              </span>
+            )}
+            <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-white leading-tight">
+              {form.title || 'Exclusive Counseling & Support'}
+            </h3>
+            <p className="text-sm text-slate-200/90 leading-relaxed">
+              {form.description || 'Take care of your mental wellbeing with top certified therapists.'}
+            </p>
+            {form.buttonText && (
+              <div className="pt-2">
+                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+                  {form.buttonText} →
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

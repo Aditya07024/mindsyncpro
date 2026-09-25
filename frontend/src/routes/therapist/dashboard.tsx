@@ -457,9 +457,9 @@ function TherapistDashboard() {
           <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-4 gap-4">
             {[
               { label: "Today's sessions", value: todayBookings.length },
-              { label: 'This month', value: stats?.monthBookings ?? 0 },
-              { label: 'Month earned', value: `₹${(stats?.monthEarned ?? 0).toLocaleString('en-IN')}` },
-              { label: 'Payout (70%)', value: `₹${(stats?.nextPayout ?? 0).toLocaleString('en-IN')}` },
+              { label: 'Scheduled Future', value: upcomingBookings.length },
+              { label: 'Completed sessions', value: stats?.completedSessions ?? 0 },
+              { label: 'Total Bookings', value: bookings.length },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="font-display text-2xl font-bold">{s.value}</p>
@@ -473,7 +473,7 @@ function TherapistDashboard() {
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 flex gap-2 overflow-x-auto">
-          {(['schedule', 'availability', 'earnings', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
+          {(['schedule', 'availability', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
             .filter(t => (t !== 'subscription' || !isOrgLinked) && (t !== 'organization' || isOrgLinked))
             .map((t) => {
             const disabled = subRequired && t !== 'subscription' && t !== 'invitations' && t !== 'profile';
@@ -558,7 +558,6 @@ function TherapistDashboard() {
                       </div>
                     </div>
                   </div>
-                  <span className="text-lg font-bold text-teal-700">₹{b.fee}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-4">
                   <button onClick={() => setBriefBookingId(b.id)}
@@ -652,205 +651,7 @@ function TherapistDashboard() {
           </motion.div>
         )}
 
-        {/* EARNINGS TAB */}
-        {tab === 'earnings' && (
-          <motion.div initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} className="space-y-6">
-            <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900">Earnings Summary</h2>
-            <div className="grid grid-cols-2 gap-5">
-              {[
-                { label: 'Total Earned', value: `₹${(stats?.totalEarned ?? 0).toLocaleString('en-IN')}` },
-                { label: 'This Month', value: `₹${(stats?.monthEarned ?? 0).toLocaleString('en-IN')}` },
-                { label: 'Next Payout (70%)', value: `₹${(stats?.nextPayout ?? 0).toLocaleString('en-IN')}` },
-                { label: 'Total Sessions', value: stats?.completedSessions ?? 0 },
-              ].map((s) => (
-                <div key={s.label} className="bg-white rounded-3xl border border-slate-200 p-6 text-center shadow-sm hover:shadow-md transition">
-                  <p className="font-display text-3xl font-bold text-teal-700">{s.value}</p>
-                  <p className="text-sm font-medium text-slate-500 mt-2">{s.label}</p>
-                </div>
-              ))}
-            </div>
-            {/* <div className="bg-amber-50/50 rounded-2xl border border-amber-200/50 p-5 text-sm font-medium text-amber-800">
-              mymindtherapyfriend retains 30% platform fee. Payouts are processed on the 1st of every month via NEFT.
-            </div> */}
 
-            {/* Customizable Revenue Chart Widget */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-display font-bold text-slate-900 text-lg">Earnings Analytics</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Visualize and customize your monthly earnings reports</p>
-                </div>
-                
-                {/* Control Panel / ToolBar */}
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  {/* Chart Type Selector */}
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
-                    {(['bar', 'line', 'area'] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setChartType(t)}
-                        className={`px-2 py-1 rounded-md font-semibold transition capitalize ${
-                          chartType === t ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Metric Toggle */}
-                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
-                    <button
-                      onClick={() => setChartMetric('net')}
-                      className={`px-2 py-1 rounded-md font-semibold transition ${
-                        chartMetric === 'net' ? 'bg-white text-teal-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      Net (70%)
-                    </button>
-                    <button
-                      onClick={() => setChartMetric('gross')}
-                      className={`px-2 py-1 rounded-md font-semibold transition ${
-                        chartMetric === 'gross' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      Gross
-                    </button>
-                  </div>
-
-                  {/* Time Limit Selector */}
-                  <select
-                    value={chartLimit}
-                    onChange={(e) => setChartLimit(e.target.value)}
-                    className="bg-slate-100 text-slate-700 font-semibold px-2 py-1.5 rounded-lg border-none focus:outline-none"
-                  >
-                    <option value="all">All Time</option>
-                    <option value="6">Last 6 Months</option>
-                    <option value="12">Last 12 Months</option>
-                  </select>
-
-                  {/* Theme Color Selector */}
-                  <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-lg">
-                    {COLORS.map((c) => (
-                      <button
-                        key={c.value}
-                        title={c.name}
-                        onClick={() => setChartColor(c.value)}
-                        className={`size-4 rounded-full border transition-all ${
-                          chartColor === c.value ? 'scale-110 border-slate-600 ring-1 ring-slate-400' : 'border-transparent opacity-80 hover:opacity-100'
-                        }`}
-                        style={{ backgroundColor: c.value }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Grid Lines Toggle */}
-                  <button
-                    onClick={() => setShowGrid(!showGrid)}
-                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition border ${
-                      showGrid ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
-                    }`}
-                  >
-                    Grid Lines
-                  </button>
-                </div>
-              </div>
-
-              {/* Chart Render Area */}
-              <div className="h-[300px] w-full bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-                {filteredChartData.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm">
-                    No transaction history available to plot.
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    {chartType === 'line' ? (
-                      <LineChart data={filteredChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />}
-                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
-                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="₹" />
-                        <RechartsTooltip 
-                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                          formatter={(value) => [`₹${value}`, chartMetric === 'net' ? 'Net Payout' : 'Gross Income']}
-                        />
-                        <Line type="monotone" dataKey={chartMetric} stroke={chartColor} strokeWidth={3} activeDot={{ r: 6 }} />
-                      </LineChart>
-                    ) : chartType === 'area' ? (
-                      <AreaChart data={filteredChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={chartColor} stopOpacity={0.2}/>
-                            <stop offset="95%" stopColor={chartColor} stopOpacity={0.0}/>
-                          </linearGradient>
-                        </defs>
-                        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />}
-                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
-                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="₹" />
-                        <RechartsTooltip 
-                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                          formatter={(value) => [`₹${value}`, chartMetric === 'net' ? 'Net Payout' : 'Gross Income']}
-                        />
-                        <Area type="monotone" dataKey={chartMetric} stroke={chartColor} fillOpacity={1} fill="url(#colorUv)" strokeWidth={2} />
-                      </AreaChart>
-                    ) : (
-                      <BarChart data={filteredChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />}
-                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} tickMargin={10} />
-                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} unit="₹" />
-                        <RechartsTooltip 
-                          contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                          formatter={(value) => [`₹${value}`, chartMetric === 'net' ? 'Net Payout' : 'Gross Income']}
-                        />
-                        <Bar dataKey={chartMetric} fill={chartColor} radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    )}
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden mt-8 shadow-sm">
-              <div className="px-6 py-4 bg-slate-50/80 border-b border-slate-200 font-display font-bold text-slate-900">Recent Transactions</div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-500 uppercase text-xs font-bold tracking-wider">
-                    <tr><th className="px-6 py-4">Date</th><th className="px-6 py-4">Session ID</th><th className="px-6 py-4">Gross Amount</th><th className="px-6 py-4">Commission (30%)</th><th className="px-6 py-4">Net Payout</th><th className="px-6 py-4">Status</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {bookings
-                      .filter((b) => b.status === 'completed' || (b.status === 'confirmed' && b.paid))
-                      .slice(0, 20)
-                      .map((b) => {
-                        const gross = b.fee ?? 0;
-                        const commission = Math.round(gross * 0.30);
-                        const net = gross - commission;
-                        return (
-                          <tr key={b.id} className="hover:bg-slate-50/50 transition">
-                            <td className="px-6 py-4 text-slate-500 font-medium">{new Date(b.slot).toLocaleDateString('en-IN')}</td>
-                            <td className="px-6 py-4 text-slate-900 font-bold">#{b.id.slice(-5)}</td>
-                            <td className="px-6 py-4 font-medium">₹{gross.toLocaleString('en-IN')}</td>
-                            <td className="px-6 py-4 text-red-500 font-medium">-₹{commission.toLocaleString('en-IN')}</td>
-                            <td className="px-6 py-4 font-bold text-teal-700">₹{net.toLocaleString('en-IN')}</td>
-                            <td className="px-6 py-4">
-                              {b.status === 'completed' ? (
-                                <span className="bg-teal-50 border border-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide">SETTLED</span>
-                              ) : (
-                                <span className="bg-blue-50 border border-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide">PAID</span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    }
-                    {bookings.filter((b) => b.status === 'completed' || (b.status === 'confirmed' && b.paid)).length === 0 && (
-                      <tr><td colSpan={6} className="px-6 py-10 text-center font-medium text-slate-500">No completed transactions yet. Sessions will appear here once they are marked as completed or paid.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {/* PROFILE TAB */}
         {tab === 'profile' && (

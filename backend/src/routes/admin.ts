@@ -53,4 +53,16 @@ router.get("/permissions", requirePermission("isSuperAdmin"), DelegatedAccessCon
 router.post("/permissions", requirePermission("isSuperAdmin"), DelegatedAccessController.upsertAccess);
 router.delete("/permissions/:id", requirePermission("isSuperAdmin"), DelegatedAccessController.revokeAccess);
 
+// Counseling Pricing Management (Admin)
+router.get("/counseling-pricing", optionalAuth, AdminController.getCounselingPricing);
+router.put("/counseling-pricing", requireAuth, requireRole(["super_admin", "admin"]), AdminController.updateCounselingPricing);
+
+// Student ID Verifications (Admin)
+router.get("/student-verifications", requireAuth, requireRole(["super_admin", "admin"]), AdminController.getStudentVerifications);
+router.patch("/student-verifications/:userId", requireAuth, requireRole(["super_admin", "admin"]), AdminController.updateStudentVerification);
+
+// Homepage Ad Banner (Public & Admin)
+router.get("/ad-banner", AdminController.getAdBanner);
+router.put("/ad-banner", requireAuth, requireRole(["super_admin", "admin"]), AdminController.updateAdBanner);
+
 export default router;

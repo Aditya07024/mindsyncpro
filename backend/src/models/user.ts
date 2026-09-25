@@ -1,7 +1,9 @@
 import mongoose, { Schema, type Document, type Types } from "mongoose";
 
-export type UserTier = "free" | "mann_shanti" | "apna_therapist" | string;
+export type UserType = "school_student" | "college_student" | "regular";
+export type StudentIdVerificationStatus = "pending" | "approved" | "rejected" | "none";
 export type UserRole = "user" | "therapist" | "org_admin" | "super_admin";
+export type UserTier = "free" | "mann_shanti" | "apna_therapist" | "apna_mann";
 
 export interface IOnboardingState {
   moodScore?: number;
@@ -16,6 +18,10 @@ export interface IUser extends Document {
   phoneHash: string;
   phoneMasked: string;
   fullName?: string;
+  userType: UserType;
+  studentIdCardUrl?: string;
+  studentIdVerificationStatus: StudentIdVerificationStatus;
+  schoolCollegeName?: string;
   role: UserRole;
   tier: UserTier;
   language: string;
@@ -90,6 +96,18 @@ const UserSchema = new Schema<IUser>(
     phoneHash: { type: String, required: false, unique: true, sparse: true, index: true },
     phoneMasked: { type: String, required: true },
     fullName: { type: String },
+    userType: {
+      type: String,
+      enum: ["school_student", "college_student", "regular"],
+      default: "regular"
+    },
+    studentIdCardUrl: { type: String, default: "" },
+    studentIdVerificationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "none"],
+      default: "none"
+    },
+    schoolCollegeName: { type: String, default: "" },
 
     role: {
       type: String,

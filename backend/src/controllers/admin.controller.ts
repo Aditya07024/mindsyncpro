@@ -718,6 +718,106 @@ export class AdminController {
       data: result,
     });
   });
+
+  /** GET /admin/counseling-pricing */
+  static getCounselingPricing = asyncHandler(async (_req: AuthedRequest, res: Response) => {
+    const { CounselingPricing } = await import("@/models/counseling-pricing");
+    let pricing = await CounselingPricing.findOne();
+    if (!pricing) {
+      pricing = await CounselingPricing.create({
+        schoolStudentFee: 299,
+        collegeStudentFee: 499,
+        regularPersonFee: 799,
+      });
+    }
+    res.json({ success: true, pricing });
+  });
+
+  /** PUT /admin/counseling-pricing */
+  static updateCounselingPricing = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { schoolStudentFee, collegeStudentFee, regularPersonFee } = req.body;
+    const { CounselingPricing } = await import("@/models/counseling-pricing");
+    let pricing = await CounselingPricing.findOne();
+    if (!pricing) {
+      pricing = new CounselingPricing();
+    }
+    if (schoolStudentFee !== undefined) pricing.schoolStudentFee = Number(schoolStudentFee);
+    if (collegeStudentFee !== undefined) pricing.collegeStudentFee = Number(collegeStudentFee);
+    if (regularPersonFee !== undefined) pricing.regularPersonFee = Number(regularPersonFee);
+    await pricing.save();
+    res.json({ success: true, pricing, message: "Counseling category pricing updated successfully" });
+  });
+
+  /** GET /admin/student-verifications */
+  static getStudentVerifications = asyncHandler(async (_req: AuthedRequest, res: Response) => {
+    const students = await User.find({
+      userType: { $in: ["school_student", "college_student"] },
+      deletedAt: null,
+    })
+      .select("fullName phoneMasked userType studentIdCardUrl studentIdVerificationStatus schoolCollegeName createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, students });
+  });
+
+  /** PATCH /admin/student-verifications/:userId */
+  static updateStudentVerification = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { userId } = req.params;
+    const { status } = req.body as { status: "approved" | "rejected" };
+
+    if (!["approved", "rejected"].includes(status)) {
+      throw new AppError("Invalid verification status", 400);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) throw new AppError("Student user not found", 404);
+
+    user.studentIdVerificationStatus = status;
+    await user.save();
+
+    res.json({ success: true, user, message: `Student ID status updated to ${status}` });
+  });
+
+  /** GET /admin/ad-banner (Publicly accessible for dashboard) */
+  static getAdBanner = asyncHandler(async (_req: any, res: Response) => {
+    const { AdBanner } = await import("@/models/ad-banner");
+    let banner = await AdBanner.findOne();
+    if (!banner) {
+      banner = await AdBanner.create({
+        title: "Exclusive Student & Professional Therapy Workshop 2026",
+        badgeText: "Featured Announcement",
+        description:
+          "Book 1-on-1 confidential counseling sessions with RCI certified psychologists, explore self-care toolkits, and join live clinical webinars.",
+        imageUrl:
+          "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80",
+        buttonText: "Explore Programs & Book",
+        targetUrl: "#counseling",
+        isActive: true,
+      });
+    }
+    res.json({ success: true, banner });
+  });
+
+  /** PUT /admin/ad-banner */
+  static updateAdBanner = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { title, badgeText, description, imageUrl, buttonText, targetUrl, isActive } = req.body;
+    const { AdBanner } = await import("@/models/ad-banner");
+    let banner = await AdBanner.findOne();
+    if (!banner) {
+      banner = new AdBanner();
+    }
+    if (title !== undefined) banner.title = title;
+    if (badgeText !== undefined) banner.badgeText = badgeText;
+    if (description !== undefined) banner.description = description;
+    if (imageUrl !== undefined) banner.imageUrl = imageUrl;
+    if (buttonText !== undefined) banner.buttonText = buttonText;
+    if (targetUrl !== undefined) banner.targetUrl = targetUrl;
+    if (isActive !== undefined) banner.isActive = Boolean(isActive);
+
+    await banner.save();
+    res.json({ success: true, banner, message: "Homepage Ad Banner updated successfully" });
+  });
 }
 
 

@@ -1,7 +1,27 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Briefcase, Users, Heart, HeartPulse, Coins, UserMinus, MessageCircle, Wrench, Sparkles, Building2, User, Search, CheckCircle2, Loader2 } from 'lucide-react';
+import {
+  Briefcase,
+  Users,
+  Heart,
+  HeartPulse,
+  Coins,
+  UserMinus,
+  MessageCircle,
+  Wrench,
+  Sparkles,
+  Building2,
+  User,
+  Search,
+  CheckCircle2,
+  Loader2,
+  GraduationCap,
+  School,
+  Upload,
+  FileCheck,
+  Check,
+} from 'lucide-react';
 import { useStore, type Concern, type NeedType } from '@/lib/store';
 import { ManasAvatar } from '@/components/ManasAvatar';
 import API from '@/lib/api';
@@ -33,10 +53,16 @@ function Onboarding() {
   const nav = useNavigate();
   const completeOnboarding = useStore((s) => s.completeOnboarding);
 
-  // Steps: 0=name, 1=type selection, 2=org picker (if linked), 3=mood, 4=concerns, 5=need, 6=Manas greeting
+  // Steps: 0=name, 1=type selection, 2=org picker, 15=category selection & student ID, 3=mood, 4=concerns, 5=need, 6=Manas greeting
   const [step, setStep] = useState(0);
   const [firstName, setFirstName] = useState('');
   const [userType, setUserType] = useState<'individual' | 'org' | null>(null);
+
+  // Category & Student ID
+  const [userCategory, setUserCategory] = useState<'school_student' | 'college_student' | 'regular'>('regular');
+  const [schoolCollegeName, setSchoolCollegeName] = useState('');
+  const [studentIdCardUrl, setStudentIdCardUrl] = useState('');
+  const [uploadingIdCard, setUploadingIdCard] = useState(false);
 
   // Org selection
   const [orgs, setOrgs] = useState<{ _id: string; name: string; type: string }[]>([]);
@@ -97,14 +123,14 @@ function Onboarding() {
   const handleTypeSelect = (type: 'individual' | 'org') => {
     setUserType(type);
     if (type === 'individual') {
-      setStep(3); // Skip org step
+      setStep(15); // Go to category selection step
     } else {
       setStep(2); // Show org picker
     }
   };
 
   const handleOrgNext = async () => {
-    if (!selectedOrg) { setStep(3); return; }
+    if (!selectedOrg) { setStep(15); return; }
     setJoinStatus('loading');
     try {
       const res: any = await API.org.requestJoin({ orgId: selectedOrg._id, email: employeeEmail });
@@ -116,6 +142,23 @@ function Onboarding() {
     }
   };
 
+  const handleIdCardFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingIdCard(true);
+      const res = await API.auth.uploadStudentIdCard(file);
+      if (res.success && res.imageUrl) {
+        setStudentIdCardUrl(res.imageUrl);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload student ID card image.');
+    } finally {
+      setUploadingIdCard(false);
+    }
+  };
+
   const filteredOrgs = orgs.filter(o =>
     o.name.toLowerCase().includes(orgSearch.toLowerCase())
   );
@@ -124,15 +167,16 @@ function Onboarding() {
     setNeed(chosenNeed);
     completeOnboarding({ firstName: firstName.trim() || 'friend', mood, concerns, need: chosenNeed });
 
-
-
-    // Save to database
+    // Save to database with user category & student ID
     try {
       await API.auth.updateOnboarding({
         moodScore: mood,
         concerns,
         primaryNeed: chosenNeed,
         completed: true,
+        userType: userCategory,
+        studentIdCardUrl,
+        schoolCollegeName,
       });
       
       // Update name if provided
@@ -308,7 +352,7 @@ function Onboarding() {
                   )}
                 </div>
 
-                {/* Employee Email Input (Visible when an org is selected) */}
+                {/* Employee Email Input */}
                 <AnimatePresence>
                   {selectedOrg && (
                     <motion.div
@@ -361,19 +405,184 @@ function Onboarding() {
                           ? <><Loader2 className="size-4 animate-spin" /> Sending request...</>
                           : selectedOrg ? `Request to join ${selectedOrg.name}` : 'Continue without organisation'}
                       </button>
-                      {/* <button onClick={() => setStep(3)} className="w-full text-sm text-muted-foreground hover:text-foreground py-1">
-                        Skip for now
-                      </button> */}
                     </>
                   ) : (
                     <button
-                      onClick={() => setStep(3)}
+                      onClick={() => setStep(15)}
                       className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground transition hover:scale-[1.01]"
                     >
                       Continue →
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── STEP 15: User Profile Category & Student ID Upload ── */}
+        {step === 15 && (
+          <motion.div key="s15" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.45 }}
+            className="flex min-h-screen flex-col items-center justify-center bg-canvas-gradient px-6 py-12">
+            <div className="w-full max-w-lg">
+              <button onClick={() => setStep(userType === 'org' ? 2 : 1)} className="mb-6 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+                ← Back
+              </button>
+              
+              <div className="rounded-3xl bg-white border border-border shadow-md p-8 space-y-6">
+                <div className="text-center space-y-2">
+                  <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 mb-2">
+                    <GraduationCap className="size-7" />
+                  </div>
+                  <h2 className="font-display text-2xl font-bold text-primary-deep sm:text-3xl">
+                    Select Your Category
+                  </h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Counseling session fees are tailored per category. Select yours below:
+                  </p>
+                </div>
+
+                {/* Category Options */}
+                <div className="space-y-3">
+                  {/* School Student */}
+                  <button
+                    type="button"
+                    onClick={() => setUserCategory('school_student')}
+                    className={`w-full text-left rounded-2xl p-4 border-2 transition-all flex items-center justify-between cursor-pointer ${
+                      userCategory === 'school_student'
+                        ? 'border-teal-600 bg-teal-50/70 shadow-sm'
+                        : 'border-slate-200 bg-slate-50 hover:border-teal-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`size-10 rounded-xl flex items-center justify-center ${userCategory === 'school_student' ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        <School className="size-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm">School Student</h4>
+                        <p className="text-xs text-slate-500">Special student pricing & verified care</p>
+                      </div>
+                    </div>
+                    {userCategory === 'school_student' && <Check className="size-5 text-teal-600 font-bold" />}
+                  </button>
+
+                  {/* College Student */}
+                  <button
+                    type="button"
+                    onClick={() => setUserCategory('college_student')}
+                    className={`w-full text-left rounded-2xl p-4 border-2 transition-all flex items-center justify-between cursor-pointer ${
+                      userCategory === 'college_student'
+                        ? 'border-teal-600 bg-teal-50/70 shadow-sm'
+                        : 'border-slate-200 bg-slate-50 hover:border-teal-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`size-10 rounded-xl flex items-center justify-center ${userCategory === 'college_student' ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        <GraduationCap className="size-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm">College Student</h4>
+                        <p className="text-xs text-slate-500">Higher education student pricing</p>
+                      </div>
+                    </div>
+                    {userCategory === 'college_student' && <Check className="size-5 text-teal-600 font-bold" />}
+                  </button>
+
+                  {/* Regular Person */}
+                  <button
+                    type="button"
+                    onClick={() => setUserCategory('regular')}
+                    className={`w-full text-left rounded-2xl p-4 border-2 transition-all flex items-center justify-between cursor-pointer ${
+                      userCategory === 'regular'
+                        ? 'border-teal-600 bg-teal-50/70 shadow-sm'
+                        : 'border-slate-200 bg-slate-50 hover:border-teal-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`size-10 rounded-xl flex items-center justify-center ${userCategory === 'regular' ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                        <User className="size-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-sm">Regular Person / Adult</h4>
+                        <p className="text-xs text-slate-500">Standard adult therapy care</p>
+                      </div>
+                    </div>
+                    {userCategory === 'regular' && <Check className="size-5 text-teal-600 font-bold" />}
+                  </button>
+                </div>
+
+                {/* Mandatory Student ID Card Upload for Students */}
+                <AnimatePresence>
+                  {(userCategory === 'school_student' || userCategory === 'college_student') && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 pt-2 border-t border-slate-100 overflow-hidden"
+                    >
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          School / College Name
+                        </label>
+                        <input
+                          type="text"
+                          value={schoolCollegeName}
+                          onChange={(e) => setSchoolCollegeName(e.target.value)}
+                          placeholder="e.g. St. Xavier's High School / Delhi University"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none"
+                        />
+                      </div>
+
+                      <div className="rounded-2xl bg-teal-50/60 p-4 border border-teal-200 space-y-3">
+                        <div className="flex items-start gap-2 text-xs text-teal-950 font-semibold">
+                          <FileCheck className="size-4 text-teal-600 shrink-0 mt-0.5" />
+                          <span>
+                            Upload Student ID Card Photo (Mandatory for Student Rates)
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Please upload a clear picture of your valid School / College Student ID card. Our admin team will verify it to unlock discounted student session rates.
+                        </p>
+
+                        <label className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white border border-dashed border-teal-400 text-teal-800 hover:bg-teal-50 cursor-pointer transition text-xs font-bold shadow-sm">
+                          <Upload className="size-4 text-teal-600" />
+                          <span>{uploadingIdCard ? 'Uploading ID Card...' : studentIdCardUrl ? 'Change Uploaded ID Card' : 'Upload Student ID Card Image'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleIdCardFileChange}
+                            disabled={uploadingIdCard}
+                            className="hidden"
+                          />
+                        </label>
+
+                        {studentIdCardUrl && (
+                          <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden border border-teal-200 shadow-sm mt-2">
+                            <img src={studentIdCardUrl} alt="Uploaded Student ID" className="h-full w-full object-cover" />
+                            <span className="absolute bottom-2 right-2 bg-emerald-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full shadow">
+                              Uploaded ✓ (Pending Admin Verification)
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Continue Action */}
+                <button
+                  onClick={() => {
+                    if ((userCategory === 'school_student' || userCategory === 'college_student') && !studentIdCardUrl) {
+                      if (!confirm("You haven't uploaded your Student ID card image yet. You can continue, but student rates will require Admin verification. Proceed?")) {
+                        return;
+                      }
+                    }
+                    setStep(3);
+                  }}
+                  className="w-full rounded-2xl bg-[#004038] py-3.5 text-sm font-bold text-white shadow-lg hover:bg-[#002f29] transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Continue to Wellness Profile →
+                </button>
               </div>
             </div>
           </motion.div>

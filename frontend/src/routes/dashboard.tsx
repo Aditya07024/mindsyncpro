@@ -152,11 +152,17 @@ function Dashboard() {
   const streak = userStats?.streak ?? 0;
   const todayMood = userStats?.latestMoodDate === todayStr() ? userStats?.latestMood : null;
   const promptText = journalPrompt?.prompt ?? 'What thought has been on a loop today?';
-  const lastMsg = recentChat?.messages?.[0]; // Assuming backend returns most recent first
-
   const submitMood = (score: number) => {
     submitMoodMutation.mutate(score);
   };
+
+  const { data: adBannerData } = useQuery({
+    queryKey: ['adBanner'],
+    queryFn: () => API.adBanner.get(),
+    retry: false,
+    enabled: !isCheckingRole,
+  });
+  const adBanner = adBannerData?.adBanner || adBannerData?.banner;
 
   // Next upcoming confirmed booking
   const upcomingBooking = bookingsData?.bookings
@@ -295,21 +301,41 @@ function Dashboard() {
                 </div>
               </motion.div>
             )}
-            {/* Chat with Manas card */}
-            <Link to="/chat" className="block">
-              <div className="rounded-3xl bg-warm-gradient p-6 text-primary-foreground shadow-md transition-transform active:scale-[0.98] hover:shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="size-5" />
-                    <span className="font-display font-semibold text-lg">Chat with Manas AI</span>
+            {/* Advertisement Section (Managed by Admin) */}
+            {adBanner?.isActive !== false && (
+              <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-lg relative overflow-hidden group">
+                {adBanner?.imageUrl && (
+                  <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
+                    <img src={adBanner.imageUrl} alt="Ad" className="w-full h-full object-cover" />
                   </div>
-                  <ChevronRight className="size-5" />
+                )}
+                <div className="relative z-10 space-y-3 max-w-xl">
+                  {adBanner?.badgeText && (
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                      {adBanner.badgeText}
+                    </span>
+                  )}
+                  <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-white leading-tight">
+                    {adBanner?.title || 'Exclusive Counseling & Mental Health Support'}
+                  </h3>
+                  <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
+                    {adBanner?.description || 'Take care of your mental wellbeing with top certified therapists tailored for students and professionals.'}
+                  </p>
+                  {adBanner?.buttonText && adBanner?.buttonLink && (
+                    <div className="pt-2">
+                      <a
+                        href={adBanner.buttonLink}
+                        target={adBanner.buttonLink.startsWith('http') ? '_blank' : '_self'}
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                      >
+                        {adBanner.buttonText} <ChevronRight className="size-4" />
+                      </a>
+                    </div>
+                  )}
                 </div>
-                <p className="mt-3 text-sm text-primary-foreground/90 leading-relaxed line-clamp-3">
-                  {lastMsg?.content || 'Tap to open up — no judgement, just a listening ear.'}
-                </p>
               </div>
-            </Link>
+            )}
 
             {/* Career Guidance & Assessment Report Navigation Banner */}
             {/* <Link to="/career-selection" className="block">

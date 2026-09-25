@@ -92,6 +92,14 @@ const API = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    uploadStudentIdCard: (file: File) => {
+      const formData = new FormData();
+      formData.append("idCard", file);
+      return apiCall<{ success: boolean; imageUrl: string }>("/api/auth/upload-student-id", {
+        method: "POST",
+        body: formData,
+      });
+    },
   },
 
   account: {
@@ -174,6 +182,25 @@ const API = {
       revoke: (id: string) =>
         apiCall<any>(`/api/admin/permissions/${id}`, { method: "DELETE" }),
     },
+    counselingPricing: {
+      get: () => apiCall<any>("/api/admin/counseling-pricing"),
+      update: (data: any) =>
+        apiCall<any>("/api/admin/counseling-pricing", { method: "PUT", body: JSON.stringify(data) }),
+    },
+    studentVerifications: {
+      list: () => apiCall<any>("/api/admin/student-verifications"),
+      update: (userId: string, data: { status: string; rejectionReason?: string }) =>
+        apiCall<any>(`/api/admin/student-verifications/${userId}`, { method: "PATCH", body: JSON.stringify(data) }),
+    },
+    adBanner: {
+      get: () => apiCall<any>("/api/admin/ad-banner"),
+      update: (data: any) =>
+        apiCall<any>("/api/admin/ad-banner", { method: "PUT", body: JSON.stringify(data) }),
+    },
+  },
+
+  adBanner: {
+    get: () => apiCall<any>("/api/admin/ad-banner"),
   },
 
   org: {
@@ -714,6 +741,28 @@ const API = {
         body: JSON.stringify(data),
       }),
   },
+
+  adminPricing: {
+    getCounselingPricing: () =>
+      apiCall<{ success: boolean; pricing: any }>("/api/admin/counseling-pricing"),
+    updateCounselingPricing: (data: { schoolStudentFee?: number; collegeStudentFee?: number; regularPersonFee?: number }) =>
+      apiCall<{ success: boolean; pricing: any; message: string }>("/api/admin/counseling-pricing", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+  },
+
+  adminStudentVerifications: {
+    list: () =>
+      apiCall<{ success: boolean; students: any[] }>("/api/admin/student-verifications"),
+    updateStatus: (userId: string, status: "approved" | "rejected") =>
+      apiCall<{ success: boolean; user: any; message: string }>(`/api/admin/student-verifications/${userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+  },
+
+
 };
 
 export default API;
