@@ -58,6 +58,10 @@ function Onboarding() {
   const [firstName, setFirstName] = useState('');
   const [userType, setUserType] = useState<'individual' | 'org' | null>(null);
 
+  // Phone & Referral
+  const [phone, setPhone] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+
   // Category & Student ID
   const [userCategory, setUserCategory] = useState<'school_student' | 'college_student' | 'regular'>('regular');
   const [schoolCollegeName, setSchoolCollegeName] = useState('');
@@ -177,6 +181,8 @@ function Onboarding() {
         userType: userCategory,
         studentIdCardUrl,
         schoolCollegeName,
+        phone,
+        referralCode,
       });
       
       // Update name if provided
@@ -509,6 +515,38 @@ function Onboarding() {
                     </div>
                     {userCategory === 'regular' && <Check className="size-5 text-teal-600 font-bold" />}
                   </button>
+                </div>
+
+                {/* Phone & Referral Code Fields */}
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Phone Number (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Enter your mobile number (e.g. +91 9876543210)"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Referral Code (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={referralCode}
+                      onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      placeholder="Got a referral code? Enter it here (e.g. MMTP-A1B2C3)"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 uppercase font-mono tracking-wider focus:ring-2 focus:ring-teal-500 outline-none"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Get 1 Free Counseling Session when you use a friend's referral code!
+                    </p>
+                  </div>
                 </div>
 
                 {/* Mandatory Student ID Card Upload for Students */}

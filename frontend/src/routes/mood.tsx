@@ -4,6 +4,8 @@ import API from '@/lib/api';
 import { AppShell } from '@/components/AppShell';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { useState } from 'react';
+import { User as UserIcon, Gift, Copy, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/mood')({ component: MoodPage });
 
@@ -20,6 +22,11 @@ function MoodPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['moodHistory'],
     queryFn: () => API.mood.list(),
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => API.auth.me(),
   });
 
   const moods = data?.moods || [];
@@ -63,8 +70,71 @@ function MoodPage() {
     <AppShell>
       <div className="space-y-6">
         <div>
-          <h1 className="font-display text-3xl font-bold text-primary-deep">Mood diary</h1>
-          <p className="mt-1 text-muted-foreground">Tap a day to see, slide to log today.</p>
+          <h1 className="font-display text-3xl font-bold text-primary-deep">My Profile & Mood Tracker</h1>
+          <p className="mt-1 text-muted-foreground">Manage your referral code, free session credits, and daily mood reflections.</p>
+        </div>
+
+        {/* User Profile & Referral Code Card */}
+        <div className="rounded-3xl bg-gradient-to-br from-[#004038] to-[#01584c] p-6 text-white shadow-lg space-y-4 relative overflow-hidden">
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 pointer-events-none">
+            <Gift className="size-48" />
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-2xl bg-white/10 flex items-center justify-center font-bold text-xl text-amber-300">
+                <UserIcon className="size-6" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-bold text-white">{user?.fullName || 'User Profile'}</h2>
+                <p className="text-xs text-white/70 capitalize">
+                  {user?.userType ? user.userType.replace('_', ' ') : 'Regular User'} • {user?.phoneMasked || user?.phone || 'No phone added'}
+                </p>
+              </div>
+            </div>
+            {user?.userType !== 'regular' && (
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full self-start sm:self-auto ${
+                user?.studentIdVerificationStatus === 'approved' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                user?.studentIdVerificationStatus === 'pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                'bg-white/10 text-white/80'
+              }`}>
+                Student ID: {user?.studentIdVerificationStatus || 'none'}
+              </span>
+            )}
+          </div>
+
+          {/* Referral Code Box */}
+          <div className="space-y-3 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                <Gift className="size-4 text-amber-400" /> Your Unique Referral Code
+              </span>
+              <span className="text-xs text-white/80 font-semibold bg-white/15 px-3 py-1 rounded-full">
+                🎉 Free Sessions Balance: <strong>{user?.freeSessionCredits || 0}</strong>
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 bg-white/10 p-4 rounded-2xl border border-white/15">
+              <div className="flex-1 font-mono text-xl font-extrabold tracking-widest text-amber-300 select-all">
+                {user?.referralCode || 'MMTP-CODE'}
+              </div>
+              <button
+                onClick={() => {
+                  if (user?.referralCode) {
+                    navigator.clipboard.writeText(user.referralCode);
+                    toast.success("Referral code copied to clipboard!");
+                  }
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow transition active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Copy className="size-4" /> Copy Code
+              </button>
+            </div>
+
+            <p className="text-xs text-white/80 leading-relaxed">
+              Share your referral code with friends! When a friend onboards or enters your code, <strong>both of you get 1 Free Counseling Session</strong> (no fees required).
+            </p>
+          </div>
         </div>
 
         <div className="rounded-3xl bg-card p-5 shadow-sm">

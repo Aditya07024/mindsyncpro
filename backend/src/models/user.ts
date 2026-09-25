@@ -72,6 +72,11 @@ export interface IUser extends Document {
     content: string;
     timestamp: Date;
   }[];
+  phone?: string;
+  referralCode?: string;
+  referredBy?: string;
+  referralPromptProcessed?: boolean;
+  freeSessionCredits: number;
   deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -95,6 +100,11 @@ const UserSchema = new Schema<IUser>(
     clerkId: { type: String, unique: true, sparse: true, index: true },
     phoneHash: { type: String, required: false, unique: true, sparse: true, index: true },
     phoneMasked: { type: String, required: true },
+    phone: { type: String, default: "" },
+    referralCode: { type: String, unique: true, sparse: true, index: true },
+    referredBy: { type: String, default: "" },
+    referralPromptProcessed: { type: Boolean, default: false },
+    freeSessionCredits: { type: Number, default: 0 },
     fullName: { type: String },
     userType: {
       type: String,
@@ -196,6 +206,14 @@ const UserSchema = new Schema<IUser>(
   },
   { timestamps: true }
 );
+
+UserSchema.pre("save", function (next) {
+  if (!this.referralCode) {
+    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+    this.referralCode = `MMTP-${randomStr}`;
+  }
+  next();
+});
 
 export const User =
   (mongoose.models.User as mongoose.Model<IUser>) ||

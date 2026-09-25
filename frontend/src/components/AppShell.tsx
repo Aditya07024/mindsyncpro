@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuth, useClerk, SignInButton } from '@clerk/clerk-react';
 import { UserProfileDropdown } from './UserProfileDropdown';
-import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet } from 'lucide-react';
+import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet, User as UserIcon, Gift, Sparkles, X } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';
 import API from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 import logoUrl from '@/assets/logo.png';
 
@@ -14,7 +16,7 @@ const tabs = [
   { to: '/chat', icon: MessageCircle, label: 'Manas' },
   { to: '/therapists', icon: Users, label: 'Counsellors' },
   { to: '/bookings', icon: CalendarCheck, label: 'Bookings' },
-  { to: '/mood', icon: Heart, label: 'Mood' },
+  { to: '/mood', icon: UserIcon, label: 'Profile' },
 ] as const;
 
 export function AppShell({
@@ -32,6 +34,26 @@ export function AppShell({
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const { signOut } = useClerk();
+  const queryClient = useQueryClient();
+
+  const [refInput, setRefInput] = useState('');
+
+  const { data: userData } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => API.auth.me(),
+    enabled: isSignedIn,
+  });
+
+  const applyRefMutation = useMutation({
+    mutationFn: (data: { referralCode?: string; skip?: boolean }) => API.auth.applyReferral(data),
+    onSuccess: (res: any) => {
+      if (res.message) toast.success(res.message);
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to process referral code.");
+    }
+  });
 
   // Preflight auth gate: check if the account is valid before rendering children
   const [authStatus, setAuthStatus] = useState<'checking' | 'ok' | 'invalid'>('checking');
@@ -164,6 +186,79 @@ export function AppShell({
           </div>
         </nav>
       )}
+
+      {/* One-Time Referral Code Popup Modal for Existing & New Users */}
+      <AnimatePresence>
+        {isSignedIn && userData && userData.role === 'user' && userData.referralPromptProcessed === false && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-card border border-border rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl relative space-y-5 overflow-hidden"
+            >
+              <div className="absolute right-4 top-4">
+                <button
+                  onClick={() => applyRefMutation.mutate({ skip: true })}
+                  className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-secondary transition cursor-pointer"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <Gift className="size-6" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-lg text-primary-deep flex items-center gap-1.5">
+                    Got a Referral Code? <Sparkles className="size-4 text-amber-500" />
+                  </h3>
+                  <p className="text-xs text-muted-foreground">Enter a friend's referral code to get 1 Free Counseling Session!</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={refInput}
+                  onChange={(e) => setRefInput(e.target.value.toUpperCase())}
+                  placeholder="Enter Referral Code (e.g. MMTP-A1B2C3)"
+                  className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm font-mono tracking-wider text-slate-800 uppercase focus:ring-2 focus:ring-primary outline-none transition"
+                />
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => applyRefMutation.mutate({ skip: true })}
+                    disabled={applyRefMutation.isPending}
+                    className="flex-1 py-3 px-4 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary transition cursor-pointer"
+                  >
+                    Skip for Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!refInput.trim()) {
+                        toast.error("Please enter a referral code or click Skip.");
+                        return;
+                      }
+                      applyRefMutation.mutate({ referralCode: refInput.trim() });
+                    }}
+                    disabled={applyRefMutation.isPending}
+                    className="flex-1 py-3 px-4 rounded-xl bg-accent hover:bg-accent/90 text-white text-xs font-bold shadow-md transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {applyRefMutation.isPending ? "Claiming..." : "Claim Free Session"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {!hideSOS && <CrisisButton />}
     </div>

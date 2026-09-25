@@ -47,6 +47,13 @@ function MyBookings() {
 
 
 
+  const { data: adBannerData } = useQuery({
+    queryKey: ['adBanner'],
+    queryFn: () => API.adBanner.get(),
+    retry: false,
+  });
+  const adBanner = adBannerData?.banner || adBannerData?.adBanner;
+
   const rateMutation = useMutation({
     mutationFn: ({ id, rating, feedback }: { id: string; rating: number; feedback: string }) =>
       API.booking.rate(id, { rating, feedback }),
@@ -69,6 +76,46 @@ function MyBookings() {
   return (
     <AppShell>
       <div className="space-y-6">
+        {/* Advertisement Banner (Managed by Admin) */}
+        {Boolean(adBanner && adBanner.isActive !== false && (adBanner.title || adBanner.description)) && (
+          <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-lg relative overflow-hidden group">
+            {adBanner.imageUrl && (
+              <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
+                <img src={adBanner.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="relative z-10 space-y-3 max-w-xl">
+              {adBanner.badgeText && (
+                <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                  {adBanner.badgeText}
+                </span>
+              )}
+              {adBanner.title && (
+                <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-white leading-tight">
+                  {adBanner.title}
+                </h3>
+              )}
+              {adBanner.description && (
+                <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
+                  {adBanner.description}
+                </p>
+              )}
+              {adBanner.buttonText && (adBanner.buttonLink || adBanner.targetUrl) && (
+                <div className="pt-2">
+                  <a
+                    href={adBanner.buttonLink || adBanner.targetUrl}
+                    target={(adBanner.buttonLink || adBanner.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                  >
+                    {adBanner.buttonText} <ChevronRight className="size-4" />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <h1 className="font-display text-2xl font-bold text-primary-deep">My Sessions</h1>
 
         {isLoading && (

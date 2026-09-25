@@ -161,6 +161,13 @@ export class BookingController {
         }
       }
 
+      // Check if user has Referral Free Session Credits
+      if (!isOrgCovered && amount > 0 && seekerUser && seekerUser.freeSessionCredits > 0) {
+        seekerUser.freeSessionCredits -= 1;
+        await seekerUser.save();
+        amount = 0;
+      }
+
       const isFree = amount === 0;
 
       const safeUserId = mongoose.Types.ObjectId.isValid(req.user!.sub)

@@ -10,7 +10,8 @@ function serializeUser(user: any) {
     role: user.role,
     tier: user.tier,
     language: user.language,
-    phoneMasked: user.phoneMasked,
+    phoneMasked: user.phoneMasked || user.phone || "",
+    phone: user.phone || user.phoneMasked || "",
     fullName: user.fullName,
     userType: user.userType || "regular",
     studentIdCardUrl: user.studentIdCardUrl || "",
@@ -20,6 +21,10 @@ function serializeUser(user: any) {
     streak: user.streak,
     onboarding: user.onboarding,
     orgId: user.orgId,
+    referralCode: user.referralCode || `MMTP-${user._id.toString().slice(-6).toUpperCase()}`,
+    referredBy: user.referredBy || "",
+    referralPromptProcessed: user.referralPromptProcessed ?? false,
+    freeSessionCredits: user.freeSessionCredits || 0,
     therapistProfile: user.role === "therapist" ? user.therapistProfile : undefined,
   };
 }
@@ -27,14 +32,66 @@ function serializeUser(user: any) {
 export class AuthController {
   /** GET /auth/me — returns the current Clerk-authed user's MongoDB profile */
   static me = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const user = await User.findById(req.user!.sub).lean();
+    let user = await User.findById(req.user!.sub);
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (!user.referralCode) {
+      const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+      user.referralCode = `MMTP-${randomStr}`;
+      await user.save();
+    }
     res.json(serializeUser(user));
+  });
+
+  static applyReferral = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { referralCode, skip } = req.body;
+    const user = await User.findById(req.user!.sub);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (user.referralPromptProcessed) {
+      return res.status(400).json({ error: "Referral prompt has already been processed for this account." });
+    }
+
+    if (skip || !referralCode || !referralCode.trim()) {
+      user.referralPromptProcessed = true;
+      await user.save();
+      return res.json({ success: true, message: "Referral code skipped.", user: serializeUser(user) });
+    }
+
+    const cleanCode = referralCode.trim().toUpperCase();
+
+    if (!user.referralCode) {
+      const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+      user.referralCode = `MMTP-${randomStr}`;
+    }
+
+    if (cleanCode === user.referralCode) {
+      return res.status(400).json({ error: "You cannot use your own referral code." });
+    }
+
+    const referrer = await User.findOne({ referralCode: cleanCode });
+    if (!referrer) {
+      return res.status(404).json({ error: "Invalid referral code. Please check and try again." });
+    }
+
+    user.referredBy = cleanCode;
+    user.referralPromptProcessed = true;
+    user.freeSessionCredits = (user.freeSessionCredits || 0) + 1;
+    await user.save();
+
+    referrer.freeSessionCredits = (referrer.freeSessionCredits || 0) + 1;
+    await referrer.save();
+
+    res.json({
+      success: true,
+      message: "Referral code applied! You and your referrer both received 1 Free Counseling Session 🎉",
+      user: serializeUser(user),
+    });
   });
 
   static updateOnboarding = asyncHandler(
     async (req: AuthedRequest, res: Response) => {
-      const { moodScore, concerns, primaryNeed, completed, userType, studentIdCardUrl, schoolCollegeName } = req.body;
+      const { moodScore, concerns, primaryNeed, completed, userType, studentIdCardUrl, schoolCollegeName, phone, referralCode } = req.body;
       const user = await AuthService.updateOnboarding(req.user!.sub, {
         moodScore,
         concerns,
@@ -46,12 +103,31 @@ export class AuthController {
         if (userType) user.userType = userType;
         if (studentIdCardUrl !== undefined) user.studentIdCardUrl = studentIdCardUrl;
         if (schoolCollegeName !== undefined) user.schoolCollegeName = schoolCollegeName;
+        if (phone) {
+          user.phone = phone;
+          user.phoneMasked = phone;
+        }
 
         if (userType === "school_student" || userType === "college_student") {
           user.studentIdVerificationStatus = "pending";
         } else if (userType === "regular") {
           user.studentIdVerificationStatus = "approved";
         }
+
+        if (referralCode && !user.referralPromptProcessed) {
+          const cleanCode = referralCode.trim().toUpperCase();
+          if (cleanCode !== user.referralCode) {
+            const referrer = await User.findOne({ referralCode: cleanCode });
+            if (referrer) {
+              user.referredBy = cleanCode;
+              user.freeSessionCredits = (user.freeSessionCredits || 0) + 1;
+              referrer.freeSessionCredits = (referrer.freeSessionCredits || 0) + 1;
+              await referrer.save();
+            }
+          }
+        }
+        user.referralPromptProcessed = true;
+
         await user.save();
       }
 

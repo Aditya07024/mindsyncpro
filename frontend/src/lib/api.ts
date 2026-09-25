@@ -83,6 +83,8 @@ const API = {
     },
     updateOnboarding: (data: any) =>
       apiCall<any>("/api/auth/onboarding", { method: "PATCH", body: JSON.stringify(data) }),
+    applyReferral: (data: { referralCode?: string; skip?: boolean }) =>
+      apiCall<any>("/api/auth/apply-referral", { method: "POST", body: JSON.stringify(data) }),
     updateProfile: (data: any) =>
       apiCall<any>("/api/auth/profile", { method: "PATCH", body: JSON.stringify(data) }),
     deleteProfile: () =>
