@@ -8,6 +8,7 @@ export interface IAdBanner extends Document {
   buttonText: string;
   targetUrl: string;
   isActive: boolean;
+  isCreatedByAdmin?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +22,7 @@ const adBannerSchema = new Schema<IAdBanner>(
     buttonText: { type: String, default: "" },
     targetUrl: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
+    isCreatedByAdmin: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

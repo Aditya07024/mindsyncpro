@@ -783,13 +783,34 @@ export class AdminController {
   static getAdBanner = asyncHandler(async (_req: any, res: Response) => {
     const { AdBanner } = await import("@/models/ad-banner");
     const banner = await AdBanner.findOne().lean();
-    res.json({ success: true, banner: banner || null });
+
+    if (!banner) {
+      return res.json({ success: true, banner: null });
+    }
+
+    // Clean up or ignore dummy default banners created prior to admin customization
+    if (
+      !banner.isCreatedByAdmin ||
+      banner.title === "Exclusive Student & Professional Therapy Workshop 2026"
+    ) {
+      return res.json({ success: true, banner: null });
+    }
+
+    if (!banner.isActive) {
+      return res.json({ success: true, banner: null });
+    }
+
+    res.json({ success: true, banner });
   });
 
   /** PUT /admin/ad-banner */
   static updateAdBanner = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { title, badgeText, description, imageUrl, buttonText, targetUrl, isActive } = req.body;
     const { AdBanner } = await import("@/models/ad-banner");
+
+    // Remove any legacy dummy default banner
+    await AdBanner.deleteMany({ title: "Exclusive Student & Professional Therapy Workshop 2026" });
+
     let banner = await AdBanner.findOne();
     if (!banner) {
       banner = new AdBanner();
@@ -801,6 +822,7 @@ export class AdminController {
     if (buttonText !== undefined) banner.buttonText = buttonText;
     if (targetUrl !== undefined) banner.targetUrl = targetUrl;
     if (isActive !== undefined) banner.isActive = Boolean(isActive);
+    banner.isCreatedByAdmin = true;
 
     await banner.save();
     res.json({ success: true, banner, message: "Homepage Ad Banner updated successfully" });
