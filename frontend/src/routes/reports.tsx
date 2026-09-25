@@ -38,7 +38,7 @@ function ReportsPage() {
   });
   const currentTier = subscription?.tier ?? "free";
 
-  const [period, setPeriod] = useState<'day' | 'week' | 'fortnight' | 'month'>('fortnight');
+  const [period] = useState<string>('all');
   const [selectedTherapist, setSelectedTherapist] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [downloading, setDownloading] = useState<boolean>(false);
@@ -61,6 +61,13 @@ function ReportsPage() {
     queryKey: ['reportShares'],
     queryFn: () => API.user.getShares(),
   });
+
+  const { data: adBannerData } = useQuery({
+    queryKey: ['adBanner'],
+    queryFn: () => API.adBanner.get(),
+    retry: false,
+  });
+  const adBanner = adBannerData?.banner || adBannerData?.adBanner;
 
   const calculateUrgency = () => {
     if (!reportData) return { score: 5, label: 'Moderate', color: '#f59e0b', bgClass: 'bg-amber-100', textClass: 'text-amber-700' };
@@ -138,13 +145,7 @@ function ReportsPage() {
   const urgency = calculateUrgency();
   const doctorRec = getDoctorRecommendation();
 
-  useEffect(() => {
-    if (currentTier === "free") {
-      setPeriod("fortnight");
-    } else {
-      setPeriod("week");
-    }
-  }, [currentTier]);
+
 
   const { data: walletData } = useQuery({
     queryKey: ["walletBalance"],
@@ -171,12 +172,12 @@ function ReportsPage() {
         startDate: reportData.startDate,
         endDate: reportData.endDate,
       });
-      toast.success("AI Therapist Analysis unlocked successfully using wallet!");
+      toast.success("AI Counsellor Analysis unlocked successfully using wallet!");
       queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
       refetchReport();
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Failed to unlock therapist analysis");
+      toast.error(err.message || "Failed to unlock counsellor analysis");
     } finally {
       setUnlocking(false);
     }
@@ -187,7 +188,7 @@ function ReportsPage() {
     mutationFn: (data: { therapistId: string; period: string; notes?: string }) =>
       API.user.shareReport(data),
     onSuccess: () => {
-      toast.success("Report shared successfully with your therapist!");
+      toast.success("Report shared successfully with your counsellor!");
       queryClient.invalidateQueries({ queryKey: ['reportShares'] });
       setNotes("");
       setSelectedTherapist("");
@@ -354,7 +355,7 @@ function ReportsPage() {
             <h1 className="font-display text-3xl font-bold text-primary-deep flex items-center gap-2">
               <FileText className="size-8 text-accent" /> Wellness Reports
             </h1>
-            <p className="text-muted-foreground mt-1">Download your wellness activity or share it directly with your therapist.</p>
+            <p className="text-muted-foreground mt-1">Download your wellness activity or share it directly with your counsellor.</p>
           </div>
         </div>
 
@@ -362,28 +363,6 @@ function ReportsPage() {
         <div className="grid md:grid-cols-3 gap-6">
           {/* Main Controls Card */}
           <div className="md:col-span-2 space-y-6">
-            {/* Period Selector Card */}
-            <div className="rounded-3xl bg-card p-6 shadow-sm border border-border">
-              <h2 className="font-display font-bold text-lg text-primary-deep mb-3 flex items-center gap-2">
-                <Calendar className="size-5 text-accent" /> Choose Report Timeframe
-              </h2>
-              <div className="flex gap-2">
-                {(currentTier === "free" ? (['day', 'fortnight', 'month'] as const) : (['day', 'week', 'month'] as const)).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPeriod(p)}
-                    className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm capitalize transition cursor-pointer ${
-                      period === p
-                        ? 'bg-primary text-primary-foreground shadow-md'
-                        : 'bg-secondary/40 text-muted-foreground hover:bg-secondary/70'
-                    }`}
-                  >
-                    {p === 'fortnight' ? '15 Days' : p}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* AI Doctor Selector Card */}
             <div className="rounded-3xl bg-card p-6 shadow-sm border border-border space-y-4">
               <h2 className="font-display font-bold text-lg text-primary-deep flex items-center gap-2">
@@ -417,38 +396,38 @@ function ReportsPage() {
             {/* Share Card */}
             <div className="rounded-3xl bg-card p-6 shadow-sm border border-border">
               <h2 className="font-display font-bold text-lg text-primary-deep mb-3 flex items-center gap-2">
-                <Share2 className="size-5 text-accent" /> Share with Therapist
+                <Share2 className="size-5 text-accent" /> Share with Counsellor
               </h2>
               {uniqueTherapists.length === 0 ? (
                 <div className="rounded-2xl bg-secondary/20 p-5 text-center border border-dashed border-border">
                   <AlertCircle className="size-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm font-medium text-muted-foreground">You don't have any booked therapists yet.</p>
+                  <p className="text-sm font-medium text-muted-foreground">You don't have any booked counsellors yet.</p>
                   <Link to="/therapists" className="mt-3 inline-block bg-primary text-primary-foreground font-bold text-xs px-4 py-2 rounded-xl transition hover:bg-primary-deep">
-                    Find a Therapist
+                    Find a Counsellor
                   </Link>
                 </div>
               ) : (
                 <form onSubmit={handleShare} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">1. Select Therapist</label>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">1. Select Counsellor</label>
                     <select
                       value={selectedTherapist}
                       onChange={(e) => setSelectedTherapist(e.target.value)}
                       className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary outline-none transition"
                       required
                     >
-                      <option value="">-- Choose Therapist --</option>
+                      <option value="">-- Choose Counsellor --</option>
                       {uniqueTherapists.map((t: any) => (
                         <option key={t.id} value={t.id}>{t.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">2. Optional Note to Therapist</label>
+                    <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1.5">2. Optional Note to Counsellor</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Hi Doctor, sharing my wellness summary for our next session..."
+                      placeholder="Hi Counsellor, sharing my wellness summary for our next session..."
                       className="w-full bg-secondary/50 border border-border rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-primary outline-none transition"
                       rows={3}
                     />
@@ -456,27 +435,27 @@ function ReportsPage() {
                   <button
                     type="submit"
                     disabled={shareMutation.isPending}
-                    className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3.5 rounded-xl shadow-md transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-3.5 rounded-xl shadow-md transition active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    {shareMutation.isPending ? 'Sharing...' : <><Share2 className="size-4" /> Share {period} Report</>}
+                    {shareMutation.isPending ? 'Sharing...' : <><Share2 className="size-4" /> Share Report</>}
                   </button>
                 </form>
               )}
             </div>
           </div>
 
-          {/* Share History Card */}
-          <div className="rounded-3xl bg-card p-6 shadow-sm border border-border flex flex-col max-h-[460px]">
-            <h2 className="font-display font-bold text-lg text-primary-deep mb-3 flex items-center gap-2">
-              <Clock className="size-5 text-accent" /> Sharing History
-            </h2>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-              {sharesLoading ? (
-                <div className="h-32 flex items-center justify-center text-sm text-muted-foreground">Loading shares...</div>
-              ) : shares.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-10">No reports shared yet.</p>
-              ) : (
-                shares.map((s: any) => (
+          {/* Sharing History / Ads Banner Card */}
+          {sharesLoading ? (
+            <div className="rounded-3xl bg-card p-6 shadow-sm border border-border flex items-center justify-center h-full min-h-[200px]">
+              <p className="text-sm text-muted-foreground">Loading shares...</p>
+            </div>
+          ) : shares.length > 0 ? (
+            <div className="rounded-3xl bg-card p-6 shadow-sm border border-border flex flex-col max-h-[460px]">
+              <h2 className="font-display font-bold text-lg text-primary-deep mb-3 flex items-center gap-2">
+                <Clock className="size-5 text-accent" /> Sharing History
+              </h2>
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                {shares.map((s: any) => (
                   <div key={s.id} className="p-4 rounded-2xl bg-secondary/30 border border-border/50 text-xs space-y-1">
                     <div className="flex justify-between font-bold text-primary-deep">
                       <span>Shared with {s.therapistName}</span>
@@ -491,21 +470,58 @@ function ReportsPage() {
                       </p>
                     )}
                   </div>
-                ))
+                ))}
+              </div>
+            </div>
+          ) : Boolean(adBanner && adBanner.isActive !== false && (adBanner.title || adBanner.description)) ? (
+            <div className="rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-md relative overflow-hidden flex flex-col justify-between h-full min-h-[320px]">
+              {adBanner.imageUrl && (
+                <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-20 pointer-events-none overflow-hidden">
+                  <img src={adBanner.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="relative z-10 space-y-3">
+                {adBanner.badgeText && (
+                  <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                    {adBanner.badgeText}
+                  </span>
+                )}
+                {adBanner.title && (
+                  <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
+                    {adBanner.title}
+                  </h3>
+                )}
+                {adBanner.description && (
+                  <p className="text-xs text-slate-200/90 leading-relaxed">
+                    {adBanner.description}
+                  </p>
+                )}
+              </div>
+              {adBanner.buttonText && (adBanner.buttonLink || adBanner.targetUrl) && (
+                <div className="pt-4 relative z-10">
+                  <a
+                    href={adBanner.buttonLink || adBanner.targetUrl}
+                    target={(adBanner.buttonLink || adBanner.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                  >
+                    {adBanner.buttonText} <ChevronRight className="size-4" />
+                  </a>
+                </div>
               )}
             </div>
-          </div>
+          ) : null}
         </div>
 
-        {/* AI Therapist Analysis & Summary (Only for Weekly or 15-Day Report) */}
-        {(period === 'week' || period === 'fortnight') && reportData && (
+        {/* AI Counsellor Analysis & Summary */}
+        {reportData && (
           <div className="rounded-3xl bg-card p-6 shadow-sm border border-border space-y-6">
             <div className="flex items-center justify-between border-b border-border/85 pb-4">
               <div>
                 <h2 className="font-display font-bold text-xl text-primary-deep flex items-center gap-2">
-                  <Sparkles className="size-5 text-accent" /> {period === 'week' ? 'Weekly' : '15-Day'} Clinical Summary
+                  <Sparkles className="size-5 text-accent" /> Clinical Summary
                 </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">Personalized emotional insights and patterns from the last {period === 'week' ? '7' : '15'} days.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Personalized emotional insights and patterns from your complete activity history.</p>
               </div>
               {reportData.aiReport?.paid && (
                 <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1">
@@ -514,7 +530,7 @@ function ReportsPage() {
               )}
             </div>
 
-            {/* If Paid, show Therapist Clinical Report */}
+            {/* If Paid, show Counsellor Clinical Report */}
             {reportData.aiReport?.paid ? (
               <div className="space-y-4">
                 <div className="rounded-2xl bg-primary-soft/30 border border-primary/20 p-5 md:p-6 space-y-4 relative overflow-hidden">
@@ -544,7 +560,7 @@ function ReportsPage() {
                       <Heart className="size-4 text-accent" /> Ready for deeper guidance?
                     </h4>
                     <p className="text-xs text-muted-foreground max-w-xl">
-                      Based on {selectedAIDoctor}'s analysis of your {period === 'week' ? 'weekly' : '15-day'} logs, scheduling a direct 1-on-1 counseling session with a professional counsellor can help you build custom coping mechanisms.
+                      Based on {selectedAIDoctor}'s analysis of your recorded logs, scheduling a direct 1-on-1 counseling session with a professional counsellor can help you build custom coping mechanisms.
                     </p>
                   </div>
                   <Link
@@ -575,9 +591,9 @@ function ReportsPage() {
                     <span className="bg-white/20 text-[9px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full inline-block">
                       Clinical Counsellor Report
                     </span>
-                    <h3 className="font-display font-bold text-lg">Unlock {period === 'week' ? 'Weekly' : '15-Day'} Counsellor Clinical Evaluation</h3>
+                    <h3 className="font-display font-bold text-lg">Unlock Counsellor Clinical Evaluation</h3>
                     <p className="text-xs text-white/80 max-w-lg leading-relaxed">
-                      Get a comprehensive clinical evaluation of your {period === 'week' ? 'weekly' : '15-day'} emotional patterns, mood trends, and journal reflections reviewed by our expert counselor to guide your healing journey.
+                      Get a comprehensive clinical evaluation of your emotional patterns, mood trends, and journal reflections reviewed by our expert counselor to guide your healing journey.
                     </p>
                   </div>
 
@@ -723,7 +739,7 @@ function ReportsPage() {
                         {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.initials || 'DM'}
                       </div>
                       <div>
-                        <h4 className="font-display font-bold text-primary-deep text-xs">Therapist Clinical Evaluation</h4>
+                        <h4 className="font-display font-bold text-primary-deep text-xs">Counsellor Clinical Evaluation</h4>
                         <p className="text-[9px] text-muted-foreground">Drafted by {selectedAIDoctor} • {AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.role || 'Emotional Wellness Specialist'}</p>
                       </div>
                     </div>

@@ -407,7 +407,7 @@ function Dashboard() {
 
 
             {/* CBT Prompt */}
-            <div className="rounded-3xl border border-dashed border-primary/30 bg-primary-soft/40 p-6">
+            {/* <div className="rounded-3xl border border-dashed border-primary/30 bg-primary-soft/40 p-6">
               <div className="text-xs font-semibold uppercase tracking-wider text-primary">Today's CBT Prompt</div>
               <p className="mt-2 font-display text-lg font-semibold text-primary-deep leading-relaxed">
                 {promptText}
@@ -415,7 +415,7 @@ function Dashboard() {
               <Link to="/journal" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-accent hover:underline">
                 Write in Journal <ChevronRight className="size-4" />
               </Link>
-            </div>
+            </div> */}
           </div>
 
           {/* Right/Side Widget Column (1/3 width on Widescreen) */}
