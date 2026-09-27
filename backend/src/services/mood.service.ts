@@ -119,6 +119,18 @@ export class MoodService {
     }
 
     user.lastActiveAt = currentDate;
+
+    // Check 1-week (7 days) streak reward milestone: 1 free session per 7 days streak
+    if (user.streak >= 7) {
+      const milestone = Math.floor(user.streak / 7);
+      const currentAwarded = user.lastStreakRewardMilestone || 0;
+      if (milestone > currentAwarded) {
+        const newlyEarned = milestone - currentAwarded;
+        user.freeSessionCredits = (user.freeSessionCredits || 0) + newlyEarned;
+        user.lastStreakRewardMilestone = milestone;
+      }
+    }
+
     await user.save();
   }
 }

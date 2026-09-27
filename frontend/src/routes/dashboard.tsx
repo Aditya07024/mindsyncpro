@@ -156,13 +156,15 @@ function Dashboard() {
     submitMoodMutation.mutate(score);
   };
 
+  const freeSessionCredits = userStats?.freeSessionCredits ?? 0;
   const { data: adBannerData } = useQuery({
     queryKey: ['adBanner'],
     queryFn: () => API.adBanner.get(),
     retry: false,
     enabled: !isCheckingRole,
   });
-  const adBanner = adBannerData?.adBanner || adBannerData?.banner;
+  const rawBanners = adBannerData?.banners || (adBannerData?.adBanner ? [adBannerData.adBanner] : (adBannerData?.banner ? [adBannerData.banner] : []));
+  const activeBanners = rawBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
 
   // Next upcoming confirmed booking
   const upcomingBooking = bookingsData?.bookings
@@ -301,43 +303,88 @@ function Dashboard() {
                 </div>
               </motion.div>
             )}
-            {/* Advertisement Section (Managed by Admin) */}
-            {Boolean(adBanner && adBanner.isActive !== false && (adBanner.title || adBanner.description)) && (
-              <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-lg relative overflow-hidden group">
-                {adBanner.imageUrl && (
-                  <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
-                    <img src={adBanner.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+            {/* 1-Week Streak Reward Banner */}
+            {(streak >= 7 || freeSessionCredits > 0) && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+              >
+                <div className="absolute -right-8 -bottom-8 size-36 rounded-full bg-white/10 blur-xl pointer-events-none" />
+                <div className="relative z-10 flex items-center gap-4">
+                  <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/20 text-white shadow-inner">
+                    <Flame className="size-7 text-amber-100 fill-amber-100 animate-pulse" />
                   </div>
-                )}
-                <div className="relative z-10 space-y-3 max-w-xl">
-                  {adBanner.badgeText && (
-                    <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
-                      {adBanner.badgeText}
-                    </span>
-                  )}
-                  {adBanner.title && (
-                    <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-white leading-tight">
-                      {adBanner.title}
-                    </h3>
-                  )}
-                  {adBanner.description && (
-                    <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
-                      {adBanner.description}
-                    </p>
-                  )}
-                  {adBanner.buttonText && (adBanner.buttonLink || adBanner.targetUrl) && (
-                    <div className="pt-2">
-                      <a
-                        href={adBanner.buttonLink || adBanner.targetUrl}
-                        target={(adBanner.buttonLink || adBanner.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
-                      >
-                        {adBanner.buttonText} <ChevronRight className="size-4" />
-                      </a>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest bg-white/20 text-white px-2.5 py-0.5 rounded-full border border-white/30">
+                        {streak >= 7 ? `${streak}-DAY STREAK ACHIEVED!` : 'STREAK REWARD AVAILABLE'}
+                      </span>
+                      <span className="text-xs font-bold bg-emerald-400 text-slate-950 px-2.5 py-0.5 rounded-full shadow-sm">
+                        1 FREE SESSION
+                      </span>
                     </div>
-                  )}
+                    <h3 className="font-display text-lg md:text-xl font-bold tracking-tight text-white mt-1">
+                      Congratulations! You earned 1 FREE Therapy Session 🎉
+                    </h3>
+                    <p className="text-xs text-amber-100/95 leading-relaxed mt-0.5">
+                      You completed a 1-week streak! Book your free 1-on-1 session with any expert therapist now.
+                    </p>
+                  </div>
                 </div>
+                <Link
+                  to="/therapists"
+                  className="relative z-10 shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-orange-600 hover:bg-amber-50 font-bold text-xs rounded-xl shadow-lg transition active:scale-95"
+                >
+                  Book Free Session <ChevronRight className="size-4" />
+                </Link>
+              </motion.div>
+            )}
+
+            {/* Advertisement Section (Managed by Admin: 1 or 2 Ads) */}
+            {activeBanners.length > 0 && (
+              <div className={`grid gap-4 ${activeBanners.length >= 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                {activeBanners.map((ad: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-lg relative overflow-hidden group flex flex-col justify-between"
+                  >
+                    {ad.imageUrl && (
+                      <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
+                        <img src={ad.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="relative z-10 space-y-3">
+                      {ad.badgeText && (
+                        <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                          {ad.badgeText}
+                        </span>
+                      )}
+                      {ad.title && (
+                        <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
+                          {ad.title}
+                        </h3>
+                      )}
+                      {ad.description && (
+                        <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
+                          {ad.description}
+                        </p>
+                      )}
+                    </div>
+                    {ad.buttonText && (ad.buttonLink || ad.targetUrl) && (
+                      <div className="pt-4 relative z-10">
+                        <a
+                          href={ad.buttonLink || ad.targetUrl}
+                          target={(ad.buttonLink || ad.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                        >
+                          {ad.buttonText} <ChevronRight className="size-4" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
 

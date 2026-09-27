@@ -8,7 +8,18 @@ export class UserController {
   static stats = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const userId = req.user!.sub;
 
-    const user = await User.findById(userId).select("streak").lean();
+    const user = await User.findById(userId);
+
+    if (user && user.streak >= 7) {
+      const milestone = Math.floor(user.streak / 7);
+      const currentAwarded = user.lastStreakRewardMilestone || 0;
+      if (milestone > currentAwarded) {
+        const newlyEarned = milestone - currentAwarded;
+        user.freeSessionCredits = (user.freeSessionCredits || 0) + newlyEarned;
+        user.lastStreakRewardMilestone = milestone;
+        await user.save();
+      }
+    }
 
     const [moods, chatCount, bookingsCount] = await Promise.all([
       Mood.find({ userId }).sort({ createdAt: -1 }).limit(30).select("score createdAt").lean(),
@@ -22,6 +33,7 @@ export class UserController {
 
     res.json({
       streak: user?.streak ?? 0,
+      freeSessionCredits: user?.freeSessionCredits ?? 0,
       moodAvg,
       chatCount,
       bookingsCount,

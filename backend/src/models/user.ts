@@ -28,6 +28,7 @@ export interface IUser extends Document {
   location?: string;
   department?: string;
   streak: number;
+  lastStreakRewardMilestone?: number;
   lastActiveAt?: Date;
   emergencyContact?: string;
   orgId?: Types.ObjectId;
@@ -136,6 +137,7 @@ const UserSchema = new Schema<IUser>(
     location: { type: String },
     department: { type: String },
     streak: { type: Number, default: 0 },
+    lastStreakRewardMilestone: { type: Number, default: 0 },
     lastActiveAt: { type: Date },
     emergencyContact: { type: String },
     orgId: { type: Schema.Types.ObjectId, ref: "Organization" },

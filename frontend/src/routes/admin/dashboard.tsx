@@ -1852,166 +1852,242 @@ function AdminAdBannerTab() {
     queryKey: ['admin-ad-banner'],
     queryFn: () => API.admin.adBanner.get(),
   });
-  const adBanner = data?.adBanner;
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    imageUrl: '',
-    buttonText: '',
-    buttonLink: '',
-    badgeText: '',
-    isActive: true,
-  });
+
+  const [activeAdSlot, setActiveAdSlot] = useState<0 | 1>(0);
+  const [banners, setBanners] = useState<any[]>([
+    { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', isActive: true },
+    { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', isActive: false },
+  ]);
 
   useEffect(() => {
-    if (adBanner) {
-      setForm({
-        title: adBanner.title || '',
-        description: adBanner.description || '',
-        imageUrl: adBanner.imageUrl || '',
-        buttonText: adBanner.buttonText || '',
-        buttonLink: adBanner.buttonLink || '',
-        badgeText: adBanner.badgeText || '',
-        isActive: adBanner.isActive !== false,
-      });
+    const fetched = data?.banners || (data?.adBanner ? [data.adBanner] : (data?.banner ? [data.banner] : []));
+    if (fetched && fetched.length > 0) {
+      setBanners([
+        {
+          title: fetched[0]?.title || '',
+          description: fetched[0]?.description || '',
+          imageUrl: fetched[0]?.imageUrl || '',
+          buttonText: fetched[0]?.buttonText || '',
+          buttonLink: fetched[0]?.buttonLink || fetched[0]?.targetUrl || '',
+          badgeText: fetched[0]?.badgeText || '',
+          isActive: fetched[0]?.isActive !== false,
+        },
+        {
+          title: fetched[1]?.title || '',
+          description: fetched[1]?.description || '',
+          imageUrl: fetched[1]?.imageUrl || '',
+          buttonText: fetched[1]?.buttonText || '',
+          buttonLink: fetched[1]?.buttonLink || fetched[1]?.targetUrl || '',
+          badgeText: fetched[1]?.badgeText || '',
+          isActive: fetched[1]?.isActive === true,
+        },
+      ]);
     }
-  }, [adBanner]);
+  }, [data]);
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) => API.admin.adBanner.update(data),
+    mutationFn: (bannersData: any[]) => API.admin.adBanner.update({ banners: bannersData }),
     onSuccess: () => {
-      toast.success('Homepage Advertisement Banner saved ✓');
+      toast.success('Homepage Advertisement Banners saved ✓');
       qc.invalidateQueries({ queryKey: ['admin-ad-banner'] });
       qc.invalidateQueries({ queryKey: ['adBanner'] });
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to update ad banner'),
+    onError: (err: any) => toast.error(err.message || 'Failed to update ad banners'),
   });
+
+  const updateCurrentAd = (field: string, value: any) => {
+    setBanners((prev) => {
+      const next = [...prev];
+      next[activeAdSlot] = { ...next[activeAdSlot], [field]: value };
+      return next;
+    });
+  };
+
+  const current = banners[activeAdSlot] || {};
+  const activeVisibleBanners = banners.filter(
+    (b) => b.isActive && (b.title.trim() || b.description.trim())
+  );
 
   if (isLoading) return <div className="p-8 text-slate-400">Loading homepage ad banner settings...</div>;
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
-      {/* Editor Form */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-5 shadow-xl">
+    <div className="space-y-8">
+      {/* Tab Header & Notice */}
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white font-display">Homepage Advertisement Banner</h2>
-          <p className="text-sm text-slate-400 mt-1">Create and manage the advertisement card shown on the user dashboard homepage.</p>
+          <h2 className="text-2xl font-bold text-white font-display">Homepage Advertisement Banners</h2>
+          <p className="text-sm text-slate-400 mt-1">
+            Upload single ad or 2 ads. When 2 ads are active, users will see 2 ads side-by-side. If 1 ad is active, users will see 1 single ad.
+          </p>
         </div>
-
-        <div className="space-y-4 pt-4 border-t border-slate-800">
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Badge Text</label>
-            <input
-              value={form.badgeText}
-              onChange={(e) => setForm({ ...form, badgeText: e.target.value })}
-              placeholder="e.g. SPECIAL OFFER"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Headline Title</label>
-            <input
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. 50% Off Counseling for Students"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="e.g. Book 1-on-1 confidential therapy sessions with certified experts."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Banner Image URL (Optional)</label>
-            <input
-              value={form.imageUrl}
-              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              placeholder="https://example.com/ad-banner.jpg"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Text</label>
-              <input
-                value={form.buttonText}
-                onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
-                placeholder="e.g. Book Now"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Target Link</label>
-              <input
-                value={form.buttonLink}
-                onChange={(e) => setForm({ ...form, buttonLink: e.target.value })}
-                placeholder="e.g. /therapists"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                className="size-4 text-violet-600 rounded bg-slate-950 border-slate-700 focus:ring-violet-500"
-              />
-              <span className="text-sm font-bold text-white">Banner Active on User Dashboard</span>
-            </label>
-          </div>
-
+        <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 self-start md:self-auto">
           <button
-            onClick={() => saveMutation.mutate(form)}
-            disabled={saveMutation.isPending}
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg disabled:opacity-50 mt-2"
+            onClick={() => setActiveAdSlot(0)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+              activeAdSlot === 0
+                ? 'bg-violet-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
           >
-            {saveMutation.isPending ? 'Saving Banner...' : 'Save Advertisement Banner'}
+            Ad #1 {banners[0]?.isActive ? '🟢 Active' : '⚪ Inactive'}
+          </button>
+          <button
+            onClick={() => setActiveAdSlot(1)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+              activeAdSlot === 1
+                ? 'bg-violet-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Ad #2 {banners[1]?.isActive ? '🟢 Active' : '⚪ Inactive'}
           </button>
         </div>
       </div>
 
-      {/* Live Preview */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold text-white font-display">Live Preview (User Dashboard View)</h3>
-        <div className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-xl relative overflow-hidden">
-          {form.imageUrl && (
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
-              <img src={form.imageUrl} alt="Ad Preview" className="w-full h-full object-cover" />
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Editor Form */}
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-5 shadow-xl">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <h3 className="text-lg font-bold text-white font-display">Editing Advertisement #{activeAdSlot + 1}</h3>
+            <span className="text-xs px-3 py-1 rounded-full bg-violet-500/20 text-violet-300 font-semibold border border-violet-500/30">
+              Slot {activeAdSlot + 1}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Badge Text</label>
+              <input
+                value={current.badgeText || ''}
+                onChange={(e) => updateCurrentAd('badgeText', e.target.value)}
+                placeholder="e.g. SPECIAL OFFER"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Headline Title</label>
+              <input
+                value={current.title || ''}
+                onChange={(e) => updateCurrentAd('title', e.target.value)}
+                placeholder="e.g. 50% Off Counseling for Students"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Description</label>
+              <textarea
+                rows={3}
+                value={current.description || ''}
+                onChange={(e) => updateCurrentAd('description', e.target.value)}
+                placeholder="e.g. Book 1-on-1 confidential therapy sessions with certified experts."
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Banner Image URL (Optional)</label>
+              <input
+                value={current.imageUrl || ''}
+                onChange={(e) => updateCurrentAd('imageUrl', e.target.value)}
+                placeholder="https://example.com/ad-banner.jpg"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Text</label>
+                <input
+                  value={current.buttonText || ''}
+                  onChange={(e) => updateCurrentAd('buttonText', e.target.value)}
+                  placeholder="e.g. Book Now"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Target Link</label>
+                <input
+                  value={current.buttonLink || ''}
+                  onChange={(e) => updateCurrentAd('buttonLink', e.target.value)}
+                  placeholder="e.g. /therapists"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={current.isActive !== false}
+                  onChange={(e) => updateCurrentAd('isActive', e.target.checked)}
+                  className="size-4 text-violet-600 rounded bg-slate-950 border-slate-700 focus:ring-violet-500"
+                />
+                <span className="text-sm font-bold text-white">Ad #{activeAdSlot + 1} Active on Dashboard</span>
+              </label>
+            </div>
+
+            <button
+              onClick={() => saveMutation.mutate(banners)}
+              disabled={saveMutation.isPending}
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-xl transition shadow-lg disabled:opacity-50 mt-2"
+            >
+              {saveMutation.isPending ? 'Saving All Ads...' : 'Save All Banners'}
+            </button>
+          </div>
+        </div>
+
+        {/* Live Preview */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-white font-display">Live Preview (User Dashboard View)</h3>
+            <span className="text-xs text-slate-400 font-semibold">
+              Displaying {activeVisibleBanners.length} Active Ad{activeVisibleBanners.length === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          {activeVisibleBanners.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-slate-800 p-8 text-center text-slate-500 text-sm">
+              No ads active. Enable at least 1 ad to display on user dashboard.
+            </div>
+          ) : (
+            <div className={`grid gap-4 ${activeVisibleBanners.length >= 2 ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+              {activeVisibleBanners.map((ad, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-xl relative overflow-hidden flex flex-col justify-between"
+                >
+                  {ad.imageUrl && (
+                    <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
+                      <img src={ad.imageUrl} alt="Ad Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="relative z-10 space-y-3">
+                    {ad.badgeText && (
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                        {ad.badgeText}
+                      </span>
+                    )}
+                    <h3 className="font-display text-lg md:text-xl font-bold tracking-tight text-white leading-tight">
+                      {ad.title || 'Exclusive Counseling & Support'}
+                    </h3>
+                    <p className="text-xs text-slate-200/90 leading-relaxed">
+                      {ad.description || 'Take care of your mental wellbeing with top certified therapists.'}
+                    </p>
+                  </div>
+                  {ad.buttonText && (
+                    <div className="pt-4 relative z-10">
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+                        {ad.buttonText} →
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
-          <div className="relative z-10 space-y-3 max-w-xl">
-            {form.badgeText && (
-              <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
-                {form.badgeText}
-              </span>
-            )}
-            <h3 className="font-display text-xl md:text-2xl font-bold tracking-tight text-white leading-tight">
-              {form.title || 'Exclusive Counseling & Support'}
-            </h3>
-            <p className="text-sm text-slate-200/90 leading-relaxed">
-              {form.description || 'Take care of your mental wellbeing with top certified therapists.'}
-            </p>
-            {form.buttonText && (
-              <div className="pt-2">
-                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
-                  {form.buttonText} →
-                </span>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

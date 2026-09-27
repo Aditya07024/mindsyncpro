@@ -67,7 +67,8 @@ function ReportsPage() {
     queryFn: () => API.adBanner.get(),
     retry: false,
   });
-  const adBanner = adBannerData?.banner || adBannerData?.adBanner;
+  const rawBanners = adBannerData?.banners || (adBannerData?.adBanner ? [adBannerData.adBanner] : (adBannerData?.banner ? [adBannerData.banner] : []));
+  const activeBanners = rawBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
 
   const calculateUrgency = () => {
     if (!reportData) return { score: 5, label: 'Moderate', color: '#f59e0b', bgClass: 'bg-amber-100', textClass: 'text-amber-700' };
@@ -473,42 +474,49 @@ function ReportsPage() {
                 ))}
               </div>
             </div>
-          ) : Boolean(adBanner && adBanner.isActive !== false && (adBanner.title || adBanner.description)) ? (
-            <div className="rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-md relative overflow-hidden flex flex-col justify-between h-full min-h-[320px]">
-              {adBanner.imageUrl && (
-                <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-20 pointer-events-none overflow-hidden">
-                  <img src={adBanner.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+          ) : activeBanners.length > 0 ? (
+            <div className={`grid gap-4 ${activeBanners.length >= 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+              {activeBanners.map((ad: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-md relative overflow-hidden flex flex-col justify-between min-h-[280px]"
+                >
+                  {ad.imageUrl && (
+                    <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-20 pointer-events-none overflow-hidden">
+                      <img src={ad.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="relative z-10 space-y-3">
+                    {ad.badgeText && (
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                        {ad.badgeText}
+                      </span>
+                    )}
+                    {ad.title && (
+                      <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
+                        {ad.title}
+                      </h3>
+                    )}
+                    {ad.description && (
+                      <p className="text-xs text-slate-200/90 leading-relaxed">
+                        {ad.description}
+                      </p>
+                    )}
+                  </div>
+                  {ad.buttonText && (ad.buttonLink || ad.targetUrl) && (
+                    <div className="pt-4 relative z-10">
+                      <a
+                        href={ad.buttonLink || ad.targetUrl}
+                        target={(ad.buttonLink || ad.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                      >
+                        {ad.buttonText} <ChevronRight className="size-4" />
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
-              <div className="relative z-10 space-y-3">
-                {adBanner.badgeText && (
-                  <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
-                    {adBanner.badgeText}
-                  </span>
-                )}
-                {adBanner.title && (
-                  <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
-                    {adBanner.title}
-                  </h3>
-                )}
-                {adBanner.description && (
-                  <p className="text-xs text-slate-200/90 leading-relaxed">
-                    {adBanner.description}
-                  </p>
-                )}
-              </div>
-              {adBanner.buttonText && (adBanner.buttonLink || adBanner.targetUrl) && (
-                <div className="pt-4 relative z-10">
-                  <a
-                    href={adBanner.buttonLink || adBanner.targetUrl}
-                    target={(adBanner.buttonLink || adBanner.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
-                  >
-                    {adBanner.buttonText} <ChevronRight className="size-4" />
-                  </a>
-                </div>
-              )}
+              ))}
             </div>
           ) : null}
         </div>

@@ -782,50 +782,66 @@ export class AdminController {
   /** GET /admin/ad-banner (Publicly accessible for dashboard) */
   static getAdBanner = asyncHandler(async (_req: any, res: Response) => {
     const { AdBanner } = await import("@/models/ad-banner");
-    const banner = await AdBanner.findOne().lean();
+    const allBanners = await AdBanner.find().sort({ createdAt: 1 }).lean();
 
-    if (!banner) {
-      return res.json({ success: true, banner: null });
-    }
+    const activeBanners = allBanners.filter((b) => {
+      if (!b.isCreatedByAdmin || b.title === "Exclusive Student & Professional Therapy Workshop 2026") {
+        return false;
+      }
+      return b.isActive !== false;
+    });
 
-    // Clean up or ignore dummy default banners created prior to admin customization
-    if (
-      !banner.isCreatedByAdmin ||
-      banner.title === "Exclusive Student & Professional Therapy Workshop 2026"
-    ) {
-      return res.json({ success: true, banner: null });
-    }
-
-    if (!banner.isActive) {
-      return res.json({ success: true, banner: null });
-    }
-
-    res.json({ success: true, banner });
+    res.json({
+      success: true,
+      banners: activeBanners,
+      banner: activeBanners[0] || null,
+      adBanner: activeBanners[0] || null,
+    });
   });
 
   /** PUT /admin/ad-banner */
   static updateAdBanner = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const { title, badgeText, description, imageUrl, buttonText, targetUrl, isActive } = req.body;
     const { AdBanner } = await import("@/models/ad-banner");
 
-    // Remove any legacy dummy default banner
+    // Remove legacy dummy default banner
     await AdBanner.deleteMany({ title: "Exclusive Student & Professional Therapy Workshop 2026" });
 
-    let banner = await AdBanner.findOne();
-    if (!banner) {
-      banner = new AdBanner();
-    }
-    if (title !== undefined) banner.title = title;
-    if (badgeText !== undefined) banner.badgeText = badgeText;
-    if (description !== undefined) banner.description = description;
-    if (imageUrl !== undefined) banner.imageUrl = imageUrl;
-    if (buttonText !== undefined) banner.buttonText = buttonText;
-    if (targetUrl !== undefined) banner.targetUrl = targetUrl;
-    if (isActive !== undefined) banner.isActive = Boolean(isActive);
-    banner.isCreatedByAdmin = true;
+    const bannersInput = Array.isArray(req.body.banners) ? req.body.banners : [req.body];
 
-    await banner.save();
-    res.json({ success: true, banner, message: "Homepage Ad Banner updated successfully" });
+    const updatedBanners = [];
+    const existing = await AdBanner.find().sort({ createdAt: 1 });
+
+    for (let i = 0; i < bannersInput.length; i++) {
+      const item = bannersInput[i];
+      let doc = existing[i];
+      if (!doc) {
+        doc = new AdBanner();
+      }
+      if (item.title !== undefined) doc.title = item.title;
+      if (item.badgeText !== undefined) doc.badgeText = item.badgeText;
+      if (item.description !== undefined) doc.description = item.description;
+      if (item.imageUrl !== undefined) doc.imageUrl = item.imageUrl;
+      if (item.buttonText !== undefined) doc.buttonText = item.buttonText;
+      if (item.targetUrl !== undefined) doc.targetUrl = item.targetUrl || item.buttonLink || "";
+      if (item.isActive !== undefined) doc.isActive = Boolean(item.isActive);
+      doc.isCreatedByAdmin = true;
+      await doc.save();
+      updatedBanners.push(doc);
+    }
+
+    // Delete any remaining extra banner documents if admin reduced count
+    if (existing.length > bannersInput.length) {
+      for (let i = bannersInput.length; i < existing.length; i++) {
+        await AdBanner.findByIdAndDelete(existing[i]._id);
+      }
+    }
+
+    res.json({
+      success: true,
+      banners: updatedBanners,
+      banner: updatedBanners[0] || null,
+      message: "Homepage Ad Banners updated successfully",
+    });
   });
 }
 
