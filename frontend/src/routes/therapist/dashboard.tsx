@@ -53,7 +53,7 @@ function TherapistDashboard() {
   const { signOut } = useClerk();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization' | 'reports'>('schedule');
+  const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization' | 'reports' | 'group-sessions'>('schedule');
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [viewJournalsBookingId, setViewJournalsBookingId] = useState<string | null>(null);
@@ -261,6 +261,15 @@ function TherapistDashboard() {
     queryFn: () => API.org.members(),
     enabled: tab === 'organization' && isOrgLinked,
   });
+
+  const { data: therapistAdData } = useQuery({
+    queryKey: ['adBanner', 'therapist'],
+    queryFn: () => API.adBanner.get('therapist'),
+    retry: false,
+  });
+
+  const rawTherapistBanners = therapistAdData?.banners || (therapistAdData?.adBanner ? [therapistAdData.adBanner] : (therapistAdData?.banner ? [therapistAdData.banner] : []));
+  const activeTherapistBanners = rawTherapistBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
 
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [memberDetail, setMemberDetail] = useState<any>(null);
@@ -473,7 +482,7 @@ function TherapistDashboard() {
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 flex gap-2 overflow-x-auto">
-          {(['schedule', 'availability', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
+          {(['schedule', 'group-sessions', 'availability', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
             .filter(t => (t !== 'subscription' || !isOrgLinked) && (t !== 'organization' || isOrgLinked))
             .map((t) => {
             const disabled = subRequired && t !== 'subscription' && t !== 'invitations' && t !== 'profile';
@@ -484,7 +493,7 @@ function TherapistDashboard() {
                 className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative whitespace-nowrap ${
                   tab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
                 } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {t === 'reports' ? 'Shared Reports' : t}
+                {t === 'group-sessions' ? '🎙️ Group Audio Sessions' : t === 'reports' ? 'Shared Reports' : t}
                 {disabled && (
                   <Shield className="size-3 absolute top-2 right-2 text-slate-400" />
                 )}
@@ -495,6 +504,55 @@ function TherapistDashboard() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Counselor Dashboard Advertisement Banners (Managed by Admin) */}
+        {activeTherapistBanners.length > 0 && (
+          <div className={`grid gap-4 ${activeTherapistBanners.length >= 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+            {activeTherapistBanners.map((ad: any, idx: number) => (
+              <div
+                key={idx}
+                className="rounded-3xl bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 p-6 text-white shadow-lg relative overflow-hidden group flex flex-col justify-between"
+              >
+                {ad.imageUrl && (
+                  <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
+                    <img src={ad.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="relative z-10 space-y-2">
+                  {ad.badgeText && (
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full">
+                      {ad.badgeText}
+                    </span>
+                  )}
+                  {ad.title && (
+                    <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
+                      {ad.title}
+                    </h3>
+                  )}
+                  {ad.description && (
+                    <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
+                      {ad.description}
+                    </p>
+                  )}
+                </div>
+                {ad.buttonText && (ad.buttonLink || ad.targetUrl) && (
+                  <div className="pt-4 relative z-10">
+                    <a
+                      href={ad.buttonLink || ad.targetUrl}
+                      target={(ad.buttonLink || ad.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                    >
+                      {ad.buttonText} <ChevronRight className="size-4" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!subRequired && tab === 'group-sessions' && <GroupAudioSessionsTherapistTab />}
+
         {subRequired && tab !== 'subscription' && (
           <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 text-center space-y-4">
             <div className="grid size-16 place-items-center rounded-2xl bg-amber-100 text-amber-600 mx-auto shadow-sm">
@@ -1450,6 +1508,278 @@ function TherapistDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function GroupAudioSessionsTherapistTab() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    startTime: '10:00',
+    endTime: '12:00',
+    price: 0,
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['group-sessions'],
+    queryFn: () => API.groupSessions.list(),
+    refetchInterval: 5000,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (formData: any) =>
+      API.groupSessions.create({
+        title: formData.title,
+        description: formData.description,
+        internalStartTime: new Date().toISOString(),
+        internalEndTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+        maxUsers: 11,
+        price: Number(formData.price || 0),
+      }),
+    onSuccess: () => {
+      toast.success('Group audio session created ✓');
+      setShowCreateModal(false);
+      setForm({ title: '', description: '', startTime: '10:00', endTime: '12:00', price: 0 });
+      qc.invalidateQueries({ queryKey: ['group-sessions'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to create group session'),
+  });
+
+  const claimMutation = useMutation({
+    mutationFn: (sessionId: string) => API.groupSessions.claimSlot(sessionId),
+    onSuccess: () => {
+      toast.success('You claimed this session slot as Counselor!');
+      qc.invalidateQueries({ queryKey: ['group-sessions'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to claim session slot'),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: ({ sessionId, targetUserId, action }: { sessionId: string; targetUserId: string; action: 'allow' | 'deny' }) =>
+      API.groupSessions.approveUser(sessionId, { targetUserId, action }),
+    onSuccess: (data) => {
+      toast.success(data.message || 'User status updated');
+      qc.invalidateQueries({ queryKey: ['group-sessions'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update user status'),
+  });
+
+  const sessions: any[] = data?.sessions || [];
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-500">Loading group audio sessions...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 p-6 rounded-3xl text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span className="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider mb-2">
+            Multi-Party Audio Sessions
+          </span>
+          <h2 className="text-2xl font-bold font-display">Group Audio Sessions</h2>
+          <p className="text-xs text-slate-300 mt-1 max-w-xl">
+            Host live audio-only therapy discussions with up to 11 participants. Counselors see participants as <strong>User 1, User 2</strong> to protect privacy.
+          </p>
+        </div>
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold rounded-xl px-5 py-3 shadow-lg shrink-0 gap-2"
+        >
+          <Plus className="size-4" /> Create Audio Session
+        </Button>
+      </div>
+
+      {/* Session Cards Grid */}
+      {sessions.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center text-slate-500">
+          No group audio sessions created yet. Click "Create Audio Session" to start one.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {sessions.map((s) => {
+            const isAssigned = s.isCounselorAssigned;
+            const waitingUsers = s.waitingQueue || [];
+
+            return (
+              <div
+                key={s._id}
+                className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition relative overflow-hidden"
+              >
+                {/* Status Indicator Badge */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      isAssigned
+                        ? 'bg-red-100 text-red-700 border border-red-200'
+                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    }`}
+                  >
+                    <span
+                      className={`size-2 rounded-full ${
+                        isAssigned ? 'bg-red-500 animate-pulse' : 'bg-emerald-500 animate-pulse'
+                      }`}
+                    />
+                    {isAssigned ? '🔴 Counselor Assigned (Occupied)' : '🟢 No Counselor Assigned (Available)'}
+                  </span>
+
+                  <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                    Max 11 Users
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-display font-bold text-slate-900 text-lg">{s.title}</h3>
+                  {s.description && <p className="text-xs text-slate-600 leading-relaxed">{s.description}</p>}
+                </div>
+
+                <div className="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-500">
+                  <div className="flex items-center justify-between">
+                    <span>Host Counselor:</span>
+                    <strong className="text-slate-800">{s.counselorName || 'Unassigned (Green Indicator)'}</strong>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Active Admitted Users:</span>
+                    <strong className="text-teal-700 font-bold">{s.admittedUsers?.length || 0} / 11 Users</strong>
+                  </div>
+                </div>
+
+                {/* Waiting Queue Admission Control Panel for Host */}
+                {waitingUsers.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2">
+                    <span className="text-xs font-bold text-amber-800 flex items-center gap-1">
+                      <Users className="size-3.5" /> Waiting Room Queue ({waitingUsers.length} Pending)
+                    </span>
+                    <div className="space-y-1.5">
+                      {waitingUsers.map((u: any) => (
+                        <div key={u.userId} className="flex items-center justify-between bg-white p-2 rounded-xl text-xs border border-amber-100 shadow-xs">
+                          <span className="font-bold text-slate-800">{u.anonymousName}</span>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              onClick={() => approveMutation.mutate({ sessionId: s._id, targetUserId: u.userId, action: 'allow' })}
+                              disabled={approveMutation.isPending}
+                              className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 h-6 font-bold"
+                            >
+                              Allow Entry ✓
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => approveMutation.mutate({ sessionId: s._id, targetUserId: u.userId, action: 'deny' })}
+                              disabled={approveMutation.isPending}
+                              className="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 h-6"
+                            >
+                              <X className="size-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex items-center gap-2">
+                  {!isAssigned ? (
+                    <Button
+                      onClick={() => claimMutation.mutate(s._id)}
+                      disabled={claimMutation.isPending}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-2.5 text-xs shadow-md"
+                    >
+                      {claimMutation.isPending ? 'Claiming Slot...' : 'Claim & Join as Counselor 🟢'}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => navigate({ to: `/group-audio/$sessionId/room`, params: { sessionId: s._id } })}
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl py-2.5 text-xs shadow-md"
+                    >
+                      Launch Audio Room 🎙️
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Create Session Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-display font-bold text-slate-900 text-lg">Create Group Audio Session</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-700">
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Session Topic / Title</label>
+                <input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Stress Management & Anxiety Group Discussion"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Brief overview of what will be discussed in this group audio session..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Availability Start</label>
+                  <input
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Availability End</label>
+                  <input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500">
+                ⚡ <strong>Max Capacity:</strong> Fixed at 11 Users Limit per audio session.
+              </div>
+
+              <Button
+                onClick={() => createMutation.mutate(form)}
+                disabled={createMutation.isPending || !form.title.trim()}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-md transition"
+              >
+                {createMutation.isPending ? 'Creating Session...' : 'Create Group Audio Session'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

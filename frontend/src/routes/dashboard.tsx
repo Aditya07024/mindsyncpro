@@ -158,8 +158,8 @@ function Dashboard() {
 
   const freeSessionCredits = userStats?.freeSessionCredits ?? 0;
   const { data: adBannerData } = useQuery({
-    queryKey: ['adBanner'],
-    queryFn: () => API.adBanner.get(),
+    queryKey: ['adBanner', 'user'],
+    queryFn: () => API.adBanner.get('user'),
     retry: false,
     enabled: !isCheckingRole,
   });
@@ -340,6 +340,36 @@ function Dashboard() {
                 </Link>
               </motion.div>
             )}
+
+            {/* Group Audio Sessions Shortcut Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-3xl bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 p-6 text-white shadow-md relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-teal-500/20 text-teal-300 font-bold border border-teal-500/30">
+                  🎙️
+                </div>
+                <div>
+                  <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-teal-500/20 text-teal-300 px-2.5 py-0.5 rounded-full border border-teal-500/30">
+                    ANONYMOUS AUDIO ROOMS
+                  </span>
+                  <h3 className="font-display font-bold text-lg text-white mt-0.5">
+                    Live Group Audio Sessions
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Join live audio-only discussions led by certified counsellors (Video disabled for 100% privacy).
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/group-sessions"
+                className="relative z-10 shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-95"
+              >
+                Explore Audio Sessions <ChevronRight className="size-4" />
+              </Link>
+            </motion.div>
 
             {/* Advertisement Section (Managed by Admin: 1 or 2 Ads) */}
             {activeBanners.length > 0 && (

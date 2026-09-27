@@ -20,5 +20,6 @@ export { PopupAnnouncement, type IPopupAnnouncement } from "./popup-announcement
 export { MeetingPhoto, type IMeetingPhoto } from "./meeting-photo";
 export { CounselingPricing, type ICounselingPricing } from "./counseling-pricing";
 export { AdBanner, type IAdBanner } from "./ad-banner";
+export { GroupAudioSession, type IGroupAudioSession } from "./group-audio-session";
 
 

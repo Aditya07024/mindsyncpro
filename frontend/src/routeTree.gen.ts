@@ -23,6 +23,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MoodRouteImport } from './routes/mood'
 import { Route as Meeting_workspaceRouteImport } from './routes/meeting_workspace'
 import { Route as JournalRouteImport } from './routes/journal'
+import { Route as GroupSessionsRouteImport } from './routes/group-sessions'
 import { Route as EcosystemRouteImport } from './routes/ecosystem'
 import { Route as DigitalShopRouteImport } from './routes/digital-shop'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
@@ -46,6 +47,7 @@ import { Route as OrgOnboardingRouteImport } from './routes/org/onboarding'
 import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
 import { Route as BookingTherapistIdRouteImport } from './routes/booking.$therapistId'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as GroupAudioSessionIdRoomRouteImport } from './routes/group-audio.$sessionId.room'
 import { Route as ConferencesIdRoomRouteImport } from './routes/conferences_.$id.room'
 
 const WalletRoute = WalletRouteImport.update({
@@ -116,6 +118,11 @@ const Meeting_workspaceRoute = Meeting_workspaceRouteImport.update({
 const JournalRoute = JournalRouteImport.update({
   id: '/journal',
   path: '/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupSessionsRoute = GroupSessionsRouteImport.update({
+  id: '/group-sessions',
+  path: '/group-sessions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EcosystemRoute = EcosystemRouteImport.update({
@@ -233,6 +240,11 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GroupAudioSessionIdRoomRoute = GroupAudioSessionIdRoomRouteImport.update({
+  id: '/group-audio/$sessionId/room',
+  path: '/group-audio/$sessionId/room',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConferencesIdRoomRoute = ConferencesIdRoomRouteImport.update({
   id: '/conferences_/$id/room',
   path: '/conferences/$id/room',
@@ -254,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/delete-account': typeof DeleteAccountRoute
   '/digital-shop': typeof DigitalShopRoute
   '/ecosystem': typeof EcosystemRoute
+  '/group-sessions': typeof GroupSessionsRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -278,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
   '/conferences/$id/room': typeof ConferencesIdRoomRoute
+  '/group-audio/$sessionId/room': typeof GroupAudioSessionIdRoomRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -294,6 +308,7 @@ export interface FileRoutesByTo {
   '/delete-account': typeof DeleteAccountRoute
   '/digital-shop': typeof DigitalShopRoute
   '/ecosystem': typeof EcosystemRoute
+  '/group-sessions': typeof GroupSessionsRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -318,6 +333,7 @@ export interface FileRoutesByTo {
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
   '/conferences/$id/room': typeof ConferencesIdRoomRoute
+  '/group-audio/$sessionId/room': typeof GroupAudioSessionIdRoomRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -335,6 +351,7 @@ export interface FileRoutesById {
   '/delete-account': typeof DeleteAccountRoute
   '/digital-shop': typeof DigitalShopRoute
   '/ecosystem': typeof EcosystemRoute
+  '/group-sessions': typeof GroupSessionsRoute
   '/journal': typeof JournalRoute
   '/meeting_workspace': typeof Meeting_workspaceRoute
   '/mood': typeof MoodRoute
@@ -359,6 +376,7 @@ export interface FileRoutesById {
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
   '/conferences_/$id/room': typeof ConferencesIdRoomRoute
+  '/group-audio/$sessionId/room': typeof GroupAudioSessionIdRoomRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -377,6 +395,7 @@ export interface FileRouteTypes {
     | '/delete-account'
     | '/digital-shop'
     | '/ecosystem'
+    | '/group-sessions'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -401,6 +420,7 @@ export interface FileRouteTypes {
     | '/therapist/dashboard'
     | '/therapist/onboarding'
     | '/conferences/$id/room'
+    | '/group-audio/$sessionId/room'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -417,6 +437,7 @@ export interface FileRouteTypes {
     | '/delete-account'
     | '/digital-shop'
     | '/ecosystem'
+    | '/group-sessions'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -441,6 +462,7 @@ export interface FileRouteTypes {
     | '/therapist/dashboard'
     | '/therapist/onboarding'
     | '/conferences/$id/room'
+    | '/group-audio/$sessionId/room'
   id:
     | '__root__'
     | '/'
@@ -457,6 +479,7 @@ export interface FileRouteTypes {
     | '/delete-account'
     | '/digital-shop'
     | '/ecosystem'
+    | '/group-sessions'
     | '/journal'
     | '/meeting_workspace'
     | '/mood'
@@ -481,6 +504,7 @@ export interface FileRouteTypes {
     | '/therapist/dashboard'
     | '/therapist/onboarding'
     | '/conferences_/$id/room'
+    | '/group-audio/$sessionId/room'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -498,6 +522,7 @@ export interface RootRouteChildren {
   DeleteAccountRoute: typeof DeleteAccountRoute
   DigitalShopRoute: typeof DigitalShopRoute
   EcosystemRoute: typeof EcosystemRoute
+  GroupSessionsRoute: typeof GroupSessionsRoute
   JournalRoute: typeof JournalRoute
   Meeting_workspaceRoute: typeof Meeting_workspaceRoute
   MoodRoute: typeof MoodRoute
@@ -520,6 +545,7 @@ export interface RootRouteChildren {
   TherapistDashboardRoute: typeof TherapistDashboardRoute
   TherapistOnboardingRoute: typeof TherapistOnboardingRoute
   ConferencesIdRoomRoute: typeof ConferencesIdRoomRoute
+  GroupAudioSessionIdRoomRoute: typeof GroupAudioSessionIdRoomRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -620,6 +646,13 @@ declare module '@tanstack/react-router' {
       path: '/journal'
       fullPath: '/journal'
       preLoaderRoute: typeof JournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/group-sessions': {
+      id: '/group-sessions'
+      path: '/group-sessions'
+      fullPath: '/group-sessions'
+      preLoaderRoute: typeof GroupSessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ecosystem': {
@@ -783,6 +816,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/group-audio/$sessionId/room': {
+      id: '/group-audio/$sessionId/room'
+      path: '/group-audio/$sessionId/room'
+      fullPath: '/group-audio/$sessionId/room'
+      preLoaderRoute: typeof GroupAudioSessionIdRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conferences_/$id/room': {
       id: '/conferences_/$id/room'
       path: '/conferences/$id/room'
@@ -830,6 +870,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeleteAccountRoute: DeleteAccountRoute,
   DigitalShopRoute: DigitalShopRoute,
   EcosystemRoute: EcosystemRoute,
+  GroupSessionsRoute: GroupSessionsRoute,
   JournalRoute: JournalRoute,
   Meeting_workspaceRoute: Meeting_workspaceRoute,
   MoodRoute: MoodRoute,
@@ -852,6 +893,7 @@ const rootRouteChildren: RootRouteChildren = {
   TherapistDashboardRoute: TherapistDashboardRoute,
   TherapistOnboardingRoute: TherapistOnboardingRoute,
   ConferencesIdRoomRoute: ConferencesIdRoomRoute,
+  GroupAudioSessionIdRoomRoute: GroupAudioSessionIdRoomRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

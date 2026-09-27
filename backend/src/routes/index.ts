@@ -20,6 +20,7 @@ import meetingPhotoRoutes from "./meeting-photo";
 import digitalProductRoutes from "./digital-product";
 import partnerRoutes from "./partner";
 import careerProgramRoutes from "./career-program";
+import groupAudioSessionRoutes from "./group-audio-session";
 
 export const apiRouter = Router();
 
@@ -48,6 +49,7 @@ apiRouter.use("/meeting-photos", meetingPhotoRoutes);
 apiRouter.use("/digital-products", digitalProductRoutes);
 apiRouter.use("/partners", partnerRoutes);
 apiRouter.use("/career-programs", careerProgramRoutes);
+apiRouter.use("/group-sessions", groupAudioSessionRoutes);
 
 
 

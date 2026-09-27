@@ -7,6 +7,7 @@ export interface IAdBanner extends Document {
   imageUrl?: string;
   buttonText: string;
   targetUrl: string;
+  targetDashboard?: "user" | "therapist" | "both";
   isActive: boolean;
   isCreatedByAdmin?: boolean;
   createdAt: Date;
@@ -21,6 +22,7 @@ const adBannerSchema = new Schema<IAdBanner>(
     imageUrl: { type: String, default: "" },
     buttonText: { type: String, default: "" },
     targetUrl: { type: String, default: "" },
+    targetDashboard: { type: String, enum: ["user", "therapist", "both"], default: "both" },
     isActive: { type: Boolean, default: true },
     isCreatedByAdmin: { type: Boolean, default: false },
   },

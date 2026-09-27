@@ -195,14 +195,14 @@ const API = {
         apiCall<any>(`/api/admin/student-verifications/${userId}`, { method: "PATCH", body: JSON.stringify(data) }),
     },
     adBanner: {
-      get: () => apiCall<any>("/api/admin/ad-banner"),
+      get: (target?: string) => apiCall<any>(`/api/admin/ad-banner${target ? `?target=${target}` : ""}`),
       update: (data: any) =>
         apiCall<any>("/api/admin/ad-banner", { method: "PUT", body: JSON.stringify(data) }),
     },
   },
 
   adBanner: {
-    get: () => apiCall<any>("/api/admin/ad-banner"),
+    get: (target?: string) => apiCall<any>(`/api/admin/ad-banner${target ? `?target=${target}` : ""}`),
   },
 
   org: {
@@ -540,6 +540,38 @@ const API = {
     delete: (id: string) =>
       apiCall<{ id: string; message: string }>(`/api/meeting-photos/${id}`, {
         method: "DELETE",
+      }),
+  },
+
+  groupSessions: {
+    list: () => apiCall<{ sessions: any[] }>("/api/group-sessions"),
+    create: (data: any) =>
+      apiCall<{ session: any; message: string }>("/api/group-sessions", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    claimSlot: (id: string) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/claim`, {
+        method: "POST",
+      }),
+    joinRequest: (id: string) =>
+      apiCall<{ status: string; anonymousName: string; session: any; message: string }>(
+        `/api/group-sessions/${id}/join-request`,
+        { method: "POST" }
+      ),
+    approveUser: (id: string, data: { targetUserId: string; action: string }) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/approve-user`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getAudioToken: (id: string) =>
+      apiCall<{ success: boolean; roomName: string; sessionTitle: string; participantName: string; isCounselor: boolean; audioOnly: boolean; videoEnabled: boolean }>(
+        `/api/group-sessions/${id}/audio-token`
+      ),
+    updatePricing: (id: string, price: number) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/pricing`, {
+        method: "PUT",
+        body: JSON.stringify({ price }),
       }),
   },
 

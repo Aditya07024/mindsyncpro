@@ -1855,8 +1855,8 @@ function AdminAdBannerTab() {
 
   const [activeAdSlot, setActiveAdSlot] = useState<0 | 1>(0);
   const [banners, setBanners] = useState<any[]>([
-    { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', isActive: true },
-    { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', isActive: false },
+    { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', targetDashboard: 'both', isActive: true },
+    { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', targetDashboard: 'both', isActive: false },
   ]);
 
   useEffect(() => {
@@ -1870,6 +1870,7 @@ function AdminAdBannerTab() {
           buttonText: fetched[0]?.buttonText || '',
           buttonLink: fetched[0]?.buttonLink || fetched[0]?.targetUrl || '',
           badgeText: fetched[0]?.badgeText || '',
+          targetDashboard: fetched[0]?.targetDashboard || 'both',
           isActive: fetched[0]?.isActive !== false,
         },
         {
@@ -1879,6 +1880,7 @@ function AdminAdBannerTab() {
           buttonText: fetched[1]?.buttonText || '',
           buttonLink: fetched[1]?.buttonLink || fetched[1]?.targetUrl || '',
           badgeText: fetched[1]?.badgeText || '',
+          targetDashboard: fetched[1]?.targetDashboard || 'both',
           isActive: fetched[1]?.isActive === true,
         },
       ]);
@@ -2015,6 +2017,19 @@ function AdminAdBannerTab() {
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Target Dashboard</label>
+              <select
+                value={current.targetDashboard || 'both'}
+                onChange={(e) => updateCurrentAd('targetDashboard', e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
+              >
+                <option value="both">Both User & Counselor Dashboards</option>
+                <option value="user">User Dashboard Only</option>
+                <option value="therapist">Counselor Dashboard Only</option>
+              </select>
             </div>
 
             <div className="pt-2">

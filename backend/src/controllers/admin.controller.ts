@@ -780,15 +780,25 @@ export class AdminController {
   });
 
   /** GET /admin/ad-banner (Publicly accessible for dashboard) */
-  static getAdBanner = asyncHandler(async (_req: any, res: Response) => {
+  static getAdBanner = asyncHandler(async (req: any, res: Response) => {
     const { AdBanner } = await import("@/models/ad-banner");
+    const targetFilter = req.query.target; // "user" | "therapist"
     const allBanners = await AdBanner.find().sort({ createdAt: 1 }).lean();
 
     const activeBanners = allBanners.filter((b) => {
       if (!b.isCreatedByAdmin || b.title === "Exclusive Student & Professional Therapy Workshop 2026") {
         return false;
       }
-      return b.isActive !== false;
+      if (!b.isActive) {
+        return false;
+      }
+      if (targetFilter === "therapist") {
+        return b.targetDashboard === "therapist" || b.targetDashboard === "both" || !b.targetDashboard;
+      }
+      if (targetFilter === "user") {
+        return b.targetDashboard === "user" || b.targetDashboard === "both" || !b.targetDashboard;
+      }
+      return true;
     });
 
     res.json({
@@ -823,6 +833,7 @@ export class AdminController {
       if (item.imageUrl !== undefined) doc.imageUrl = item.imageUrl;
       if (item.buttonText !== undefined) doc.buttonText = item.buttonText;
       if (item.targetUrl !== undefined) doc.targetUrl = item.targetUrl || item.buttonLink || "";
+      if (item.targetDashboard !== undefined) doc.targetDashboard = item.targetDashboard;
       if (item.isActive !== undefined) doc.isActive = Boolean(item.isActive);
       doc.isCreatedByAdmin = true;
       await doc.save();
