@@ -35,6 +35,7 @@ export interface IGroupAudioSession extends Document {
   waitingQueue: IWaitingUser[];
   admittedUsers: IAdmittedUser[];
   paidUsers: IPaidUser[];
+  blockedUsers: Types.ObjectId[];
   createdBy?: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
@@ -89,6 +90,7 @@ const groupAudioSessionSchema = new Schema<IGroupAudioSession>(
     waitingQueue: { type: [waitingUserSchema], default: [] },
     admittedUsers: { type: [admittedUserSchema], default: [] },
     paidUsers: { type: [paidUserSchema], default: [] },
+    blockedUsers: { type: [{ type: Schema.Types.ObjectId, ref: "User" }], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }

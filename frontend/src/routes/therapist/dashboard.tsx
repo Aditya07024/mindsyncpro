@@ -1526,10 +1526,6 @@ function GroupAudioSessionsTherapistTab() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [form, setForm] = useState({
     title: '',
-    description: '',
-    startTime: '10:00',
-    endTime: '12:00',
-    price: 0,
   });
 
   const { data, isLoading } = useQuery({
@@ -1542,16 +1538,14 @@ function GroupAudioSessionsTherapistTab() {
     mutationFn: (formData: any) =>
       API.groupSessions.create({
         title: formData.title,
-        description: formData.description,
         internalStartTime: new Date().toISOString(),
         internalEndTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
         maxUsers: 11,
-        price: Number(formData.price || 0),
       }),
     onSuccess: () => {
       toast.success('Group audio session created ✓');
       setShowCreateModal(false);
-      setForm({ title: '', description: '', startTime: '10:00', endTime: '12:00', price: 0 });
+      setForm({ title: '' });
       qc.invalidateQueries({ queryKey: ['group-sessions'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to create group session'),
@@ -1679,11 +1673,6 @@ function GroupAudioSessionsTherapistTab() {
                   <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-teal-700 transition-colors">
                     {s.title}
                   </h3>
-                  {s.description && (
-                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                      {s.description}
-                    </p>
-                  )}
                 </div>
 
                 <div className="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-500">
@@ -1696,7 +1685,7 @@ function GroupAudioSessionsTherapistTab() {
                     <strong className="text-teal-700 font-bold">{s.admittedUsers?.length || 0} / 11 Users</strong>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-500">Session Fee:</span>
+                    <span className="font-medium text-slate-500">Session Fee (Admin Managed):</span>
                     <strong className={`font-extrabold px-2 py-0.5 rounded-md ${s.price > 0 ? 'bg-teal-50 text-teal-800 border border-teal-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                       {s.price > 0 ? `₹${s.price}` : 'FREE Session'}
                     </strong>
@@ -1799,57 +1788,17 @@ function GroupAudioSessionsTherapistTab() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Description</label>
-                <textarea
-                  rows={2}
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Brief overview of what will be discussed in this group audio session..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 resize-none font-medium"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Session Fee (₹)</label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={10}
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value)) })}
-                    placeholder="Enter fee (0 for FREE)"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">Set ₹0 to make this group audio session free for participants.</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Availability Start</label>
-                  <input
-                    type="time"
-                    value={form.startTime}
-                    onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Availability End</label>
-                  <input
-                    type="time"
-                    value={form.endTime}
-                    onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none font-medium"
-                  />
-                </div>
+              <div className="p-3.5 bg-teal-50/80 border border-teal-200/80 rounded-2xl text-xs text-teal-800 space-y-1">
+                <p className="font-bold flex items-center gap-1.5">
+                  <Shield className="size-4 text-teal-600 shrink-0" /> Admin Pricing Managed
+                </p>
+                <p className="text-slate-600 leading-relaxed">
+                  Session fees are decided exclusively by platform Administrators. New sessions start as Free until Admin sets a custom fee.
+                </p>
               </div>
 
               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
-                <Shield className="size-4 text-teal-600 shrink-0" />
+                <Users className="size-4 text-slate-600 shrink-0" />
                 <span><strong>Max Capacity:</strong> Fixed at 11 Users limit per audio room for privacy.</span>
               </div>
 

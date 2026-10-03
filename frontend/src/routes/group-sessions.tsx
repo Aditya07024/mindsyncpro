@@ -136,11 +136,6 @@ function UserGroupSessionsPage() {
                     <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-teal-700 transition-colors">
                       {s.title}
                     </h3>
-                    {s.description && (
-                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                        {s.description}
-                      </p>
-                    )}
                   </div>
 
                   <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-500 font-medium">

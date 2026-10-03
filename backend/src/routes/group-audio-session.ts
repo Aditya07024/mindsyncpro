@@ -28,4 +28,7 @@ router.put("/:id/pricing", requireAuth, requireRole(["super_admin", "admin"]), G
 // Delete group audio session (Counselor or Admin)
 router.delete("/:id", requireAuth, GroupAudioSessionController.deleteSession);
 
+// Counselor host kick & block user
+router.post("/:id/block-user", requireAuth, GroupAudioSessionController.blockUser);
+
 export default router;

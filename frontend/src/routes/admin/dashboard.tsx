@@ -1756,9 +1756,101 @@ function AdminCounselingPricingTab() {
           {saveMutation.isPending ? 'Saving Pricing...' : 'Save Counseling Pricing'}
         </button>
       </div>
+
+      {/* Admin Group Audio Session Pricing Section */}
+      <AdminGroupAudioPricingSection />
     </div>
   );
 }
+
+function AdminGroupAudioPricingSection() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-group-sessions-pricing'],
+    queryFn: () => API.groupSessions.list(),
+  });
+
+  const updatePriceMutation = useMutation({
+    mutationFn: ({ sessionId, price }: { sessionId: string; price: number }) =>
+      API.groupSessions.updatePricing(sessionId, price),
+    onSuccess: (res: any) => {
+      toast.success(res?.message || 'Audio session pricing updated ✓');
+      qc.invalidateQueries({ queryKey: ['admin-group-sessions-pricing'] });
+      qc.invalidateQueries({ queryKey: ['group-sessions'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update audio session price'),
+  });
+
+  const sessions: any[] = data?.sessions || [];
+  const [editingPrices, setEditingPrices] = useState<Record<string, number>>({});
+
+  if (isLoading) return <div className="text-xs text-slate-400 pt-4">Loading audio sessions pricing...</div>;
+
+  return (
+    <div className="pt-8 border-t border-slate-800 space-y-4">
+      <div>
+        <h3 className="text-xl font-bold text-white font-display">🎙️ Group Audio Session Pricing (Admin Only)</h3>
+        <p className="text-xs text-slate-400 mt-1">
+          Admins exclusively decide and update the price for each live group audio session.
+        </p>
+      </div>
+
+      {sessions.length === 0 ? (
+        <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-2xl text-xs text-slate-400 text-center">
+          No group audio sessions available.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {sessions.map((s) => {
+            const currentEditingPrice = editingPrices[s._id] !== undefined ? editingPrices[s._id] : (s.price || 0);
+
+            return (
+              <div
+                key={s._id}
+                className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="space-y-1 min-w-0">
+                  <h4 className="font-bold text-sm text-white truncate">{s.title}</h4>
+                  <p className="text-xs text-slate-400">
+                    Host: <strong className="text-slate-300">{s.counselorName || 'Unassigned'}</strong> · Status: <span className="text-teal-400 font-semibold uppercase">{s.status}</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="relative w-28">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={currentEditingPrice}
+                      onChange={(e) =>
+                        setEditingPrices({
+                          ...editingPrices,
+                          [s._id]: Math.max(0, Number(e.target.value)),
+                        })
+                      }
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-7 pr-2 py-1.5 text-xs text-white outline-none focus:ring-1 focus:ring-teal-500 font-bold"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => updatePriceMutation.mutate({ sessionId: s._id, price: currentEditingPrice })}
+                    disabled={updatePriceMutation.isPending}
+                    className="bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition shadow-md disabled:opacity-50"
+                  >
+                    {updatePriceMutation.isPending ? 'Updating...' : 'Set Fee'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 
 function AdminStudentVerificationsTab() {
   const qc = useQueryClient();

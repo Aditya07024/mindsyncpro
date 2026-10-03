@@ -10,7 +10,7 @@ import {
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import {
-  Mic, MicOff, PhoneOff, Users, Shield, Clock, AlertCircle, Loader2, Sparkles, UserPlus, X,
+  Mic, MicOff, PhoneOff, Users, Shield, Clock, AlertCircle, Loader2, Sparkles, UserPlus, X, UserX,
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -85,6 +85,17 @@ function GroupAudioRoomPage() {
       queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to update user'),
+  });
+
+  // Block user mutation (Counselor host action)
+  const blockMutation = useMutation({
+    mutationFn: (targetUserId: string) => API.groupSessions.blockUser(sessionId, targetUserId),
+    onSuccess: (data) => {
+      toast.success(data.message || 'User removed and blocked ✓');
+      refetchSession();
+      queryClient.invalidateQueries({ queryKey: ['group-sessions'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to block user'),
   });
 
   // Timer interval for call duration
@@ -230,6 +241,7 @@ function GroupAudioRoomPage() {
           formatDuration={formatDuration}
           navigate={navigate}
           approveMutation={approveMutation}
+          blockMutation={blockMutation}
         />
       </LiveKitRoom>
     );
@@ -250,6 +262,7 @@ function GroupAudioRoomPage() {
       formatDuration={formatDuration}
       navigate={navigate}
       approveMutation={approveMutation}
+      blockMutation={blockMutation}
     />
   );
 }
@@ -268,6 +281,7 @@ function AudioRoomInnerContent({
   formatDuration,
   navigate,
   approveMutation,
+  blockMutation,
 }: any) {
   const participants = useParticipants();
 
@@ -484,7 +498,7 @@ function AudioRoomInnerContent({
                   <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
                     Participant
                   </span>
-                  <div className="mt-3">
+                  <div className="mt-3 flex flex-col items-center gap-2 w-full">
                     {isUserActiveSpeaker ? (
                       <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-300 font-bold bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-400/40 shadow-sm">
                         <SpeakingWaveform active={true} /> Speaking
@@ -493,6 +507,22 @@ function AudioRoomInnerContent({
                       <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
                         <Mic className="size-3 text-emerald-400" /> Audio Connected
                       </span>
+                    )}
+
+                    {isCounselor && (
+                      <Button
+                        onClick={() => {
+                          if (confirm(`Remove & block ${u.anonymousName} from this session permanently?`)) {
+                            blockMutation.mutate(u.userId);
+                          }
+                        }}
+                        disabled={blockMutation?.isPending}
+                        size="sm"
+                        variant="destructive"
+                        className="mt-1 bg-red-500/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-[10px] font-bold px-2 py-0.5 h-6 rounded-xl transition-all w-full flex items-center justify-center gap-1"
+                      >
+                        <UserX className="size-3" /> Remove & Block
+                      </Button>
                     )}
                   </div>
                 </motion.div>

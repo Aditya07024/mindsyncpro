@@ -580,6 +580,11 @@ const API = {
       apiCall<{ message: string }>(`/api/group-sessions/${id}`, {
         method: "DELETE",
       }),
+    blockUser: (id: string, targetUserId: string) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/block-user`, {
+        method: "POST",
+        body: JSON.stringify({ targetUserId }),
+      }),
   },
 
   digitalProducts: {

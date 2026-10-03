@@ -12,7 +12,7 @@ export class GroupAudioSessionController {
    * Create a new group audio session (Counselor or Admin)
    */
   static createSession = asyncHandler(async (req: AuthedRequest, res: Response) => {
-    const { title, description, internalStartTime, internalEndTime, maxUsers, price } = req.body;
+    const { title, internalStartTime, internalEndTime, maxUsers } = req.body;
 
     if (!title) {
       throw new AppError("Session title is required", 400);
@@ -21,6 +21,7 @@ export class GroupAudioSessionController {
     const userId = req.user!.sub;
     const user = await User.findById(userId).lean();
     const isCounselor = user?.role === "therapist" || req.user?.role === "therapist";
+    const isAdmin = req.user?.role === "super_admin" || req.user?.role === "admin";
 
     const startTime = internalStartTime ? new Date(internalStartTime) : new Date();
     const endTime = internalEndTime
@@ -32,13 +33,13 @@ export class GroupAudioSessionController {
 
     const session = await GroupAudioSession.create({
       title: title.trim(),
-      description: description ? description.trim() : "",
+      description: "",
       counselorId: isCounselor ? new mongoose.Types.ObjectId(userId) : null,
       counselorName: isCounselor ? (user?.fullName || "Counselor") : "",
       internalStartTime: startTime,
       internalEndTime: endTime,
       status: "active",
-      price: price !== undefined ? Number(price) : 0,
+      price: isAdmin && req.body.price !== undefined ? Number(req.body.price) : 0,
       maxUsers: maxUsers ? Number(maxUsers) : 11,
       roomName,
       isCounselorCreated: isCounselor,
@@ -179,6 +180,13 @@ export class GroupAudioSessionController {
     const session = await GroupAudioSession.findById(id);
     if (!session) {
       throw new AppError("Group audio session not found", 404);
+    }
+
+    const isBlocked = session.blockedUsers?.some(
+      (bId) => bId.toString() === userId.toString()
+    );
+    if (isBlocked) {
+      throw new AppError("You have been removed and blocked from joining this audio session by the host counselor", 403);
     }
 
     const currentTotal = session.waitingQueue.length + session.admittedUsers.length;
@@ -334,6 +342,13 @@ export class GroupAudioSessionController {
       throw new AppError("Group audio session not found", 404);
     }
 
+    const isBlocked = session.blockedUsers?.some(
+      (bId) => bId.toString() === userId.toString()
+    );
+    if (isBlocked) {
+      throw new AppError("You have been removed and blocked from joining this audio session by the host counselor", 403);
+    }
+
     const isCounselorHost =
       session.counselorId && session.counselorId.toString() === userId.toString();
 
@@ -435,6 +450,62 @@ export class GroupAudioSessionController {
 
     return res.json({
       message: "Group audio session deleted successfully",
+    });
+  });
+
+  /**
+   * POST /api/group-sessions/:id/block-user
+   * Counselor host removes and permanently blocks a user from this audio session
+   */
+  static blockUser = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { targetUserId } = req.body;
+    const userId = req.user!.sub;
+
+    const session = await GroupAudioSession.findById(id);
+    if (!session) {
+      throw new AppError("Group audio session not found", 404);
+    }
+
+    const isHost =
+      (session.counselorId && session.counselorId.toString() === userId.toString()) ||
+      (session.createdBy && session.createdBy.toString() === userId.toString()) ||
+      req.user?.role === "super_admin" ||
+      req.user?.role === "admin";
+
+    if (!isHost) {
+      throw new AppError("Only the assigned host counselor can remove and block participants", 403);
+    }
+
+    if (!targetUserId) {
+      throw new AppError("targetUserId is required", 400);
+    }
+
+    const targetObjId = new mongoose.Types.ObjectId(targetUserId);
+
+    // Remove from admittedUsers
+    session.admittedUsers = session.admittedUsers.filter(
+      (u) => u.userId.toString() !== targetUserId.toString()
+    );
+
+    // Remove from waitingQueue
+    session.waitingQueue = session.waitingQueue.filter(
+      (u) => u.userId.toString() !== targetUserId.toString()
+    );
+
+    // Add to blockedUsers if not present
+    const isAlreadyBlocked = session.blockedUsers?.some(
+      (bId) => bId.toString() === targetUserId.toString()
+    );
+    if (!isAlreadyBlocked) {
+      session.blockedUsers.push(targetObjId);
+    }
+
+    await session.save();
+
+    return res.json({
+      message: "Participant has been removed and blocked from this audio session",
+      session,
     });
   });
 }
