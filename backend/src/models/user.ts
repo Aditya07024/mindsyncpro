@@ -21,6 +21,7 @@ export interface IUser extends Document {
   userType: UserType;
   studentIdCardUrl?: string;
   studentIdVerificationStatus: StudentIdVerificationStatus;
+  studentIdRejectionReason?: string;
   schoolCollegeName?: string;
   role: UserRole;
   tier: UserTier;
@@ -118,6 +119,7 @@ const UserSchema = new Schema<IUser>(
       enum: ["pending", "approved", "rejected", "none"],
       default: "none"
     },
+    studentIdRejectionReason: { type: String, default: "" },
     schoolCollegeName: { type: String, default: "" },
 
     role: {

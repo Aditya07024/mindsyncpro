@@ -55,6 +55,23 @@ export function AppShell({
     }
   });
 
+  const isStudentUnverified =
+    (userData?.userType === 'school_student' || userData?.userType === 'college_student') &&
+    userData?.studentIdVerificationStatus !== 'approved';
+
+  useEffect(() => {
+    if (
+      isSignedIn &&
+      userData &&
+      isStudentUnverified &&
+      loc.pathname !== '/dashboard' &&
+      !loc.pathname.startsWith('/onboarding') &&
+      !loc.pathname.startsWith('/sign-in')
+    ) {
+      navigate({ to: '/dashboard', replace: true });
+    }
+  }, [isSignedIn, userData, isStudentUnverified, loc.pathname, navigate]);
+
   // Preflight auth gate: check if the account is valid before rendering children
   const [authStatus, setAuthStatus] = useState<'checking' | 'ok' | 'invalid'>('checking');
   const hasChecked = useRef(false);

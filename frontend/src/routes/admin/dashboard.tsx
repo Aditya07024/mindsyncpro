@@ -1766,7 +1766,7 @@ function AdminStudentVerificationsTab() {
     queryKey: ['admin-student-verifications'],
     queryFn: () => API.admin.studentVerifications.list(),
   });
-  const verifications: any[] = data?.verifications ?? [];
+  const verifications: any[] = data?.verifications || data?.students || [];
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const updateStatusMutation = useMutation({
@@ -1839,7 +1839,7 @@ function AdminStudentVerificationsTab() {
                 <button
                   disabled={updateStatusMutation.isPending}
                   onClick={() => {
-                    const reason = prompt('Reason for rejection (optional):') || '';
+                    const reason = prompt('Reason for rejection:') || '';
                     updateStatusMutation.mutate({ userId: v._id || v.id, status: 'rejected', rejectionReason: reason });
                   }}
                   className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl text-xs shadow-md transition disabled:opacity-50"

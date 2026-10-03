@@ -26,6 +26,7 @@ import { useStore, type Concern, type NeedType } from '@/lib/store';
 import { ManasAvatar } from '@/components/ManasAvatar';
 import API from '@/lib/api';
 import logoUrl from '@/assets/logo.png';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/onboarding')({ component: Onboarding });
 
@@ -53,10 +54,10 @@ function Onboarding() {
   const nav = useNavigate();
   const completeOnboarding = useStore((s) => s.completeOnboarding);
 
-  // Steps: 0=name, 1=type selection, 2=org picker, 15=category selection & student ID, 3=mood, 4=concerns, 5=need, 6=Manas greeting
+  // Steps: 0=name, 2=org picker, 15=category selection & student ID, 3=mood, 4=concerns, 5=need, 6=Manas greeting
   const [step, setStep] = useState(0);
   const [firstName, setFirstName] = useState('');
-  const [userType, setUserType] = useState<'individual' | 'org' | null>(null);
+  const [userType, setUserType] = useState<'individual' | 'org'>('individual');
 
   // Phone & Referral
   const [phone, setPhone] = useState('');
@@ -65,6 +66,8 @@ function Onboarding() {
   // Category & Student ID
   const [userCategory, setUserCategory] = useState<'school_student' | 'college_student' | 'regular'>('regular');
   const [schoolCollegeName, setSchoolCollegeName] = useState('');
+  const [selectedSchoolOption, setSelectedSchoolOption] = useState<string>('');
+  const [customSchoolName, setCustomSchoolName] = useState<string>('');
   const [studentIdCardUrl, setStudentIdCardUrl] = useState('');
   const [uploadingIdCard, setUploadingIdCard] = useState(false);
 
@@ -109,16 +112,14 @@ function Onboarding() {
     }).catch(() => {});
   }, [nav]);
 
-  // Load verified orgs when user selects org type
+  // Load verified orgs for school/college dropdown
   useEffect(() => {
-    if (step === 2) {
-      setOrgLoading(true);
-      API.org.verifiedOrgs()
-        .then((res: any) => setOrgs(res?.organizations || []))
-        .catch(() => setOrgs([]))
-        .finally(() => setOrgLoading(false));
-    }
-  }, [step]);
+    setOrgLoading(true);
+    API.org.verifiedOrgs()
+      .then((res: any) => setOrgs(res?.organizations || []))
+      .catch(() => setOrgs([]))
+      .finally(() => setOrgLoading(false));
+  }, []);
 
   const toggleConcern = (c: Concern) => {
     setConcerns((cs) => (cs.includes(c) ? cs.filter((x) => x !== c) : [...cs, c]));
@@ -166,6 +167,34 @@ function Onboarding() {
   const filteredOrgs = orgs.filter(o =>
     o.name.toLowerCase().includes(orgSearch.toLowerCase())
   );
+
+  const finishOnboardingDirectly = async () => {
+    completeOnboarding({ firstName: firstName.trim() || 'friend', mood: 5, concerns: [], need: 'talk' });
+
+    try {
+      await API.auth.updateOnboarding({
+        moodScore: 5,
+        concerns: [],
+        primaryNeed: 'talk',
+        completed: true,
+        userType: userCategory,
+        studentIdCardUrl,
+        schoolCollegeName,
+        phone,
+        referralCode,
+      });
+      
+      // Update name if provided
+      if (firstName.trim()) {
+        await API.auth.updateProfile({ "Full name": firstName.trim() });
+      }
+    } catch (e) {
+      console.error('Failed to save onboarding state:', e);
+    }
+    localStorage.setItem('mymind_show_new_user_wellness_popup', 'true');
+    window.location.href = '/dashboard';
+    return;
+  };
 
   const startFirstMessage = async (chosenNeed: NeedType) => {
     setNeed(chosenNeed);
@@ -218,75 +247,14 @@ function Onboarding() {
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && setStep(1)}
+                onKeyDown={(e) => e.key === 'Enter' && setStep(15)}
                 placeholder="What should I call you?"
                 className="w-full rounded-full border-0 bg-white/15 px-5 py-3 text-center text-primary-foreground placeholder:text-primary-foreground/60 backdrop-blur outline-none focus:bg-white/25"
               />
-              <button onClick={() => setStep(1)} className="w-full rounded-full bg-accent px-6 py-3 font-semibold text-accent-foreground transition hover:scale-[1.02]">
+              <button onClick={() => setStep(15)} className="w-full rounded-full bg-accent px-6 py-3 font-semibold text-accent-foreground transition hover:scale-[1.02]">
                 Begin
               </button>
             </motion.div>
-          </motion.div>
-        )}
-
-        {/* ── STEP 1: Individual vs Org ── */}
-        {step === 1 && (
-          <motion.div key="s1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}
-            className="flex min-h-screen flex-col items-center justify-center bg-canvas-gradient px-6">
-            <div className="w-full max-w-lg text-center mb-10">
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.1 }}
-                className="inline-flex size-16 items-center justify-center rounded-3xl bg-primary/10 text-primary mb-4">
-                <Users className="size-8" />
-              </motion.div>
-              <h2 className="font-display text-3xl font-bold text-primary-deep md:text-4xl">
-                Hi {firstName ? firstName : 'there'} 👋
-              </h2>
-              <p className="mt-3 text-muted-foreground text-lg">
-                Are you joining as an individual, or through your organisation?
-              </p>
-            </div>
-
-            <div className="w-full max-w-lg grid sm:grid-cols-2 gap-4">
-              {/* Individual Card */}
-              <motion.button
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleTypeSelect('individual')}
-                className="group relative overflow-hidden rounded-3xl bg-white border-2 border-border p-7 text-left shadow-sm hover:border-primary/40 hover:shadow-lg transition-all"
-              >
-                <div className="mb-4 grid size-12 place-items-center rounded-2xl bg-violet-50 text-violet-600">
-                  <User className="size-6" />
-                </div>
-                <h3 className="font-display text-xl font-bold text-primary-deep">Individual</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Join on your own. Your data stays private and only visible to you.
-                </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-violet-600">
-                  Get started <span aria-hidden>→</span>
-                </div>
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-50/0 to-violet-50/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              </motion.button>
-
-              {/* Linked with Org Card */}
-              <motion.button
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleTypeSelect('org')}
-                className="group relative overflow-hidden rounded-3xl bg-white border-2 border-border p-7 text-left shadow-sm hover:border-blue-400/60 hover:shadow-lg transition-all"
-              >
-                <div className="mb-4 grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600">
-                  <Building2 className="size-6" />
-                </div>
-                <h3 className="font-display text-xl font-bold text-primary-deep">Linked with Organisation</h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  Connect through your company or college to access your organisation's wellness programme.
-                </p>
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                  Connect <span aria-hidden>→</span>
-                </div>
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-50/0 to-blue-50/60 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              </motion.button>
-            </div>
           </motion.div>
         )}
 
@@ -295,7 +263,7 @@ function Onboarding() {
           <motion.div key="s2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.45 }}
             className="flex min-h-screen flex-col items-center justify-center bg-canvas-gradient px-6 py-12">
             <div className="w-full max-w-md">
-              <button onClick={() => setStep(1)} className="mb-6 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <button onClick={() => setStep(0)} className="mb-6 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                 ← Back
               </button>
               <div className="rounded-3xl bg-white border border-border shadow-sm p-8 space-y-6">
@@ -431,7 +399,7 @@ function Onboarding() {
           <motion.div key="s15" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.45 }}
             className="flex min-h-screen flex-col items-center justify-center bg-canvas-gradient px-6 py-12">
             <div className="w-full max-w-lg">
-              <button onClick={() => setStep(userType === 'org' ? 2 : 1)} className="mb-6 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <button onClick={() => setStep(0)} className="mb-6 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
                 ← Back
               </button>
               
@@ -540,7 +508,7 @@ function Onboarding() {
                       type="text"
                       value={referralCode}
                       onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                      placeholder="Got a referral code? Enter it here (e.g. MMTP-A1B2C3)"
+                      placeholder="(e.g. MMTP-A1B2C3)"
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 uppercase font-mono tracking-wider focus:ring-2 focus:ring-teal-500 outline-none"
                     />
                     <p className="text-[10px] text-muted-foreground mt-1">
@@ -560,22 +528,66 @@ function Onboarding() {
                     >
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          School / College Name
+                          School / College Name <span className="text-red-500 font-bold">*</span>
                         </label>
-                        <input
-                          type="text"
-                          value={schoolCollegeName}
-                          onChange={(e) => setSchoolCollegeName(e.target.value)}
-                          placeholder="e.g. St. Xavier's High School / Delhi University"
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none"
-                        />
+                        <select
+                          value={selectedSchoolOption}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedSchoolOption(val);
+                            if (val === 'other') {
+                              setSchoolCollegeName(customSchoolName);
+                            } else {
+                              setSchoolCollegeName(val);
+                            }
+                          }}
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none mb-2"
+                        >
+                          <option value="">-- Select Onboarded School / College --</option>
+                          {orgs.map((org) => (
+                            <option key={org._id} value={org.name}>
+                              {org.name} ({org.type || 'Institution'})
+                            </option>
+                          ))}
+                          <option value="other">➕ Other (Not in list)</option>
+                        </select>
+
+                        {selectedSchoolOption === 'other' && (
+                          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+                            <input
+                              type="text"
+                              required
+                              value={customSchoolName}
+                              onChange={(e) => {
+                                setCustomSchoolName(e.target.value);
+                                setSchoolCollegeName(e.target.value);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  if (!schoolCollegeName.trim()) {
+                                    toast.error("School / College Name is mandatory for students. Please enter your institution name.");
+                                    return;
+                                  }
+                                  if (!studentIdCardUrl) {
+                                    toast.error("Upload Student ID Card Photo is mandatory for students. Please upload your student ID card.");
+                                    return;
+                                  }
+                                  finishOnboardingDirectly();
+                                }
+                              }}
+                              placeholder="Enter your School / College Name..."
+                              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-teal-500 outline-none"
+                            />
+                          </motion.div>
+                        )}
                       </div>
 
                       <div className="rounded-2xl bg-teal-50/60 p-4 border border-teal-200 space-y-3">
                         <div className="flex items-start gap-2 text-xs text-teal-950 font-semibold">
                           <FileCheck className="size-4 text-teal-600 shrink-0 mt-0.5" />
                           <span>
-                            Upload Student ID Card Photo (Mandatory for Student Rates)
+                            Upload Student ID Card Photo <span className="text-red-500 font-bold">*</span>
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-600 leading-relaxed">
@@ -584,7 +596,7 @@ function Onboarding() {
 
                         <label className="flex items-center justify-center gap-2 p-3.5 rounded-xl bg-white border border-dashed border-teal-400 text-teal-800 hover:bg-teal-50 cursor-pointer transition text-xs font-bold shadow-sm">
                           <Upload className="size-4 text-teal-600" />
-                          <span>{uploadingIdCard ? 'Uploading ID Card...' : studentIdCardUrl ? 'Change Uploaded ID Card' : 'Upload Student ID Card Image'}</span>
+                          <span>{uploadingIdCard ? 'Uploading ID Card...' : studentIdCardUrl ? 'Change Uploaded ID Card' : 'Upload Student ID Card Image (Mandatory)'}</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -609,17 +621,23 @@ function Onboarding() {
 
                 {/* Continue Action */}
                 <button
+                  type="button"
                   onClick={() => {
-                    if ((userCategory === 'school_student' || userCategory === 'college_student') && !studentIdCardUrl) {
-                      if (!confirm("You haven't uploaded your Student ID card image yet. You can continue, but student rates will require Admin verification. Proceed?")) {
+                    if (userCategory === 'school_student' || userCategory === 'college_student') {
+                      if (!schoolCollegeName.trim()) {
+                        toast.error("School / College Name is mandatory for students. Please enter your institution name.");
+                        return;
+                      }
+                      if (!studentIdCardUrl) {
+                        toast.error("Upload Student ID Card Photo is mandatory for students. Please upload your student ID card.");
                         return;
                       }
                     }
-                    setStep(3);
+                    finishOnboardingDirectly();
                   }}
                   className="w-full rounded-2xl bg-[#004038] py-3.5 text-sm font-bold text-white shadow-lg hover:bg-[#002f29] transition cursor-pointer flex items-center justify-center gap-2"
                 >
-                  Continue to Wellness Profile →
+                  Go to Dashboard →
                 </button>
               </div>
             </div>

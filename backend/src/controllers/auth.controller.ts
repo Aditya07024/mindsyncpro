@@ -16,6 +16,7 @@ function serializeUser(user: any) {
     userType: user.userType || "regular",
     studentIdCardUrl: user.studentIdCardUrl || "",
     studentIdVerificationStatus: user.studentIdVerificationStatus || "none",
+    studentIdRejectionReason: user.studentIdRejectionReason || "",
     schoolCollegeName: user.schoolCollegeName || "",
     isAnonymous: user.isAnonymous,
     streak: user.streak,

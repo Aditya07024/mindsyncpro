@@ -752,19 +752,19 @@ export class AdminController {
   static getStudentVerifications = asyncHandler(async (_req: AuthedRequest, res: Response) => {
     const students = await User.find({
       userType: { $in: ["school_student", "college_student"] },
-      deletedAt: null,
+      $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
     })
-      .select("fullName phoneMasked userType studentIdCardUrl studentIdVerificationStatus schoolCollegeName createdAt")
+      .select("fullName phoneMasked phone userType studentIdCardUrl studentIdVerificationStatus studentIdRejectionReason schoolCollegeName createdAt email")
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json({ success: true, students });
+    res.json({ success: true, students, verifications: students });
   });
 
   /** PATCH /admin/student-verifications/:userId */
   static updateStudentVerification = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { userId } = req.params;
-    const { status } = req.body as { status: "approved" | "rejected" };
+    const { status, rejectionReason } = req.body as { status: "approved" | "rejected"; rejectionReason?: string };
 
     if (!["approved", "rejected"].includes(status)) {
       throw new AppError("Invalid verification status", 400);
@@ -774,6 +774,11 @@ export class AdminController {
     if (!user) throw new AppError("Student user not found", 404);
 
     user.studentIdVerificationStatus = status;
+    if (status === "rejected") {
+      user.studentIdRejectionReason = rejectionReason || "";
+    } else if (status === "approved") {
+      user.studentIdRejectionReason = "";
+    }
     await user.save();
 
     res.json({ success: true, user, message: `Student ID status updated to ${status}` });

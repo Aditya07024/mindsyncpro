@@ -1,15 +1,16 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight, Calendar, GraduationCap, Building2, MapPin, User, Mail, Briefcase, BarChart3 } from 'lucide-react';
+import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight, Calendar, GraduationCap, Building2, MapPin, User, Mail, Briefcase, BarChart3, X, Lock, ShieldAlert, RotateCw, LogOut } from 'lucide-react';
 import { useStore } from '@/lib/store';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { AppShell } from '@/components/AppShell';
 import { MessageCounter } from '@/components/MessageCounter';
 import { CrisisOverlay } from '@/components/CrisisButton';
 import { motion } from 'framer-motion';
 import API from '@/lib/api';
 import { formatAdLink, getNormalizedPosterUrl } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/dashboard')({ component: Dashboard });
 
@@ -38,6 +39,19 @@ function Dashboard() {
   const displayName = dbUser?.fullName?.split(" ")[0] || clerkUser?.firstName || 'friend';
   const [crisisMode, setCrisisMode] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
+  const [showWellnessModal, setShowWellnessModal] = useState(false);
+
+  useEffect(() => {
+    const flag = localStorage.getItem('mymind_show_new_user_wellness_popup');
+    if (flag === 'true') {
+      setShowWellnessModal(true);
+    }
+  }, []);
+
+  const handleDismissWellnessModal = () => {
+    localStorage.removeItem('mymind_show_new_user_wellness_popup');
+    setShowWellnessModal(false);
+  };
 
   // Auto-redirect therapists and admins based on existing role
   useEffect(() => {
@@ -177,6 +191,30 @@ function Dashboard() {
 
   const canJoin = upcomingBooking && (new Date(upcomingBooking.slot).getTime() - Date.now()) < 15 * 60 * 1000;
 
+  const [isRefreshingStatus, setIsRefreshingStatus] = useState(false);
+  const isStudentUnverified =
+    (dbUser?.userType === 'school_student' || dbUser?.userType === 'college_student') &&
+    dbUser?.studentIdVerificationStatus !== 'approved';
+
+  const handleRefreshStatus = async () => {
+    setIsRefreshingStatus(true);
+    try {
+      const me = await API.auth.me();
+      setDbUser(me);
+      if (me?.studentIdVerificationStatus === 'approved') {
+        toast.success("🎉 Student ID verified! Your dashboard is now fully unlocked.");
+      } else if (me?.studentIdVerificationStatus === 'rejected') {
+        toast.error("❌ Verification Status: Rejected by Admin. Please contact support.");
+      } else {
+        toast.info("⏳ Status: Verification is still pending admin approval.");
+      }
+    } catch (err) {
+      toast.error("Failed to refresh verification status.");
+    } finally {
+      setIsRefreshingStatus(false);
+    }
+  };
+
   const tier = subscription?.tier ?? 'free';
   const tierLabel = subscription?.tierLabel ?? 'Free';
 
@@ -190,7 +228,14 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      {isStudentUnverified && (
+        <UnverifiedStudentLockModal
+          dbUser={dbUser}
+          onRefresh={handleRefreshStatus}
+          isRefreshing={isRefreshingStatus}
+        />
+      )}
+      <div className={isStudentUnverified ? "filter blur-sm pointer-events-none select-none opacity-40 max-h-[85vh] overflow-hidden" : "space-y-6"}>
         {/* Header */}
         <div className="flex items-end justify-between border-b border-border/40 pb-4">
           <div>
@@ -578,6 +623,239 @@ function Dashboard() {
       </div>
 
       <CrisisOverlay open={crisisMode} onClose={() => setCrisisMode(false)} />
+      {!isStudentUnverified && (
+        <OptionalNewUserWellnessModal
+          open={showWellnessModal}
+          onClose={handleDismissWellnessModal}
+          onSubmit={(score) => {
+            submitMood(score);
+            handleDismissWellnessModal();
+          }}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function UnverifiedStudentLockModal({
+  dbUser,
+  onRefresh,
+  isRefreshing,
+}: {
+  dbUser: any;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+}) {
+  const { signOut } = useClerk();
+  const isRejected = dbUser?.studentIdVerificationStatus === 'rejected';
+  const userTypeName = dbUser?.userType === 'school_student' ? 'School Student' : 'College Student';
+  const schoolCollege = dbUser?.schoolCollegeName || 'Registered Institution';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-white overflow-hidden"
+      >
+        {/* Glow background accents */}
+        <div className="absolute -top-20 -right-20 size-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 size-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+
+        {/* Top Icon & Title Header */}
+        <div className="flex flex-col items-center text-center space-y-3">
+          <div className="relative">
+            <div className="size-16 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center shadow-inner">
+              <GraduationCap className="size-9 text-amber-400 animate-pulse" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 bg-slate-900 p-1 rounded-full border border-slate-700 text-amber-400">
+              <Lock className="size-4" />
+            </div>
+          </div>
+
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Account Under Verification 🎓
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Student ID Review in Progress
+            </p>
+          </div>
+
+          {/* Verification Status Tag */}
+          <div className="pt-1 flex flex-col items-center gap-2 w-full">
+            {isRejected ? (
+              <>
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-semibold shadow-sm">
+                  <X className="size-4 text-rose-400" />
+                  Status: Verification Rejected by Admin
+                </span>
+                {dbUser?.studentIdRejectionReason ? (
+                  <div className="w-full bg-rose-950/60 border border-rose-500/30 rounded-2xl p-3.5 text-center shadow-md">
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-rose-400 block">Rejection Reason:</span>
+                    <span className="text-xs sm:text-sm font-bold text-rose-100 italic mt-0.5 block">"{dbUser.studentIdRejectionReason}"</span>
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-semibold shadow-sm">
+                <Clock className="size-4 text-amber-400 animate-spin" style={{ animationDuration: '3s' }} />
+                Status: Pending Admin Verification
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Registered Details */}
+        <div className="bg-slate-950/60 rounded-2xl p-4 border border-slate-800 space-y-2 text-xs">
+          <div className="flex justify-between items-center text-slate-300 border-b border-slate-800/80 pb-2">
+            <span className="text-slate-400">Account Category:</span>
+            <span className="font-semibold text-white">{userTypeName}</span>
+          </div>
+          <div className="flex justify-between items-center text-slate-300 pt-1">
+            <span className="text-slate-400">Institution:</span>
+            <span className="font-semibold text-amber-300 truncate max-w-[220px]">{schoolCollege}</span>
+          </div>
+        </div>
+
+        {/* Informational Message */}
+        {isRejected ? (
+          <div className="text-center text-xs sm:text-sm text-slate-300 leading-relaxed bg-rose-950/20 border border-rose-500/20 rounded-2xl p-4 space-y-1">
+            <p className="text-rose-200">
+              Your uploaded Student ID photo verification was reviewed and not approved by our admin team.
+            </p>
+            <p className="text-xs text-slate-400 pt-0.5">
+              Please contact admin support or verify your institution details to resolve this.
+            </p>
+          </div>
+        ) : (
+          <div className="text-center text-xs sm:text-sm text-slate-300 leading-relaxed bg-amber-950/20 border border-amber-500/20 rounded-2xl p-4">
+            <p>
+              Thank you for registering! Your valid Student ID card is currently being verified by our admin team to unlock student session discounts and features.
+              <br />
+              <strong className="text-amber-200 block mt-1.5">
+                All dashboard features will remain locked until the admin approves your account.
+              </strong>
+            </p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="space-y-3 pt-2">
+          <button
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-bold text-xs shadow-lg transition active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+          >
+            <RotateCw className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Checking Status with Server...' : 'Refresh Verification Status'}
+          </button>
+
+          <div className="flex gap-2.5">
+            <a
+              href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white font-medium text-xs transition"
+            >
+              <MessageCircle className="size-4 text-emerald-400" />
+              Support
+            </a>
+
+            <button
+              onClick={() => signOut()}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-rose-500/30 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 font-medium text-xs transition cursor-pointer"
+            >
+              <LogOut className="size-4 text-rose-400" />
+              Log Out
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function OptionalNewUserWellnessModal({ open, onClose, onSubmit }: { open: boolean; onClose: () => void; onSubmit: (score: number) => void }) {
+  const [selectedScore, setSelectedScore] = useState(5);
+  const MOOD_EMOJIS = ['😞','😟','😕','😐','🙂','😊','😄','😁','🤩','🥰'];
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-6"
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-5 top-5 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+        >
+          <X className="size-5" />
+        </button>
+
+        <div className="text-center space-y-2">
+          <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-3 py-1 rounded-full">
+            Optional Daily Check-In
+          </span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-900">
+            How are you feeling right now? 👋
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Share your current mood score to personalize your experience, or feel free to skip anytime.
+          </p>
+        </div>
+
+        {/* Emoji & Score Picker */}
+        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 text-center space-y-4">
+          <div className="text-6xl animate-bounce" style={{ animationDuration: '2s' }}>
+            {MOOD_EMOJIS[selectedScore - 1]}
+          </div>
+          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold px-2">
+            <span>Heavy</span>
+            <span className="text-sm font-bold text-slate-900">{selectedScore} / 10</span>
+            <span>Great</span>
+          </div>
+          <div className="flex justify-between gap-1">
+            {MOOD_EMOJIS.map((emoji, idx) => {
+              const score = idx + 1;
+              const isSelected = selectedScore === score;
+              return (
+                <button
+                  key={score}
+                  onClick={() => setSelectedScore(score)}
+                  className={`size-8 text-sm rounded-xl transition flex items-center justify-center ${
+                    isSelected ? 'bg-primary text-white scale-110 shadow-md' : 'hover:bg-slate-200/70 text-slate-700'
+                  }`}
+                >
+                  {emoji}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 pt-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition"
+          >
+            Skip for Now
+          </button>
+          <button
+            onClick={() => {
+              onSubmit(selectedScore);
+            }}
+            className="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary-deep text-white font-bold text-xs shadow-md transition"
+          >
+            Log Mood & Continue
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
