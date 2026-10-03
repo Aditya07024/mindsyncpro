@@ -30,8 +30,8 @@ export class BookingController {
               therapist?.therapistProfile?.specializations?.[0] ?? "",
             slot: b.slot,
             status: b.status,
-            amount: b.payment.amount,
-            paid: b.payment.paid,
+            amount: b.payment?.amount ?? 0,
+            paid: b.payment?.paid ?? false,
             videoRoomId: b.videoRoomId,
             journalShareState: b.journalShareState || "none",
             prescription: b.prescription || null,
@@ -84,47 +84,12 @@ export class BookingController {
       });
       if (conflict) throw new AppError("This slot is already booked", 409);
 
-      // Calculate amount based on Admin-managed category pricing
-      const { CounselingPricing } = await import("@/models/counseling-pricing");
-      let pricing = await CounselingPricing.findOne();
-      if (!pricing) {
-        pricing = await CounselingPricing.create({
-          schoolStudentFee: 299,
-          collegeStudentFee: 499,
-          regularPersonFee: 799,
-        });
-      }
-
-      const seekerUser = await User.findById(req.user!.sub).select("orgId phoneMasked fullName userType studentIdVerificationStatus");
-
-      let amount = pricing.regularPersonFee;
-      if (seekerUser?.userType === "school_student") {
-        amount = pricing.schoolStudentFee;
-      } else if (seekerUser?.userType === "college_student") {
-        amount = pricing.collegeStudentFee;
-      } else {
-        amount = pricing.regularPersonFee;
-      }
-
-      let isOrgCovered = false;
-
-      const seekerEmail = (seekerUser?.phoneMasked?.includes("@") ? seekerUser.phoneMasked : "").toLowerCase().trim();
-
-      const { Organization } = await import("@/models/organization");
-      
-      let userOrg = seekerUser?.orgId ? await Organization.findById(seekerUser.orgId) : null;
-      if (!userOrg && seekerEmail) {
-        userOrg = await Organization.findOne({ allowedEmails: seekerEmail, verificationStatus: "verified" });
-        if (userOrg && seekerUser) {
-          seekerUser.orgId = userOrg._id as any;
-          await seekerUser.save();
-        }
-      }
-
-      if (userOrg && (userOrg.coverMemberTherapyFees || userOrg.verificationStatus === "verified")) {
-        isOrgCovered = true;
-        amount = 0;
-      }
+      // Calculate amount based on Admin-managed category pricing & Org coverage
+      const { getEffectivePricingForUser } = await import("@/services/counseling-pricing.service");
+      const effectivePricing = await getEffectivePricingForUser(req.user!.sub);
+      let amount = effectivePricing.fee;
+      let isOrgCovered = effectivePricing.isOrgCovered;
+      const seekerUser = effectivePricing.seekerUser;
 
       if (!isOrgCovered) {
         const { Subscription } = await import("@/models/subscription");
@@ -243,7 +208,7 @@ export class BookingController {
           therapistName: therapist.therapistProfile.name,
           slot: booking.slot,
           status: booking.status,
-          amount: booking.payment.amount,
+          amount: booking.payment?.amount ?? 0,
           videoRoomId: booking.videoRoomId,
         },
       });
@@ -408,8 +373,8 @@ export class BookingController {
         therapistName: therapist?.therapistProfile?.name ?? "Therapist",
         slot: booking.slot,
         status: booking.status,
-        amount: booking.payment.amount,
-        paid: booking.payment.paid,
+        amount: booking.payment?.amount ?? 0,
+        paid: booking.payment?.paid ?? false,
         videoRoomId: booking.videoRoomId,
         journalShareState: booking.journalShareState || "none",
         prescription: booking.prescription || null,

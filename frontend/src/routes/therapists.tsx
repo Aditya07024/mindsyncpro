@@ -364,8 +364,22 @@ function TherapistMarketplace() {
 
                     {/* Fee & CTA */}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                      <div className="text-lg font-bold text-slate-900">
-                        ₹{therapist.sessionFee}
+                      <div>
+                        {therapistsData?.pricingInfo?.isOrgCovered ? (
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md inline-block">
+                              FREE (Org Covered)
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium mt-0.5">{therapistsData.pricingInfo.orgName}</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="text-lg font-bold text-slate-900">₹{therapist.sessionFee}</span>
+                            <span className="text-[10px] text-slate-500 block font-medium uppercase -mt-1">
+                              {therapistsData?.pricingInfo?.feeCategory?.replace('_', ' ') || 'Category'} Rate
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <Button
                         onClick={(e) => {
@@ -446,8 +460,17 @@ function TherapistMarketplace() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-slate-900">₹{selectedTherapist.sessionFee}</p>
-                    <p className="text-xs text-slate-500">per session</p>
+                    {therapistsData?.pricingInfo?.isOrgCovered ? (
+                      <div>
+                        <p className="text-xl font-extrabold text-emerald-600">FREE</p>
+                        <p className="text-[10px] text-emerald-700 font-semibold">Covered by {therapistsData.pricingInfo.orgName}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-2xl font-bold text-slate-900">₹{selectedTherapist.sessionFee}</p>
+                        <p className="text-xs text-slate-500 font-medium uppercase">{therapistsData?.pricingInfo?.feeCategory?.replace('_', ' ') || 'Category'} Rate</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

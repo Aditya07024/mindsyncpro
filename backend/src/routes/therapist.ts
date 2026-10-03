@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "@/middleware/auth";
+import { requireAuth, optionalAuth } from "@/middleware/auth";
 import { requireSubscription } from "@/middleware/subscription";
 import { TherapistController } from "@/controllers/therapist.controller";
 import { ReportController } from "@/controllers/report.controller";
@@ -9,8 +9,8 @@ const router = Router();
 // Recommend therapists (auth required)
 router.post("/recommend", requireAuth, TherapistController.recommend);
 
-// Public: list all therapists with search & filters
-router.get("/", TherapistController.list);
+// Public / Optional Auth: list all therapists with search & filters
+router.get("/", optionalAuth, TherapistController.list);
 
 // ⚠️ /me/* routes MUST come before /:id to avoid "me" being matched as an ID param
 
@@ -46,10 +46,10 @@ router.get(
   ReportController.getTherapistSharedReportDetail,
 );
 
-// Public: get single therapist details (must be AFTER all /me/* routes)
-router.get("/:id", TherapistController.getDetail);
+// Public / Optional Auth: get single therapist details (must be AFTER all /me/* routes)
+router.get("/:id", optionalAuth, TherapistController.getDetail);
 
-// Public: check therapist's available slots
-router.get("/:id/availability", TherapistController.getAvailability);
+// Public / Optional Auth: check therapist's available slots
+router.get("/:id/availability", optionalAuth, TherapistController.getAvailability);
 
 export default router;

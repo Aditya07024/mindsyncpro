@@ -14,13 +14,37 @@ export const Route = createFileRoute("/booking/$therapistId")({
   component: BookingFlow,
 });
 
+const parseSlotTo24Hour = (slotStr: string) => {
+  if (!slotStr) return { hours: 0, minutes: 0 };
+  const trimmed = slotStr.trim();
+  const isPM = /pm/i.test(trimmed);
+  const isAM = /am/i.test(trimmed);
+  const cleanStr = trimmed.replace(/[^\d:]/g, "");
+  const [hStr, mStr] = cleanStr.split(":");
+  let hours = parseInt(hStr || "0", 10);
+  const minutes = parseInt(mStr || "0", 10);
+
+  if (isPM && hours < 12) hours += 12;
+  if (isAM && hours === 12) hours = 0;
+
+  return { hours, minutes };
+};
+
 const formatTime = (time24: string) => {
   if (!time24) return "";
-  const [h, m] = time24.split(":");
+  const trimmed = time24.trim();
+  if (/am|pm/i.test(trimmed)) {
+    return trimmed.replace(/\s*(AM|PM)\s*(AM|PM)/gi, " $1");
+  }
+
+  const [h, m] = trimmed.split(":");
+  if (!h || !m) return time24;
   const hour = parseInt(h, 10);
+  if (isNaN(hour)) return time24;
   const ampm = hour >= 12 ? "PM" : "AM";
   const displayHour = hour % 12 || 12;
-  return `${displayHour}:${m} ${ampm}`;
+  const cleanM = m.replace(/[^0-9]/g, "").slice(0, 2);
+  return `${displayHour}:${cleanM} ${ampm}`;
 };
 
 function BookingFlow() {
@@ -104,9 +128,9 @@ function BookingFlow() {
   // Handle slot selection
   const handleSelectSlot = (slot: string) => {
     if (!selectedDate) return;
-    const [hours, minutes] = slot.split(":");
+    const { hours, minutes } = parseSlotTo24Hour(slot);
     const dateTime = new Date(selectedDate);
-    dateTime.setHours(parseInt(hours), parseInt(minutes));
+    dateTime.setHours(hours, minutes, 0, 0);
     setSelectedSlot(slot);
   };
 
@@ -116,9 +140,9 @@ function BookingFlow() {
       alert("Please select a date and slot");
       return;
     }
-    const [hours, minutes] = selectedSlot.split(":");
+    const { hours, minutes } = parseSlotTo24Hour(selectedSlot);
     const dateTime = new Date(selectedDate);
-    dateTime.setHours(parseInt(hours), parseInt(minutes));
+    dateTime.setHours(hours, minutes, 0, 0);
     createBookingMutation.mutate(dateTime.toISOString());
   };
 
@@ -170,9 +194,15 @@ function BookingFlow() {
                   <h1 className="text-2xl font-bold text-slate-900">{therapist.name || 'Counsellor'}</h1>
                   <p className="text-slate-600">{therapist.specializations?.[0]}</p>
                   <div className="flex items-center gap-4 mt-2">
-                    <span className="text-lg font-bold text-slate-900">
-                      ₹{therapist.sessionFee}/session
-                    </span>
+                    {therapist.pricingInfo?.isOrgCovered ? (
+                      <span className="text-sm font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                        FREE (Covered by {therapist.pricingInfo.orgName || 'Organization'})
+                      </span>
+                    ) : (
+                      <span className="text-lg font-bold text-slate-900">
+                        ₹{therapist.sessionFee}/session <span className="text-xs text-slate-500 font-normal uppercase">({therapist.pricingInfo?.feeCategory?.replace('_', ' ') || 'Category'} Rate)</span>
+                      </span>
+                    )}
                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-amber-700 text-sm font-bold">
                       <Star className="size-4 fill-amber-500 text-amber-500" />
                       {therapist.rating?.toFixed(1) || '5.0'}
@@ -285,10 +315,10 @@ function BookingFlow() {
                       })();
                       const filteredSlots = (availability?.openSlots ?? []).filter((slot: string) => {
                         if (selectedDate !== localToday) return true;
-                        const [hours, minutes] = slot.split(":");
+                        const { hours, minutes } = parseSlotTo24Hour(slot);
                         const now = new Date();
                         const slotTime = new Date();
-                        slotTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+                        slotTime.setHours(hours, minutes, 0, 0);
                         return slotTime > now;
                       });
 

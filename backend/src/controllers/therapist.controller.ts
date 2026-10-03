@@ -4,15 +4,86 @@ import type { AuthedRequest } from "@/middleware/auth";
 import { User, TherapistBooking, TherapistInvitation } from "@/models";
 import { AppError } from "@/lib/app-error";
 
+export async function getEffectivePricingForUser(userId?: string) {
+  const { CounselingPricing } = await import("@/models/counseling-pricing");
+  let pricing = await CounselingPricing.findOne();
+  if (!pricing) {
+    pricing = await CounselingPricing.create({
+      schoolStudentFee: 299,
+      collegeStudentFee: 499,
+      regularPersonFee: 799,
+    });
+  }
+
+  if (!userId) {
+    return {
+      fee: pricing.regularPersonFee,
+      isOrgCovered: false,
+      feeCategory: "regular",
+      orgName: undefined,
+    };
+  }
+
+  const seekerUser = await User.findById(userId).select("orgId phoneMasked userType");
+  if (!seekerUser) {
+    return {
+      fee: pricing.regularPersonFee,
+      isOrgCovered: false,
+      feeCategory: "regular",
+      orgName: undefined,
+    };
+  }
+
+  let baseFee = pricing.regularPersonFee;
+  if (seekerUser.userType === "school_student") {
+    baseFee = pricing.schoolStudentFee;
+  } else if (seekerUser.userType === "college_student") {
+    baseFee = pricing.collegeStudentFee;
+  } else {
+    baseFee = pricing.regularPersonFee;
+  }
+
+  let isOrgCovered = false;
+  let orgName: string | undefined = undefined;
+
+  const seekerEmail = (seekerUser.phoneMasked?.includes("@") ? seekerUser.phoneMasked : "").toLowerCase().trim();
+  const { Organization } = await import("@/models/organization");
+  
+  let userOrg = seekerUser.orgId ? await Organization.findById(seekerUser.orgId) : null;
+  if (!userOrg && seekerEmail) {
+    userOrg = await Organization.findOne({ allowedEmails: seekerEmail, verificationStatus: "verified" });
+    if (userOrg && seekerUser) {
+      seekerUser.orgId = userOrg._id as any;
+      await seekerUser.save();
+    }
+  }
+
+  if (userOrg && userOrg.verificationStatus === "verified") {
+    if (userOrg.coverMemberTherapyFees) {
+      isOrgCovered = true;
+      baseFee = 0;
+      orgName = userOrg.name;
+    }
+  }
+
+  return {
+    fee: baseFee,
+    isOrgCovered,
+    feeCategory: seekerUser.userType || "regular",
+    orgName,
+  };
+}
+
 export class TherapistController {
   /** GET /therapists — list all verified therapists (for users to browse) with search & filters */
   static list = asyncHandler(async (req: Request, res: Response) => {
+    const authedUserId = (req as AuthedRequest).user?.sub;
+    const effectivePricing = await getEffectivePricingForUser(authedUserId);
+
     const {
       search,
       specialization,
       language,
-      minFee = 0,
-      maxFee = 5000,
       verified,
       rating,
       location,
@@ -55,12 +126,6 @@ export class TherapistController {
         $options: "i",
       };
     }
-
-    // Filter by session fee range
-    filter["therapistProfile.sessionFee"] = {
-      $gte: Number(minFee),
-      $lte: Number(maxFee),
-    };
 
     // Filter by verification status: default to verified: true, unless verified is explicitly passed as "false" or "all"
     if (verified === "false") {
@@ -105,12 +170,8 @@ export class TherapistController {
       }
     }
 
-    // Filter by subscription status
-    // 1. Independent therapists must have tier != free
-    // 2. Attached therapists must belong to an organization with an active subscription
     const pipeline: any[] = [
       { $match: filter },
-      // Join with organization to check its subscription status if therapist is attached
       {
         $lookup: {
           from: "subscriptions",
@@ -130,7 +191,6 @@ export class TherapistController {
           as: "activeSubs"
         }
       },
-      // Keep if (independent AND tier != free) OR has active subscription record
       {
         $match: {
           $or: [
@@ -142,14 +202,14 @@ export class TherapistController {
       { $sort: { createdAt: -1 } },
       { $skip: Number(skip) },
       { $limit: Number(limit) },
-        {
-          $project: {
-            therapistProfile: 1,
-            location: 1,
-            phoneMasked: 1,
-            createdAt: 1
-          }
+      {
+        $project: {
+          therapistProfile: 1,
+          location: 1,
+          phoneMasked: 1,
+          createdAt: 1
         }
+      }
     ];
 
     const therapists = await User.aggregate(pipeline);
@@ -161,6 +221,7 @@ export class TherapistController {
     const total = countResult[0]?.total ?? 0;
 
     res.json({
+      pricingInfo: effectivePricing,
       therapists: therapists.map((t) => ({
         id: t._id,
         name: t.therapistProfile?.name || "Therapist",
@@ -174,7 +235,7 @@ export class TherapistController {
         languages: t.therapistProfile?.languages ?? [],
         rating: t.therapistProfile?.rating ?? 5.0,
         sessionCount: t.therapistProfile?.sessionCount ?? 0,
-        sessionFee: t.therapistProfile?.sessionFee ?? 1800,
+        sessionFee: effectivePricing.fee,
         verified: t.therapistProfile?.verified ?? false,
         bio: t.therapistProfile?.bio ?? "",
         introVideoUrl: t.therapistProfile?.introVideoUrl ?? "",
@@ -193,6 +254,8 @@ export class TherapistController {
   /** GET /therapists/:id — get single therapist details */
   static getDetail = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
+    const authedUserId = (req as AuthedRequest).user?.sub;
+    const effectivePricing = await getEffectivePricingForUser(authedUserId);
 
     const therapist = await User.findOne({
       _id: id,
@@ -230,7 +293,8 @@ export class TherapistController {
       languages: therapist.therapistProfile.languages,
       rating: therapist.therapistProfile.rating,
       sessionCount: therapist.therapistProfile.sessionCount,
-      sessionFee: therapist.therapistProfile.sessionFee,
+      sessionFee: effectivePricing.fee,
+      pricingInfo: effectivePricing,
       bio: therapist.therapistProfile.bio,
       introVideoUrl: therapist.therapistProfile.introVideoUrl,
       availability: therapist.therapistProfile.availability,
