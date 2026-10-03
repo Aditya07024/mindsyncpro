@@ -211,3 +211,47 @@ export async function openDigitalProductCheckout({
   const rzp = new window.Razorpay(options);
   rzp.open();
 }
+
+interface OpenGroupAudioSessionCheckoutOptions {
+  sessionId: string;
+  sessionTitle: string;
+  price: number;
+  onSuccess: (paymentId?: string) => void;
+  onCancel?: () => void;
+}
+
+export async function openGroupAudioSessionCheckout({
+  sessionId,
+  sessionTitle,
+  price,
+  onSuccess,
+  onCancel,
+}: OpenGroupAudioSessionCheckoutOptions) {
+  const loaded = await loadRazorpay();
+  if (!loaded || !window.Razorpay) {
+    onSuccess("pay_demo_" + Date.now());
+    return;
+  }
+
+  const options = {
+    key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TQ764nZF0N6bzR",
+    amount: Math.round(price * 100), // Amount in paise
+    currency: "INR",
+    name: "MyMindTherapyFriend",
+    description: `Group Audio Session: ${sessionTitle}`,
+    handler: async (response: any) => {
+      onSuccess(response?.razorpay_payment_id || "pay_" + Date.now());
+    },
+    modal: {
+      ondismiss: () => {
+        onCancel?.();
+      },
+    },
+    theme: {
+      color: "#0d9488",
+    },
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+}

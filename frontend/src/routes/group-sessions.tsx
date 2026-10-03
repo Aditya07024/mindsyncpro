@@ -2,10 +2,11 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/AppShell';
 import { motion } from 'framer-motion';
-import { Users, Clock, Shield, Volume2, ChevronRight, Lock, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Users, Shield, Volume2, ChevronRight, Loader2, Sparkles } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { openGroupAudioSessionCheckout } from '@/lib/razorpay';
 
 export const Route = createFileRoute('/group-sessions')({
   component: UserGroupSessionsPage,
@@ -22,8 +23,9 @@ function UserGroupSessionsPage() {
   });
 
   const joinMutation = useMutation({
-    mutationFn: (sessionId: string) => API.groupSessions.joinRequest(sessionId),
-    onSuccess: (res, sessionId) => {
+    mutationFn: ({ sessionId, paymentId }: { sessionId: string; paymentId?: string }) =>
+      API.groupSessions.joinRequest(sessionId, { paymentId }),
+    onSuccess: (res, { sessionId }) => {
       if (res.status === 'admitted') {
         toast.success('Admitted to session!');
         navigate({ to: `/group-audio/$sessionId/room`, params: { sessionId } });
@@ -34,6 +36,25 @@ function UserGroupSessionsPage() {
     },
     onError: (err: any) => toast.error(err.message || 'Failed to join group audio session'),
   });
+
+  const handleJoinClick = (session: any) => {
+    if (session.price && session.price > 0) {
+      openGroupAudioSessionCheckout({
+        sessionId: session._id,
+        sessionTitle: session.title,
+        price: session.price,
+        onSuccess: (paymentId) => {
+          toast.success(`Payment of ₹${session.price} successful! Registering for session...`);
+          joinMutation.mutate({ sessionId: session._id, paymentId });
+        },
+        onCancel: () => {
+          toast.error('Payment cancelled. Payment is required to join this audio session.');
+        },
+      });
+    } else {
+      joinMutation.mutate({ sessionId: session._id });
+    }
+  };
 
   const activeSessions = data?.sessions || [];
 
@@ -145,11 +166,11 @@ function UserGroupSessionsPage() {
                     </div>
                   ) : (
                     <Button
-                      onClick={() => joinMutation.mutate(s._id)}
+                      onClick={() => handleJoinClick(s)}
                       disabled={joinMutation.isPending}
                       className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md gap-2 active:scale-[0.98] transition-transform"
                     >
-                      {joinMutation.isPending ? 'Requesting Join...' : 'Join Audio Session'} <ChevronRight className="size-4" />
+                      {joinMutation.isPending ? 'Requesting Join...' : s.price > 0 ? `Pay ₹${s.price} & Join Session` : 'Join Audio Session'} <ChevronRight className="size-4" />
                     </Button>
                   )}
                 </motion.div>

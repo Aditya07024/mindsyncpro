@@ -210,6 +210,25 @@ export class GroupAudioSessionController {
       });
     }
 
+    const { paymentId } = req.body || {};
+
+    if (session.price && session.price > 0) {
+      const isAlreadyPaid = session.paidUsers?.some(
+        (pu) => pu.userId.toString() === userId.toString()
+      );
+      if (!isAlreadyPaid) {
+        if (!paymentId) {
+          throw new AppError(`Payment of ₹${session.price} is required to register for this session`, 402);
+        }
+        session.paidUsers.push({
+          userId: new mongoose.Types.ObjectId(userId),
+          amount: session.price,
+          paymentId: paymentId || `pay_${Date.now()}`,
+          paidAt: new Date(),
+        });
+      }
+    }
+
     // Generate deterministic anonymous label: "User 1", "User 2", etc.
     const totalCount = session.waitingQueue.length + session.admittedUsers.length + 1;
     const anonymousName = `User ${totalCount}`;
@@ -324,6 +343,15 @@ export class GroupAudioSessionController {
 
     if (!isCounselorHost && !admittedEntry && req.user?.role !== "super_admin") {
       throw new AppError("You are not admitted to this audio session yet", 403);
+    }
+
+    if (session.price && session.price > 0 && !isCounselorHost && req.user?.role !== "super_admin" && req.user?.role !== "admin") {
+      const isPaid = session.paidUsers?.some(
+        (pu) => pu.userId.toString() === userId.toString()
+      );
+      if (!isPaid) {
+        throw new AppError(`Payment of ₹${session.price} is required to join this audio session`, 402);
+      }
     }
 
     const participantName = isCounselorHost

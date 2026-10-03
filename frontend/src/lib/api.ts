@@ -554,10 +554,13 @@ const API = {
       apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/claim`, {
         method: "POST",
       }),
-    joinRequest: (id: string) =>
+    joinRequest: (id: string, data?: { paymentId?: string }) =>
       apiCall<{ status: string; anonymousName: string; session: any; message: string }>(
         `/api/group-sessions/${id}/join-request`,
-        { method: "POST" }
+        {
+          method: "POST",
+          body: data ? JSON.stringify(data) : undefined,
+        }
       ),
     approveUser: (id: string, data: { targetUserId: string; action: string }) =>
       apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/approve-user`, {
