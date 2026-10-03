@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users, X } from 'lucide-react';
 import API from '@/lib/api';
 import { formatAdLink, getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -276,6 +276,48 @@ function TherapistDashboard() {
   const [memberDetail, setMemberDetail] = useState<any>(null);
   const [memberLoading, setMemberLoading] = useState(false);
 
+  const [profileForm, setProfileForm] = useState({
+    bio: '',
+    fee: 1500,
+    specializations: '',
+    introVideoUrl: '',
+    email: '',
+    website: '',
+    phone: '',
+    openToCollaboration: false,
+  });
+
+  const profile = statsData?.profile;
+
+  useEffect(() => {
+    if (meData) {
+      const status = meData.therapistProfile?.verificationStatus;
+      if (!meData.therapistProfile || status !== 'verified') {
+        setVerificationStatus(status || 'not_started');
+      } else {
+        setVerificationStatus('verified');
+      }
+    }
+  }, [meData]);
+
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        bio: profile.bio || '',
+        fee: profile.sessionFee || 1500,
+        specializations: profile.specializations?.join(', ') || '',
+        introVideoUrl: profile.introVideoUrl || '',
+        email: profile.email || '',
+        website: profile.website || '',
+        phone: profile.phone || '',
+        openToCollaboration: !!profile.openToCollaboration,
+      });
+      if (profile.availability && profile.availability.length > 0) {
+        setAvailability(profile.availability);
+      }
+    }
+  }, [profile]);
+
   // Authentication & Loading Guard (MUST be after all hooks to prevent React Error #310)
   if (!isLoaded) {
     return (
@@ -303,7 +345,6 @@ function TherapistDashboard() {
     }
   };
 
-  const profile = statsData?.profile;
   const stats = statsData?.stats;
   const bookings: any[] = bookingsData?.bookings ?? [];
   const revenueByMonth = bookingsData?.revenueByMonth ?? {};
@@ -325,47 +366,6 @@ function TherapistDashboard() {
   const filteredChartData = chartLimit === 'all' 
     ? chartData 
     : chartData.slice(-Number(chartLimit));
-
-  const [profileForm, setProfileForm] = useState({
-    bio: '',
-    fee: 1500,
-    specializations: '',
-    introVideoUrl: '',
-    email: '',
-    website: '',
-    phone: '',
-    openToCollaboration: false,
-  });
-
-  useEffect(() => {
-    if (meData) {
-      const status = meData.therapistProfile?.verificationStatus;
-      if (!meData.therapistProfile || status !== 'verified') {
-        setVerificationStatus(status || 'not_started');
-      } else {
-        setVerificationStatus('verified');
-      }
-    }
-  }, [meData]);
-
-
-  useEffect(() => {
-    if (profile) {
-      setProfileForm({
-        bio: profile.bio || '',
-        fee: profile.sessionFee || 1500,
-        specializations: profile.specializations?.join(', ') || '',
-        introVideoUrl: profile.introVideoUrl || '',
-        email: profile.email || '',
-        website: profile.website || '',
-        phone: profile.phone || '',
-        openToCollaboration: !!profile.openToCollaboration,
-      });
-      if (profile.availability && profile.availability.length > 0) {
-        setAvailability(profile.availability);
-      }
-    }
-  }, [profile]);
 
   const today = new Date().toDateString();
   const todayBookings = bookings.filter((b) => new Date(b.slot).toDateString() === today && b.status === 'confirmed');
