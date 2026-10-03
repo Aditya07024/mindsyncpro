@@ -1654,6 +1654,12 @@ function GroupAudioSessionsTherapistTab() {
                     <span>Active Admitted Users:</span>
                     <strong className="text-teal-700 font-bold">{s.admittedUsers?.length || 0} / 11 Users</strong>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span>Session Fee:</span>
+                    <strong className="text-emerald-700 font-bold">
+                      {s.price > 0 ? `₹${s.price}` : 'FREE Session'}
+                    </strong>
+                  </div>
                 </div>
 
                 {/* Waiting Queue Admission Control Panel for Host */}
@@ -1750,6 +1756,23 @@ function GroupAudioSessionsTherapistTab() {
                   placeholder="Brief overview of what will be discussed in this group audio session..."
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Session Fee (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={10}
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value)) })}
+                    placeholder="Enter fee (0 for FREE)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Set ₹0 to make this group audio session free for participants.</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

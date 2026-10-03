@@ -3,6 +3,7 @@ import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
 import { GroupAudioSession, User } from "@/models";
 import { AppError } from "@/lib/app-error";
+import LiveKitService from "@/services/livekit.service";
 import mongoose from "mongoose";
 
 export class GroupAudioSessionController {
@@ -318,13 +319,29 @@ export class GroupAudioSessionController {
       ? `${session.counselorName || "Counselor"}`
       : admittedEntry?.anonymousName || "Participant";
 
+    let token: string | null = null;
+    try {
+      token = await LiveKitService.generateToken({
+        roomName: session.roomName,
+        userName: participantName,
+        userId,
+        canPublish: true,
+        canPublishData: true,
+        canSubscribe: true,
+      });
+    } catch (err) {
+      console.error("[LiveKit] Group audio token generation failed:", err);
+    }
+
     return res.json({
       success: true,
+      token,
+      livekitUrl: LiveKitService.getLiveKitURL() || "",
       roomName: session.roomName,
       sessionTitle: session.title,
       participantName,
       isCounselor: Boolean(isCounselorHost),
-      audioOnly: true, // Strictly audio-onlyWebRTC
+      audioOnly: true, // Strictly audio-only WebRTC
       videoEnabled: false, // Strictly NO video
     });
   });

@@ -3,6 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  LiveKitRoom,
+  RoomAudioRenderer,
+} from '@livekit/components-react';
+import '@livekit/components-styles';
+import {
   Mic, MicOff, PhoneOff, Users, Shield, UserCheck, CheckCircle2,
   Clock, Volume2, AlertCircle, Loader2, Sparkles, UserPlus, X, Lock,
 } from 'lucide-react';
@@ -22,6 +27,9 @@ function GroupAudioRoomPage() {
   const [micMuted, setMicMuted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   // Fetch WebRTC audio token & room config
   const { data: roomConfig, isLoading: configLoading, error: configError } = useQuery({
@@ -60,16 +68,65 @@ function GroupAudioRoomPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Simulate local mic activity visualizer
+  // Real Microphone Stream & Voice Activity Detection using AudioContext Analyser
   useEffect(() => {
-    if (micMuted) {
-      setIsSpeaking(false);
-      return;
+    let animationFrameId: number;
+
+    async function initAudio() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        mediaStreamRef.current = stream;
+
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const audioCtx = new AudioCtx();
+          audioCtxRef.current = audioCtx;
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+          const checkVolume = () => {
+            if (mediaStreamRef.current && mediaStreamRef.current.getAudioTracks().some(t => t.enabled)) {
+              analyser.getByteFrequencyData(dataArray);
+              const sum = dataArray.reduce((acc, val) => acc + val, 0);
+              const avg = sum / dataArray.length;
+              setIsSpeaking(avg > 10);
+            } else {
+              setIsSpeaking(false);
+            }
+            animationFrameId = requestAnimationFrame(checkVolume);
+          };
+
+          checkVolume();
+        }
+      } catch (err) {
+        console.warn('Microphone stream access unavailable:', err);
+      }
     }
-    const interval = setInterval(() => {
-      setIsSpeaking(Math.random() > 0.4);
-    }, 1500);
-    return () => clearInterval(interval);
+
+    initAudio();
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close();
+      }
+    };
+  }, []);
+
+  // Dynamic Microphone Mute / Unmute Control
+  useEffect(() => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getAudioTracks().forEach((track) => {
+        track.enabled = !micMuted;
+      });
+    }
   }, [micMuted]);
 
   const formatDuration = (secs: number) => {
@@ -113,8 +170,10 @@ function GroupAudioRoomPage() {
   const admittedUsers = currentSession?.admittedUsers || [];
   const waitingQueue = currentSession?.waitingQueue || [];
 
-  return (
+  const roomContent = (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden select-none">
+      {/* LiveKit Remote Audio Renderer */}
+      {roomConfig?.token && <RoomAudioRenderer />}
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/3 size-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
@@ -356,4 +415,20 @@ function GroupAudioRoomPage() {
       </footer>
     </div>
   );
+
+  if (roomConfig?.token && roomConfig?.livekitUrl) {
+    return (
+      <LiveKitRoom
+        serverUrl={roomConfig.livekitUrl}
+        token={roomConfig.token}
+        audio={!micMuted}
+        video={false}
+        connect={true}
+      >
+        {roomContent}
+      </LiveKitRoom>
+    );
+  }
+
+  return roomContent;
 }
