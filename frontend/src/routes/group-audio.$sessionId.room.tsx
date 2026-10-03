@@ -10,7 +10,7 @@ import {
 import '@livekit/components-styles';
 import {
   Mic, MicOff, PhoneOff, Users, Shield, UserCheck, CheckCircle2,
-  Clock, Volume2, AlertCircle, Loader2, Sparkles, UserPlus, X, Lock,
+  Clock, Volume2, AlertCircle, Loader2, Sparkles, UserPlus, X, Lock, AudioWaveform,
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,18 @@ function LiveKitMicController({ micMuted }: { micMuted: boolean }) {
   }, [localParticipant, micMuted]);
 
   return null;
+}
+
+/* Voice Wave Visualizer Component */
+function SpeakingWaveform({ active = true }: { active?: boolean }) {
+  return (
+    <div className="flex items-center gap-0.5 h-4 px-1">
+      <span className={`w-0.5 rounded-full bg-emerald-400 ${active ? 'animate-[bounce_0.8s_infinite_100ms] h-3.5' : 'h-1.5'}`} />
+      <span className={`w-0.5 rounded-full bg-teal-300 ${active ? 'animate-[bounce_0.8s_infinite_300ms] h-4' : 'h-2'}`} />
+      <span className={`w-0.5 rounded-full bg-emerald-400 ${active ? 'animate-[bounce_0.8s_infinite_200ms] h-2.5' : 'h-1.5'}`} />
+      <span className={`w-0.5 rounded-full bg-teal-400 ${active ? 'animate-[bounce_0.8s_infinite_400ms] h-3.5' : 'h-1'}`} />
+    </div>
+  );
 }
 
 export const Route = createFileRoute('/group-audio/$sessionId/room')({
@@ -156,26 +168,31 @@ function GroupAudioRoomPage() {
   if (configLoading) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <Loader2 className="size-10 text-teal-400 animate-spin mb-4" />
-        <h2 className="text-xl font-bold font-display">Connecting to Audio Room...</h2>
-        <p className="text-sm text-slate-400 mt-1">Initializing audio-only WebRTC stream</p>
+        <div className="relative mb-6">
+          <div className="size-16 rounded-full bg-teal-500/20 border border-teal-500/30 flex items-center justify-center animate-pulse">
+            <Loader2 className="size-8 text-teal-400 animate-spin" />
+          </div>
+          <div className="absolute inset-0 size-16 rounded-full bg-teal-500/10 blur-xl animate-ping" />
+        </div>
+        <h2 className="text-xl font-bold font-display tracking-tight text-slate-100">Connecting to Audio Room...</h2>
+        <p className="text-xs text-slate-400 mt-1">Establishing encrypted audio-only WebRTC stream</p>
       </div>
     );
   }
 
   if (configError) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4">
-        <div className="size-16 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mb-4">
-          <AlertCircle className="size-8" />
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="size-20 rounded-3xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mb-5 shadow-2xl">
+          <AlertCircle className="size-10" />
         </div>
-        <h2 className="text-xl font-bold font-display">Unable to Join Audio Session</h2>
-        <p className="text-sm text-slate-400 mt-1 mb-6 text-center max-w-md">
+        <h2 className="text-2xl font-bold font-display tracking-tight text-white mb-2">Unable to Join Audio Session</h2>
+        <p className="text-xs sm:text-sm text-slate-400 mb-8 max-w-md leading-relaxed">
           {(configError as any)?.message || 'You must be admitted by the counselor to enter this session.'}
         </p>
         <Button
           onClick={() => navigate({ to: '/dashboard' })}
-          className="bg-slate-800 hover:bg-slate-700 text-white font-bold"
+          className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl px-6 py-3 border border-slate-800 shadow-xl"
         >
           Return to Dashboard
         </Button>
@@ -197,37 +214,38 @@ function GroupAudioRoomPage() {
           <LiveKitMicController micMuted={micMuted} />
         </>
       )}
-      {/* Background Ambient Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/3 size-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
-      {/* Top Bar */}
-      <header className="relative z-10 border-b border-slate-900 bg-slate-950/80 backdrop-blur px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-teal-500/20 border border-teal-500/30 text-teal-300 flex items-center justify-center font-bold">
+      {/* Ambient Lighting Orbs */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-teal-500/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/4 size-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
+
+      {/* Top Bar Header */}
+      <header className="relative z-10 border-b border-slate-900/80 bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="size-10 sm:size-11 rounded-2xl bg-gradient-to-br from-teal-500/20 to-emerald-500/10 border border-teal-500/30 text-teal-300 flex items-center justify-center font-bold text-lg shrink-0 shadow-inner">
             🎙️
           </div>
-          <div>
-            <h1 className="font-display font-bold text-lg text-white leading-tight">
+          <div className="min-w-0">
+            <h1 className="font-display font-bold text-sm sm:text-base text-white leading-tight truncate max-w-[180px] sm:max-w-md">
               {roomConfig?.sessionTitle || currentSession?.title || 'Group Audio Session'}
             </h1>
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+            <div className="flex items-center gap-2 text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold shrink-0">
                 <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                WebRTC Audio Room (Video Disabled)
+                Live Audio
               </span>
-              <span>·</span>
-              <span className="flex items-center gap-1">
-                <Clock className="size-3" /> {formatDuration(elapsedSeconds)}
+              <span className="text-slate-600">·</span>
+              <span className="flex items-center gap-1 text-slate-300 font-mono">
+                <Clock className="size-3 text-slate-500" /> {formatDuration(elapsedSeconds)}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="bg-slate-900 border border-slate-800 rounded-full px-3 py-1 text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="bg-slate-900/90 border border-slate-800 rounded-full px-2.5 sm:px-3.5 py-1 text-xs font-semibold text-slate-300 flex items-center gap-1.5 shadow-sm">
             <Users className="size-3.5 text-teal-400" />
-            <span>{admittedUsers.length + 1} / 11 Users</span>
+            <span className="text-[11px] sm:text-xs">{admittedUsers.length + 1}/11</span>
           </div>
 
           <Button
@@ -237,85 +255,99 @@ function GroupAudioRoomPage() {
             }}
             variant="destructive"
             size="sm"
-            className="rounded-full px-4 gap-2 font-bold bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white border border-red-500/30 transition"
+            className="rounded-full px-3.5 sm:px-4 py-1.5 text-xs font-bold bg-red-500/15 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 transition-all duration-200 gap-1.5"
           >
-            <PhoneOff className="size-4" /> Leave Session
+            <PhoneOff className="size-3.5" /> <span className="hidden sm:inline">Leave Room</span>
           </Button>
         </div>
       </header>
 
-      {/* Main Center Audio Participants Grid */}
-      <main className="relative z-10 max-w-5xl mx-auto px-4 py-8 w-full flex-1 flex flex-col justify-center">
-        {/* Notice Badge */}
-        <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-400">
-            <Shield className="size-3.5 text-teal-400" />
-            Counselors see participants as <strong className="text-teal-300">User 1, User 2</strong> for privacy.
+      {/* Center Audio Grid Area */}
+      <main className="relative z-10 max-w-5xl mx-auto px-4 py-6 sm:py-8 w-full flex-1 flex flex-col justify-center">
+        {/* Privacy Shield Notice */}
+        <div className="text-center mb-6 sm:mb-8">
+          <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] sm:text-xs text-slate-400 shadow-lg">
+            <Shield className="size-3.5 text-teal-400 shrink-0" />
+            Anonymous Room: Counselors see participants as <strong className="text-teal-300 font-semibold">User 1, User 2</strong>
           </span>
         </div>
 
-        {/* Audio Participant Avatars Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+        {/* Audio Participant Tiles Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {/* Host Counselor Avatar Tile */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`rounded-3xl p-6 bg-slate-900/90 border flex flex-col items-center text-center relative overflow-hidden transition ${
+            className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
               isCounselor && isSpeaking
-                ? 'border-teal-500 shadow-lg shadow-teal-500/20 ring-2 ring-teal-500/30'
-                : 'border-slate-800'
+                ? 'border-teal-500 shadow-xl shadow-teal-500/20 ring-2 ring-teal-500/40 bg-slate-900/95'
+                : 'border-slate-800/80 hover:border-slate-700'
             }`}
           >
             <div className="relative mb-3">
-              <div className="size-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-700 text-white font-bold text-2xl flex items-center justify-center shadow-lg">
+              <div className="size-16 sm:size-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-700 text-white font-bold text-2xl flex items-center justify-center shadow-lg border-2 border-teal-400/30">
                 👨‍⚕️
               </div>
-              <span className="absolute bottom-0 right-0 size-6 rounded-full bg-teal-500 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-slate-950">
+              <span className="absolute bottom-0 right-0 px-2 py-0.5 rounded-full bg-teal-500 border-2 border-slate-950 text-[9px] sm:text-[10px] font-extrabold text-slate-950 uppercase tracking-wider shadow-sm">
                 HOST
               </span>
             </div>
-            <h3 className="font-display font-bold text-sm text-white">
+            <h3 className="font-display font-bold text-xs sm:text-sm text-white truncate max-w-full">
               {currentSession?.counselorName || 'Counselor Host'}
             </h3>
             <span className="text-[10px] font-semibold text-teal-400 uppercase tracking-wider mt-0.5">
               Certified Counsellor
             </span>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-              <Volume2 className="size-3.5 animate-pulse" /> Speaking
+
+            <div className="mt-3">
+              {isCounselor && isSpeaking ? (
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-semibold bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30">
+                  <SpeakingWaveform active={true} /> Speaking
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
+                  <Mic className="size-3 text-teal-400" /> Host Live
+                </div>
+              )}
             </div>
           </motion.div>
 
           {/* Self User Avatar Tile */}
           {!isCounselor && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={`rounded-3xl p-6 bg-slate-900/90 border flex flex-col items-center text-center relative overflow-hidden transition ${
+              className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
                 !micMuted && isSpeaking
-                  ? 'border-emerald-500 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30'
-                  : 'border-slate-800'
+                  ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/40 bg-slate-900/95'
+                  : 'border-slate-800/80 hover:border-slate-700'
               }`}
             >
               <div className="relative mb-3">
-                <div className="size-20 rounded-full bg-gradient-to-br from-violet-600 to-purple-800 text-white font-bold text-xl flex items-center justify-center shadow-lg">
-                  {participantName.slice(0, 2)}
+                <div className="size-16 sm:size-20 rounded-full bg-gradient-to-br from-violet-600 to-indigo-800 text-white font-bold text-lg sm:text-xl flex items-center justify-center shadow-lg border-2 border-violet-400/30">
+                  {participantName.slice(0, 2).toUpperCase()}
                 </div>
-                <span className="absolute bottom-0 right-0 size-6 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] text-slate-300">
+                <span className="absolute bottom-0 right-0 px-2 py-0.5 rounded-full bg-indigo-600 border-2 border-slate-950 text-[9px] sm:text-[10px] font-extrabold text-white uppercase tracking-wider shadow-sm">
                   YOU
                 </span>
               </div>
-              <h3 className="font-display font-bold text-sm text-white">{participantName}</h3>
+              <h3 className="font-display font-bold text-xs sm:text-sm text-white truncate max-w-full">{participantName}</h3>
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
                 Anonymous Participant
               </span>
+
               <div className="mt-3">
                 {micMuted ? (
-                  <span className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
-                    <MicOff className="size-3.5" /> Muted
+                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
+                    <MicOff className="size-3" /> Muted
+                  </span>
+                ) : isSpeaking ? (
+                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30 font-semibold">
+                    <SpeakingWaveform active={true} /> Speaking
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                    <Mic className="size-3.5" /> Mic On
+                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
+                    <Mic className="size-3 text-emerald-400" /> Mic Ready
                   </span>
                 )}
               </div>
@@ -330,29 +362,29 @@ function GroupAudioRoomPage() {
               return (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`rounded-3xl p-6 bg-slate-900/90 border flex flex-col items-center text-center relative transition ${
-                    speaking ? 'border-teal-500/80 shadow-md shadow-teal-500/10' : 'border-slate-800'
+                  className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative transition-all duration-300 ${
+                    speaking ? 'border-teal-500/80 shadow-xl shadow-teal-500/15 ring-2 ring-teal-500/30' : 'border-slate-800/80 hover:border-slate-700'
                   }`}
                 >
                   <div className="relative mb-3">
-                    <div className="size-20 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xl flex items-center justify-center shadow">
+                    <div className="size-16 sm:size-20 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 font-bold text-lg sm:text-xl flex items-center justify-center shadow">
                       👤
                     </div>
                   </div>
-                  <h3 className="font-display font-bold text-sm text-white">{u.anonymousName}</h3>
+                  <h3 className="font-display font-bold text-xs sm:text-sm text-white truncate max-w-full">{u.anonymousName}</h3>
                   <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
                     Participant
                   </span>
                   <div className="mt-3">
                     {speaking ? (
-                      <span className="flex items-center gap-1 text-xs text-teal-400 bg-teal-500/10 px-2.5 py-1 rounded-full border border-teal-500/20 font-semibold">
-                        <Volume2 className="size-3.5 animate-pulse" /> Audio Live
+                      <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-teal-300 bg-teal-500/15 px-2.5 py-1 rounded-full border border-teal-500/30 font-semibold">
+                        <SpeakingWaveform active={true} /> Audio Live
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-800 px-2.5 py-1 rounded-full">
-                        <Mic className="size-3.5 text-slate-500" /> Audio Connected
+                      <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
+                        <Mic className="size-3 text-slate-400" /> Connected
                       </span>
                     )}
                   </div>
@@ -362,29 +394,29 @@ function GroupAudioRoomPage() {
         </div>
       </main>
 
-      {/* Counselor Host Waiting Room Panel (If Counselor Host and waiting users exist) */}
+      {/* Counselor Host Waiting Room Queue Drawer (Mobile & Desktop) */}
       {isCounselor && waitingQueue.length > 0 && (
         <div className="relative z-20 max-w-5xl mx-auto px-4 mb-4 w-full">
-          <div className="bg-slate-900 border border-amber-500/30 rounded-3xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-slate-900/95 border border-amber-500/30 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold">
+              <div className="size-9 sm:size-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold shrink-0 border border-amber-500/30">
                 <UserPlus className="size-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-white flex items-center gap-2">
-                  Waiting Room Queue ({waitingQueue.length} User{waitingQueue.length === 1 ? '' : 's'})
+                <h4 className="font-bold text-xs sm:text-sm text-white flex items-center gap-2">
+                  Waiting Room Queue ({waitingQueue.length} Pending)
                 </h4>
-                <p className="text-xs text-slate-400">
-                  Users are requesting to enter this session. Click allow to admit them.
+                <p className="text-[11px] text-slate-400">
+                  Click allow to admit waiting users into the audio session.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
               {waitingQueue.map((userReq: any) => (
                 <div
                   key={userReq.userId}
-                  className="bg-slate-950 border border-slate-800 rounded-2xl px-3 py-2 flex items-center gap-3 shrink-0"
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 flex items-center gap-2.5 shrink-0 shadow-sm"
                 >
                   <span className="text-xs font-bold text-amber-300">{userReq.anonymousName}</span>
                   <div className="flex items-center gap-1">
@@ -394,9 +426,9 @@ function GroupAudioRoomPage() {
                         approveMutation.mutate({ targetUserId: userReq.userId, action: 'allow' })
                       }
                       disabled={approveMutation.isPending}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 h-7 rounded-xl font-bold"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] px-2.5 py-1 h-6 rounded-lg font-bold"
                     >
-                      Allow Entry ✓
+                      Allow ✓
                     </Button>
                     <Button
                       size="sm"
@@ -404,9 +436,9 @@ function GroupAudioRoomPage() {
                         approveMutation.mutate({ targetUserId: userReq.userId, action: 'deny' })
                       }
                       disabled={approveMutation.isPending}
-                      className="bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs px-2 py-1 h-7 rounded-xl"
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-400 text-[11px] px-2 py-1 h-6 rounded-lg"
                     >
-                      <X className="size-3.5" />
+                      <X className="size-3" />
                     </Button>
                   </div>
                 </div>
@@ -416,22 +448,22 @@ function GroupAudioRoomPage() {
         </div>
       )}
 
-      {/* Bottom Audio Control Toolbar */}
-      <footer className="relative z-10 border-t border-slate-900 bg-slate-950/90 backdrop-blur px-6 py-4 flex items-center justify-center">
-        <div className="flex items-center gap-4">
+      {/* Bottom Audio Control Bar */}
+      <footer className="relative z-10 border-t border-slate-900/80 bg-slate-950/95 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-center">
+        <div className="flex items-center gap-4 sm:gap-6">
           <button
             onClick={() => setMicMuted(!micMuted)}
-            className={`size-14 rounded-2xl flex items-center justify-center font-bold transition shadow-lg ${
+            className={`size-12 sm:size-14 rounded-2xl flex items-center justify-center font-bold transition-all duration-200 active:scale-95 shadow-xl ${
               micMuted
-                ? 'bg-red-600 text-white shadow-red-600/30'
-                : 'bg-teal-600 hover:bg-teal-500 text-white shadow-teal-600/30'
+                ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 border border-red-500/40'
+                : 'bg-teal-500 hover:bg-teal-400 text-slate-950 shadow-teal-500/30 border border-teal-400/40'
             }`}
           >
-            {micMuted ? <MicOff className="size-6" /> : <Mic className="size-6" />}
+            {micMuted ? <MicOff className="size-6 sm:size-7" /> : <Mic className="size-6 sm:size-7" />}
           </button>
 
-          <div className="px-4 py-2 bg-slate-900 border border-slate-800 rounded-2xl text-xs text-slate-400 font-semibold flex items-center gap-2">
-            <span className="size-2 rounded-full bg-teal-400 animate-ping" />
+          <div className="px-3.5 sm:px-4 py-2 bg-slate-900/90 border border-slate-800 rounded-2xl text-xs text-slate-300 font-semibold flex items-center gap-2 shadow-sm">
+            <span className={`size-2.5 rounded-full ${micMuted ? 'bg-red-500' : 'bg-emerald-400 animate-ping'}`} />
             <span>Mic is {micMuted ? 'Muted' : 'Live & Active'}</span>
           </div>
         </div>

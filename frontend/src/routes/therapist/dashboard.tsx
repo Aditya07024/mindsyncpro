@@ -1579,36 +1579,48 @@ function GroupAudioSessionsTherapistTab() {
   const sessions: any[] = data?.sessions || [];
 
   if (isLoading) {
-    return <div className="p-8 text-center text-slate-500">Loading group audio sessions...</div>;
+    return (
+      <div className="p-12 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="size-8 text-teal-600 animate-spin" />
+        <p className="text-sm font-medium">Loading group audio sessions...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 p-6 rounded-3xl text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider mb-2">
-            Multi-Party Audio Sessions
+    <div className="space-y-6 sm:space-y-8">
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 p-6 sm:p-8 rounded-3xl text-white shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-5 border border-teal-500/20 relative overflow-hidden">
+        <div className="relative z-10 space-y-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[11px] sm:text-xs font-bold uppercase tracking-wider shadow-sm">
+            <Sparkles className="size-3 text-teal-300 animate-pulse" /> Multi-Party Audio Sessions
           </span>
-          <h2 className="text-2xl font-bold font-display">Group Audio Sessions</h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-xl">
-            Host live audio-only therapy discussions with up to 11 participants. Counselors see participants as <strong>User 1, User 2</strong> to protect privacy.
+          <h2 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight text-white">Group Audio Sessions</h2>
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+            Host live audio-only therapy discussions with up to 11 participants. Counselors see participants as <strong className="text-teal-300">User 1, User 2</strong> for privacy.
           </p>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold rounded-xl px-5 py-3 shadow-lg shrink-0 gap-2"
+          className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold rounded-2xl px-5 py-3 shadow-xl shrink-0 gap-2 active:scale-95 transition-all text-xs sm:text-sm border border-teal-400/40"
         >
-          <Plus className="size-4" /> Create Audio Session
+          <Plus className="size-4 stroke-[3]" /> Create Audio Session
         </Button>
       </div>
 
       {/* Session Cards Grid */}
       {sessions.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center text-slate-500">
-          No group audio sessions created yet. Click "Create Audio Session" to start one.
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center space-y-3 shadow-xs">
+          <div className="size-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-2 border border-teal-100">
+            <Users className="size-7" />
+          </div>
+          <h3 className="font-display font-bold text-slate-900 text-lg">No Group Audio Sessions Yet</h3>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+            Click "Create Audio Session" above to host live group discussions.
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {sessions.map((s) => {
             const isAssigned = s.isCounselorAssigned;
             const waitingUsers = s.waitingQueue || [];
@@ -1616,15 +1628,15 @@ function GroupAudioSessionsTherapistTab() {
             return (
               <div
                 key={s._id}
-                className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition relative overflow-hidden"
+                className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
               >
                 {/* Status Indicator Badge */}
                 <div className="flex items-center justify-between">
                   <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider ${
                       isAssigned
-                        ? 'bg-red-100 text-red-700 border border-red-200'
-                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        ? 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}
                   >
                     <span
@@ -1632,31 +1644,37 @@ function GroupAudioSessionsTherapistTab() {
                         isAssigned ? 'bg-red-500 animate-pulse' : 'bg-emerald-500 animate-pulse'
                       }`}
                     />
-                    {isAssigned ? '🔴 Counselor Assigned (Occupied)' : '🟢 No Counselor Assigned (Available)'}
+                    {isAssigned ? 'Occupied' : '🟢 Open for Counselor'}
                   </span>
 
-                  <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <span className="text-xs font-extrabold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
                     Max 11 Users
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-display font-bold text-slate-900 text-lg">{s.title}</h3>
-                  {s.description && <p className="text-xs text-slate-600 leading-relaxed">{s.description}</p>}
+                <div className="space-y-1.5">
+                  <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-teal-700 transition-colors">
+                    {s.title}
+                  </h3>
+                  {s.description && (
+                    <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                      {s.description}
+                    </p>
+                  )}
                 </div>
 
                 <div className="border-t border-slate-100 pt-3 space-y-2 text-xs text-slate-500">
                   <div className="flex items-center justify-between">
-                    <span>Host Counselor:</span>
-                    <strong className="text-slate-800">{s.counselorName || 'Unassigned (Green Indicator)'}</strong>
+                    <span className="font-medium text-slate-500">Host Counselor:</span>
+                    <strong className="text-slate-800 font-semibold">{s.counselorName || 'Unassigned (Available)'}</strong>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Active Admitted Users:</span>
+                    <span className="font-medium text-slate-500">Active Admitted:</span>
                     <strong className="text-teal-700 font-bold">{s.admittedUsers?.length || 0} / 11 Users</strong>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Session Fee:</span>
-                    <strong className="text-emerald-700 font-bold">
+                    <span className="font-medium text-slate-500">Session Fee:</span>
+                    <strong className={`font-extrabold px-2 py-0.5 rounded-md ${s.price > 0 ? 'bg-teal-50 text-teal-800 border border-teal-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                       {s.price > 0 ? `₹${s.price}` : 'FREE Session'}
                     </strong>
                   </div>
@@ -1664,28 +1682,28 @@ function GroupAudioSessionsTherapistTab() {
 
                 {/* Waiting Queue Admission Control Panel for Host */}
                 {waitingUsers.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 space-y-2">
-                    <span className="text-xs font-bold text-amber-800 flex items-center gap-1">
-                      <Users className="size-3.5" /> Waiting Room Queue ({waitingUsers.length} Pending)
+                  <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-3 space-y-2 shadow-xs">
+                    <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <Users className="size-3.5 text-amber-700" /> Waiting Room Queue ({waitingUsers.length} Pending)
                     </span>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
                       {waitingUsers.map((u: any) => (
-                        <div key={u.userId} className="flex items-center justify-between bg-white p-2 rounded-xl text-xs border border-amber-100 shadow-xs">
-                          <span className="font-bold text-slate-800">{u.anonymousName}</span>
-                          <div className="flex items-center gap-1">
+                        <div key={u.userId} className="flex items-center justify-between bg-white p-2 rounded-xl text-xs border border-amber-100 shadow-2xs">
+                          <span className="font-bold text-slate-800 truncate max-w-[100px]">{u.anonymousName}</span>
+                          <div className="flex items-center gap-1 shrink-0">
                             <Button
                               size="sm"
                               onClick={() => approveMutation.mutate({ sessionId: s._id, targetUserId: u.userId, action: 'allow' })}
                               disabled={approveMutation.isPending}
-                              className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 h-6 font-bold"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] px-2 py-0.5 h-6 font-bold rounded-lg"
                             >
-                              Allow Entry ✓
+                              Allow ✓
                             </Button>
                             <Button
                               size="sm"
                               onClick={() => approveMutation.mutate({ sessionId: s._id, targetUserId: u.userId, action: 'deny' })}
                               disabled={approveMutation.isPending}
-                              className="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 h-6"
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] px-1.5 py-0.5 h-6 rounded-lg"
                             >
                               <X className="size-3" />
                             </Button>
@@ -1702,14 +1720,14 @@ function GroupAudioSessionsTherapistTab() {
                     <Button
                       onClick={() => claimMutation.mutate(s._id)}
                       disabled={claimMutation.isPending}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-2.5 text-xs shadow-md"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md active:scale-[0.98] transition-all"
                     >
                       {claimMutation.isPending ? 'Claiming Slot...' : 'Claim & Join as Counselor 🟢'}
                     </Button>
                   ) : (
                     <Button
                       onClick={() => navigate({ to: `/group-audio/$sessionId/room`, params: { sessionId: s._id } })}
-                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl py-2.5 text-xs shadow-md"
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md active:scale-[0.98] transition-all"
                     >
                       Launch Audio Room 🎙️
                     </Button>
@@ -1723,27 +1741,27 @@ function GroupAudioSessionsTherapistTab() {
 
       {/* Create Session Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
+            className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl relative border border-slate-100"
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-display font-bold text-slate-900 text-lg">Create Group Audio Session</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-700">
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100 transition">
                 <X className="size-5" />
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Session Topic / Title</label>
                 <input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Stress Management & Anxiety Group Discussion"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 font-medium"
                 />
               </div>
 
@@ -1754,7 +1772,7 @@ function GroupAudioSessionsTherapistTab() {
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   placeholder="Brief overview of what will be discussed in this group audio session..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-teal-500 resize-none font-medium"
                 />
               </div>
 
@@ -1782,7 +1800,7 @@ function GroupAudioSessionsTherapistTab() {
                     type="time"
                     value={form.startTime}
                     onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none font-medium"
                   />
                 </div>
                 <div>
@@ -1791,19 +1809,20 @@ function GroupAudioSessionsTherapistTab() {
                     type="time"
                     value={form.endTime}
                     onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 outline-none font-medium"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500">
-                ⚡ <strong>Max Capacity:</strong> Fixed at 11 Users Limit per audio session.
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
+                <Shield className="size-4 text-teal-600 shrink-0" />
+                <span><strong>Max Capacity:</strong> Fixed at 11 Users limit per audio room for privacy.</span>
               </div>
 
               <Button
                 onClick={() => createMutation.mutate(form)}
                 disabled={createMutation.isPending || !form.title.trim()}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-md transition"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-2xl shadow-lg transition active:scale-[0.98]"
               >
                 {createMutation.isPending ? 'Creating Session...' : 'Create Group Audio Session'}
               </Button>
