@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useLocalParticipant,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import {
@@ -14,6 +15,20 @@ import {
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+
+function LiveKitMicController({ micMuted }: { micMuted: boolean }) {
+  const { localParticipant } = useLocalParticipant();
+
+  useEffect(() => {
+    if (localParticipant) {
+      localParticipant.setMicrophoneEnabled(!micMuted).catch((err) => {
+        console.warn('LiveKit microphone mute toggle:', err);
+      });
+    }
+  }, [localParticipant, micMuted]);
+
+  return null;
+}
 
 export const Route = createFileRoute('/group-audio/$sessionId/room')({
   component: GroupAudioRoomPage,
@@ -122,6 +137,9 @@ function GroupAudioRoomPage() {
 
   // Dynamic Microphone Mute / Unmute Control
   useEffect(() => {
+    if (micMuted) {
+      setIsSpeaking(false);
+    }
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getAudioTracks().forEach((track) => {
         track.enabled = !micMuted;
@@ -172,8 +190,13 @@ function GroupAudioRoomPage() {
 
   const roomContent = (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden select-none">
-      {/* LiveKit Remote Audio Renderer */}
-      {roomConfig?.token && <RoomAudioRenderer />}
+      {/* LiveKit Mic Controller & Remote Audio Renderer */}
+      {roomConfig?.token && (
+        <>
+          <RoomAudioRenderer />
+          <LiveKitMicController micMuted={micMuted} />
+        </>
+      )}
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/3 size-80 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
