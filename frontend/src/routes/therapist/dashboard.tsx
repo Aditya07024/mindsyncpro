@@ -28,6 +28,22 @@ const formatSlotDisplay = (slot: string) => {
   return `${displayHour}:${minStr} ${ampm}`;
 };
 
+const normalizeAvailability = (rawAvail?: any[]) => {
+  const slotsByDay = new Map<number, string[]>();
+  if (Array.isArray(rawAvail)) {
+    rawAvail.forEach((item) => {
+      if (item && typeof item.day === 'number') {
+        const slotsArray = Array.isArray(item.slots) ? item.slots : [];
+        slotsByDay.set(item.day, slotsArray);
+      }
+    });
+  }
+  return DAYS.map((_, dayIndex) => ({
+    day: dayIndex,
+    slots: slotsByDay.get(dayIndex) || [],
+  }));
+};
+
 function riskBadge(level: string) {
   const map: Record<string, string> = {
     low: 'bg-green-100 text-green-800',
@@ -59,8 +75,8 @@ function TherapistDashboard() {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [viewJournalsBookingId, setViewJournalsBookingId] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<{ day: number; slots: string[] }[]>(
-    DAYS.map((_, day) => ({ day, slots: day >= 1 && day <= 5 ? ['10:00', '14:00', '16:00'] : [] }))
+  const [availability, setAvailability] = useState<{ day: number; slots: string[] }[]>(() =>
+    normalizeAvailability(DAYS.map((_, day) => ({ day, slots: day >= 1 && day <= 5 ? ['10:00', '14:00', '16:00'] : [] })))
   );
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('bar');
@@ -215,7 +231,11 @@ function TherapistDashboard() {
 
   const availabilityMutation = useMutation({
     mutationFn: () => API.therapist.updateAvailability({ availability }),
-    onSuccess: () => toast.success('Availability saved'),
+    onSuccess: () => {
+      toast.success('Availability saved');
+      qc.invalidateQueries({ queryKey: ['therapist-stats'] });
+      qc.invalidateQueries({ queryKey: ['auth-me'] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -312,8 +332,8 @@ function TherapistDashboard() {
         phone: profile.phone || '',
         openToCollaboration: !!profile.openToCollaboration,
       });
-      if (profile.availability && profile.availability.length > 0) {
-        setAvailability(profile.availability);
+      if (profile.availability) {
+        setAvailability(normalizeAvailability(profile.availability));
       }
     }
   }, [profile]);
@@ -377,15 +397,18 @@ function TherapistDashboard() {
     return diff <= 15 * 60 * 1000 && diff > -2 * 60 * 60 * 1000;
   };
 
-  const toggleSlot = (day: number, slot: string) => {
-    setAvailability((prev) =>
-      prev.map((d) =>
-        d.day !== day ? d : {
-          ...d,
-          slots: d.slots.includes(slot) ? d.slots.filter((s) => s !== slot) : [...d.slots, slot].sort(),
-        }
-      )
-    );
+  const toggleSlot = (dayIndex: number, slot: string) => {
+    setAvailability((prev) => {
+      const currentNormalized = normalizeAvailability(prev);
+      return currentNormalized.map((d) => {
+        if (d.day !== dayIndex) return d;
+        const exists = d.slots.includes(slot);
+        const updatedSlots = exists
+          ? d.slots.filter((s) => s !== slot)
+          : [...d.slots, slot].sort();
+        return { ...d, slots: updatedSlots };
+      });
+    });
   };
 
   if (verificationStatus && verificationStatus !== 'verified') {
@@ -702,11 +725,17 @@ function TherapistDashboard() {
                     {DEFAULT_SLOTS.map((slot) => {
                       const active = availability.find((d) => d.day === i)?.slots.includes(slot);
                       return (
-                        <button key={slot} onClick={() => toggleSlot(i, slot)}
-                          className={`w-full h-11 rounded-xl text-xs font-bold transition-all shadow-sm ${
-                            active ? 'bg-teal-50 text-teal-700 border-2 border-teal-500 shadow-inner' : 'bg-slate-50/50 text-slate-400 border border-slate-200 hover:bg-slate-100'
-                          }`}>
-                          {active ? 'Available' : '-'}
+                        <button
+                          type="button"
+                          key={slot}
+                          onClick={() => toggleSlot(i, slot)}
+                          className={`w-full h-11 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer select-none flex items-center justify-center ${
+                            active
+                              ? 'bg-teal-600 text-white border-2 border-teal-700 shadow-md font-extrabold'
+                              : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'
+                          }`}
+                        >
+                          {active ? 'Available ✓' : '-'}
                         </button>
                       );
                     })}
