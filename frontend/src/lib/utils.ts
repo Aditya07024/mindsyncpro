@@ -87,4 +87,21 @@ export function getNormalizedPosterUrl(url?: string | null): string {
   return filename ? `${apiBase}/uploads/images/${filename}` : trimmed;
 }
 
+export function formatAdLink(link?: string): string {
+  if (!link) return '#';
+  const trimmed = link.trim();
+  if (!trimmed) return '#';
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('mailto:') ||
+    trimmed.startsWith('tel:')
+  ) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
+
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users } from 'lucide-react';
 import API from '@/lib/api';
+import { formatAdLink, getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useClerk, useAuth } from '@clerk/clerk-react';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -507,47 +508,54 @@ function TherapistDashboard() {
         {/* Counselor Dashboard Advertisement Banners (Managed by Admin) */}
         {activeTherapistBanners.length > 0 && (
           <div className={`grid gap-4 ${activeTherapistBanners.length >= 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-            {activeTherapistBanners.map((ad: any, idx: number) => (
-              <div
-                key={idx}
-                className="rounded-3xl bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 p-6 text-white shadow-lg relative overflow-hidden group flex flex-col justify-between"
-              >
-                {ad.imageUrl && (
-                  <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
-                    <img src={ad.imageUrl} alt="Ad" className="w-full h-full object-cover" />
+            {activeTherapistBanners.map((ad: any, idx: number) => {
+              const targetLink = formatAdLink(ad.buttonLink || ad.targetUrl);
+              const isExternal = targetLink.startsWith('http');
+              const poster = getNormalizedPosterUrl(ad.imageUrl);
+              return (
+                <div
+                  key={idx}
+                  className="rounded-3xl bg-gradient-to-r from-teal-950 via-slate-900 to-slate-950 p-6 text-white shadow-xl flex flex-col sm:flex-row justify-between items-stretch gap-4 relative overflow-hidden group"
+                >
+                  <div className="relative z-10 flex-1 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      {ad.badgeText && (
+                        <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full">
+                          {ad.badgeText}
+                        </span>
+                      )}
+                      {ad.title && (
+                        <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
+                          {ad.title}
+                        </h3>
+                      )}
+                      {ad.description && (
+                        <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
+                          {ad.description}
+                        </p>
+                      )}
+                    </div>
+                    {ad.buttonText && (ad.buttonLink || ad.targetUrl) && (
+                      <div className="pt-3 relative z-10">
+                        <a
+                          href={targetLink}
+                          target={isExternal ? '_blank' : '_self'}
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                        >
+                          {ad.buttonText} <ChevronRight className="size-4" />
+                        </a>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="relative z-10 space-y-2">
-                  {ad.badgeText && (
-                    <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-teal-500/20 text-teal-300 border border-teal-500/30 px-3 py-1 rounded-full">
-                      {ad.badgeText}
-                    </span>
-                  )}
-                  {ad.title && (
-                    <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
-                      {ad.title}
-                    </h3>
-                  )}
-                  {ad.description && (
-                    <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
-                      {ad.description}
-                    </p>
+                  {poster && (
+                    <div className="sm:w-40 h-32 sm:h-auto shrink-0 rounded-2xl overflow-hidden border border-white/10 shadow-md bg-slate-950/60 relative">
+                      <img src={poster} alt="Ad Poster" className="w-full h-full object-cover" />
+                    </div>
                   )}
                 </div>
-                {ad.buttonText && (ad.buttonLink || ad.targetUrl) && (
-                  <div className="pt-4 relative z-10">
-                    <a
-                      href={ad.buttonLink || ad.targetUrl}
-                      target={(ad.buttonLink || ad.targetUrl)?.startsWith('http') ? '_blank' : '_self'}
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
-                    >
-                      {ad.buttonText} <ChevronRight className="size-4" />
-                    </a>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

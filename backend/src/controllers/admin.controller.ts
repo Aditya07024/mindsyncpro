@@ -832,7 +832,9 @@ export class AdminController {
       if (item.description !== undefined) doc.description = item.description;
       if (item.imageUrl !== undefined) doc.imageUrl = item.imageUrl;
       if (item.buttonText !== undefined) doc.buttonText = item.buttonText;
-      if (item.targetUrl !== undefined) doc.targetUrl = item.targetUrl || item.buttonLink || "";
+      if (item.targetUrl !== undefined || item.buttonLink !== undefined) {
+        doc.targetUrl = item.targetUrl || item.buttonLink || "";
+      }
       if (item.targetDashboard !== undefined) doc.targetDashboard = item.targetDashboard;
       if (item.isActive !== undefined) doc.isActive = Boolean(item.isActive);
       doc.isCreatedByAdmin = true;

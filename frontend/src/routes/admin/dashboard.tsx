@@ -9,6 +9,7 @@ import {
   Trash2
 } from 'lucide-react';
 import API from '@/lib/api';
+import { getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@clerk/clerk-react';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -22,6 +23,22 @@ import { DigitalProductsAdminManager } from '@/components/DigitalProductsAdminMa
 import { AdminPartnersManager } from '@/components/AdminPartnersManager';
 import { AdminCareerProgramsManager } from '@/components/AdminCareerProgramsManager';
 
+
+export function formatAdLink(link?: string): string {
+  if (!link) return '#';
+  const trimmed = link.trim();
+  if (!trimmed) return '#';
+  if (
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('mailto:') ||
+    trimmed.startsWith('tel:')
+  ) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
 
 export const Route = createFileRoute('/admin/dashboard')({ component: SuperAdminDashboard });
 
@@ -1888,7 +1905,13 @@ function AdminAdBannerTab() {
   }, [data]);
 
   const saveMutation = useMutation({
-    mutationFn: (bannersData: any[]) => API.admin.adBanner.update({ banners: bannersData }),
+    mutationFn: (bannersData: any[]) =>
+      API.admin.adBanner.update({
+        banners: bannersData.map((b) => ({
+          ...b,
+          targetUrl: b.buttonLink || b.targetUrl || '',
+        })),
+      }),
     onSuccess: () => {
       toast.success('Homepage Advertisement Banners saved ✓');
       qc.invalidateQueries({ queryKey: ['admin-ad-banner'] });
@@ -1919,7 +1942,7 @@ function AdminAdBannerTab() {
         <div>
           <h2 className="text-2xl font-bold text-white font-display">Homepage Advertisement Banners</h2>
           <p className="text-sm text-slate-400 mt-1">
-            Upload single ad or 2 ads. When 2 ads are active, users will see 2 ads side-by-side. If 1 ad is active, users will see 1 single ad.
+            Upload single ad or 2 ads. Select target dashboard for each ad. External links automatically open in a new tab.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 self-start md:self-auto">
@@ -1988,34 +2011,106 @@ function AdminAdBannerTab() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Banner Image URL (Optional)</label>
-              <input
-                value={current.imageUrl || ''}
-                onChange={(e) => updateCurrentAd('imageUrl', e.target.value)}
-                placeholder="https://example.com/ad-banner.jpg"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
-              />
+            {/* Banner Image Upload & Guidelines */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                Banner Image (Upload File or Image URL)
+              </label>
+
+              {/* Dimension & File Size Specifications Callout Box */}
+              <div className="p-3.5 rounded-2xl bg-violet-950/40 border border-violet-800/60 text-xs space-y-1 text-violet-200">
+                <div className="flex items-center gap-2 font-bold text-violet-300">
+                  <span>📐 Recommended Dimensions & Specifications:</span>
+                </div>
+                <ul className="list-disc list-inside space-y-0.5 text-[11px] text-slate-300">
+                  <li><strong>Dimensions:</strong> 1200 × 600 px (Aspect Ratio: 2:1 or 16:9 banner)</li>
+                  <li><strong>Max File Size:</strong> 5 MB</li>
+                  <li><strong>Supported Formats:</strong> PNG, JPG, WEBP, GIF</li>
+                </ul>
+              </div>
+
+              {/* Upload Input & URL input */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <label className="cursor-pointer inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-700 transition shrink-0">
+                  <span>📁 Upload Image File</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File size exceeds 5MB limit. Please choose a smaller image.");
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        updateCurrentAd("imageUrl", reader.result as string);
+                        toast.success("Banner image uploaded successfully!");
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+
+                <input
+                  value={current.imageUrl || ''}
+                  onChange={(e) => updateCurrentAd('imageUrl', e.target.value)}
+                  placeholder="Or paste external image URL (e.g. https://domain.com/banner.jpg)"
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:ring-2 focus:ring-violet-500 outline-none"
+                />
+              </div>
+
+              {/* Image Preview & Remove Button */}
+              {current.imageUrl && (
+                <div className="relative mt-2 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-2 flex items-center gap-3">
+                  <img
+                    src={getNormalizedPosterUrl(current.imageUrl)}
+                    alt="Uploaded Ad Banner"
+                    className="w-24 h-16 object-cover rounded-xl border border-white/10"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x200?text=Invalid+Image+URL';
+                    }}
+                  />
+                  <div className="flex-1 text-xs space-y-1">
+                    <p className="text-emerald-400 font-bold">✓ Image Ready</p>
+                    <p className="text-slate-400 text-[10px] truncate max-w-[200px]">
+                      {current.imageUrl.startsWith('data:') ? 'Base64 Uploaded File' : current.imageUrl}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => updateCurrentAd('imageUrl', '')}
+                    className="px-3 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-xs rounded-xl border border-red-800 transition"
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Text</label>
                 <input
                   value={current.buttonText || ''}
                   onChange={(e) => updateCurrentAd('buttonText', e.target.value)}
-                  placeholder="e.g. Book Now"
+                  placeholder="e.g. Book Now or Learn More"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Button Target Link</label>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">External Website Link / Target URL</label>
                 <input
                   value={current.buttonLink || ''}
                   onChange={(e) => updateCurrentAd('buttonLink', e.target.value)}
-                  placeholder="e.g. /therapists"
+                  placeholder="e.g. https://google.com or /therapists"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:ring-2 focus:ring-violet-500 outline-none"
                 />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  🌐 Enter external website URL (opens in new tab) or internal app path.
+                </p>
               </div>
             </div>
 
@@ -2057,7 +2152,7 @@ function AdminAdBannerTab() {
         {/* Live Preview */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white font-display">Live Preview (User Dashboard View)</h3>
+            <h3 className="text-lg font-bold text-white font-display">Live Preview</h3>
             <span className="text-xs text-slate-400 font-semibold">
               Displaying {activeVisibleBanners.length} Active Ad{activeVisibleBanners.length === 1 ? '' : 's'}
             </span>
@@ -2065,42 +2160,54 @@ function AdminAdBannerTab() {
 
           {activeVisibleBanners.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-800 p-8 text-center text-slate-500 text-sm">
-              No ads active. Enable at least 1 ad to display on user dashboard.
+              No ads active. Enable at least 1 ad to display on dashboard.
             </div>
           ) : (
             <div className={`grid gap-4 ${activeVisibleBanners.length >= 2 ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
-              {activeVisibleBanners.map((ad, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-3xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 p-6 text-white shadow-xl relative overflow-hidden flex flex-col justify-between"
-                >
-                  {ad.imageUrl && (
-                    <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none overflow-hidden">
-                      <img src={ad.imageUrl} alt="Ad Preview" className="w-full h-full object-cover" />
+              {activeVisibleBanners.map((ad, idx) => {
+                const targetLink = formatAdLink(ad.buttonLink || ad.targetUrl);
+                const isExternal = targetLink.startsWith('http');
+                const poster = getNormalizedPosterUrl(ad.imageUrl);
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-3xl bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 border border-emerald-500/20 p-6 text-white shadow-xl flex flex-col sm:flex-row justify-between items-stretch gap-4 relative overflow-hidden"
+                  >
+                    <div className="relative z-10 flex-1 space-y-3 flex flex-col justify-between">
+                      <div className="space-y-2">
+                        {ad.badgeText && (
+                          <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                            {ad.badgeText}
+                          </span>
+                        )}
+                        <h3 className="font-display text-lg font-bold tracking-tight text-white leading-tight">
+                          {ad.title || 'Exclusive Counseling & Support'}
+                        </h3>
+                        <p className="text-xs text-slate-200/90 leading-relaxed">
+                          {ad.description || 'Take care of your mental wellbeing with top certified therapists.'}
+                        </p>
+                      </div>
+                      {ad.buttonText && (
+                        <div className="pt-2">
+                          <a
+                            href={targetLink}
+                            target={isExternal ? '_blank' : '_self'}
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-md hover:bg-emerald-400 transition"
+                          >
+                            {ad.buttonText} →
+                          </a>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  <div className="relative z-10 space-y-3">
-                    {ad.badgeText && (
-                      <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
-                        {ad.badgeText}
-                      </span>
+                    {poster && (
+                      <div className="sm:w-36 h-28 sm:h-auto shrink-0 rounded-2xl overflow-hidden border border-white/10 shadow-md bg-slate-950/60 relative">
+                        <img src={poster} alt="Ad Preview" className="w-full h-full object-cover" />
+                      </div>
                     )}
-                    <h3 className="font-display text-lg md:text-xl font-bold tracking-tight text-white leading-tight">
-                      {ad.title || 'Exclusive Counseling & Support'}
-                    </h3>
-                    <p className="text-xs text-slate-200/90 leading-relaxed">
-                      {ad.description || 'Take care of your mental wellbeing with top certified therapists.'}
-                    </p>
                   </div>
-                  {ad.buttonText && (
-                    <div className="pt-4 relative z-10">
-                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
-                        {ad.buttonText} →
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
