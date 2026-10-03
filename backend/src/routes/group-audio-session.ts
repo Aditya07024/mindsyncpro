@@ -25,4 +25,7 @@ router.get("/:id/audio-token", requireAuth, GroupAudioSessionController.getAudio
 // Update session price (Admin)
 router.put("/:id/pricing", requireAuth, requireRole(["super_admin", "admin"]), GroupAudioSessionController.updatePricing);
 
+// Delete group audio session (Counselor or Admin)
+router.delete("/:id", requireAuth, GroupAudioSessionController.deleteSession);
+
 export default router;

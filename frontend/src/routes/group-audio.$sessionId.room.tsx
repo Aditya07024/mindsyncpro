@@ -1,16 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   LiveKitRoom,
   RoomAudioRenderer,
   useLocalParticipant,
+  useParticipants,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import {
-  Mic, MicOff, PhoneOff, Users, Shield, UserCheck, CheckCircle2,
-  Clock, Volume2, AlertCircle, Loader2, Sparkles, UserPlus, X, Lock, AudioWaveform,
+  Mic, MicOff, PhoneOff, Users, Shield, Clock, AlertCircle, Loader2, Sparkles, UserPlus, X,
 } from 'lucide-react';
 import API from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -205,16 +205,89 @@ function GroupAudioRoomPage() {
   const admittedUsers = currentSession?.admittedUsers || [];
   const waitingQueue = currentSession?.waitingQueue || [];
 
-  const roomContent = (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden select-none">
-      {/* LiveKit Mic Controller & Remote Audio Renderer */}
-      {roomConfig?.token && (
-        <>
-          <RoomAudioRenderer />
-          <LiveKitMicController micMuted={micMuted} />
-        </>
-      )}
+  if (roomConfig?.token && roomConfig?.livekitUrl) {
+    return (
+      <LiveKitRoom
+        serverUrl={roomConfig.livekitUrl}
+        token={roomConfig.token}
+        audio={!micMuted}
+        video={false}
+        connect={true}
+      >
+        <RoomAudioRenderer />
+        <LiveKitMicController micMuted={micMuted} />
+        <AudioRoomInnerContent
+          roomConfig={roomConfig}
+          currentSession={currentSession}
+          isCounselor={isCounselor}
+          participantName={participantName}
+          admittedUsers={admittedUsers}
+          waitingQueue={waitingQueue}
+          micMuted={micMuted}
+          setMicMuted={setMicMuted}
+          isSpeaking={isSpeaking}
+          elapsedSeconds={elapsedSeconds}
+          formatDuration={formatDuration}
+          navigate={navigate}
+          approveMutation={approveMutation}
+        />
+      </LiveKitRoom>
+    );
+  }
 
+  return (
+    <AudioRoomInnerContent
+      roomConfig={roomConfig}
+      currentSession={currentSession}
+      isCounselor={isCounselor}
+      participantName={participantName}
+      admittedUsers={admittedUsers}
+      waitingQueue={waitingQueue}
+      micMuted={micMuted}
+      setMicMuted={setMicMuted}
+      isSpeaking={isSpeaking}
+      elapsedSeconds={elapsedSeconds}
+      formatDuration={formatDuration}
+      navigate={navigate}
+      approveMutation={approveMutation}
+    />
+  );
+}
+
+function AudioRoomInnerContent({
+  roomConfig,
+  currentSession,
+  isCounselor,
+  participantName,
+  admittedUsers,
+  waitingQueue,
+  micMuted,
+  setMicMuted,
+  isSpeaking,
+  elapsedSeconds,
+  formatDuration,
+  navigate,
+  approveMutation,
+}: any) {
+  const participants = useParticipants();
+
+  const hostName = currentSession?.counselorName || 'Counselor Host';
+  const isHostActiveSpeaker =
+    (isCounselor && !micMuted && isSpeaking) ||
+    participants.some(
+      (p: any) =>
+        p.isSpeaking && (p.name === hostName || p.identity === currentSession?.counselorId)
+    );
+
+  const isSelfActiveSpeaker =
+    (!micMuted && isSpeaking) ||
+    participants.some(
+      (p: any) =>
+        p.isSpeaking && (p.name === participantName || p.identity === roomConfig?.userId)
+    );
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden select-none">
       {/* Ambient Lighting Orbs */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-teal-500/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/4 size-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
@@ -279,13 +352,21 @@ function GroupAudioRoomPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
-              isCounselor && !micMuted && isSpeaking
-                ? 'border-teal-500 shadow-xl shadow-teal-500/20 ring-2 ring-teal-500/40 bg-slate-900/95'
+              isHostActiveSpeaker
+                ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/40 shadow-2xl shadow-emerald-500/30 bg-slate-900/95 scale-[1.03]'
                 : 'border-slate-800/80 hover:border-slate-700'
             }`}
           >
-            <div className="relative mb-3">
-              <div className="size-16 sm:size-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-700 text-white font-bold text-2xl flex items-center justify-center shadow-lg border-2 border-teal-400/30">
+            {isHostActiveSpeaker && (
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[9px] sm:text-[10px] font-black text-slate-950 uppercase tracking-wider shadow-md animate-pulse">
+                🔊 SPEAKING
+              </div>
+            )}
+
+            <div className="relative mb-3 mt-1">
+              <div className={`size-16 sm:size-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-700 text-white font-bold text-2xl flex items-center justify-center shadow-lg border-2 ${
+                isHostActiveSpeaker ? 'border-emerald-300 ring-4 ring-emerald-400/60 animate-pulse' : 'border-teal-400/30'
+              }`}>
                 👨‍⚕️
               </div>
               <span className="absolute bottom-0 right-0 px-2 py-0.5 rounded-full bg-teal-500 border-2 border-slate-950 text-[9px] sm:text-[10px] font-extrabold text-slate-950 uppercase tracking-wider shadow-sm">
@@ -300,22 +381,16 @@ function GroupAudioRoomPage() {
             </span>
 
             <div className="mt-3">
-              {isCounselor ? (
-                micMuted ? (
-                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
-                    <MicOff className="size-3" /> Muted
-                  </span>
-                ) : isSpeaking ? (
-                  <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-semibold bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                    <SpeakingWaveform active={true} /> Speaking
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
-                    <Mic className="size-3 text-teal-400" /> Host Mic Ready
-                  </div>
-                )
+              {isHostActiveSpeaker ? (
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-300 font-bold bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-400/40 shadow-sm">
+                  <SpeakingWaveform active={true} /> Speaking
+                </div>
+              ) : isCounselor && micMuted ? (
+                <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
+                  <MicOff className="size-3" /> Muted
+                </span>
               ) : (
-                <div className="flex items-center gap-1 text-[11px] sm:text-xs text-teal-300 bg-teal-500/10 px-2.5 py-1 rounded-full border border-teal-500/20 font-semibold">
+                <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
                   <Mic className="size-3 text-teal-400" /> Host Connected
                 </div>
               )}
@@ -328,13 +403,21 @@ function GroupAudioRoomPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
-                !micMuted && isSpeaking
-                  ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/40 bg-slate-900/95'
+                isSelfActiveSpeaker
+                  ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/40 shadow-2xl shadow-emerald-500/30 bg-slate-900/95 scale-[1.03]'
                   : 'border-slate-800/80 hover:border-slate-700'
               }`}
             >
-              <div className="relative mb-3">
-                <div className="size-16 sm:size-20 rounded-full bg-gradient-to-br from-violet-600 to-indigo-800 text-white font-bold text-lg sm:text-xl flex items-center justify-center shadow-lg border-2 border-violet-400/30">
+              {isSelfActiveSpeaker && (
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[9px] sm:text-[10px] font-black text-slate-950 uppercase tracking-wider shadow-md animate-pulse">
+                  🔊 SPEAKING
+                </div>
+              )}
+
+              <div className="relative mb-3 mt-1">
+                <div className={`size-16 sm:size-20 rounded-full bg-gradient-to-br from-violet-600 to-indigo-800 text-white font-bold text-lg sm:text-xl flex items-center justify-center shadow-lg border-2 ${
+                  isSelfActiveSpeaker ? 'border-emerald-300 ring-4 ring-emerald-400/60 animate-pulse' : 'border-violet-400/30'
+                }`}>
                   {participantName.slice(0, 2).toUpperCase()}
                 </div>
                 <span className="absolute bottom-0 right-0 px-2 py-0.5 rounded-full bg-indigo-600 border-2 border-slate-950 text-[9px] sm:text-[10px] font-extrabold text-white uppercase tracking-wider shadow-sm">
@@ -351,8 +434,8 @@ function GroupAudioRoomPage() {
                   <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
                     <MicOff className="size-3" /> Muted
                   </span>
-                ) : isSpeaking ? (
-                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30 font-semibold">
+                ) : isSelfActiveSpeaker ? (
+                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-300 font-bold bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-400/40 shadow-sm">
                     <SpeakingWaveform active={true} /> Speaking
                   </span>
                 ) : (
@@ -368,15 +451,32 @@ function GroupAudioRoomPage() {
           {admittedUsers
             .filter((u: any) => u.anonymousName !== participantName)
             .map((u: any, idx: number) => {
+              const isUserActiveSpeaker = participants.some(
+                (p: any) =>
+                  p.isSpeaking && (p.name === u.anonymousName || p.identity === u.userId)
+              );
+
               return (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border border-slate-800/80 hover:border-slate-700 flex flex-col items-center text-center relative transition-all duration-300"
+                  className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
+                    isUserActiveSpeaker
+                      ? 'border-2 border-emerald-400 ring-4 ring-emerald-500/40 shadow-2xl shadow-emerald-500/30 bg-slate-900/95 scale-[1.03]'
+                      : 'border-slate-800/80 hover:border-slate-700'
+                  }`}
                 >
-                  <div className="relative mb-3">
-                    <div className="size-16 sm:size-20 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 font-bold text-lg sm:text-xl flex items-center justify-center shadow">
+                  {isUserActiveSpeaker && (
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-emerald-500 text-[9px] sm:text-[10px] font-black text-slate-950 uppercase tracking-wider shadow-md animate-pulse">
+                      🔊 SPEAKING
+                    </div>
+                  )}
+
+                  <div className="relative mb-3 mt-1">
+                    <div className={`size-16 sm:size-20 rounded-full bg-slate-800/90 text-slate-300 font-bold text-lg sm:text-xl flex items-center justify-center shadow border ${
+                      isUserActiveSpeaker ? 'border-emerald-300 ring-4 ring-emerald-400/60 animate-pulse' : 'border-slate-700'
+                    }`}>
                       👤
                     </div>
                   </div>
@@ -385,9 +485,15 @@ function GroupAudioRoomPage() {
                     Participant
                   </span>
                   <div className="mt-3">
-                    <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
-                      <Mic className="size-3 text-emerald-400" /> Audio Connected
-                    </span>
+                    {isUserActiveSpeaker ? (
+                      <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-300 font-bold bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-400/40 shadow-sm">
+                        <SpeakingWaveform active={true} /> Speaking
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
+                        <Mic className="size-3 text-emerald-400" /> Audio Connected
+                      </span>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -471,20 +577,4 @@ function GroupAudioRoomPage() {
       </footer>
     </div>
   );
-
-  if (roomConfig?.token && roomConfig?.livekitUrl) {
-    return (
-      <LiveKitRoom
-        serverUrl={roomConfig.livekitUrl}
-        token={roomConfig.token}
-        audio={!micMuted}
-        video={false}
-        connect={true}
-      >
-        {roomContent}
-      </LiveKitRoom>
-    );
-  }
-
-  return roomContent;
 }

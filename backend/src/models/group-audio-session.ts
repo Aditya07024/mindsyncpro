@@ -12,6 +12,14 @@ export interface IAdmittedUser {
   admittedAt: Date;
 }
 
+export interface IPaidUser {
+  userId: Types.ObjectId;
+  amount: number;
+  paymentId?: string;
+  orderId?: string;
+  paidAt: Date;
+}
+
 export interface IGroupAudioSession extends Document {
   title: string;
   description: string;
@@ -26,6 +34,7 @@ export interface IGroupAudioSession extends Document {
   isCounselorCreated: boolean;
   waitingQueue: IWaitingUser[];
   admittedUsers: IAdmittedUser[];
+  paidUsers: IPaidUser[];
   createdBy?: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
@@ -49,6 +58,17 @@ const admittedUserSchema = new Schema<IAdmittedUser>(
   { _id: false }
 );
 
+const paidUserSchema = new Schema<IPaidUser>(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    amount: { type: Number, required: true },
+    paymentId: { type: String, default: "" },
+    orderId: { type: String, default: "" },
+    paidAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const groupAudioSessionSchema = new Schema<IGroupAudioSession>(
   {
     title: { type: String, required: true, trim: true },
@@ -68,6 +88,7 @@ const groupAudioSessionSchema = new Schema<IGroupAudioSession>(
     isCounselorCreated: { type: Boolean, default: false },
     waitingQueue: { type: [waitingUserSchema], default: [] },
     admittedUsers: { type: [admittedUserSchema], default: [] },
+    paidUsers: { type: [paidUserSchema], default: [] },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users, X } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users, X, Trash2 } from 'lucide-react';
 import API from '@/lib/api';
 import { formatAdLink, getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -1566,6 +1566,15 @@ function GroupAudioSessionsTherapistTab() {
     onError: (err: any) => toast.error(err.message || 'Failed to claim session slot'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (sessionId: string) => API.groupSessions.delete(sessionId),
+    onSuccess: (res: any) => {
+      toast.success(res?.message || 'Group audio session deleted ✓');
+      qc.invalidateQueries({ queryKey: ['group-sessions'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to delete audio session'),
+  });
+
   const approveMutation = useMutation({
     mutationFn: ({ sessionId, targetUserId, action }: { sessionId: string; targetUserId: string; action: 'allow' | 'deny' }) =>
       API.groupSessions.approveUser(sessionId, { targetUserId, action }),
@@ -1630,7 +1639,7 @@ function GroupAudioSessionsTherapistTab() {
                 key={s._id}
                 className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
               >
-                {/* Status Indicator Badge */}
+                {/* Status Indicator Badge & Delete Action */}
                 <div className="flex items-center justify-between">
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider ${
@@ -1647,9 +1656,23 @@ function GroupAudioSessionsTherapistTab() {
                     {isAssigned ? 'Occupied' : '🟢 Open for Counselor'}
                   </span>
 
-                  <span className="text-xs font-extrabold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
-                    Max 11 Users
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-extrabold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/60">
+                      Max 11 Users
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete "${s.title}"?`)) {
+                          deleteMutation.mutate(s._id);
+                        }
+                      }}
+                      disabled={deleteMutation.isPending}
+                      title="Delete Audio Session"
+                      className="p-1.5 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -1720,17 +1743,28 @@ function GroupAudioSessionsTherapistTab() {
                     <Button
                       onClick={() => claimMutation.mutate(s._id)}
                       disabled={claimMutation.isPending}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md active:scale-[0.98] transition-all"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
                     >
-                      {claimMutation.isPending ? 'Claiming Slot...' : 'Claim & Join as Counselor 🟢'}
+                      {claimMutation.isPending ? 'Assigning Slot...' : 'Assign / Claim Slot 🟢'}
                     </Button>
                   ) : (
-                    <Button
-                      onClick={() => navigate({ to: `/group-audio/$sessionId/room`, params: { sessionId: s._id } })}
-                      className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md active:scale-[0.98] transition-all"
-                    >
-                      Launch Audio Room 🎙️
-                    </Button>
+                    <div className="flex items-center gap-2 w-full">
+                      <Button
+                        onClick={() => navigate({ to: `/group-audio/$sessionId/room`, params: { sessionId: s._id } })}
+                        className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl py-2.5 text-xs shadow-md active:scale-[0.98] transition-all"
+                      >
+                        Launch Room 🎙️
+                      </Button>
+                      <Button
+                        onClick={() => claimMutation.mutate(s._id)}
+                        disabled={claimMutation.isPending}
+                        variant="outline"
+                        className="border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-2xl px-3 py-2.5 shrink-0"
+                        title="Unassign Counselor Slot"
+                      >
+                        Unassign
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>

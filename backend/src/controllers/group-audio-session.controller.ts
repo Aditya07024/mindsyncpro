@@ -143,7 +143,18 @@ export class GroupAudioSessionController {
       throw new AppError("Group audio session not found", 404);
     }
 
-    if (session.counselorId && session.counselorId.toString() !== userId.toString()) {
+    if (session.counselorId && session.counselorId.toString() === userId.toString()) {
+      session.counselorId = undefined as any;
+      session.counselorName = "";
+      await session.save();
+
+      return res.json({
+        message: "You have unassigned yourself from this session slot",
+        session,
+      });
+    }
+
+    if (session.counselorId) {
       throw new AppError("This session is already assigned to another counselor (Occupied - Red Indicator)", 400);
     }
 
@@ -365,6 +376,37 @@ export class GroupAudioSessionController {
     return res.json({
       message: "Group audio session price updated successfully",
       session,
+    });
+  });
+
+  /**
+   * DELETE /api/group-sessions/:id
+   * Delete a group audio session (Counselor or Admin)
+   */
+  static deleteSession = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const userId = req.user!.sub;
+
+    const user = await User.findById(userId).lean();
+    const isCounselorOrAdmin =
+      user?.role === "therapist" ||
+      req.user?.role === "therapist" ||
+      req.user?.role === "super_admin" ||
+      req.user?.role === "admin";
+
+    if (!isCounselorOrAdmin) {
+      throw new AppError("Only certified counselors and administrators can delete audio sessions", 403);
+    }
+
+    const session = await GroupAudioSession.findById(id);
+    if (!session) {
+      throw new AppError("Group audio session not found", 404);
+    }
+
+    await GroupAudioSession.findByIdAndDelete(id);
+
+    return res.json({
+      message: "Group audio session deleted successfully",
     });
   });
 }

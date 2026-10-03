@@ -573,6 +573,10 @@ const API = {
         method: "PUT",
         body: JSON.stringify({ price }),
       }),
+    delete: (id: string) =>
+      apiCall<{ message: string }>(`/api/group-sessions/${id}`, {
+        method: "DELETE",
+      }),
   },
 
   digitalProducts: {
