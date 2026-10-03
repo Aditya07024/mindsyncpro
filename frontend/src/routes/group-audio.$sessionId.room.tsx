@@ -279,7 +279,7 @@ function GroupAudioRoomPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative overflow-hidden transition-all duration-300 ${
-              isCounselor && isSpeaking
+              isCounselor && !micMuted && isSpeaking
                 ? 'border-teal-500 shadow-xl shadow-teal-500/20 ring-2 ring-teal-500/40 bg-slate-900/95'
                 : 'border-slate-800/80 hover:border-slate-700'
             }`}
@@ -300,13 +300,23 @@ function GroupAudioRoomPage() {
             </span>
 
             <div className="mt-3">
-              {isCounselor && isSpeaking ? (
-                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-semibold bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                  <SpeakingWaveform active={true} /> Speaking
-                </div>
+              {isCounselor ? (
+                micMuted ? (
+                  <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
+                    <MicOff className="size-3" /> Muted
+                  </span>
+                ) : isSpeaking ? (
+                  <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-emerald-400 font-semibold bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30">
+                    <SpeakingWaveform active={true} /> Speaking
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
+                    <Mic className="size-3 text-teal-400" /> Host Mic Ready
+                  </div>
+                )
               ) : (
-                <div className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
-                  <Mic className="size-3 text-teal-400" /> Host Live
+                <div className="flex items-center gap-1 text-[11px] sm:text-xs text-teal-300 bg-teal-500/10 px-2.5 py-1 rounded-full border border-teal-500/20 font-semibold">
+                  <Mic className="size-3 text-teal-400" /> Host Connected
                 </div>
               )}
             </div>
@@ -358,15 +368,12 @@ function GroupAudioRoomPage() {
           {admittedUsers
             .filter((u: any) => u.anonymousName !== participantName)
             .map((u: any, idx: number) => {
-              const speaking = (idx % 2 === 0) && isSpeaking;
               return (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={`rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border flex flex-col items-center text-center relative transition-all duration-300 ${
-                    speaking ? 'border-teal-500/80 shadow-xl shadow-teal-500/15 ring-2 ring-teal-500/30' : 'border-slate-800/80 hover:border-slate-700'
-                  }`}
+                  className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 bg-slate-900/80 backdrop-blur-md border border-slate-800/80 hover:border-slate-700 flex flex-col items-center text-center relative transition-all duration-300"
                 >
                   <div className="relative mb-3">
                     <div className="size-16 sm:size-20 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 font-bold text-lg sm:text-xl flex items-center justify-center shadow">
@@ -378,15 +385,9 @@ function GroupAudioRoomPage() {
                     Participant
                   </span>
                   <div className="mt-3">
-                    {speaking ? (
-                      <span className="flex items-center gap-1.5 text-[11px] sm:text-xs text-teal-300 bg-teal-500/15 px-2.5 py-1 rounded-full border border-teal-500/30 font-semibold">
-                        <SpeakingWaveform active={true} /> Audio Live
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
-                        <Mic className="size-3 text-slate-400" /> Connected
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1 text-[11px] sm:text-xs text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-700/50">
+                      <Mic className="size-3 text-emerald-400" /> Audio Connected
+                    </span>
                   </div>
                 </motion.div>
               );
