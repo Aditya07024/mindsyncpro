@@ -70,7 +70,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
             >
               <Play size={14} color="#FFF" fill="#FFF" style={{ marginRight: 4 }} />
               <Text style={styles.seeIntroText}>
-                🎥 Click here to see introduction of counselor
+                Click here to see introduction of counselor
               </Text>
             </TouchableOpacity>
           </View>
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#0D564D',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 30,
     borderRadius: 24,
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.4)',
