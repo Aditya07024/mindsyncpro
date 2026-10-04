@@ -69,16 +69,57 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
     }
   };
 
-  const renderSingleCard = (b: any, isCarousel: boolean = false) => {
-    const poster = b.posterUrl || b.imageUrl;
+  const renderCardContent = (b: any) => {
     const link = b.targetUrl || b.buttonLink || b.linkUrl || '';
     const badgeLabel = b.badgeText || 'FEATURED';
     const buttonLabel = b.buttonText || (link ? 'Learn More' : '');
 
-    const CardWrapperComponent = poster ? ImageBackground : View;
-    const wrapperProps = poster
-      ? { source: { uri: poster }, resizeMode: 'cover' as const }
-      : {};
+    return (
+      <LinearGradient
+        colors={[
+          'rgba(15, 23, 42, 0.35)',
+          'rgba(15, 23, 42, 0.82)',
+          'rgba(15, 23, 42, 0.98)',
+        ]}
+        locations={[0, 0.45, 1]}
+        style={styles.cardGradient}
+      >
+        {/* Badge Row */}
+        <View style={styles.badgeRow}>
+          <View style={styles.badgePill}>
+            <Sparkles size={11} color="#2DD4BF" />
+            <Text style={styles.badgeText}>{badgeLabel.toUpperCase()}</Text>
+          </View>
+        </View>
+
+        {/* Title */}
+        {b.title ? <Text style={styles.titleText}>{b.title}</Text> : null}
+
+        {/* Description */}
+        {b.description ? (
+          <Text style={styles.descText} numberOfLines={3}>
+            {b.description}
+          </Text>
+        ) : null}
+
+        {/* CTA Button */}
+        {buttonLabel ? (
+          <TouchableOpacity
+            onPress={() => handlePressAd(link)}
+            style={styles.ctaButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.ctaButtonText}>{buttonLabel}</Text>
+            <ChevronRight size={16} color="#0F172A" />
+          </TouchableOpacity>
+        ) : null}
+      </LinearGradient>
+    );
+  };
+
+  const renderSingleCard = (b: any, isCarousel: boolean = false) => {
+    const poster = b.posterUrl || b.imageUrl;
+    const link = b.targetUrl || b.buttonLink || b.linkUrl || '';
 
     return (
       <TouchableOpacity
@@ -87,47 +128,19 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
         onPress={() => link && handlePressAd(link)}
         style={[styles.cardWrapper, isCarousel ? { width: CARD_WIDTH } : styles.fullWidthCard]}
       >
-        <CardWrapperComponent {...wrapperProps} style={styles.backgroundContainer}>
-          <LinearGradient
-            colors={[
-              'rgba(15, 23, 42, 0.35)',
-              'rgba(15, 23, 42, 0.82)',
-              'rgba(15, 23, 42, 0.98)',
-            ]}
-            locations={[0, 0.45, 1]}
-            style={styles.cardGradient}
+        {poster ? (
+          <ImageBackground
+            source={{ uri: poster }}
+            resizeMode="cover"
+            style={styles.backgroundContainer}
           >
-            {/* Badge Row */}
-            <View style={styles.badgeRow}>
-              <View style={styles.badgePill}>
-                <Sparkles size={11} color="#2DD4BF" />
-                <Text style={styles.badgeText}>{badgeLabel.toUpperCase()}</Text>
-              </View>
-            </View>
-
-            {/* Title */}
-            {b.title ? <Text style={styles.titleText}>{b.title}</Text> : null}
-
-            {/* Description */}
-            {b.description ? (
-              <Text style={styles.descText} numberOfLines={3}>
-                {b.description}
-              </Text>
-            ) : null}
-
-            {/* CTA Button */}
-            {buttonLabel ? (
-              <TouchableOpacity
-                onPress={() => handlePressAd(link)}
-                style={styles.ctaButton}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.ctaButtonText}>{buttonLabel}</Text>
-                <ChevronRight size={16} color="#0F172A" />
-              </TouchableOpacity>
-            ) : null}
-          </LinearGradient>
-        </CardWrapperComponent>
+            {renderCardContent(b)}
+          </ImageBackground>
+        ) : (
+          <View style={styles.backgroundContainer}>
+            {renderCardContent(b)}
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
