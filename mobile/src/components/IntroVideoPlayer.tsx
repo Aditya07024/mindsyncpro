@@ -20,6 +20,7 @@ interface IntroVideoPlayerProps {
   fallbackName?: string;
   avatarUrl?: string;
   style?: any;
+  onVideoPress?: () => void;
 }
 
 export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
@@ -28,32 +29,17 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
   fallbackName = '',
   avatarUrl,
   style,
+  onVideoPress,
 }) => {
   const [hasError, setHasError] = useState(false);
 
   const parsed = parseVideoUrl(url);
-
-  // Fallback avatar/placeholder if no valid video URL or error
-  if (!url || !parsed.embedUrl || parsed.type === 'unknown' || hasError) {
-    return (
-      <View style={[styles.fallbackContainer, style]}>
-        {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.initialCircle}>
-            <Text style={styles.initialText}>
-              {fallbackName ? fallbackName.charAt(0).toUpperCase() : 'C'}
-            </Text>
-          </View>
-        )}
-      </View>
-    );
-  }
-
+  const hasVideo = !!url && parsed.type !== 'unknown' && !!parsed.embedUrl && !hasError;
   const isCard = mode === 'card';
 
   // In card mode (therapist list cards):
-  // Show high-res static thumbnail preview with play icon overlay (NO AUTOPLAY)
+  // Show high-res static thumbnail/avatar preview.
+  // Clicking the "🎥 Click here to see introduction of counselor" button pill opens the video modal!
   if (isCard) {
     let thumbnailUrl = avatarUrl;
     if (parsed.type === 'youtube' && parsed.id) {
@@ -74,27 +60,82 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
           </View>
         )}
 
-        {/* See Intro Video Pill Button Overlay */}
-        <View style={styles.playOverlay}>
-          <View style={styles.seeIntroPill}>
-            <Play size={13} color="#FFF" fill="#FFF" style={{ marginRight: 2 }} />
-            <Text style={styles.seeIntroText}>See Intro Video</Text>
+        {/* Video CTA Overlay Button: ONLY clicking this button triggers the video popup modal */}
+        {hasVideo && (
+          <View style={styles.playOverlay} pointerEvents="box-none">
+            <TouchableOpacity
+              onPress={onVideoPress}
+              activeOpacity={0.8}
+              style={styles.seeIntroPill}
+            >
+              <Play size={14} color="#FFF" fill="#FFF" style={{ marginRight: 4 }} />
+              <Text style={styles.seeIntroText}>
+                🎥 Click here to see introduction of counselor
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
+        )}
       </View>
     );
   }
 
-  // Modal mode: Render active video player
+  // Fallback avatar/placeholder if no valid video URL or player error in modal mode
+  if (!hasVideo) {
+    return (
+      <View style={[styles.fallbackContainer, style]}>
+        {avatarUrl ? (
+          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+        ) : (
+          <View style={styles.initialCircle}>
+            <Text style={styles.initialText}>
+              {fallbackName ? fallbackName.charAt(0).toUpperCase() : 'C'}
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // Active Video Player Mode (Modal & Therapist Detail Screen)
   let webUri = parsed.embedUrl;
+  let htmlContent: string | null = null;
+
   if (parsed.type === 'youtube') {
     webUri = `${parsed.embedUrl}?autoplay=1&rel=0&controls=1&playsinline=1`;
   } else if (parsed.type === 'vimeo') {
     webUri = `${parsed.embedUrl}?autoplay=1`;
+  } else if (parsed.type === 'direct') {
+    htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+          <style>
+            html, body { margin: 0; padding: 0; background: #000; width: 100%; height: 100%; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+            video { width: 100%; height: 100%; max-width: 100%; max-height: 100%; object-fit: contain; }
+          </style>
+        </head>
+        <body>
+          <video src="${webUri}" controls autoplay playsinline webkit-playsinline></video>
+        </body>
+      </html>
+    `;
   }
 
   // React Native Web Embed
   if (Platform.OS === 'web') {
+    if (htmlContent) {
+      return (
+        <View style={[styles.videoContainer, style]}>
+          <iframe
+            srcDoc={htmlContent}
+            style={{ width: '100%', height: '100%', border: 0 } as any}
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            onError={() => setHasError(true)}
+          />
+        </View>
+      );
+    }
     return (
       <View style={[styles.videoContainer, style]}>
         <iframe
@@ -107,12 +148,13 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     );
   }
 
-  // Native iOS & Android Fallback (react-native-webview played inline in app)
+  // Native iOS & Android WebView Player
   if (WebView) {
+    const webViewSource = htmlContent ? { html: htmlContent } : { uri: webUri };
     return (
       <View style={[styles.videoContainer, style]}>
         <WebView
-          source={{ uri: webUri }}
+          source={webViewSource}
           style={styles.fullMedia}
           javaScriptEnabled={true}
           domStorageEnabled={true}
@@ -125,7 +167,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     );
   }
 
-  // Fallback if WebView missing
+  // Fallback if WebView is not available
   return (
     <View style={[styles.fallbackContainer, style]}>
       {avatarUrl ? (
@@ -182,9 +224,10 @@ const styles = StyleSheet.create({
   },
   playOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.3)',
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 12,
   },
   seeIntroPill: {
     flexDirection: 'row',
@@ -192,20 +235,22 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#0D564D',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    paddingVertical: 10,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+    maxWidth: '92%',
   },
   seeIntroText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: Theme.fonts.bodyBold,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
+    textAlign: 'center',
   },
 });

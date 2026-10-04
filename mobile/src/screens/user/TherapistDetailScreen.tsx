@@ -4,6 +4,7 @@ import { Star, ShieldCheck, Heart, Award, ArrowLeft, PlayCircle, X, Video as Vid
 import { WebView } from 'react-native-webview';
 import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';
+import { IntroVideoPlayer } from '../../components/IntroVideoPlayer';
 
 // Utility: extract YouTube video ID from various YouTube URL formats
 const getYouTubeId = (url: string): string | null => {
@@ -83,54 +84,12 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
 
         {/* Hero Video / Avatar Section */}
         <View style={styles.videoPlaceholder}>
-          {hasVideo ? (
-            useWebViewPlayer ? (
-              Platform.OS === 'web' ? (
-                <iframe
-                  src={getEmbedUrl()}
-                  style={{ width: '100%', height: '100%', border: 'none', borderRadius: 16, objectFit: 'contain' }}
-                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-                  allowFullScreen
-                />
-              ) : (
-                <WebView
-                  source={{ uri: getEmbedUrl() }}
-                  style={styles.videoPlayer}
-                  allowsInlineMediaPlayback={true}
-                  mediaPlaybackRequiresUserAction={false}
-                  javaScriptEnabled={true}
-                  domStorageEnabled={true}
-                  allowsFullscreenVideo={true}
-                  scalesPageToFit={true}
-                  startInLoadingState={true}
-                  renderLoading={() => (
-                    <View style={styles.videoLoadingOverlay}>
-                      <ActivityIndicator size="large" color={Theme.colors.primary} />
-                    </View>
-                  )}
-                  onError={() => setVideoError(true)}
-                />
-              )
-            ) : (
-              <Video
-                ref={videoRef}
-                source={{ uri: therapist.introVideoUrl! }}
-                style={styles.videoPlayer}
-                resizeMode={ResizeMode.CONTAIN}
-                useNativeControls
-                shouldPlay
-                isLooping
-                onError={(error) => {
-                  console.error('[VideoPlayer] Playback error:', error);
-                  setVideoError(true);
-                }}
-              />
-            )
-          ) : therapist.avatarUrl ? (
-            <Image source={{ uri: therapist.avatarUrl }} style={styles.videoBg} />
-          ) : (
-            <View style={styles.avatarFallback} />
-          )}
+          <IntroVideoPlayer
+            url={therapist.introVideoUrl}
+            mode="modal"
+            fallbackName={therapist.name}
+            avatarUrl={therapist.avatarUrl}
+          />
         </View>
 
         {/* Practitioner details card */}

@@ -54,24 +54,21 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.92} style={styles.card}>
-      {/* Top Video Header (Tap video header opens video popup modal) */}
-      <TouchableOpacity
-        onPress={onVideoPress || onPress}
-        activeOpacity={0.9}
-        style={styles.videoHeader}
-      >
+      {/* Top Video Header */}
+      <View style={styles.videoHeader}>
         <IntroVideoPlayer
           url={therapist.introVideoUrl}
           mode="card"
           fallbackName={therapist.name}
           avatarUrl={therapist.avatarUrl}
+          onVideoPress={onVideoPress}
         />
         {/* Rating Floating Badge */}
-        <View style={styles.floatingRating}>
+        <View style={styles.floatingRating} pointerEvents="none">
           <Star size={13} color="#F59E0B" fill="#F59E0B" />
           <Text style={styles.floatingRatingText}>{ratingVal}</Text>
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Card Content Body */}
       <View style={styles.body}>
