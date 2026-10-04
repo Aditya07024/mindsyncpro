@@ -30,7 +30,10 @@ interface Booking {
   };
 }
 
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
+
 export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { handleScroll } = useTabBarVisibility();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [selectedPrescription, setSelectedPrescription] = useState<Booking['prescription'] | null>(null);
@@ -119,6 +122,8 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
       ) : (
         <FlatList
           data={activeTab === 'upcoming' ? upcomingBookings : pastBookings}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           keyExtractor={item => item.id || item._id || Math.random().toString()}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (

@@ -42,11 +42,14 @@ import { getNotificationsPreference } from '../../lib/pushNotifications';
 import { AdBannerCarousel } from '../../components/AdBannerCarousel';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
+
 interface DashboardScreenProps {
   navigation: any;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
+  const { handleScroll } = useTabBarVisibility();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { user } = useUser();
@@ -184,7 +187,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         navigation={navigation}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {/* Earlier White Card Stats Banner */}
         <View style={styles.statsBanner}>
           <View style={styles.statBox}>

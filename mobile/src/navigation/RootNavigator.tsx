@@ -1,10 +1,12 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { createBottomTabNavigator, BottomTabBar, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, MessageSquare, Compass, Calendar, DollarSign, Briefcase, Award, ShieldAlert, Smile, User, Users, UserCheck } from 'lucide-react-native';
 import { Theme } from '../theme';
+import { TabBarVisibilityProvider, useTabBarVisibility } from '../context/TabBarVisibilityContext';
 
 // Pre-login screens
 import LandingScreen from '../screens/landing/LandingScreen';
@@ -57,13 +59,45 @@ import SuperAdminEarningsScreen from '../screens/admin/SuperAdminEarningsScreen'
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Smooth Animated Tab Bar Container for auto-hide/reveal on scroll
+const AnimatedBottomTabBar = (props: BottomTabBarProps) => {
+  const { translateY, opacity } = useTabBarVisibility();
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }],
+      opacity: opacity.value,
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[
+        {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+        },
+        animatedStyle,
+      ]}
+    >
+      <BottomTabBar {...props} />
+    </Animated.View>
+  );
+};
+
 // 1. User Bottom Navigator
 const UserTabNavigator = () => {
   const insets = useSafeAreaInsets();
-  const bottomMargin = Math.max(insets.bottom, 12);
+  const { width: windowWidth } = useWindowDimensions();
+  const bottomMargin = Math.max(insets.bottom - 14, 10);
+  const horizontalOffset = Math.round(windowWidth * 0.05);
   
   return (
     <Tab.Navigator
+      tabBar={(props) => <AnimatedBottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
@@ -72,8 +106,8 @@ const UserTabNavigator = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomMargin,
-          left: 16,
-          right: 16,
+          left: horizontalOffset,
+          right: horizontalOffset,
           backgroundColor: '#FFFFFF',
           borderRadius: 28,
           height: 68,
@@ -148,10 +182,13 @@ const UserTabNavigator = () => {
 // 2. Therapist Bottom Navigator
 const TherapistTabNavigator = () => {
   const insets = useSafeAreaInsets();
-  const bottomMargin = Math.max(insets.bottom, 12);
+  const { width: windowWidth } = useWindowDimensions();
+  const bottomMargin = Math.max(insets.bottom - 14, 10);
+  const horizontalOffset = Math.round(windowWidth * 0.05);
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <AnimatedBottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
@@ -159,8 +196,8 @@ const TherapistTabNavigator = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomMargin,
-          left: 16,
-          right: 16,
+          left: horizontalOffset,
+          right: horizontalOffset,
           backgroundColor: '#FFFFFF',
           borderRadius: 28,
           height: 68,
@@ -227,10 +264,13 @@ const TherapistTabNavigator = () => {
 // 3. Org Bottom Navigator
 const OrgTabNavigator = () => {
   const insets = useSafeAreaInsets();
-  const bottomMargin = Math.max(insets.bottom, 12);
+  const { width: windowWidth } = useWindowDimensions();
+  const bottomMargin = Math.max(insets.bottom - 14, 10);
+  const horizontalOffset = Math.round(windowWidth * 0.05);
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <AnimatedBottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
@@ -238,10 +278,10 @@ const OrgTabNavigator = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: bottomMargin,
-          left: 16,
-          right: 16,
+          left: horizontalOffset,
+          right: horizontalOffset,
           backgroundColor: '#FFFFFF',
-          borderRadius: 28,
+          borderRadius: 30,
           height: 68,
           paddingBottom: 6,
           paddingTop: 6,
@@ -375,47 +415,49 @@ const AdminTabNavigator = () => {
 // 5. Main Root Navigator Stack
 export const RootNavigator = () => {
   return (
-    <Stack.Navigator
-      initialRouteName="Landing"
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      {/* Pre-login stack */}
-      <Stack.Screen name="Landing" component={LandingScreen} />
-      <Stack.Screen name="About" component={AboutScreen} />
-      <Stack.Screen name="Plans" component={PlansScreen} />
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="ClerkAuth" component={ClerkAuthScreen} />
-      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      <Stack.Screen name="TherapistOnboarding" component={TherapistOnboardingScreen} />
-      <Stack.Screen name="OrgOnboarding" component={OrgOnboardingScreen} />
+    <TabBarVisibilityProvider>
+      <Stack.Navigator
+        initialRouteName="Landing"
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        {/* Pre-login stack */}
+        <Stack.Screen name="Landing" component={LandingScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
+        <Stack.Screen name="Plans" component={PlansScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="ClerkAuth" component={ClerkAuthScreen} />
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="TherapistOnboarding" component={TherapistOnboardingScreen} />
+        <Stack.Screen name="OrgOnboarding" component={OrgOnboardingScreen} />
 
-      {/* Post-login tab shell stack */}
-      <Stack.Screen name="UserTabs" component={UserTabNavigator} />
-      <Stack.Screen name="TherapistTabs" component={TherapistTabNavigator} />
-      <Stack.Screen name="OrgTabs" component={OrgTabNavigator} />
-      <Stack.Screen name="AdminTabs" component={AdminTabNavigator} />
+        {/* Post-login tab shell stack */}
+        <Stack.Screen name="UserTabs" component={UserTabNavigator} />
+        <Stack.Screen name="TherapistTabs" component={TherapistTabNavigator} />
+        <Stack.Screen name="OrgTabs" component={OrgTabNavigator} />
+        <Stack.Screen name="AdminTabs" component={AdminTabNavigator} />
 
-      {/* Seeker details and modals */}
-      <Stack.Screen name="TherapistDetail" component={TherapistDetailScreen} />
-      <Stack.Screen name="Booking" component={BookingScreen} />
-      <Stack.Screen name="Breathe" component={BreatheScreen} />
-      <Stack.Screen name="Journal" component={CBTJournalScreen} />
-      <Stack.Screen name="Wallet" component={WalletScreen} />
-      <Stack.Screen name="Reports" component={ReportsScreen} />
-      <Stack.Screen name="MoodDiary" component={MoodDiaryScreen} />
-      <Stack.Screen name="Mood" component={MoodDiaryScreen} />
+        {/* Seeker details and modals */}
+        <Stack.Screen name="TherapistDetail" component={TherapistDetailScreen} />
+        <Stack.Screen name="Booking" component={BookingScreen} />
+        <Stack.Screen name="Breathe" component={BreatheScreen} />
+        <Stack.Screen name="Journal" component={CBTJournalScreen} />
+        <Stack.Screen name="Wallet" component={WalletScreen} />
+        <Stack.Screen name="Reports" component={ReportsScreen} />
+        <Stack.Screen name="MoodDiary" component={MoodDiaryScreen} />
+        <Stack.Screen name="Mood" component={MoodDiaryScreen} />
 
-      {/* Practitioner specialized overlays */}
-      <Stack.Screen name="TherapistBrief" component={TherapistBriefScreen} />
+        {/* Practitioner specialized overlays */}
+        <Stack.Screen name="TherapistBrief" component={TherapistBriefScreen} />
 
-      {/* Shared authed screens */}
-      <Stack.Screen name="Notifications" component={NotificationInboxScreen} />
-      <Stack.Screen name="Session" component={SessionScreen} />
-      <Stack.Screen name="GroupSessions" component={GroupSessionsScreen} />
-      <Stack.Screen name="GroupAudioRoom" component={GroupAudioRoomScreen} />
-    </Stack.Navigator>
+        {/* Shared authed screens */}
+        <Stack.Screen name="Notifications" component={NotificationInboxScreen} />
+        <Stack.Screen name="Session" component={SessionScreen} />
+        <Stack.Screen name="GroupSessions" component={GroupSessionsScreen} />
+        <Stack.Screen name="GroupAudioRoom" component={GroupAudioRoomScreen} />
+      </Stack.Navigator>
+    </TabBarVisibilityProvider>
   );
 };
 

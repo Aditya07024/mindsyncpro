@@ -10,6 +10,7 @@ import {
   TextInput,
   Switch,
   Share,
+  Image,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth, useUser } from '@clerk/clerk-expo';
@@ -35,11 +36,14 @@ import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
+
 interface UserProfileScreenProps {
   navigation: any;
 }
 
 export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation }) => {
+  const { handleScroll } = useTabBarVisibility();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { user: clerkUser } = useUser();
@@ -72,6 +76,8 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
     dbUser.phone ||
     dbUser.phoneMasked ||
     'Account Verified';
+
+  const finalAvatarUrl = clerkUser?.imageUrl || dbUser?.profilePicture || dbUser?.avatar;
 
   const referralCode = dbUser.referralCode || `MMTP-${(dbUser._id || dbUser.id || '').toString().slice(-6).toUpperCase()}`;
   const freeSessionCredits = dbUser.freeSessionCredits || 0;
@@ -208,13 +214,22 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
         navigation={navigation}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {/* Static User Profile Card (No modal popup on avatar) */}
         <View style={styles.userCard}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>
-              {displayName.charAt(0).toUpperCase()}
-            </Text>
+            {finalAvatarUrl ? (
+              <Image source={{ uri: finalAvatarUrl }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>
+                {displayName.charAt(0).toUpperCase()}
+              </Text>
+            )}
           </View>
 
           <View style={styles.userInfo}>
@@ -460,6 +475,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   avatarText: {
     fontFamily: Theme.fonts.display,

@@ -17,11 +17,14 @@ import { Theme } from '../../theme';
 import { TherapistCard, TherapistData } from '../../components/TherapistCard';
 import { IntroVideoPlayer } from '../../components/IntroVideoPlayer';
 
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
+
 interface TherapistListScreenProps {
   navigation: any;
 }
 
 export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ navigation }) => {
+  const { handleScroll } = useTabBarVisibility();
   const [search, setSearch] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
@@ -174,6 +177,8 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
       ) : (
         <FlatList
           data={filteredTherapists}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           keyExtractor={(item: any, index) =>
             item?._id?.toString() || item?.id?.toString() || index.toString()
           }

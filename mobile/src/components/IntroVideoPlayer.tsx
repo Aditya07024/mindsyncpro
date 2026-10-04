@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Image, Platform } from 'react-native';
 import { Play } from 'lucide-react-native';
 import { parseVideoUrl } from '../lib/video';
+import { Theme } from '../theme';
 
 // Lazily require react-native-webview on native platforms only to avoid web crash
 let WebView: any = null;
@@ -29,7 +30,6 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
   style,
 }) => {
   const [hasError, setHasError] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const parsed = parseVideoUrl(url);
 
@@ -52,65 +52,48 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
 
   const isCard = mode === 'card';
 
-  // Direct MP4 / Video File
-  if (parsed.type === 'direct') {
-    if (Platform.OS === 'web') {
-      return (
-        <View style={[styles.videoContainer, style]}>
-          <video
-            src={parsed.embedUrl}
-            autoPlay={isCard}
-            muted={isCard && !isPlaying}
-            controls={true}
-            loop={isCard}
-            playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
-            onError={() => setHasError(true)}
-          />
-        </View>
-      );
+  // In card mode (therapist list cards):
+  // Show high-res static thumbnail preview with play icon overlay (NO AUTOPLAY)
+  if (isCard) {
+    let thumbnailUrl = avatarUrl;
+    if (parsed.type === 'youtube' && parsed.id) {
+      thumbnailUrl = `https://img.youtube.com/vi/${parsed.id}/hqdefault.jpg`;
     }
 
     return (
       <View style={[styles.videoContainer, style]}>
-        <Video
-          source={{ uri: parsed.embedUrl }}
-          style={styles.fullMedia}
-          useNativeControls={true}
-          resizeMode={ResizeMode.COVER}
-          isLooping={isCard}
-          shouldPlay={isCard || isPlaying}
-          isMuted={isCard && !isPlaying}
-          onError={() => setHasError(true)}
-        />
-        {isCard && !isPlaying && (
-          <TouchableOpacity
-            style={styles.playOverlay}
-            onPress={() => setIsPlaying(true)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.playBtnCircle}>
-              <Play size={20} color="#FFF" fill="#FFF" style={{ marginLeft: 3 }} />
+        {thumbnailUrl ? (
+          <Image source={{ uri: thumbnailUrl }} style={styles.avatarImage} />
+        ) : (
+          <View style={styles.fallbackContainer}>
+            <View style={styles.initialCircle}>
+              <Text style={styles.initialText}>
+                {fallbackName ? fallbackName.charAt(0).toUpperCase() : 'C'}
+              </Text>
             </View>
-          </TouchableOpacity>
+          </View>
         )}
+
+        {/* See Intro Video Pill Button Overlay */}
+        <View style={styles.playOverlay}>
+          <View style={styles.seeIntroPill}>
+            <Play size={13} color="#FFF" fill="#FFF" style={{ marginRight: 2 }} />
+            <Text style={styles.seeIntroText}>See Intro Video</Text>
+          </View>
+        </View>
       </View>
     );
   }
 
-  // Web Embeds (YouTube, Drive, Loom, Vimeo)
+  // Modal mode: Render active video player
   let webUri = parsed.embedUrl;
   if (parsed.type === 'youtube') {
-    const embedParams = isCard
-      ? 'autoplay=1&mute=1&loop=1&playlist=' + parsed.id + '&controls=1&playsinline=1'
-      : 'autoplay=1&rel=0&controls=1&playsinline=1';
-    webUri = `${parsed.embedUrl}?${embedParams}`;
+    webUri = `${parsed.embedUrl}?autoplay=1&rel=0&controls=1&playsinline=1`;
   } else if (parsed.type === 'vimeo') {
-    const embedParams = isCard ? 'autoplay=1&muted=1&loop=1' : 'autoplay=1';
-    webUri = `${parsed.embedUrl}?${embedParams}`;
+    webUri = `${parsed.embedUrl}?autoplay=1`;
   }
 
-  // React Native Web Fallback (HTML iframe played inline in app)
+  // React Native Web Embed
   if (Platform.OS === 'web') {
     return (
       <View style={[styles.videoContainer, style]}>
@@ -199,21 +182,30 @@ const styles = StyleSheet.create({
   },
   playOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    backgroundColor: 'rgba(15, 23, 42, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  playBtnCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#0D9488',
-    justifyContent: 'center',
+  seeIntroPill: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0D564D',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 4,
+  },
+  seeIntroText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontFamily: Theme.fonts.bodyBold,
+    letterSpacing: 0.3,
   },
 });

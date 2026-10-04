@@ -106,22 +106,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </View>
           )}
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={onProfilePress || (() => activeNavigation.navigate('Profile'))} 
-          style={styles.avatarBorder}
-          activeOpacity={0.8}
-        >
-          {Boolean(finalAvatarUrl) ? (
-            <Image source={{ uri: finalAvatarUrl }} style={styles.avatarImage} />
-          ) : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarText}>
-                {(displayName || 'F').substring(0, 1).toUpperCase()}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -147,7 +131,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.primary + '10',
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
   },
