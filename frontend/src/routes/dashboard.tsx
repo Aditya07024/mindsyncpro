@@ -427,44 +427,48 @@ function Dashboard() {
                   return (
                     <div
                       key={idx}
-                      className="rounded-3xl bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 border border-emerald-500/20 p-6 text-white shadow-xl flex flex-col sm:flex-row justify-between items-stretch gap-4 relative overflow-hidden group"
+                      className="rounded-3xl bg-slate-900 border border-emerald-500/20 p-6 text-white shadow-xl flex flex-col justify-between items-stretch min-h-[180px] relative overflow-hidden group"
                     >
-                      <div className="relative z-10 flex-1 space-y-3 flex flex-col justify-between">
+                      {poster && (
+                        <img
+                          src={poster}
+                          alt="Ad Background"
+                          className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-500 group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/45 z-10" />
+
+                      <div className="relative z-20 flex-1 space-y-3 flex flex-col justify-between">
                         <div className="space-y-2">
                           {ad.badgeText && (
-                            <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+                            <span className="inline-block text-[10px] font-bold uppercase tracking-widest bg-slate-950/80 text-emerald-300 border border-emerald-500/40 px-3 py-1 rounded-full backdrop-blur-md">
                               {ad.badgeText}
                             </span>
                           )}
                           {ad.title && (
-                            <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight">
+                            <h3 className="font-display text-xl font-bold tracking-tight text-white leading-tight drop-shadow-md">
                               {ad.title}
                             </h3>
                           )}
                           {ad.description && (
-                            <p className="text-sm text-slate-200/90 leading-relaxed font-normal">
+                            <p className="text-sm text-slate-100/90 leading-relaxed font-normal drop-shadow">
                               {ad.description}
                             </p>
                           )}
                         </div>
                         {ad.buttonText && (ad.buttonLink || ad.targetUrl) && (
-                          <div className="pt-3 relative z-10">
+                          <div className="pt-3 relative z-20">
                             <a
                               href={targetLink}
                               target={isExternal ? '_blank' : '_self'}
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-md transition active:scale-[0.98]"
+                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition active:scale-[0.98]"
                             >
                               {ad.buttonText} <ChevronRight className="size-4" />
                             </a>
                           </div>
                         )}
                       </div>
-                      {poster && (
-                        <div className="sm:w-40 h-32 sm:h-auto shrink-0 rounded-2xl overflow-hidden border border-white/10 shadow-md bg-slate-950/60 relative">
-                          <img src={poster} alt="Ad Poster" className="w-full h-full object-cover" />
-                        </div>
-                      )}
                     </div>
                   );
                 })}

@@ -1,8 +1,24 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  TouchableOpacity,
+  Linking,
+  ScrollView,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight, Sparkles } from 'lucide-react-native';
 import API from '../lib/api';
 import { Theme } from '../theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH - Theme.spacing.margin * 2;
 
 interface AdBannerCarouselProps {
   target: 'user' | 'therapist';
@@ -10,6 +26,8 @@ interface AdBannerCarouselProps {
 }
 
 export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navigation }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
   const { data } = useQuery({
     queryKey: ['adBanner', target],
     queryFn: () => API.adBanner.get(target),
@@ -22,6 +40,14 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
   );
 
   if (activeBanners.length === 0) return null;
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+    if (index !== activeIndex) {
+      setActiveIndex(index);
+    }
+  };
 
   const handlePressAd = (url: string) => {
     if (!url) return;
@@ -43,107 +69,219 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {activeBanners.map((b: any, index: number) => {
-        const poster = b.posterUrl || b.imageUrl;
-        const link = b.targetUrl || b.buttonLink || b.linkUrl || '';
-        const badgeLabel = b.badgeText || 'FEATURED';
-        const buttonLabel = b.buttonText || (link ? 'Learn More →' : '');
+  const renderBannerContent = (b: any) => {
+    const link = b.targetUrl || b.buttonLink || b.linkUrl || '';
+    const badgeLabel = b.badgeText || 'FEATURED';
+    const buttonLabel = b.buttonText || (link ? 'Learn More' : '');
 
-        return (
-          <View key={b._id || index} style={styles.card}>
-            <View style={styles.textColumn}>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{badgeLabel.toUpperCase()}</Text>
-              </View>
-              {b.title ? <Text style={styles.title}>{b.title}</Text> : null}
-              {b.description ? <Text style={styles.description} numberOfLines={3}>{b.description}</Text> : null}
-
-              {buttonLabel ? (
-                <TouchableOpacity
-                  onPress={() => handlePressAd(link)}
-                  style={styles.linkBtn}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.linkBtnText}>{buttonLabel} →</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-
-            {poster ? (
-              <Image source={{ uri: poster }} style={styles.poster} resizeMode="cover" />
-            ) : null}
+    return (
+      <LinearGradient
+        colors={[
+          'rgba(15, 23, 42, 0.40)',
+          'rgba(15, 23, 42, 0.85)',
+          'rgba(15, 23, 42, 0.98)',
+        ]}
+        locations={[0, 0.5, 1]}
+        style={styles.cardGradient}
+      >
+        {/* Badge Row */}
+        <View style={styles.badgeRow}>
+          <View style={styles.badgePill}>
+            <Sparkles size={11} color="#2DD4BF" />
+            <Text style={styles.badgeText}>{badgeLabel.toUpperCase()}</Text>
           </View>
-        );
-      })}
+        </View>
+
+        {/* Title */}
+        {b.title ? <Text style={styles.titleText}>{b.title}</Text> : null}
+
+        {/* Description */}
+        {b.description ? (
+          <Text style={styles.descText} numberOfLines={3}>
+            {b.description}
+          </Text>
+        ) : null}
+
+        {/* CTA Button */}
+        {buttonLabel ? (
+          <TouchableOpacity
+            onPress={() => handlePressAd(link)}
+            style={styles.ctaButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.ctaButtonText}>{buttonLabel}</Text>
+            <ChevronRight size={16} color="#0F172A" />
+          </TouchableOpacity>
+        ) : null}
+      </LinearGradient>
+    );
+  };
+
+  return (
+    <View style={styles.outerContainer}>
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {activeBanners.map((b: any, index: number) => {
+          const poster = b.posterUrl || b.imageUrl;
+          const link = b.targetUrl || b.buttonLink || b.linkUrl || '';
+
+          return (
+            <TouchableOpacity
+              key={b._id || index}
+              activeOpacity={0.92}
+              onPress={() => link && handlePressAd(link)}
+              style={styles.cardWrapper}
+            >
+              {poster ? (
+                <ImageBackground
+                  source={{ uri: poster }}
+                  resizeMode="cover"
+                  style={styles.backgroundContainer}
+                >
+                  {renderBannerContent(b)}
+                </ImageBackground>
+              ) : (
+                <View style={styles.backgroundContainer}>
+                  {renderBannerContent(b)}
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Pagination Dot Indicator */}
+      {activeBanners.length > 1 && (
+        <View style={styles.paginationContainer}>
+          {activeBanners.map((_: any, idx: number) => (
+            <View
+              key={idx}
+              style={[
+                styles.paginationDot,
+                idx === activeIndex && styles.paginationDotActive,
+              ]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: 12,
-    gap: 12,
+  outerContainer: {
+    marginVertical: 14,
   },
-  card: {
+  scrollContent: {
+    paddingHorizontal: 0,
+  },
+  cardWrapper: {
+    width: CARD_WIDTH,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(45, 212, 191, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+    minHeight: 195,
+  },
+  backgroundContainer: {
+    width: '100%',
+    minHeight: 195,
     backgroundColor: '#0F172A',
-    borderRadius: 20,
-    padding: 16,
+  },
+  cardGradient: {
+    padding: 20,
+    minHeight: 195,
+    justifyContent: 'flex-end',
+  },
+  badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    overflow: 'hidden',
-  },
-  textColumn: {
-    flex: 1,
-    marginRight: 12,
-  },
-  badge: {
-    backgroundColor: '#0D564D',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 6,
+    borderColor: 'rgba(45, 212, 191, 0.4)',
   },
   badgeText: {
     fontFamily: Theme.fonts.display,
-    fontSize: 9,
-    color: '#ADEEE2',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    color: '#2DD4BF',
+    letterSpacing: 0.8,
   },
-  title: {
+  titleText: {
     fontFamily: Theme.fonts.display,
-    fontSize: 15,
+    fontSize: 18,
     color: '#FFFFFF',
-    marginBottom: 4,
+    lineHeight: 24,
+    marginBottom: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  description: {
+  descText: {
     fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#94A3B8',
-    lineHeight: 16,
-    marginBottom: 10,
+    fontSize: 12.5,
+    color: '#F1F5F9',
+    lineHeight: 18,
+    marginBottom: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  linkBtn: {
-    backgroundColor: '#0D564D',
+  ctaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    marginTop: 4,
-  },
-  linkBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: '#FFFFFF',
-  },
-  poster: {
-    width: 80,
-    height: 80,
+    gap: 6,
+    backgroundColor: '#2DD4BF',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     borderRadius: 14,
+    shadowColor: '#2DD4BF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  ctaButtonText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 13,
+    color: '#0F172A',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 6,
+  },
+  paginationDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#475569',
+  },
+  paginationDotActive: {
+    width: 18,
+    backgroundColor: '#2DD4BF',
   },
 });
 

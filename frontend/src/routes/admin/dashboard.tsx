@@ -22,6 +22,7 @@ import { AdminMeetingPhotosTab } from './-meeting-photos';
 import { DigitalProductsAdminManager } from '@/components/DigitalProductsAdminManager';
 import { AdminPartnersManager } from '@/components/AdminPartnersManager';
 import { AdminCareerProgramsManager } from '@/components/AdminCareerProgramsManager';
+import { ImageCropModal } from '@/components/ImageCropModal';
 
 
 export function formatAdLink(link?: string): string {
@@ -1963,6 +1964,8 @@ function AdminAdBannerTab() {
   });
 
   const [activeAdSlot, setActiveAdSlot] = useState<0 | 1>(0);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageForCrop, setRawImageForCrop] = useState('');
   const [banners, setBanners] = useState<any[]>([
     { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', targetDashboard: 'both', isActive: true },
     { title: '', description: '', imageUrl: '', buttonText: '', buttonLink: '', badgeText: '', targetDashboard: 'both', isActive: false },
@@ -2138,8 +2141,9 @@ function AdminAdBannerTab() {
                       }
                       const reader = new FileReader();
                       reader.onload = () => {
-                        updateCurrentAd("imageUrl", reader.result as string);
-                        toast.success("Banner image uploaded successfully!");
+                        const res = reader.result as string;
+                        setRawImageForCrop(res);
+                        setCropModalOpen(true);
                       };
                       reader.readAsDataURL(file);
                     }}
@@ -2154,32 +2158,54 @@ function AdminAdBannerTab() {
                 />
               </div>
 
-              {/* Image Preview & Remove Button */}
+              {/* Image Preview & Crop/Remove Buttons */}
               {current.imageUrl && (
-                <div className="relative mt-2 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-2 flex items-center gap-3">
+                <div className="relative mt-2 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-3 flex flex-col sm:flex-row items-center gap-3">
                   <img
                     src={getNormalizedPosterUrl(current.imageUrl)}
                     alt="Uploaded Ad Banner"
-                    className="w-24 h-16 object-cover rounded-xl border border-white/10"
+                    className="w-28 h-16 object-cover rounded-xl border border-white/10"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://placehold.co/400x200?text=Invalid+Image+URL';
                     }}
                   />
-                  <div className="flex-1 text-xs space-y-1">
-                    <p className="text-emerald-400 font-bold">✓ Image Ready</p>
+                  <div className="flex-1 text-xs space-y-1 text-center sm:text-left">
+                    <p className="text-emerald-400 font-bold">✓ Image Ready & Cropped</p>
                     <p className="text-slate-400 text-[10px] truncate max-w-[200px]">
                       {current.imageUrl.startsWith('data:') ? 'Base64 Uploaded File' : current.imageUrl}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => updateCurrentAd('imageUrl', '')}
-                    className="px-3 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-xs rounded-xl border border-red-800 transition"
-                  >
-                    Remove Image
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRawImageForCrop(getNormalizedPosterUrl(current.imageUrl));
+                        setCropModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-800 transition"
+                    >
+                      ✂️ Crop & Adjust
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateCurrentAd('imageUrl', '')}
+                      className="px-3 py-1.5 bg-red-950/80 hover:bg-red-900 text-red-300 font-bold text-xs rounded-xl border border-red-800 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               )}
+
+              <ImageCropModal
+                isOpen={cropModalOpen}
+                imageSrc={rawImageForCrop}
+                onClose={() => setCropModalOpen(false)}
+                onCropComplete={(croppedUrl) => {
+                  updateCurrentAd("imageUrl", croppedUrl);
+                  toast.success("Image cropped and scaled to 2:1 banner format!");
+                }}
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

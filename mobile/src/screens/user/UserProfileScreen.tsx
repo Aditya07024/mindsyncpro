@@ -310,7 +310,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
           <LogOut size={18} color="#EF4444" />
-          <Text style={styles.signOutText}>Sign Out of MyMindTherapyFriend</Text>
+          <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
 
         <Text style={styles.footerVersion}>MyMindTherapyFriend v1.0.1 · Encrypted & Confidential</Text>
