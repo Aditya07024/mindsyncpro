@@ -178,8 +178,12 @@ function Dashboard() {
     retry: false,
     enabled: !isCheckingRole,
   });
+  const userTier = dbUser?.tier || subscription?.subscription?.tier || subscription?.tier || subscription?.planId || '';
+  const userPrice = subscription?.subscription?.price || subscription?.price || 0;
+  const is499User = userTier === 'apna_therapist' || userTier === '499' || userPrice === 499;
+
   const rawBanners = adBannerData?.banners || (adBannerData?.adBanner ? [adBannerData.adBanner] : (adBannerData?.banner ? [adBannerData.banner] : []));
-  const activeBanners = rawBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
+  const activeBanners = is499User ? [] : rawBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
 
   // Next upcoming confirmed booking
   const upcomingBooking = bookingsData?.bookings

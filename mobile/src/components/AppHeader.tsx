@@ -72,9 +72,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     }
   };
 
-  const finalAvatarUrl = userImageUrl || user?.imageUrl;
+  const finalAvatarUrl = userImageUrl || user?.imageUrl || (user as any)?.profileImageUrl;
   const emailAddress = user?.primaryEmailAddress?.emailAddress || 'MyMindTherapyFriend Member';
-  const displayName = user?.fullName || userFirstName;
+  const displayName = user?.fullName || (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '') || userFirstName;
 
   return (
     <View style={[styles.headerContainer, { paddingTop: insets.top + 8 }]}>
@@ -91,21 +91,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       </View>
 
       <View style={styles.rightSection}>
-        {/* {(role === 'user' || role === 'therapist' || role === 'org_admin') && (
-          <TouchableOpacity 
-            onPress={onUpgradePress || (() => {
-              if (navigation) {
-                navigation.navigate('Plans');
-              }
-            })} 
-            style={styles.upgradeBtn}
-          >
-            <Text style={styles.upgradeText}>
-              {role === 'org_admin' ? 'Subscription' : 'Upgrade'}
-            </Text>
-          </TouchableOpacity>
-        )} */}
-
         <TouchableOpacity
           onPress={() => {
             if (navigation) {
@@ -121,124 +106,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </View>
           )}
         </TouchableOpacity>
-        
+
         <TouchableOpacity 
-          onPress={onProfilePress || (() => setModalVisible(true))} 
+          onPress={onProfilePress || (() => activeNavigation.navigate('Profile'))} 
           style={styles.avatarBorder}
+          activeOpacity={0.8}
         >
-          {finalAvatarUrl ? (
+          {Boolean(finalAvatarUrl) ? (
             <Image source={{ uri: finalAvatarUrl }} style={styles.avatarImage} />
           ) : (
             <View style={styles.avatarFallback}>
               <Text style={styles.avatarText}>
-                {displayName.substring(0, 1).toUpperCase()}
+                {(displayName || 'F').substring(0, 1).toUpperCase()}
               </Text>
             </View>
           )}
         </TouchableOpacity>
       </View>
-
-      {/* Profile Details & Sign Out Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalVisible(false)}
-        >
-          <TouchableOpacity 
-            style={styles.modalContent}
-            activeOpacity={1}
-          >
-            {/* Close Button */}
-            <TouchableOpacity 
-              onPress={() => setModalVisible(false)}
-              style={styles.closeBtn}
-            >
-              <X size={18} color={Theme.colors.onSurfaceVariant} />
-            </TouchableOpacity>
-
-            {/* Profile Info */}
-            <View style={styles.modalHeader}>
-              <View style={styles.modalAvatarBorder}>
-                {finalAvatarUrl ? (
-                  <Image source={{ uri: finalAvatarUrl }} style={styles.modalAvatarImage} />
-                ) : (
-                  <View style={styles.modalAvatarFallback}>
-                    <Text style={styles.modalAvatarText}>
-                      {displayName.substring(0, 1).toUpperCase()}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.modalName}>{displayName}</Text>
-              <Text style={styles.modalEmail}>{emailAddress}</Text>
-              <View style={styles.roleTag}>
-                <Text style={styles.roleTagText}>{role.toUpperCase().replace('_', ' ')}</Text>
-              </View>
-            </View>
-
-            {/* Actions */}
-            <View style={styles.modalActions}>
-              {role === 'user' && (
-                <>
-                  <TouchableOpacity 
-                    style={styles.upgradeActionBtn}
-                    onPress={() => {
-                      setModalVisible(false);
-                      activeNavigation.navigate('Plans');
-                    }}
-                  >
-                    <Sparkles size={18} color="#FFF" />
-                    <Text style={styles.upgradeActionText}>Upgrade Plan</Text>
-                  </TouchableOpacity>
-
-                  {/* <TouchableOpacity 
-                    style={[styles.upgradeActionBtn, { backgroundColor: Theme.colors.primaryContainer }]}
-                    onPress={() => {
-                      setModalVisible(false);
-                      activeNavigation.navigate('Wallet');
-                    }}
-                  >
-                    <Wallet size={18} color="#FFF" />
-                    <Text style={styles.upgradeActionText}>My Wallet</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={[styles.upgradeActionBtn, { backgroundColor: Theme.colors.secondary }]}
-                    onPress={() => {
-                      setModalVisible(false);
-                      activeNavigation.navigate('Reports');
-                    }}
-                  >
-                    <FileText size={18} color="#FFF" />
-                    <Text style={styles.upgradeActionText}>Wellness Reports</Text>
-                  </TouchableOpacity> */}
-                </>
-              )}
-
-              <TouchableOpacity 
-                style={styles.logoutActionBtn}
-                onPress={handleSignOut}
-              >
-                <LogOut size={18} color={Theme.colors.error} />
-                <Text style={styles.logoutActionText}>Sign Out</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.cancelActionBtn}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelActionText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 };
@@ -248,7 +132,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.margin,
+    paddingHorizontal: 16,
     paddingBottom: Theme.spacing.xs,
     backgroundColor: Theme.colors.surface,
     borderBottomWidth: 1,

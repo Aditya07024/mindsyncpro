@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity, Modal, Dimensions, Linking, ActivityIndicator, Platform } from 'react-native';
 import { Star, ShieldCheck, Heart, Award, ArrowLeft, PlayCircle, X, Video as VideoIcon, ExternalLink } from 'lucide-react-native';
-import { Video, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
 import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';

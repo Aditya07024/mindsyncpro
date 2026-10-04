@@ -33,9 +33,12 @@ export const ChatScreen: React.FC = () => {
   const scrollRef = useRef<ScrollView>(null);
 
   const keyboard = useAnimatedKeyboard();
-  const footerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -keyboard.height.value }],
-  }));
+  const footerAnimatedStyle = useAnimatedStyle(() => {
+    const tabOffset = keyboard.height.value > 0 ? Math.min(keyboard.height.value, 80) : 0;
+    return {
+      transform: [{ translateY: -keyboard.height.value + tabOffset }],
+    };
+  });
   const spacerAnimatedStyle = useAnimatedStyle(() => ({
     height: keyboard.height.value,
   }));
@@ -275,7 +278,7 @@ export const ChatScreen: React.FC = () => {
         <Animated.View style={spacerAnimatedStyle} />
       </ScrollView>
 
-      <Animated.View style={footerAnimatedStyle}>
+      <Animated.View style={[footerAnimatedStyle, { backgroundColor: 'transparent' }]} pointerEvents="box-none">
         {/* Limit Warning banner */}
         {limitHit && (
           <View style={styles.limitWarning}>
@@ -292,7 +295,7 @@ export const ChatScreen: React.FC = () => {
         )}
 
         {/* Input container */}
-        <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 8) + 80 }]}>
           <TextInput
             value={input}
             onChangeText={setInput}
@@ -491,32 +494,41 @@ const styles = StyleSheet.create({
   inputArea: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Theme.spacing.xs,
+    gap: 8,
     paddingHorizontal: Theme.spacing.margin,
-    paddingVertical: Theme.spacing.sm,
-    backgroundColor: Theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
+    paddingVertical: 4,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
   },
   chatInput: {
     flex: 1,
-    height: 48,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    paddingHorizontal: 16,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 18,
     fontSize: 14,
     fontFamily: Theme.fonts.body,
     color: Theme.colors.onSurface,
-    backgroundColor: Theme.colors.surfaceLow,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   sendBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: Theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: Theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   sendBtnDisabled: {
     opacity: 0.4,

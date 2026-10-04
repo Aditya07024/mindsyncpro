@@ -12,6 +12,7 @@ import {
   Share,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import {
   Gift,
   Copy,
@@ -26,6 +27,8 @@ import {
   ChevronRight,
   Sparkles,
   ShieldCheck,
+  Star,
+  Trash2,
 } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
@@ -38,19 +41,51 @@ interface UserProfileScreenProps {
 
 export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation }) => {
   const queryClient = useQueryClient();
+  const { signOut } = useAuth();
+  const { user: clerkUser } = useUser();
+
   const [friendCode, setFriendCode] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  // Fetch current user details
-  const { data: userData, isLoading: userLoading, refetch: refetchUser } = useQuery({
-    queryKey: ['userProfile'],
+  // Fetch current user details from API
+  const { data: authMeData, isLoading: meLoading, refetch: refetchMe } = useQuery({
+    queryKey: ['authMe'],
     queryFn: () => API.auth.me(),
   });
 
-  const user = userData?.user || userData || {};
-  const referralCode = user.referralCode || '';
-  const freeSessionCredits = user.freeSessionCredits || 0;
-  const isStudentVerified = user.studentVerified || user.userType === 'student';
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => API.user.profile(),
+  });
+
+  const dbUser = profileData?.user || authMeData || {};
+
+  // Extract user details with fallbacks
+  const displayName =
+    dbUser.fullName ||
+    clerkUser?.fullName ||
+    (clerkUser?.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : '') ||
+    'Valued Seeker';
+
+  const displayContact =
+    clerkUser?.primaryEmailAddress?.emailAddress ||
+    dbUser.phone ||
+    dbUser.phoneMasked ||
+    'Account Verified';
+
+  const referralCode = dbUser.referralCode || `MMTP-${(dbUser._id || dbUser.id || '').toString().slice(-6).toUpperCase()}`;
+  const freeSessionCredits = dbUser.freeSessionCredits || 0;
+  const isStudentVerified =
+    (dbUser.userType === 'school_student' || dbUser.userType === 'college_student') &&
+    dbUser.studentIdVerificationStatus === 'approved';
+
+  const tierRaw = dbUser.tier || 'free';
+  const tierDisplay =
+    tierRaw === 'apna_therapist'
+      ? 'Apna Therapist Plan'
+      : tierRaw === 'mann_shanti'
+      ? 'Mann Shanti Plan'
+      : 'Free Tier Plan';
 
   // Apply referral code mutation
   const applyReferralMutation = useMutation({
@@ -62,7 +97,8 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
       );
       setFriendCode('');
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-      refetchUser();
+      queryClient.invalidateQueries({ queryKey: ['authMe'] });
+      refetchMe();
     },
     onError: (err: any) => {
       Alert.alert('Referral Error', err?.message || 'Invalid referral code or code already used.');
@@ -112,7 +148,10 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
         text: 'Sign Out',
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('jwt_token');
+          try {
+            await signOut();
+          } catch (e) {}
+          await AsyncStorage.clear();
           navigation.reset({
             index: 0,
             routes: [{ name: 'Landing' }],
@@ -122,7 +161,37 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
     ]);
   };
 
-  if (userLoading) {
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      '⚠️ Delete Account',
+      'Are you sure you want to permanently delete your account and all associated data? This action CANNOT be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Permanently Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await API.account.delete();
+            } catch (e: any) {
+              console.warn('Account delete API error:', e.message);
+            }
+            try {
+              await signOut();
+            } catch (e) {}
+            await AsyncStorage.clear();
+            Alert.alert('Account Deleted', 'Your account and data have been permanently removed.');
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Landing' }],
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  if (meLoading && !dbUser.fullName) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Theme.colors.primary} />
@@ -133,19 +202,24 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
 
   return (
     <View style={styles.container}>
-      <AppHeader userFirstName={user.name?.split(' ')[0] || 'Seeker'} role="user" navigation={navigation} />
+      <AppHeader
+        userFirstName={displayName.split(' ')[0]}
+        role={dbUser.role || 'user'}
+        navigation={navigation}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* User Card */}
+        {/* Static User Profile Card (No modal popup on avatar) */}
         <View style={styles.userCard}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarText}>
-              {(user.name || user.email || 'U')[0].toUpperCase()}
+              {displayName.charAt(0).toUpperCase()}
             </Text>
           </View>
+
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user.name || 'Mental Health Seeker'}</Text>
-            <Text style={styles.userEmail}>{user.email || user.phone || 'No contact specified'}</Text>
+            <Text style={styles.userName}>{displayName}</Text>
+            <Text style={styles.userEmail}>{displayContact}</Text>
             <View style={styles.badgeRow}>
               {isStudentVerified ? (
                 <View style={[styles.roleBadge, styles.studentBadge]}>
@@ -155,7 +229,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
               ) : (
                 <View style={styles.roleBadge}>
                   <ShieldCheck size={12} color={Theme.colors.primary} />
-                  <Text style={styles.roleBadgeText}>Active Seeker</Text>
+                  <Text style={styles.roleBadgeText}>{tierDisplay}</Text>
                 </View>
               )}
             </View>
@@ -184,7 +258,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
           {/* Unique Referral Code */}
           <Text style={styles.inputLabel}>Your Unique Referral Code</Text>
           <View style={styles.referralCodeBox}>
-            <Text style={styles.referralCodeText}>{referralCode || 'MMTP-REF'}</Text>
+            <Text style={styles.referralCodeText}>{referralCode}</Text>
 
             <View style={styles.referralActions}>
               <TouchableOpacity onPress={handleCopyCode} style={styles.iconBtn}>
@@ -201,39 +275,55 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
             <Text style={{ fontWeight: '700' }}>both of you earn 1 Free Session Credit.</Text>
           </Text>
 
-          {/* Apply Friend's Code */}
-          <View style={styles.applySection}>
-            <Text style={styles.inputLabel}>Have a Friend's Referral Code?</Text>
-            <View style={styles.applyRow}>
-              <TextInput
-                style={styles.codeTextInput}
-                placeholder="Enter referral code (e.g. MMTP-1A2B)"
-                placeholderTextColor="#94A3B8"
-                value={friendCode}
-                onChangeText={setFriendCode}
-                autoCapitalize="characters"
-              />
-              <TouchableOpacity
-                style={[
-                  styles.applyBtn,
-                  (!friendCode.trim() || applyReferralMutation.isPending) && styles.btnDisabled,
-                ]}
-                disabled={!friendCode.trim() || applyReferralMutation.isPending}
-                onPress={handleApplyFriendCode}
-              >
-                {applyReferralMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Text style={styles.applyBtnText}>Apply</Text>
-                )}
-              </TouchableOpacity>
+          {/* Apply Friend's Code (renders ONLY IF not processed yet) */}
+          {dbUser && dbUser.referralPromptProcessed === false && !dbUser.referredBy && (
+            <View style={styles.applySection}>
+              <Text style={styles.inputLabel}>Have a Friend's Referral Code?</Text>
+              <View style={styles.applyRow}>
+                <TextInput
+                  style={styles.codeTextInput}
+                  placeholder="Enter referral code (e.g. MMTP-1A2B)"
+                  placeholderTextColor="#94A3B8"
+                  value={friendCode}
+                  onChangeText={setFriendCode}
+                  autoCapitalize="characters"
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.applyBtn,
+                    (!friendCode.trim() || applyReferralMutation.isPending) && styles.btnDisabled,
+                  ]}
+                  disabled={!friendCode.trim() || applyReferralMutation.isPending}
+                  onPress={handleApplyFriendCode}
+                >
+                  {applyReferralMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.applyBtnText}>Apply</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
-        {/* Quick Menu Options */}
+        {/* Account Services & Plans */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeaderTitle}>Account & Services</Text>
+          <Text style={styles.sectionHeaderTitle}>Account & Membership</Text>
+
+          {/* View Plans Button */}
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Plans')}
+          >
+            <View style={styles.menuLeft}>
+              <View style={[styles.menuIconBg, { backgroundColor: '#FEF3C7' }]}>
+                <Star size={18} color="#D97706" />
+              </View>
+              <Text style={styles.menuText}>View Membership Plans & Pricing</Text>
+            </View>
+            <ChevronRight size={18} color="#94A3B8" />
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.menuItem}
@@ -288,7 +378,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
           </TouchableOpacity>
         </View>
 
-        {/* Settings & App Preferences */}
+        {/* Preferences */}
         <View style={styles.card}>
           <Text style={styles.sectionHeaderTitle}>Preferences</Text>
 
@@ -307,11 +397,18 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
           </View>
         </View>
 
-        {/* Sign Out Button */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-          <LogOut size={18} color="#EF4444" />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        {/* Action Buttons: Sign Out & Delete Account */}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+            <LogOut size={18} color="#475569" />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.deleteAccountBtn} onPress={handleDeleteAccount}>
+            <Trash2 size={18} color="#DC2626" />
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.footerVersion}>MyMindTherapyFriend v1.0.1 · Encrypted & Confidential</Text>
       </ScrollView>
@@ -338,7 +435,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 110,
   },
   userCard: {
     flexDirection: 'row',
@@ -349,6 +446,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   avatarCircle: {
     width: 56,
@@ -361,7 +463,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: Theme.fonts.display,
-    fontSize: 22,
+    fontSize: 24,
     color: '#FFF',
   },
   userInfo: {
@@ -369,7 +471,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontFamily: Theme.fonts.display,
-    fontSize: 17,
+    fontSize: 18,
     color: '#0F172A',
   },
   userEmail: {
@@ -570,7 +672,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 4,
   },
+  actionButtonsContainer: {
+    gap: 10,
+    marginBottom: 16,
+  },
   signOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 14,
+    paddingVertical: 13,
+    gap: 8,
+  },
+  signOutText: {
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 14,
+    color: '#475569',
+  },
+  deleteAccountBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -578,14 +700,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FCA5A5',
     borderRadius: 14,
-    paddingVertical: 14,
+    paddingVertical: 13,
     gap: 8,
-    marginBottom: 16,
   },
-  signOutText: {
+  deleteAccountText: {
     fontFamily: Theme.fonts.bodyBold,
     fontSize: 14,
-    color: '#EF4444',
+    color: '#DC2626',
   },
   footerVersion: {
     fontFamily: Theme.fonts.body,

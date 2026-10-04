@@ -48,6 +48,9 @@ async function apiCall<T>(
 
 const API = {
   health: () => apiCall<{ ok: boolean }>("/api/health"),
+  account: {
+    delete: () => apiCall<any>("/api/account", { method: "DELETE" }),
+  },
   auth: {
     me: () => apiCall<any>("/api/auth/me"),
     setRole: async (role: string) => {

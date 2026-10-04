@@ -1,14 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, Alert, Switch, Linking, TextInput, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Flame, Star, Compass, BookOpen, Search, Calendar, MessageSquare, AlertCircle, LogOut, Sparkles, Wallet, FileText, Bell, BellOff, MessageCircle, ChevronRight, Users, Clock, Gift } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Flame,
+  Star,
+  Compass,
+  BookOpen,
+  MessageSquare,
+  AlertCircle,
+  Sparkles,
+  Wallet,
+  FileText,
+  MessageCircle,
+  ChevronRight,
+  Users,
+  Clock,
+  Gift,
+  Smile,
+  ShieldCheck,
+  Heart,
+  ArrowRight,
+} from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { useStore } from '../../lib/store';
 import { AppHeader } from '../../components/AppHeader';
 import { SOSButton } from '../../components/SOSButton';
 import { CrisisOverlay } from '../../components/CrisisOverlay';
-import { getNotificationsPreference, handleNotificationToggle } from '../../lib/pushNotifications';
+import { getNotificationsPreference } from '../../lib/pushNotifications';
 import { AdBannerCarousel } from '../../components/AdBannerCarousel';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 
@@ -43,8 +73,9 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     retry: false,
   });
 
-  const storeFirstName = useStore(state => state.firstName);
-  const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || storeFirstName || 'Friend';
+  const storeFirstName = useStore((state) => state.firstName);
+  const firstName =
+    profileData?.user?.fullName?.split(' ')[0] || user?.firstName || storeFirstName || 'Friend';
 
   const { data: bookingsData, refetch: refetchBookings } = useQuery({
     queryKey: ['userBookings'],
@@ -77,28 +108,45 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   const streak = userStats?.streak ?? 0;
   const freeSessionCredits = userStats?.freeSessionCredits ?? 0;
   const tierRaw = profileData?.user?.tier || 'free';
-  const tier = tierRaw === 'apna_therapist' ? 'Apna Therapist' : tierRaw === 'mann_shanti' ? 'Mann Shanti' : 'Free Tier';
+  const tier =
+    tierRaw === 'apna_therapist'
+      ? 'Apna Therapist'
+      : tierRaw === 'mann_shanti'
+      ? 'Mann Shanti'
+      : 'Free Tier';
 
   const dbUser = profileData?.user;
   const isStudentUnverified =
     (dbUser?.userType === 'school_student' || dbUser?.userType === 'college_student') &&
     dbUser?.studentIdVerificationStatus !== 'approved';
 
-  const dailyPrompt = promptData?.prompt || "What is one thought you had today that felt absolute, but might actually have nuance?";
+  const dailyPrompt =
+    promptData?.prompt ||
+    'What is one thought you had today that felt absolute, but might actually have nuance?';
 
   // Find closest upcoming session
   const bookings = bookingsData?.bookings || [];
   const upcomingBooking = bookings
-    .filter((b: any) => (b.status === 'confirmed' || b.status === 'pending') && new Date(b.slot) > new Date())
+    .filter(
+      (b: any) =>
+        (b.status === 'confirmed' || b.status === 'pending') && new Date(b.slot) > new Date()
+    )
     .sort((a: any, b: any) => new Date(a.slot).getTime() - new Date(b.slot).getTime())[0];
 
-  const requestedBookings = bookings
-    .filter((b: any) => b.status === 'confirmed' && b.journalShareState === 'requested' && new Date(b.slot) > new Date());
+  const requestedBookings = bookings.filter(
+    (b: any) =>
+      b.status === 'confirmed' &&
+      b.journalShareState === 'requested' &&
+      new Date(b.slot) > new Date()
+  );
 
   const handleRespondJournal = async (bookingId: string, approve: boolean) => {
     try {
       await API.booking.respondToJournal(bookingId, approve);
-      Alert.alert('Response Saved', approve ? 'Journal entries shared with counsellor.' : 'Share request declined.');
+      Alert.alert(
+        'Response Saved',
+        approve ? 'Journal entries shared with counsellor.' : 'Share request declined.'
+      );
       refetchBookings();
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to update journal share request.');
@@ -119,7 +167,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     setSelectedMood(moodVal);
     try {
       await API.mood.create({ score: moodVal });
-      Alert.alert('Mood Saved', 'Thank you for checking in. We have updated your daily pattern logs.');
+      Alert.alert('Mood Saved ✨', 'Thank you for checking in! Your daily log has been updated.');
     } catch (e) {
       Alert.alert('Error', 'Failed to save mood log.');
     }
@@ -129,6 +177,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     <View style={styles.container}>
       <AppHeader
         userFirstName={firstName}
+        userImageUrl={user?.imageUrl || dbUser?.profilePicture}
         role={dbUser?.role || 'user'}
         onUpgradePress={() => navigation.navigate('Plans')}
         onProfilePress={() => navigation.navigate('Profile')}
@@ -136,27 +185,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        {/* Student ID Lock Modal / Alert Banner */}
-        {isStudentUnverified && (
-          <View style={styles.studentLockBanner}>
-            <View style={styles.studentLockHeader}>
-              <AlertCircle size={20} color="#D97706" />
-              <Text style={styles.studentLockTitle}>Student Verification Required</Text>
-            </View>
-            <Text style={styles.studentLockSub}>
-              You registered as a student ({dbUser?.schoolCollegeName || 'Student'}). Please upload your Student ID Card in profile to unlock full platform features.
-            </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Profile')}
-              style={styles.studentLockBtn}
-            >
-              <Text style={styles.studentLockBtnText}>Upload Student ID →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Streak & Plan Hero Banner */}
+        {/* Earlier White Card Stats Banner */}
         <View style={styles.statsBanner}>
           <View style={styles.statBox}>
             <Flame size={20} color={Theme.colors.primary} />
@@ -170,130 +199,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <Text style={styles.statLabel}>Current Plan</Text>
           </View>
           <View style={styles.divider} />
-          <View style={styles.statBox}>
+          <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('Profile')}>
             <Gift size={20} color="#0D9488" />
             <Text style={styles.statVal}>{freeSessionCredits}</Text>
             <Text style={styles.statLabel}>Free Credits</Text>
-          </View>
+          </TouchableOpacity>
         </View>
-
-        {/* Journal Share Requests Banner */}
-        {requestedBookings.length > 0 && (
-          <View style={styles.journalShareBanner}>
-            <Text style={styles.journalShareTitle}>🔔 Counsellor Requesting CBT Journal Access</Text>
-            {requestedBookings.map((b: any) => (
-              <View key={b._id || b.id} style={styles.journalShareItem}>
-                <Text style={styles.journalShareText}>
-                  {b.therapistName || 'Your Counsellor'} requested access to view your CBT journal for session on {formatSlotTime(b.slot)}.
-                </Text>
-                <View style={styles.journalShareRow}>
-                  <TouchableOpacity
-                    style={styles.journalApproveBtn}
-                    onPress={() => handleRespondJournal(b._id || b.id, true)}
-                  >
-                    <Text style={styles.journalApproveText}>Allow Share</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.journalDeclineBtn}
-                    onPress={() => handleRespondJournal(b._id || b.id, false)}
-                  >
-                    <Text style={styles.journalDeclineText}>Decline</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Upcoming Session Reminder Card */}
-        {upcomingBooking && (
-          <View style={styles.upcomingCard}>
-            <View style={styles.upcomingHeader}>
-              <View style={styles.upcomingBadge}>
-                <Clock size={12} color="#0D564D" />
-                <Text style={styles.upcomingBadgeText}>UPCOMING COUNSELING SESSION</Text>
-              </View>
-              <Text style={styles.upcomingTime}>{formatSlotTime(upcomingBooking.slot)}</Text>
-            </View>
-            <Text style={styles.upcomingTherapist}>{upcomingBooking.therapistName || 'Counselor Session'}</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Session', { bookingId: upcomingBooking._id || upcomingBooking.id })}
-              style={styles.upcomingBtn}
-            >
-              <Text style={styles.upcomingBtnText}>Join Video Session →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Free Credits Reminder Banner */}
-        {freeSessionCredits > 0 && (
-          <View style={styles.freeCreditBanner}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Sparkles size={20} color="#D97706" />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: Theme.fonts.display, fontSize: 13.5, color: '#92400E' }}>
-                  🎁 {freeSessionCredits} Free Counseling Session Credit{freeSessionCredits > 1 ? 's' : ''} Available!
-                </Text>
-                <Text style={{ fontFamily: Theme.fonts.body, fontSize: 11.5, color: '#B45309', marginTop: 2 }}>
-                  Book a session with certified therapists using your earned referral credit.
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Therapists')}
-              style={{ backgroundColor: '#D97706', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, alignSelf: 'flex-start', marginTop: 8 }}
-            >
-              <Text style={{ color: '#FFF', fontFamily: Theme.fonts.bodyBold, fontSize: 11 }}>Book Free Session →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Target Ad Banners */}
-        <AdBannerCarousel target="user" navigation={navigation} />
-
-        {/* First-time Referral Code Prompt Card (renders ONLY IF not processed yet) */}
-        {dbUser && dbUser.referralPromptProcessed === false && !dbUser.referredBy && (
-          <View style={styles.referralPromptCard}>
-            <View style={styles.referralPromptHeader}>
-              <Gift size={20} color="#0D9488" />
-              <Text style={styles.referralPromptTitle}>Have a Friend's Referral Code?</Text>
-            </View>
-            <Text style={styles.referralPromptSub}>
-              Enter a friend's referral code to get 1 Free Counseling Session Credit!
-            </Text>
-            <View style={styles.referralPromptRow}>
-              <TextInput
-                style={styles.referralInput}
-                placeholder="Enter referral code (e.g. MMTP-1A2B)"
-                placeholderTextColor="#94A3B8"
-                value={referralCodeInput}
-                onChangeText={setReferralCodeInput}
-                autoCapitalize="characters"
-              />
-              <TouchableOpacity
-                style={[styles.referralApplyBtn, (!referralCodeInput.trim() || applyRefMutation.isPending) && { opacity: 0.5 }]}
-                disabled={!referralCodeInput.trim() || applyRefMutation.isPending}
-                onPress={() => applyRefMutation.mutate({ referralCode: referralCodeInput.trim() })}
-              >
-                {applyRefMutation.isPending ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Text style={styles.referralApplyBtnText}>Apply</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={styles.referralSkipBtn}
-              onPress={() => applyRefMutation.mutate({ skip: true })}
-            >
-              <Text style={styles.referralSkipBtnText}>Skip for now</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         {/* Today's Mood Selector */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>How are you feeling today?</Text>
+          <View style={styles.cardTitleRow}>
+            <Smile size={18} color={Theme.colors.primary} />
+            <Text style={styles.cardTitle}>How are you feeling right now?</Text>
+          </View>
           <View style={styles.moodEmojiRow}>
             {[
               { val: 1, emoji: '😞' },
@@ -303,13 +221,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               { val: 5, emoji: '🙂' },
               { val: 6, emoji: '😊' },
               { val: 7, emoji: '🥰' },
-            ].map(item => (
+            ].map((item) => (
               <TouchableOpacity
                 key={item.val}
                 onPress={() => handleMoodSelect(item.val)}
                 style={[
                   styles.moodEmojiBtn,
-                  selectedMood === item.val && styles.moodEmojiActive
+                  selectedMood === item.val && styles.moodEmojiActive,
                 ]}
               >
                 <Text style={styles.moodEmojiText}>{item.emoji}</Text>
@@ -334,8 +252,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           </TouchableOpacity>
         </View>
 
-        {/* Main Action Grid */}
-        <Text style={styles.sectionHeaderTitle}>Wellness & Counseling Tools</Text>
+        {/* Main Services Grid */}
+        <Text style={styles.sectionHeaderTitle}>Wellness & Therapy Services</Text>
 
         <View style={styles.gridContainer}>
           <TouchableOpacity
@@ -345,8 +263,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <View style={[styles.gridIconCircle, { backgroundColor: '#CCFBF1' }]}>
               <Compass size={22} color={Theme.colors.primary} />
             </View>
-            <Text style={styles.gridCardTitle}>Book Therapy</Text>
-            <Text style={styles.gridCardSub}>Connect 1-on-1 with expert psychologists</Text>
+            <Text style={styles.gridCardTitle}>1-on-1 Therapy</Text>
+            <Text style={styles.gridCardSub}>Book sessions with verified psychologists</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -357,18 +275,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <Users size={22} color="#16A34A" />
             </View>
             <Text style={styles.gridCardTitle}>Live Audio Rooms</Text>
-            <Text style={styles.gridCardSub}>100% Anonymous group sessions</Text>
+            <Text style={styles.gridCardSub}>100% Anonymous group peer audio</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.gridCard, { backgroundColor: '#FFF7ED', borderColor: '#FFEDD5' }]}
-            onPress={() => navigation.navigate('Chat')}
+            onPress={() => navigation.navigate('Journal')}
           >
             <View style={[styles.gridIconCircle, { backgroundColor: '#FFEDD5' }]}>
-              <MessageSquare size={22} color="#EA580C" />
+              <FileText size={22} color="#EA580C" />
             </View>
-            <Text style={styles.gridCardTitle}>Manas AI Support</Text>
-            <Text style={styles.gridCardSub}>24/7 CBT-guided conversational AI</Text>
+            <Text style={styles.gridCardTitle}>CBT Journal</Text>
+            <Text style={styles.gridCardSub}>Record reflections & reframe thoughts</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -379,13 +297,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <BookOpen size={22} color="#4F46E5" />
             </View>
             <Text style={styles.gridCardTitle}>Guided Breathing</Text>
-            <Text style={styles.gridCardSub}>Calm anxiety & regulate mood</Text>
+            <Text style={styles.gridCardSub}>Anxiety relief & mood regulation</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Secondary Services Navigation */}
+        {/* Quick Account Navigation */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Account Services</Text>
+          <Text style={styles.cardTitle}>Account Tools & Reports</Text>
 
           <TouchableOpacity
             style={styles.menuRow}
@@ -412,9 +330,22 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('MoodDiary')}
+          >
+            <View style={styles.menuLeft}>
+              <View style={[styles.menuIconBg, { backgroundColor: '#FFF7ED' }]}>
+                <Smile size={18} color="#EA580C" />
+              </View>
+              <Text style={styles.menuText}>Mood Tracker & Pattern Reflections</Text>
+            </View>
+            <ChevronRight size={18} color="#94A3B8" />
+          </TouchableOpacity>
         </View>
 
-        {/* WhatsApp Support Community Card */}
+        {/* WhatsApp Community Card */}
         <View style={styles.whatsappCard}>
           <View style={styles.whatsappHeader}>
             <View style={styles.whatsappIconBox}>
@@ -436,8 +367,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         </View>
       </ScrollView>
 
-      {/* Floating SOS Crisis Button & Overlay */}
-      <SOSButton onPress={() => setCrisisOpen(true)} />
+      {/* Floating SOS Crisis Button & Overlay (Floats above floating tab bar) */}
+      <SOSButton onPress={() => setCrisisOpen(true)} bottomOffset={90} />
       <CrisisOverlay open={crisisOpen} onClose={() => setCrisisOpen(false)} />
     </View>
   );
@@ -449,8 +380,61 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 110,
+  },
+  welcomeContainer: {
+    marginBottom: 12,
+    marginTop: 2,
+  },
+  welcomeGreeting: {
+    fontFamily: Theme.fonts.display,
+    fontSize: 22,
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  welcomeSubtext: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  statsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderRadius: Theme.radius.xl,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statVal: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 15,
+    color: '#0F172A',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontFamily: Theme.fonts.bodyMedium,
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  divider: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#E2E8F0',
   },
   studentLockBanner: {
     backgroundColor: '#FEF3C7',
@@ -489,42 +473,6 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fonts.bodyBold,
     fontSize: 12,
     color: '#FFF',
-  },
-  statsBanner: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.margin,
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  statBox: {
-    alignItems: 'center',
-  },
-  statVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-    marginTop: 4,
-  },
-  statLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  divider: {
-    width: 1,
-    height: 32,
-    backgroundColor: Theme.colors.surfaceHigh,
   },
   journalShareBanner: {
     backgroundColor: '#FEF2F2',
@@ -631,14 +579,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#0F2926',
   },
-  freeCreditBanner: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.margin,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
   referralPromptCard: {
     backgroundColor: '#FFF',
     borderRadius: Theme.radius.xl,
@@ -724,16 +664,22 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: Theme.spacing.sm,
+  },
   cardTitle: {
     fontFamily: Theme.fonts.display,
     fontSize: 15,
     color: Theme.colors.onSurface,
-    marginBottom: Theme.spacing.sm,
   },
   moodEmojiRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 4,
   },
   moodEmojiBtn: {
     padding: Theme.spacing.xs,
@@ -801,14 +747,17 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Theme.spacing.sm,
+    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: Theme.spacing.margin,
   },
   gridCard: {
     width: '48%',
+    maxWidth: '48%',
     borderRadius: Theme.radius.xl,
     padding: Theme.spacing.md,
     borderWidth: 1,
+    minHeight: 130,
   },
   gridIconCircle: {
     width: 40,

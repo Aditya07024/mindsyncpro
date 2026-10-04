@@ -48,13 +48,30 @@ function MyBookings() {
 
 
 
+  const { data: userProfile } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => API.auth.me().catch(() => null),
+    retry: false,
+  });
+
+  const { data: subData } = useQuery({
+    queryKey: ['userSubscription'],
+    queryFn: () => API.subscription.get().catch(() => null),
+    retry: false,
+  });
+
   const { data: adBannerData } = useQuery({
     queryKey: ['adBanner'],
     queryFn: () => API.adBanner.get(),
     retry: false,
   });
+
+  const userTier = userProfile?.tier || subData?.subscription?.tier || subData?.tier || subData?.planId || '';
+  const userPrice = subData?.subscription?.price || subData?.price || 0;
+  const is499User = userTier === 'apna_therapist' || userTier === '499' || userPrice === 499;
+
   const rawBanners = adBannerData?.banners || (adBannerData?.adBanner ? [adBannerData.adBanner] : (adBannerData?.banner ? [adBannerData.banner] : []));
-  const activeBanners = rawBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
+  const activeBanners = is499User ? [] : rawBanners.filter((b: any) => b && b.isActive !== false && (b.title || b.description));
 
   const rateMutation = useMutation({
     mutationFn: ({ id, rating, feedback }: { id: string; rating: number; feedback: string }) =>

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
-import { Star, ShieldCheck } from 'lucide-react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
+import { Star, ShieldCheck, Clock, MessageCircle, MapPin } from 'lucide-react-native';
 import { Theme } from '../theme';
+import { IntroVideoPlayer } from './IntroVideoPlayer';
 
 export interface TherapistData {
   _id: string;
@@ -24,207 +25,298 @@ export interface TherapistData {
   gender?: string;
   city?: string;
   state?: string;
+  location?: string;
+  sessionCount?: number;
 }
 
 interface TherapistCardProps {
   therapist: TherapistData;
   onPress: () => void;
+  onVideoPress?: () => void;
   onBookPress?: () => void;
+  isOrgCovered?: boolean;
+  orgName?: string;
 }
 
 export const TherapistCard: React.FC<TherapistCardProps> = ({
   therapist,
   onPress,
+  onVideoPress,
   onBookPress,
+  isOrgCovered = false,
+  orgName,
 }) => {
-  const specs = therapist.specialties && therapist.specialties.length > 0
-    ? therapist.specialties.slice(0, 2).join(', ')
-    : 'Mental Health Counselor';
+  const specsList = therapist.specializations || therapist.specialties || (therapist.specialty ? [therapist.specialty] : ['Counseling', 'Mental Wellness']);
+  const languagesList = therapist.languages && therapist.languages.length > 0 ? therapist.languages : ['English', 'Hindi'];
+  const ratingVal = therapist.rating ? therapist.rating.toFixed(1) : '4.9';
+  const feeVal = therapist.sessionFee || therapist.hourlyRate || 1500;
+  const locationText = therapist.location || (therapist.city ? `${therapist.city}${therapist.state ? `, ${therapist.state}` : ''}` : 'Online');
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.card}>
-      <View style={styles.contentRow}>
-        <View style={styles.avatarContainer}>
-          {therapist.avatarUrl ? (
-            <Image source={{ uri: therapist.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarFallbackText}>
-                {therapist.name.substring(0, 1).toUpperCase()}
-              </Text>
-            </View>
-          )}
-          {therapist.verified && (
-            <View style={styles.verifyBadge}>
-              <ShieldCheck size={12} color="#FFF" />
-            </View>
-          )}
+    <TouchableOpacity onPress={onPress} activeOpacity={0.92} style={styles.card}>
+      {/* Top Video Header (Tap video header opens video popup modal) */}
+      <TouchableOpacity
+        onPress={onVideoPress || onPress}
+        activeOpacity={0.9}
+        style={styles.videoHeader}
+      >
+        <IntroVideoPlayer
+          url={therapist.introVideoUrl}
+          mode="card"
+          fallbackName={therapist.name}
+          avatarUrl={therapist.avatarUrl}
+        />
+        {/* Rating Floating Badge */}
+        <View style={styles.floatingRating}>
+          <Star size={13} color="#F59E0B" fill="#F59E0B" />
+          <Text style={styles.floatingRatingText}>{ratingVal}</Text>
         </View>
+      </TouchableOpacity>
 
-        <View style={styles.infoSection}>
-          <View style={styles.nameRow}>
+      {/* Card Content Body */}
+      <View style={styles.body}>
+        {/* Name & Verification */}
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.nameText} numberOfLines={1}>
               {therapist.name}
             </Text>
-            <View style={styles.ratingRow}>
-              <Star size={14} color={Theme.colors.gold} fill={Theme.colors.gold} />
-              <Text style={styles.ratingText}>{therapist.rating?.toFixed(1) || '5.0'}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.specialtyText} numberOfLines={1}>
-            {specs}
-          </Text>
-
-          <Text style={styles.expText}>
-            {therapist.experience || 3}+ years experience
-          </Text>
-
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Hourly Session</Text>
-            <Text style={styles.priceValue}>
-              ₹{therapist.sessionFee || therapist.hourlyRate || 1500}
-            </Text>
+            {therapist.verified && (
+              <View style={styles.verifiedBadge}>
+                <ShieldCheck size={11} color="#0284C7" />
+                <Text style={styles.verifiedText}>Counsellor Verified</Text>
+              </View>
+            )}
           </View>
         </View>
-      </View>
 
-      {onBookPress && (
-        <TouchableOpacity onPress={onBookPress} style={styles.bookBtn}>
-          <Text style={styles.bookBtnText}>Book Session</Text>
-        </TouchableOpacity>
-      )}
+        {/* Bio Snippet */}
+        {therapist.bio ? (
+          <Text style={styles.bioText} numberOfLines={2}>
+            {therapist.bio}
+          </Text>
+        ) : (
+          <Text style={styles.bioText} numberOfLines={2}>
+            Experienced compassionate counselor offering evidence-based therapy and guidance.
+          </Text>
+        )}
+
+        {/* Specialization Chips */}
+        <View style={styles.specsRow}>
+          {specsList.slice(0, 3).map((spec, idx) => (
+            <View key={idx} style={styles.specChip}>
+              <Text style={styles.specChipText}>{spec}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Meta Info Row: Experience/Sessions, Language, Location */}
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Clock size={13} color="#64748B" />
+            <Text style={styles.metaText}>
+              {therapist.sessionCount ? `${therapist.sessionCount} sessions` : `${therapist.experience || 3}+ yrs exp`}
+            </Text>
+          </View>
+
+          <View style={styles.metaItem}>
+            <MessageCircle size={13} color="#64748B" />
+            <Text style={styles.metaText}>{languagesList[0]}</Text>
+          </View>
+
+          <View style={styles.metaItem}>
+            <MapPin size={13} color="#64748B" />
+            <Text style={styles.metaText} numberOfLines={1}>{locationText}</Text>
+          </View>
+        </View>
+
+        {/* Footer: Fee / Coverage & CTA Button */}
+        <View style={styles.footerRow}>
+          <View style={styles.priceContainer}>
+            {isOrgCovered ? (
+              <View>
+                <Text style={styles.freeOrgBadge}>FREE (Org Covered)</Text>
+                {orgName && <Text style={styles.orgSubText}>{orgName}</Text>}
+              </View>
+            ) : (
+              <View>
+                <Text style={styles.priceAmount}>₹{feeVal}</Text>
+                <Text style={styles.pricePeriod}>per 45 min session</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={onBookPress || onPress}
+            style={styles.bookButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.bookButtonText}>Book Session</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.sm,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    marginBottom: Theme.spacing.sm,
-    shadowColor: '#2E6E65',
+    borderColor: '#E2E8F0',
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
     elevation: 3,
   },
-  contentRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  avatarContainer: {
+  videoHeader: {
+    width: '100%',
+    height: 180,
+    backgroundColor: '#0F172A',
     position: 'relative',
-    width: 70,
-    height: 70,
-    borderRadius: Theme.radius.lg,
-    overflow: 'hidden',
   },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  avatarFallback: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Theme.colors.primaryContainer,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarFallbackText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 24,
-  },
-  verifyBadge: {
+  floatingRating: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
-    backgroundColor: Theme.colors.primary,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FFF',
-  },
-  infoSection: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  nameRow: {
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: Theme.spacing.xs,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  floatingRatingText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  body: {
+    padding: 14,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   nameText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  ratingRow: {
+  verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: Theme.colors.surfaceLow,
-    paddingHorizontal: 6,
+    gap: 4,
+    marginTop: 2,
+    backgroundColor: '#E0F2FE',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: Theme.radius.sm,
+    borderRadius: 12,
   },
-  ratingText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.onSurface,
+  verifiedText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#0369A1',
   },
-  specialtyText: {
-    fontFamily: Theme.fonts.bodyMedium,
+  bioText: {
     fontSize: 13,
-    color: Theme.colors.primaryContainer,
-    marginTop: 2,
+    color: '#475569',
+    lineHeight: 18,
+    marginVertical: 6,
   },
-  expText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-  },
-  priceRow: {
+  specsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Theme.spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceLow,
-    paddingTop: Theme.spacing.xs - 2,
+    flexWrap: 'wrap',
+    gap: 6,
+    marginVertical: 6,
   },
-  priceLabel: {
-    fontFamily: Theme.fonts.body,
+  specChip: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 14,
+  },
+  specChipText: {
     fontSize: 11,
-    color: Theme.colors.textMuted,
+    fontWeight: '500',
+    color: '#334155',
   },
-  priceValue: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 15,
-    color: Theme.colors.secondary,
-  },
-  bookBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 10,
-    borderRadius: Theme.radius.full,
+  metaRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Theme.spacing.sm,
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    marginVertical: 4,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  bookBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  priceContainer: {
+    justifyContent: 'center',
+  },
+  priceAmount: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  pricePeriod: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: -2,
+  },
+  freeOrgBadge: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#059669',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+  },
+  orgSubText: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  bookButton: {
+    backgroundColor: '#0D564D',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  bookButtonText: {
+    color: '#FFFFFF',
     fontSize: 13,
+    fontWeight: '700',
   },
 });
-export default TherapistCard;

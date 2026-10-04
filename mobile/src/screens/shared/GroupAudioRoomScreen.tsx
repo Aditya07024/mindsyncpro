@@ -22,9 +22,16 @@ import {
   UserX,
   AlertTriangle,
 } from 'lucide-react-native';
-import { Audio } from 'expo-av';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
+
+// Safely lazy load Audio from expo-av to prevent ExponentAV crashes in Expo Go 57
+let ExpoAudio: any = null;
+try {
+  ExpoAudio = require('expo-av')?.Audio;
+} catch (e) {
+  // ExponentAV module not present in Expo Go 57
+}
 
 interface GroupAudioRoomScreenProps {
   navigation: any;
@@ -83,9 +90,9 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
           } else {
             setHasMicPermission(true);
           }
-        } else {
+        } else if (ExpoAudio) {
           // Request permissions via expo-av
-          const { status } = await Audio.requestPermissionsAsync();
+          const { status } = await ExpoAudio.requestPermissionsAsync();
           if (!isMounted) return;
 
           if (status !== 'granted') {
@@ -103,23 +110,31 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
           setPermissionError(null);
 
           // Configure audio mode for voice call / live communication
-          await Audio.setAudioModeAsync({
-            allowsRecordingIOS: true,
-            playsInSilentModeIOS: true,
-            staysActiveInBackground: true,
-            shouldDuckAndroid: true,
-            playThroughEarpieceAndroid: false,
-          });
+          if (ExpoAudio.setAudioModeAsync) {
+            await ExpoAudio.setAudioModeAsync({
+              allowsRecordingIOS: true,
+              playsInSilentModeIOS: true,
+              staysActiveInBackground: true,
+              shouldDuckAndroid: true,
+              playThroughEarpieceAndroid: false,
+            });
+          }
 
           // Prepare & start local recording stream for live audio mic feedback
-          const { recording } = await Audio.Recording.createAsync(
-            Audio.RecordingOptionsPresets.HIGH_QUALITY
-          );
-          if (!isMounted) {
-            await recording.stopAndUnloadAsync();
-            return;
+          if (ExpoAudio.Recording?.createAsync) {
+            const { recording } = await ExpoAudio.Recording.createAsync(
+              ExpoAudio.RecordingOptionsPresets.HIGH_QUALITY
+            );
+            if (!isMounted) {
+              await recording.stopAndUnloadAsync();
+              return;
+            }
+            recordingRef.current = recording;
           }
-          recordingRef.current = recording;
+        } else {
+          // Fallback when ExpoAudio native module is not present in runtime (e.g. Expo Go 57)
+          setHasMicPermission(true);
+          setPermissionError(null);
         }
       } catch (err: any) {
         console.warn('Error setting up microphone:', err);

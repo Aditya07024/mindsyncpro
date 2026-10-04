@@ -39,7 +39,9 @@ interface SessionScreenProps {
 }
 
 export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation }) => {
-  const { bookingId, role } = route.params || {};
+  const { bookingId } = route.params || {};
+  const role = (route.params?.role || 'user') as 'user' | 'therapist';
+  const isTherapist = role === 'therapist';
   const queryClient = useQueryClient();
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
@@ -198,8 +200,8 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
 
   // Hang up action
   const handleHangUp = () => {
-    if (role === 'user') {
-      // Seeker leaves call -> show rating popup immediately
+    if (!isTherapist) {
+      // Seeker leaves call -> show rating popup immediately and return to UserTabs
       navigation.replace('UserTabs', { screen: 'Bookings' });
       setTimeout(() => {
         Alert.alert(
@@ -241,7 +243,7 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
         );
       }, 600);
     } else {
-      // Therapist leaves call -> auto save first, then navigate
+      // Therapist leaves call -> auto save first, then navigate to TherapistTabs
       (async () => {
         try {
           await API.booking.savePrescription(bookingId, {

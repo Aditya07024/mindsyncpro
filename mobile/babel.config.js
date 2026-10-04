@@ -3,11 +3,5 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: ['babel-plugin-transform-import-meta'],
-    overrides: [
-      {
-        test: /[\\/]node_modules[\\/]/,
-        plugins: ['babel-plugin-transform-import-meta']
-      }
-    ]
   };
 };

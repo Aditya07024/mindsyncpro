@@ -34,6 +34,24 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
     retry: false,
   });
 
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => API.user.profile().catch(() => null),
+    retry: false,
+  });
+
+  const { data: subData } = useQuery({
+    queryKey: ['userSubscription'],
+    queryFn: () => API.subscription.get().catch(() => null),
+    retry: false,
+  });
+
+  const tier = profileData?.user?.tier || subData?.subscription?.tier || subData?.tier || subData?.planId || '';
+  const price = subData?.subscription?.price || subData?.price || 0;
+  const is499Plan = tier === 'apna_therapist' || tier === '499' || price === 499;
+
+  if (is499Plan) return null;
+
   const rawBanners = data?.banners || (data?.adBanner ? [data.adBanner] : (data?.banner ? [data.banner] : []));
   const activeBanners = rawBanners.filter(
     (b: any) => b && b.isActive !== false && (b.title || b.description || b.imageUrl || b.posterUrl)

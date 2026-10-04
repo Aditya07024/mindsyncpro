@@ -60,26 +60,44 @@ const Tab = createBottomTabNavigator();
 // 1. User Bottom Navigator
 const UserTabNavigator = () => {
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 15) : Math.max(insets.bottom, 8);
+  const bottomMargin = Math.max(insets.bottom, 12);
   
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
-        tabBarInactiveTintColor: Theme.colors.outline,
+        tabBarInactiveTintColor: '#64748B',
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor: '#FFF',
-          borderTopWidth: 1,
-          borderTopColor: Theme.colors.surfaceHigh,
-          height: 60 + bottomPadding,
-          paddingBottom: bottomPadding,
-          paddingTop: 8,
+          position: 'absolute',
+          bottom: bottomMargin,
+          left: 16,
+          right: 16,
+          backgroundColor: '#FFFFFF',
+          borderRadius: 28,
+          height: 68,
+          paddingBottom: 6,
+          paddingTop: 6,
+          borderTopWidth: 0,
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 10,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 0,
         },
         tabBarLabelStyle: {
           fontFamily: Theme.fonts.bodyBold,
           fontSize: 10,
+          marginTop: 1,
+          marginBottom: 0,
         }
       }}
     >
@@ -88,7 +106,7 @@ const UserTabNavigator = () => {
         component={UserDashboardScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />
+          tabBarIcon: ({ color }) => <Home size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -96,7 +114,7 @@ const UserTabNavigator = () => {
         component={ChatScreen}
         options={{
           tabBarLabel: 'Manas AI',
-          tabBarIcon: ({ color, size }) => <MessageSquare size={size} color={color} />
+          tabBarIcon: ({ color }) => <MessageSquare size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -104,7 +122,7 @@ const UserTabNavigator = () => {
         component={TherapistListScreen}
         options={{
           tabBarLabel: 'Therapists',
-          tabBarIcon: ({ color, size }) => <Compass size={size} color={color} />
+          tabBarIcon: ({ color }) => <Compass size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -112,7 +130,7 @@ const UserTabNavigator = () => {
         component={UserBookingsScreen}
         options={{
           tabBarLabel: 'Sessions',
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />
+          tabBarIcon: ({ color }) => <Calendar size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -120,7 +138,7 @@ const UserTabNavigator = () => {
         component={UserProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />
+          tabBarIcon: ({ color }) => <User size={19} color={color} />
         }}
       />
     </Tab.Navigator>
@@ -130,25 +148,43 @@ const UserTabNavigator = () => {
 // 2. Therapist Bottom Navigator
 const TherapistTabNavigator = () => {
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 15) : Math.max(insets.bottom, 8);
+  const bottomMargin = Math.max(insets.bottom, 12);
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
-        tabBarInactiveTintColor: Theme.colors.outline,
+        tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          backgroundColor: '#FFF',
-          borderTopWidth: 1,
-          borderTopColor: Theme.colors.surfaceHigh,
-          height: 60 + bottomPadding,
-          paddingBottom: bottomPadding,
-          paddingTop: 8,
+          position: 'absolute',
+          bottom: bottomMargin,
+          left: 16,
+          right: 16,
+          backgroundColor: '#FFFFFF',
+          borderRadius: 28,
+          height: 68,
+          paddingBottom: 6,
+          paddingTop: 6,
+          borderTopWidth: 0,
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 10,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 0,
         },
         tabBarLabelStyle: {
           fontFamily: Theme.fonts.bodyBold,
           fontSize: 10,
+          marginTop: 1,
+          marginBottom: 0,
         }
       }}
     >
@@ -157,7 +193,7 @@ const TherapistTabNavigator = () => {
         component={TherapistDashboardScreen}
         options={{
           tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <Briefcase size={size} color={color} />
+          tabBarIcon: ({ color }) => <Briefcase size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -165,7 +201,7 @@ const TherapistTabNavigator = () => {
         component={TherapistScheduleScreen}
         options={{
           tabBarLabel: 'Schedule',
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />
+          tabBarIcon: ({ color }) => <Calendar size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -173,7 +209,7 @@ const TherapistTabNavigator = () => {
         component={TherapistEarningsScreen}
         options={{
           tabBarLabel: 'Earnings',
-          tabBarIcon: ({ color, size }) => <DollarSign size={size} color={color} />
+          tabBarIcon: ({ color }) => <DollarSign size={19} color={color} />
         }}
       />
       <Tab.Screen 
@@ -181,7 +217,7 @@ const TherapistTabNavigator = () => {
         component={TherapistProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />
+          tabBarIcon: ({ color }) => <User size={19} color={color} />
         }}
       />
     </Tab.Navigator>
@@ -191,25 +227,43 @@ const TherapistTabNavigator = () => {
 // 3. Org Bottom Navigator
 const OrgTabNavigator = () => {
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 15) : Math.max(insets.bottom, 8);
+  const bottomMargin = Math.max(insets.bottom, 12);
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: Theme.colors.primary,
-        tabBarInactiveTintColor: Theme.colors.outline,
+        tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          backgroundColor: '#FFF',
-          borderTopWidth: 1,
-          borderTopColor: Theme.colors.surfaceHigh,
-          height: 60 + bottomPadding,
-          paddingBottom: bottomPadding,
-          paddingTop: 8,
+          position: 'absolute',
+          bottom: bottomMargin,
+          left: 16,
+          right: 16,
+          backgroundColor: '#FFFFFF',
+          borderRadius: 28,
+          height: 68,
+          paddingBottom: 6,
+          paddingTop: 6,
+          borderTopWidth: 0,
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
+          shadowColor: '#0F172A',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
+          elevation: 10,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 0,
         },
         tabBarLabelStyle: {
           fontFamily: Theme.fonts.bodyBold,
           fontSize: 10,
+          marginTop: 1,
+          marginBottom: 0,
         }
       }}
     >
@@ -218,7 +272,7 @@ const OrgTabNavigator = () => {
         component={OrgDashboardScreen}
         options={{
           tabBarLabel: 'Overview',
-          tabBarIcon: ({ color, size }) => <Award size={size} color={color} />
+          tabBarIcon: ({ color }) => <Award size={19} color={color} />
         }}
       />
       <Tab.Screen 
