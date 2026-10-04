@@ -137,14 +137,6 @@ function TherapistOnboarding() {
                       <option value="10 to 15 yr">10 to 15 years</option>
                       <option value="more than 15 yr">&gt; 15 years</option>
                     </select>
-                    {formData.experienceCategory && (
-                      <p className="text-xs text-primary mt-1 font-medium">
-                        Session Fee set to: ₹
-                        {formData.experienceCategory === 'less than 5 yr' ? 899 :
-                         formData.experienceCategory === '5 to 10 yr' ? 1299 :
-                         formData.experienceCategory === '10 to 15 yr' ? 1599 : 2199}
-                      </p>
-                    )}
                   </div>
                 </div>
 

@@ -173,10 +173,8 @@ export class AuthController {
       // Ensure they have the therapist role now, but verification is pending
       user.role = "therapist";
 
-      let sessionFee = 899; // Default
-      if (experienceCategory === "5 to 10 yr") sessionFee = 1299;
-      else if (experienceCategory === "10 to 15 yr") sessionFee = 1599;
-      else if (experienceCategory === "more than 15 yr") sessionFee = 2199;
+      // Session fee is exclusively decided and managed by platform Admin upon verification
+      const sessionFee = 0;
       
       user.therapistProfile = {
         name: fullName || user.fullName || "",
