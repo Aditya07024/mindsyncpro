@@ -212,9 +212,9 @@ const UserSchema = new Schema<IUser>(
 );
 
 UserSchema.pre("save", function (next) {
-  if (!this.referralCode) {
-    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-    this.referralCode = `MMTP-${randomStr}`;
+  if (!this.referralCode && this._id) {
+    const codeSuffix = this._id.toString().slice(-6).toUpperCase();
+    this.referralCode = `MMTP-${codeSuffix}`;
   }
   next();
 });

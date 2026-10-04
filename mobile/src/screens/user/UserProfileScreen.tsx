@@ -36,6 +36,7 @@ import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import Animated from 'react-native-reanimated';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 
 interface UserProfileScreenProps {
@@ -43,7 +44,7 @@ interface UserProfileScreenProps {
 }
 
 export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation }) => {
-  const { handleScroll } = useTabBarVisibility();
+  const { scrollHandler } = useTabBarVisibility();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { user: clerkUser } = useUser();
@@ -214,10 +215,10 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
         navigation={navigation}
       />
 
-      <ScrollView 
+      <Animated.ScrollView 
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
         {/* Static User Profile Card (No modal popup on avatar) */}
@@ -426,7 +427,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
         </View>
 
         <Text style={styles.footerVersion}>MyMindTherapyFriend v1.0.1 · Encrypted & Confidential</Text>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };

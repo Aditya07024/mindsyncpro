@@ -30,10 +30,11 @@ interface Booking {
   };
 }
 
+import Animated from 'react-native-reanimated';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 
 export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { handleScroll } = useTabBarVisibility();
+  const { scrollHandler } = useTabBarVisibility();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [selectedPrescription, setSelectedPrescription] = useState<Booking['prescription'] | null>(null);
@@ -120,17 +121,17 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
       {isLoading ? (
         <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
       ) : (
-        <FlatList
+        <Animated.FlatList
           data={activeTab === 'upcoming' ? upcomingBookings : pastBookings}
-          onScroll={handleScroll}
+          onScroll={scrollHandler}
           scrollEventThrottle={16}
           keyExtractor={item => item.id || item._id || Math.random().toString()}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.cardHead}>
-                <View>
-                  <Text style={styles.therapistName}>
+                <View style={styles.cardHeadLeft}>
+                  <Text style={styles.therapistName} numberOfLines={1}>
                     {item.therapistName || (typeof item.therapistId === 'object' ? item.therapistId?.name : '') || 'Vetted Therapist'}
                   </Text>
                   <View style={styles.timeRow}>
@@ -402,10 +403,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Theme.colors.textMuted,
   },
+  cardHeadLeft: {
+    flex: 1,
+    marginRight: 8,
+  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Theme.radius.sm,
+    alignSelf: 'flex-start',
+    flexShrink: 0,
   },
   badgeConfirmed: {
     backgroundColor: 'rgba(76, 175, 80, 0.1)',

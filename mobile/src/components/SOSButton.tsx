@@ -3,14 +3,16 @@ import { StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { AlertCircle } from 'lucide-react-native';
 import { Theme } from '../theme';
+import { useTabBarVisibility } from '../context/TabBarVisibilityContext';
 
 interface SOSButtonProps {
   onPress: () => void;
   bottomOffset?: number;
 }
 
-export const SOSButton: React.FC<SOSButtonProps> = ({ onPress, bottomOffset = 24 }) => {
+export const SOSButton: React.FC<SOSButtonProps> = ({ onPress, bottomOffset = 90 }) => {
   const scale = useSharedValue(1);
+  const { translateY: tabBarTranslateY } = useTabBarVisibility();
 
   useEffect(() => {
     scale.value = withRepeat(
@@ -25,7 +27,10 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onPress, bottomOffset = 24
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }],
+      transform: [
+        { scale: scale.value },
+        { translateY: tabBarTranslateY.value * 0.45 }
+      ],
     };
   });
 
@@ -58,4 +63,3 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
 });
-export default SOSButton;

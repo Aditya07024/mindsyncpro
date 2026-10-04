@@ -17,6 +17,7 @@ import { Theme } from '../../theme';
 import { TherapistCard, TherapistData } from '../../components/TherapistCard';
 import { IntroVideoPlayer } from '../../components/IntroVideoPlayer';
 
+import Animated from 'react-native-reanimated';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 
 interface TherapistListScreenProps {
@@ -24,7 +25,7 @@ interface TherapistListScreenProps {
 }
 
 export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ navigation }) => {
-  const { handleScroll } = useTabBarVisibility();
+  const { scrollHandler } = useTabBarVisibility();
   const [search, setSearch] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
@@ -175,9 +176,9 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
       {isLoading ? (
         <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
       ) : (
-        <FlatList
+        <Animated.FlatList
           data={filteredTherapists}
-          onScroll={handleScroll}
+          onScroll={scrollHandler}
           scrollEventThrottle={16}
           keyExtractor={(item: any, index) =>
             item?._id?.toString() || item?.id?.toString() || index.toString()

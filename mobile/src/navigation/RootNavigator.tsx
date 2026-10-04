@@ -61,12 +61,16 @@ const Tab = createBottomTabNavigator();
 
 // Smooth Animated Tab Bar Container for auto-hide/reveal on scroll
 const AnimatedBottomTabBar = (props: BottomTabBarProps) => {
-  const { translateY, opacity } = useTabBarVisibility();
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const bottomMargin = Math.max(insets.bottom - 14, 10);
+  const horizontalOffset = Math.round(windowWidth * 0.05);
+
+  const { translateY } = useTabBarVisibility();
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateY: translateY.value }],
-      opacity: opacity.value,
     };
   });
 
@@ -75,9 +79,9 @@ const AnimatedBottomTabBar = (props: BottomTabBarProps) => {
       style={[
         {
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: bottomMargin,
+          left: horizontalOffset,
+          right: horizontalOffset,
           zIndex: 1000,
         },
         animatedStyle,
@@ -104,10 +108,6 @@ const UserTabNavigator = () => {
         tabBarInactiveTintColor: '#64748B',
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          position: 'absolute',
-          bottom: bottomMargin,
-          left: horizontalOffset,
-          right: horizontalOffset,
           backgroundColor: '#FFFFFF',
           borderRadius: 28,
           height: 68,
@@ -194,10 +194,6 @@ const TherapistTabNavigator = () => {
         tabBarActiveTintColor: Theme.colors.primary,
         tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          position: 'absolute',
-          bottom: bottomMargin,
-          left: horizontalOffset,
-          right: horizontalOffset,
           backgroundColor: '#FFFFFF',
           borderRadius: 28,
           height: 68,
@@ -276,10 +272,6 @@ const OrgTabNavigator = () => {
         tabBarActiveTintColor: Theme.colors.primary,
         tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          position: 'absolute',
-          bottom: bottomMargin,
-          left: horizontalOffset,
-          right: horizontalOffset,
           backgroundColor: '#FFFFFF',
           borderRadius: 30,
           height: 68,

@@ -42,6 +42,7 @@ import { getNotificationsPreference } from '../../lib/pushNotifications';
 import { AdBannerCarousel } from '../../components/AdBannerCarousel';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 
+import Animated from 'react-native-reanimated';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 
 interface DashboardScreenProps {
@@ -49,7 +50,7 @@ interface DashboardScreenProps {
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
-  const { handleScroll } = useTabBarVisibility();
+  const { scrollHandler } = useTabBarVisibility();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { user } = useUser();
@@ -187,10 +188,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         navigation={navigation}
       />
 
-      <ScrollView 
+      <Animated.ScrollView 
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
+        onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
         {/* Earlier White Card Stats Banner */}
@@ -373,7 +374,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <Text style={styles.whatsappBtnText}>Join WhatsApp Community →</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Floating SOS Crisis Button & Overlay (Floats above floating tab bar) */}
       <SOSButton onPress={() => setCrisisOpen(true)} bottomOffset={90} />
