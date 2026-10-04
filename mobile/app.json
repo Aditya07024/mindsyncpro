@@ -3,7 +3,7 @@
     "name": "MyMindTherapyFriend",
     "slug": "mymindtherapyfriend",
     "scheme": "mymindtherapyfriend",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,13 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.atul.mymindtherapyfriend",
+      "buildNumber": "2",
       "infoPlist": {
         "NSCameraUsageDescription": "MyMindTherapyFriend needs camera access to allow video call sessions with your therapist.",
         "NSMicrophoneUsageDescription": "MyMindTherapyFriend needs microphone access to allow voice in video call sessions with your therapist."
       }
     },
     "android": {
-      "package": "com.atul.mymindtherapyfriend.com",
+      "package": "com.atul.mymindtherapyfriend",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
