@@ -7,6 +7,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
+import { AdBannerCarousel } from '../../components/AdBannerCarousel';
 
 interface ReportsScreenProps {
   navigation: any;
@@ -643,6 +644,9 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         <Text style={styles.headerTitle}>Wellness Reports</Text>
       </View>
 
+      {/* Target Ad Banners */}
+      <AdBannerCarousel target="user" navigation={navigation} />
+
       {/* Period Selection */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -1184,7 +1188,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Choose Therapist</Text>
-            {uniqueTherapists.map((t) => (
+            {uniqueTherapists.map((t: any) => (
               <TouchableOpacity
                 key={t.id}
                 onPress={() => {

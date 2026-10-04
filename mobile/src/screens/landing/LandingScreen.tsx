@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 
 import API from '../../lib/api';
+import { routeSignedInUser } from '../../lib/roleRouter';
 
 interface LandingScreenProps {
   navigation: any;
@@ -57,112 +58,27 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
 
         if (intendedRole) {
           try {
-            // Commit intended role to backend database
-            const res = await API.auth.setRole(intendedRole);
-            const confirmedRole = res.user?.role || intendedRole;
-
-            // Clear stored credentials
+            await API.auth.setRole(intendedRole);
             await AsyncStorage.removeItem('intended_role');
-            if (savedUpgradePlan) {
-              await AsyncStorage.removeItem('upgrade_plan');
-            }
-
-            // Navigate to respective portal
-            if (confirmedRole === 'user') {
-              const profile = await API.auth.me();
-              if (profile && profile.onboarding && profile.onboarding.completedAt) {
-                navigation.replace('UserTabs', { screen: 'Home', upgradePlan: savedUpgradePlan });
-              } else {
-                navigation.replace('Onboarding', { upgradePlan: savedUpgradePlan });
-              }
-            } else if (confirmedRole === 'therapist') {
-              navigation.replace('TherapistTabs');
-            } else if (confirmedRole === 'org_admin') {
-              navigation.replace('OrgTabs');
-            } else if (confirmedRole === 'super_admin') {
-              navigation.replace('AdminTabs');
-            }
+            if (savedUpgradePlan) await AsyncStorage.removeItem('upgrade_plan');
+            await routeSignedInUser(navigation, { role: intendedRole, upgradePlan: savedUpgradePlan });
             return;
           } catch (err) {
             console.error("Failed to commit role to backend in autologin:", err);
-            // Fallback redirect respecting the intended role so they are not sent to seeker dashboard!
             await AsyncStorage.removeItem('intended_role');
-            if (savedUpgradePlan) {
-              await AsyncStorage.removeItem('upgrade_plan');
-            }
-            if (intendedRole === 'user') {
-              navigation.replace('UserTabs', { screen: 'Home', upgradePlan: savedUpgradePlan });
-            } else if (intendedRole === 'therapist') {
-              navigation.replace('TherapistTabs');
-            } else if (intendedRole === 'org_admin') {
-              navigation.replace('OrgTabs');
-            } else if (intendedRole === 'super_admin') {
-              navigation.replace('AdminTabs');
-            }
+            if (savedUpgradePlan) await AsyncStorage.removeItem('upgrade_plan');
+            await routeSignedInUser(navigation, { role: intendedRole, upgradePlan: savedUpgradePlan });
             return;
           }
         }
 
-        // 2. Default fallback check if no custom signup role was saved (subsequent opens)
-        const profile = await API.auth.me();
-        const role = profile?.role || 'user';
-
-if (role === 'user') {
-  if (profile?.onboarding?.completedAt) {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'UserTabs', params: { screen: 'Home' } }],
-    });
-  } else {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Onboarding' }],
-    });
-  }
-} else if (role === 'therapist') {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'TherapistTabs' }],
-  });
-} else if (role === 'org_admin') {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'OrgTabs' }],
-  });
-} else if (role === 'super_admin') {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'AdminTabs' }],
-  });
-}
+        await routeSignedInUser(navigation);
       } catch (err) {
         console.error("Failed to fetch profile on autologin:", err);
-        // Recover stashed intended role if any, to prevent wrong portal drops
         const backupRole = stashedIntendedRole || 'user';
         await AsyncStorage.removeItem('intended_role');
         await AsyncStorage.removeItem('upgrade_plan');
-
-        if (backupRole === 'therapist') {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'TherapistTabs' }],
-  });
-} else if (backupRole === 'org_admin') {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'OrgTabs' }],
-  });
-} else if (backupRole === 'super_admin') {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'AdminTabs' }],
-  });
-} else {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: 'UserTabs', params: { screen: 'Home' } }],
-  });
-}
+        await routeSignedInUser(navigation, { role: backupRole });
       }
     };
 

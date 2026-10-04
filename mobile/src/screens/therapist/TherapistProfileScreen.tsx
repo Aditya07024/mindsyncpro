@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Lock, CheckCircle, Award, Sparkles, Mail, CreditCard, RefreshCw, XCircle, Bell, BellOff, LogOut } from 'lucide-react-native';
+import { User, Lock, CheckCircle, Award, Sparkles, Mail, CreditCard, RefreshCw, XCircle, Bell, BellOff, LogOut, Building } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
@@ -93,6 +93,28 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
     ]);
   };
 
+  const handleLeaveOrg = () => {
+    Alert.alert(
+      'Leave Organization',
+      'Are you sure you want to leave your currently affiliated organization?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Leave',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await API.therapist.leaveOrg();
+              Alert.alert('Success', 'You have left the organization.');
+              refetchProfile();
+            } catch (err: any) {
+              Alert.alert('Error', err?.message || 'Failed to leave organization.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   // Fetch profiles and subscription
   const { data: userProfile, refetch: refetchProfile } = useQuery({
@@ -144,17 +166,11 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
       Alert.alert('Subscription Required', 'An active subscription is required to save changes.');
       return;
     }
-    const feeNum = Number(sessionFee);
-    if (isNaN(feeNum) || feeNum < 0) {
-      Alert.alert('Invalid Fee', 'Session Fee must be a valid number.');
-      return;
-    }
 
     setSaveLoading(true);
     try {
       await API.therapist.updateProfile({
         bio,
-        fee: feeNum,
         specializations,
         introVideoUrl,
         email,
@@ -275,6 +291,28 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
             </View>
           </View>
         </View>
+
+        {/* Organization Affiliation Card */}
+        {userProfile?.orgId ? (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Building size={18} color={Theme.colors.primary} />
+              <Text style={styles.cardTitle}>Organization Affiliation</Text>
+            </View>
+            <View style={styles.credentialDetails}>
+              <View style={styles.infoBox}>
+                <Text style={styles.infoKey}>Affiliation:</Text>
+                <Text style={styles.infoVal}>Active Corporate / Academic Linkage</Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleLeaveOrg}
+                style={[styles.saveBtn, { backgroundColor: Theme.colors.error, marginTop: 8 }]}
+              >
+                <Text style={styles.saveBtnText}>Leave Organization</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
 
         {/* Profile Editor Card */}
         <View style={styles.card}>

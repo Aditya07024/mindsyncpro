@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useStore, Concern, NeedType } from '../../lib/store';
+import * as DocumentPicker from 'expo-document-picker';
+import { useStore } from '../../lib/store';
 import { Theme } from '../../theme';
-import { ArrowRight, Check } from 'lucide-react-native';
+import { ArrowRight, Check, GraduationCap, School, User, Upload, CheckCircle2 } from 'lucide-react-native';
 import API from '../../lib/api';
 
 interface OnboardingScreenProps {
@@ -16,238 +27,297 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
 
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState('');
-  const [mood, setMood] = useState<number | null>(null);
-  const [selectedConcerns, setSelectedConcerns] = useState<Concern[]>([]);
-  const [need, setNeed] = useState<NeedType | null>(null);
+
+  // Category & Student Verification
+  const [userCategory, setUserCategory] = useState<'school_student' | 'college_student' | 'regular'>('regular');
+  const [phone, setPhone] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [schoolCollegeName, setSchoolCollegeName] = useState('');
+  const [customSchoolName, setCustomSchoolName] = useState('');
+  const [selectedSchoolOption, setSelectedSchoolOption] = useState<string>('');
+  const [studentIdCardUrl, setStudentIdCardUrl] = useState('');
+  const [uploadingIdCard, setUploadingIdCard] = useState(false);
+  const [orgs, setOrgs] = useState<{ _id: string; name: string; type: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const concernsList: { key: Concern; label: string; emoji: string }[] = [
-    { key: 'work', label: 'Work Burnout', emoji: '💼' },
-    { key: 'family', label: 'Family Relations', emoji: '🏡' },
-    { key: 'relationships', label: 'Relationships', emoji: '❤️' },
-    { key: 'loneliness', label: 'Loneliness', emoji: '👥' },
-    { key: 'health', label: 'Health Concerns', emoji: '🌱' },
-    { key: 'money', label: 'Financial Stress', emoji: '💰' },
-  ];
+  useEffect(() => {
+    API.org.verifiedOrgs()
+      .then((res: any) => setOrgs(res?.organizations || []))
+      .catch(() => setOrgs([]));
+  }, []);
 
-  const needsList: { key: NeedType; label: string; desc: string }[] = [
-    { key: 'talk', label: 'Talk / Listen', desc: 'Empathic dialogue with Manas or verified therapists.' },
-    { key: 'tools', label: 'Evidence tools', desc: 'CBT journal sheets, breathing practices, tracking.' },
-    { key: 'express', label: 'Self expression', desc: 'Daily writing prompt, patterns & wellness analytics.' },
-  ];
+  const handlePickStudentIdCard = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({
+        type: 'image/*',
+        copyToCacheDirectory: true,
+      });
 
-  const handleNext = () => {
-    if (step === 1) {
-      if (!firstName.trim()) {
-        Alert.alert('First Name Required', 'Please enter your first name so we can address you warmly.');
+      if (!res.canceled && res.assets && res.assets.length > 0) {
+        const asset = res.assets[0];
+        setUploadingIdCard(true);
+        const uploadRes = await API.auth.uploadStudentIdCard(asset.uri, asset.name || 'student-id.jpg');
+        if (uploadRes.success && uploadRes.imageUrl) {
+          setStudentIdCardUrl(uploadRes.imageUrl);
+          Alert.alert('ID Uploaded ✓', 'Student ID card image uploaded successfully.');
+        }
+      }
+    } catch (err: any) {
+      Alert.alert('Upload Error', err.message || 'Failed to upload student ID card.');
+    } finally {
+      setUploadingIdCard(false);
+    }
+  };
+
+  const finishOnboarding = async () => {
+    if (userCategory === 'school_student' || userCategory === 'college_student') {
+      const finalSchoolName = selectedSchoolOption === 'other' ? customSchoolName : schoolCollegeName;
+      if (!finalSchoolName.trim()) {
+        Alert.alert('School/College Name Required', 'School / College Name is mandatory for students.');
         return;
       }
-      setStep(2);
-    } else if (step === 2) {
-      if (mood === null) {
-        Alert.alert('Mood Check-in', 'How are you feeling today? Tap an emoji to check-in.');
+      if (!studentIdCardUrl) {
+        Alert.alert('Student ID Card Required', 'Upload Student ID Card Photo is mandatory for students.');
         return;
       }
-      setStep(3);
-    } else if (step === 3) {
-      if (selectedConcerns.length === 0) {
-        Alert.alert('Select Concerns', 'Please select at least one concern that brought you to MyMindTherapyFriend.');
-        return;
-      }
-      setStep(4);
-    } else if (step === 4) {
-      if (!need) {
-        Alert.alert('Select Needs', 'What is your primary focus for this session? Choose one.');
-        return;
-      }
+    }
+
+    setLoading(true);
+    try {
+      const finalSchoolName = selectedSchoolOption === 'other' ? customSchoolName : schoolCollegeName;
       
-      setLoading(true);
-      API.auth.updateProfile({ "Full name": firstName })
-        .then(() => {
-          return API.auth.updateOnboarding({
-            moodScore: mood,
-            concerns: selectedConcerns,
-            primaryNeed: need,
-            completed: true
-          });
-        })
-        .then(() => {
-          // Save to global Zustand store for legacy states
-          completeOnboarding({
-            firstName,
-            mood: mood || 4,
-            concerns: selectedConcerns,
-            need,
-          });
-          setLoading(false);
-navigation.reset({
-  index: 0,
-  routes: [
-    {
-      name: 'UserTabs',
-      params: { screen: 'Home' },
-    },
-  ],
-});        })
-        .catch((err: any) => {
-          setLoading(false);
-          Alert.alert('Onboarding Sync Failed', err.message || 'We could not save your data to the server.');
-        });
+      await API.auth.updateOnboarding({
+        moodScore: 5,
+        concerns: [],
+        primaryNeed: 'talk',
+        completed: true,
+        userType: userCategory,
+        studentIdCardUrl,
+        schoolCollegeName: finalSchoolName,
+        phone,
+        referralCode,
+      });
+
+      if (firstName.trim()) {
+        await API.auth.updateProfile({ "Full name": firstName.trim() });
+      }
+
+      completeOnboarding({
+        firstName: firstName.trim() || 'friend',
+        mood: 5,
+        concerns: [],
+        need: 'talk',
+      });
+
+      setLoading(false);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'UserTabs', params: { screen: 'Home' } }],
+      });
+    } catch (err: any) {
+      setLoading(false);
+      Alert.alert('Onboarding Error', err.message || 'Failed to complete onboarding.');
     }
   };
 
-  const toggleConcern = (concern: Concern) => {
-    if (selectedConcerns.includes(concern)) {
-      setSelectedConcerns(selectedConcerns.filter(c => c !== concern));
-    } else {
-      setSelectedConcerns([...selectedConcerns, concern]);
-    }
-  };
+  return (
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20) }]}>
+      <View style={styles.header}>
+        <Text style={styles.appTitle}>Apna Dil Kholo</Text>
+        <Text style={styles.appSubtitle}>A safe space, just for you.</Text>
+      </View>
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>Let's start with your name</Text>
-            <Text style={styles.stepDesc}>What should our companion, Manas, call you?</Text>
-            
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {step === 1 && (
+          <View style={styles.card}>
+            <Text style={styles.stepTitle}>What should I call you?</Text>
+            <Text style={styles.stepDesc}>Enter your name to begin personalizing your wellness journey.</Text>
+
             <TextInput
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Your first name…"
               style={styles.nameInput}
-              placeholderTextColor={Theme.colors.outline}
+              placeholderTextColor="#A1A1AA"
               autoFocus
             />
+
+            <TouchableOpacity
+              disabled={!firstName.trim()}
+              onPress={() => setStep(2)}
+              style={[styles.btnPrimary, !firstName.trim() && styles.btnDisabled]}
+            >
+              <Text style={styles.btnPrimaryText}>Continue →</Text>
+            </TouchableOpacity>
           </View>
-        );
-      case 2:
-        return (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>How are you feeling right now, {firstName}?</Text>
-            <Text style={styles.stepDesc}>Select the emotional state matching your mood today:</Text>
-            
-            <View style={styles.moodGrid}>
-              {[
-                { val: 1, label: 'Low', emoji: '😞' },
-                { val: 2, label: 'Heavy', emoji: '😟' },
-                { val: 3, label: 'Unstable', emoji: '😕' },
-                { val: 4, label: 'Neutral', emoji: '😐' },
-                { val: 5, label: 'Calm', emoji: '🙂' },
-                { val: 6, label: 'Good', emoji: '😊' },
-                { val: 7, label: 'Joyful', emoji: '🥰' },
-              ].map(m => (
+        )}
+
+        {step === 2 && (
+          <View style={styles.card}>
+            <Text style={styles.stepTitle}>Select Your Category</Text>
+            <Text style={styles.stepDesc}>Counseling session fees are tailored per category:</Text>
+
+            {/* Category Cards */}
+            <View style={styles.categoryGroup}>
+              <TouchableOpacity
+                onPress={() => setUserCategory('school_student')}
+                style={[styles.catCard, userCategory === 'school_student' && styles.catCardActive]}
+              >
+                <View style={[styles.catIconBox, userCategory === 'school_student' && styles.catIconActive]}>
+                  <School size={20} color={userCategory === 'school_student' ? '#FFF' : '#0D564D'} />
+                </View>
+                <View style={styles.catTextFlex}>
+                  <Text style={styles.catTitle}>School Student</Text>
+                  <Text style={styles.catSub}>Special student pricing & verified care</Text>
+                </View>
+                {userCategory === 'school_student' && <Check size={18} color="#0D564D" />}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setUserCategory('college_student')}
+                style={[styles.catCard, userCategory === 'college_student' && styles.catCardActive]}
+              >
+                <View style={[styles.catIconBox, userCategory === 'college_student' && styles.catIconActive]}>
+                  <GraduationCap size={20} color={userCategory === 'college_student' ? '#FFF' : '#0D564D'} />
+                </View>
+                <View style={styles.catTextFlex}>
+                  <Text style={styles.catTitle}>College Student</Text>
+                  <Text style={styles.catSub}>Higher education student pricing</Text>
+                </View>
+                {userCategory === 'college_student' && <Check size={18} color="#0D564D" />}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setUserCategory('regular')}
+                style={[styles.catCard, userCategory === 'regular' && styles.catCardActive]}
+              >
+                <View style={[styles.catIconBox, userCategory === 'regular' && styles.catIconActive]}>
+                  <User size={20} color={userCategory === 'regular' ? '#FFF' : '#0D564D'} />
+                </View>
+                <View style={styles.catTextFlex}>
+                  <Text style={styles.catTitle}>Regular Person / Adult</Text>
+                  <Text style={styles.catSub}>Standard adult therapy care</Text>
+                </View>
+                {userCategory === 'regular' && <Check size={18} color="#0D564D" />}
+              </TouchableOpacity>
+            </View>
+
+            {/* Phone & Referral */}
+            <Text style={styles.fieldLabel}>Phone Number (Optional)</Text>
+            <TextInput
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="+91 9876543210"
+              keyboardType="phone-pad"
+              style={styles.input}
+              placeholderTextColor="#A1A1AA"
+            />
+
+            <Text style={styles.fieldLabel}>Referral Code (Optional)</Text>
+            <TextInput
+              value={referralCode}
+              onChangeText={v => setReferralCode(v.toUpperCase())}
+              placeholder="e.g. MMTP-A1B2C3"
+              style={[styles.input, { fontFamily: 'Sora_600SemiBold' }]}
+              placeholderTextColor="#A1A1AA"
+              autoCapitalize="characters"
+            />
+            <Text style={styles.hintText}>Get 1 Free Counseling Session when using a valid referral code.</Text>
+
+            {/* Student ID Upload Block */}
+            {(userCategory === 'school_student' || userCategory === 'college_student') && (
+              <View style={styles.studentBox}>
+                <Text style={styles.fieldLabel}>School / College Name *</Text>
                 <TouchableOpacity
-                  key={m.val}
-                  onPress={() => setMood(m.val)}
-                  style={[
-                    styles.moodBtn,
-                    mood === m.val && styles.moodBtnActive
-                  ]}
+                  onPress={() => {
+                    Alert.alert(
+                      'Select Institution',
+                      'Choose your institution:',
+                      [
+                        ...orgs.map(org => ({
+                          text: org.name,
+                          onPress: () => {
+                            setSelectedSchoolOption(org.name);
+                            setSchoolCollegeName(org.name);
+                          },
+                        })),
+                        {
+                          text: '➕ Other (Not in list)',
+                          onPress: () => {
+                            setSelectedSchoolOption('other');
+                            setSchoolCollegeName(customSchoolName);
+                          },
+                        },
+                        { text: 'Cancel', style: 'cancel' },
+                      ]
+                    );
+                  }}
+                  style={styles.selectBtn}
                 >
-                  <Text style={styles.moodEmoji}>{m.emoji}</Text>
-                  <Text style={styles.moodLabel}>{m.label}</Text>
+                  <Text style={styles.selectBtnText}>
+                    {selectedSchoolOption
+                      ? selectedSchoolOption === 'other'
+                        ? '➕ Other (Custom)'
+                        : selectedSchoolOption
+                      : '-- Select Onboarded Institution --'}
+                  </Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        );
-      case 3:
-        return (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>What's currently on your mind?</Text>
-            <Text style={styles.stepDesc}>Select any areas that might be causing you stress (Choose multiple):</Text>
-            
-            <View style={styles.grid}>
-              {concernsList.map(c => {
-                const active = selectedConcerns.includes(c.key);
-                return (
-                  <TouchableOpacity
-                    key={c.key}
-                    onPress={() => toggleConcern(c.key)}
-                    style={[
-                      styles.concernBtn,
-                      active && styles.concernBtnActive
-                    ]}
-                  >
-                    <Text style={styles.concernEmoji}>{c.emoji}</Text>
-                    <Text style={[styles.concernLabel, active && styles.textWhite]}>{c.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        );
-      case 4:
-        return (
-          <View style={styles.stepContainer}>
-            <Text style={styles.stepTitle}>What is your main goal today?</Text>
-            <Text style={styles.stepDesc}>We will personalize your home feed based on your focus:</Text>
-            
-            <View style={styles.needsList}>
-              {needsList.map(n => {
-                const active = need === n.key;
-                return (
-                  <TouchableOpacity
-                    key={n.key}
-                    onPress={() => setNeed(n.key)}
-                    style={[
-                      styles.needCard,
-                      active && styles.needCardActive
-                    ]}
-                  >
-                    <View style={styles.needCardLeft}>
-                      <Text style={styles.needCardTitle}>{n.label}</Text>
-                      <Text style={styles.needCardDesc}>{n.desc}</Text>
+
+                {selectedSchoolOption === 'other' && (
+                  <TextInput
+                    value={customSchoolName}
+                    onChangeText={v => {
+                      setCustomSchoolName(v);
+                      setSchoolCollegeName(v);
+                    }}
+                    placeholder="Enter your School / College Name..."
+                    style={[styles.input, { marginTop: 8 }]}
+                    placeholderTextColor="#A1A1AA"
+                  />
+                )}
+
+                <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Upload Student ID Card Photo *</Text>
+                <TouchableOpacity
+                  onPress={handlePickStudentIdCard}
+                  disabled={uploadingIdCard}
+                  style={styles.uploadBtn}
+                >
+                  <Upload size={18} color="#0D564D" style={{ marginRight: 6 }} />
+                  <Text style={styles.uploadBtnText}>
+                    {uploadingIdCard
+                      ? 'Uploading ID Card...'
+                      : studentIdCardUrl
+                      ? 'Change Uploaded ID Card'
+                      : 'Upload Student ID Card Photo (Mandatory)'}
+                  </Text>
+                </TouchableOpacity>
+
+                {studentIdCardUrl ? (
+                  <View style={styles.previewBox}>
+                    <Image source={{ uri: studentIdCardUrl }} style={styles.previewImage} />
+                    <View style={styles.verifiedBadge}>
+                      <CheckCircle2 size={12} color="#FFF" style={{ marginRight: 4 }} />
+                      <Text style={styles.verifiedText}>Uploaded ✓ (Pending Admin Verification)</Text>
                     </View>
-                    {active && (
-                      <View style={styles.needCheck}>
-                        <Check size={14} color="#FFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                  </View>
+                ) : null}
+              </View>
+            )}
+
+            <TouchableOpacity
+              disabled={loading}
+              onPress={finishOnboarding}
+              style={[styles.btnPrimary, { marginTop: 24 }]}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.btnPrimaryText}>Go to Dashboard →</Text>
+              )}
+            </TouchableOpacity>
           </View>
-        );
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      {/* Progress indicators */}
-      <View style={styles.progressRow}>
-        {[1, 2, 3, 4].map(s => (
-          <View 
-            key={s} 
-            style={[
-              styles.progressBar,
-              s <= step ? styles.progressActive : styles.progressInactive
-            ]} 
-          />
-        ))}
-      </View>
-
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 84 }]}>
-        {renderStep()}
+        )}
       </ScrollView>
-
-      <View style={[styles.footer, { bottom: Math.max(insets.bottom, 16) + 16 }]}>
-        <TouchableOpacity onPress={handleNext} disabled={loading} style={styles.nextBtn}>
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <>
-              <Text style={styles.nextText}>
-                {step === 4 ? 'Complete Onboarding' : 'Continue'}
-              </Text>
-              <ArrowRight size={18} color="#FFF" />
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
@@ -255,183 +325,212 @@ navigation.reset({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Theme.colors.background,
+    backgroundColor: '#FAFAF9',
   },
-  progressRow: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: Theme.spacing.margin,
-    paddingTop: 60,
+  header: {
+    paddingHorizontal: 20,
+    marginBottom: 10,
   },
-  progressBar: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
+  appTitle: {
+    fontFamily: 'Sora_700Bold',
+    fontSize: 26,
+    color: '#0D564D',
   },
-  progressActive: {
-    backgroundColor: Theme.colors.primary,
-  },
-  progressInactive: {
-    backgroundColor: Theme.colors.surfaceHigh,
+  appSubtitle: {
+    fontFamily: 'PlusJakartaSans_500Medium',
+    fontSize: 14,
+    color: '#6F7977',
+    marginTop: 2,
   },
   scrollContent: {
-    paddingHorizontal: Theme.spacing.margin,
-    paddingTop: Theme.spacing.md,
-    paddingBottom: 100,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
   },
-  stepContainer: {
-    width: '100%',
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#E8E8E7',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
   stepTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-    marginBottom: Theme.spacing.xs,
+    fontFamily: 'Sora_700Bold',
+    fontSize: 20,
+    color: '#1A1C1C',
+    marginBottom: 6,
   },
   stepDesc: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 20,
-    marginBottom: Theme.spacing.md,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 13,
+    color: '#6F7977',
+    marginBottom: 16,
   },
   nameInput: {
-    width: '100%',
-    height: 56,
+    backgroundColor: '#F9F9F8',
     borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: Theme.spacing.sm,
-    fontSize: 18,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    backgroundColor: '#FFF',
-    marginTop: Theme.spacing.xs,
+    borderColor: '#E8E8E7',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 16,
+    color: '#1A1C1C',
+    marginBottom: 20,
   },
-  moodGrid: {
+  categoryGroup: {
+    gap: 10,
+    marginBottom: 16,
+  },
+  catCard: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Theme.spacing.xs,
+    alignItems: 'center',
+    backgroundColor: '#F9F9F8',
+    borderWidth: 1.5,
+    borderColor: '#E8E8E7',
+    borderRadius: 16,
+    padding: 14,
+  },
+  catCardActive: {
+    backgroundColor: '#E6F4F1',
+    borderColor: '#0D564D',
+  },
+  catIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#E8E8E7',
     justifyContent: 'center',
-    marginTop: Theme.spacing.xs,
-  },
-  moodBtn: {
-    width: '28%',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingVertical: Theme.spacing.sm,
     alignItems: 'center',
-    gap: 4,
+    marginRight: 12,
   },
-  moodBtnActive: {
-    backgroundColor: Theme.colors.secondaryContainer + '20',
-    borderColor: Theme.colors.secondary,
-    borderWidth: 1.5,
+  catIconActive: {
+    backgroundColor: '#0D564D',
   },
-  moodEmoji: {
-    fontSize: 28,
-  },
-  moodLabel: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11,
-    color: Theme.colors.onSurface,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Theme.spacing.sm,
-    marginTop: Theme.spacing.xs,
-  },
-  concernBtn: {
-    width: '47%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.sm,
-  },
-  concernBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  concernEmoji: {
-    fontSize: 18,
-  },
-  concernLabel: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  textWhite: {
-    color: '#FFF',
-  },
-  needsList: {
-    gap: Theme.spacing.sm,
-    marginTop: Theme.spacing.xs,
-  },
-  needCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-  },
-  needCardActive: {
-    borderColor: Theme.colors.primary,
-    borderWidth: 1.5,
-    backgroundColor: Theme.colors.primary + '05',
-  },
-  needCardLeft: {
+  catTextFlex: {
     flex: 1,
-    marginRight: Theme.spacing.xs,
   },
-  needCardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
+  catTitle: {
+    fontFamily: 'Sora_600SemiBold',
+    fontSize: 14,
+    color: '#1A1C1C',
   },
-  needCardDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
+  catSub: {
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 11,
+    color: '#6F7977',
+    marginTop: 2,
+  },
+  fieldLabel: {
+    fontFamily: 'Sora_600SemiBold',
+    fontSize: 11,
+    color: '#6F7977',
+    textTransform: 'uppercase',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: '#F9F9F8',
+    borderWidth: 1,
+    borderColor: '#E8E8E7',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 13,
+    color: '#1A1C1C',
+  },
+  hintText: {
+    fontFamily: 'PlusJakartaSans_400Regular',
+    fontSize: 10,
+    color: '#6F7977',
     marginTop: 4,
-    lineHeight: 16,
   },
-  needCheck: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+  studentBox: {
+    backgroundColor: '#E6F4F1',
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#BFE3DC',
   },
-  footer: {
-    position: 'absolute',
-    bottom: 24,
-    left: Theme.spacing.margin,
-    right: Theme.spacing.margin,
+  selectBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#BFE3DC',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  nextBtn: {
+  selectBtnText: {
+    fontFamily: 'PlusJakartaSans_500Medium',
+    fontSize: 13,
+    color: '#1A1C1C',
+  },
+  uploadBtn: {
     flexDirection: 'row',
-    height: 52,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.full,
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#0D564D',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
-  nextText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
+  uploadBtnText: {
+    fontFamily: 'Sora_600SemiBold',
+    fontSize: 12,
+    color: '#0D564D',
+  },
+  previewBox: {
+    marginTop: 10,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#BFE3DC',
+  },
+  previewImage: {
+    width: '100%',
+    height: 140,
+    resizeMode: 'cover',
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: '#059669',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 99,
+  },
+  verifiedText: {
+    fontFamily: 'Sora_700Bold',
+    fontSize: 9,
+    color: '#FFFFFF',
+  },
+  btnPrimary: {
+    backgroundColor: '#0D564D',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  btnPrimaryText: {
+    fontFamily: 'Sora_600SemiBold',
     fontSize: 15,
+    color: '#FFFFFF',
   },
 });
+
 export default OnboardingScreen;

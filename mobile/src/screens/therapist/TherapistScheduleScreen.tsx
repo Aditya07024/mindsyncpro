@@ -40,6 +40,10 @@ const formatSlotDisplay = (slot: string) => {
   return `${String(displayHour).padStart(2, '0')}:${minStr} ${ampm}`;
 };
 
+interface TherapistScheduleScreenProps {
+  navigation: any;
+}
+
 export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = ({ navigation }) => {
   const [activationLoading, setActivationLoading] = useState(false);
   const [availability, setAvailability] = useState<string[]>([]);

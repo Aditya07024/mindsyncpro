@@ -37,8 +37,8 @@ export class AuthController {
     if (!user) return res.status(404).json({ error: "User not found" });
 
     if (!user.referralCode) {
-      const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-      user.referralCode = `MMTP-${randomStr}`;
+      const codeSuffix = user._id.toString().slice(-6).toUpperCase();
+      user.referralCode = `MMTP-${codeSuffix}`;
       await user.save();
     }
     res.json(serializeUser(user));

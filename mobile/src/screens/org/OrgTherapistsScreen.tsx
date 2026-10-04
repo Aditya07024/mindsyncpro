@@ -29,7 +29,7 @@ import { AppHeader } from '../../components/AppHeader';
 
 export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'pending' | 'invite' | 'sent'>('pending');
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'invite' | 'sent'>('active');
   const [extSearch, setExtSearch] = useState('');
   const [extTherapists, setExtTherapists] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -46,6 +46,12 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
   const hasAffiliationFeature = subData?.config?.enableTherapistAffiliation !== false;
 
   // Queries
+  const { data: activeTherapistsData, isLoading: isActiveLoading, refetch: refetchActive } = useQuery({
+    queryKey: ['org-active-therapists'],
+    queryFn: () => API.org.therapists().catch(() => ({ therapists: [] })),
+    retry: false
+  });
+
   const { data: pendingData, isLoading: isPendingLoading, refetch: refetchPending } = useQuery({
     queryKey: ['org-pending-therapists'],
     queryFn: () => API.org.pendingTherapists(),
@@ -98,11 +104,38 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
         `Therapist has been successfully ${verified ? 'approved' : 'rejected'}.`
       );
       refetchPending();
+      refetchActive();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Action failed');
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleRemoveTherapist = async (id: string, name: string) => {
+    Alert.alert(
+      'Remove Therapist',
+      `Are you sure you want to remove ${name} from your organization network?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            setActionLoading(id);
+            try {
+              await API.org.removeTherapist(id);
+              Alert.alert('Success', `${name} has been removed.`);
+              refetchActive();
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'Failed to remove therapist');
+            } finally {
+              setActionLoading(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSearchExternal = async (queryText = extSearch) => {
@@ -148,6 +181,12 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
 
       {/* Tabs segment */}
       <View style={styles.tabBar}>
+        <TouchableOpacity
+          onPress={() => setActiveTab('active')}
+          style={[styles.tabButton, activeTab === 'active' && styles.activeTabButton]}
+        >
+          <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>Active</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setActiveTab('pending')}
           style={[styles.tabButton, activeTab === 'pending' && styles.activeTabButton]}
@@ -226,6 +265,47 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {activeTab === 'active' && (
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Active Affiliated Therapists</Text>
+              <Text style={styles.sectionDesc}>
+                Certified practitioners currently linked with your organization network.
+              </Text>
+
+              {isActiveLoading ? (
+                <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 24 }} />
+              ) : !activeTherapistsData?.therapists || activeTherapistsData.therapists.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Users size={40} color={Theme.colors.outline} />
+                  <Text style={styles.emptyText}>No active therapists linked yet.</Text>
+                </View>
+              ) : (
+                activeTherapistsData.therapists.map((t: any) => (
+                  <View key={t.id || t._id} style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <View>
+                        <Text style={styles.therapistName}>{t.fullName || t.name}</Text>
+                        <Text style={styles.therapistEmail}>{t.email || t.qualification}</Text>
+                      </View>
+                      <View style={styles.badgeAccepted}>
+                        <Text style={styles.badgeAcceptedText}>ACTIVE</Text>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      disabled={actionLoading === (t.id || t._id)}
+                      onPress={() => handleRemoveTherapist(t.id || t._id, t.fullName || t.name)}
+                      style={styles.btnCancelInvite}
+                    >
+                      <Trash2 size={14} color="#FF6B6B" />
+                      <Text style={styles.btnCancelInviteText}>Remove Therapist</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+
           {activeTab === 'pending' && (
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Pending Affiliations</Text>
@@ -345,7 +425,7 @@ export const OrgTherapistsScreen: React.FC<{ navigation?: any }> = ({ navigation
                   style={styles.searchInput}
                 />
                 <TouchableOpacity
-                  onPress={handleSearchExternal}
+                  onPress={() => handleSearchExternal()}
                   disabled={isSearching}
                   style={styles.searchBtn}
                 >

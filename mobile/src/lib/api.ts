@@ -106,6 +106,36 @@ const API = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    applyReferral: (data: { referralCode?: string; skip?: boolean }) =>
+      apiCall<any>("/api/auth/apply-referral", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    uploadStudentIdCard: async (fileUri: string, fileName: string) => {
+      const headers: Record<string, string> = {};
+      if (_getToken) {
+        const token = await _getToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      }
+      const formData = new FormData();
+      formData.append("idCard", {
+        uri: fileUri,
+        name: fileName || "student-id.jpg",
+        type: "image/jpeg",
+      } as any);
+
+      const response = await fetch(`${API_URL}/api/auth/upload-student-id`, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(err.message || `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
   },
 
   admin: {
@@ -187,6 +217,7 @@ const API = {
         body: JSON.stringify(data),
       }),
     pendingTherapists: () => apiCall<any>("/api/org/pending-therapists"),
+    therapists: () => apiCall<any>("/api/org/therapists"),
     verifyTherapist: (id: string, data: { verified: boolean }) =>
       apiCall<any>(`/api/org/therapist/${id}/verify`, {
         method: "PATCH",
@@ -216,6 +247,8 @@ const API = {
     invitations: () => apiCall<any>("/api/org/invitations"),
     cancelInvitation: (id: string) =>
       apiCall<any>(`/api/org/invitation/${id}`, { method: "DELETE" }),
+    removeTherapist: (id: string) =>
+      apiCall<any>(`/api/org/therapist/${id}`, { method: "DELETE" }),
     uploadEmails: async (fileUri: string, fileName: string) => {
       const headers: Record<string, string> = {};
       if (_getToken) {
@@ -325,6 +358,7 @@ const API = {
       }),
     sharedReports: () => apiCall<any>("/api/therapists/me/shared-reports"),
     sharedReportDetail: (id: string) => apiCall<any>(`/api/therapists/me/shared-reports/${id}`),
+    leaveOrg: () => apiCall<any>("/api/therapists/me/leave-org", { method: "POST" }),
   },
 
   booking: {
@@ -346,6 +380,15 @@ const API = {
         body: JSON.stringify(data),
       }),
     getAiBrief: (id: string) => apiCall<any>(`/api/bookings/${id}/ai-brief`),
+    requestJournal: (id: string) =>
+      apiCall<any>(`/api/bookings/${id}/request-journal`, { method: "POST" }),
+    respondToJournal: (id: string, approve: boolean) =>
+      apiCall<any>(`/api/bookings/${id}/respond-journal`, {
+        method: "POST",
+        body: JSON.stringify({ approve }),
+      }),
+    getSharedJournals: (id: string) =>
+      apiCall<any>(`/api/bookings/${id}/shared-journals`),
     savePrescription: (
       id: string,
       data: {
@@ -518,6 +561,58 @@ const API = {
       apiCall<any>(`/api/notifications/${id}/read`, { method: "PUT" }),
     markAllRead: () =>
       apiCall<any>("/api/notifications/read-all", { method: "PUT" }),
+  },
+
+  adBanner: {
+    get: (target?: string) =>
+      apiCall<any>(`/api/admin/ad-banner${target ? `?target=${target}` : ""}`),
+  },
+
+  groupSessions: {
+    list: () => apiCall<{ sessions: any[] }>("/api/group-sessions"),
+    create: (data: any) =>
+      apiCall<{ session: any; message: string }>("/api/group-sessions", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    claimSlot: (id: string) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/claim`, {
+        method: "POST",
+      }),
+    joinRequest: (id: string, data?: { paymentId?: string }) =>
+      apiCall<{ status: string; anonymousName: string; session: any; message: string }>(
+        `/api/group-sessions/${id}/join-request`,
+        {
+          method: "POST",
+          body: data ? JSON.stringify(data) : undefined,
+        }
+      ),
+    approveUser: (id: string, data: { targetUserId: string; action: string }) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/approve-user`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    getAudioToken: (id: string) =>
+      apiCall<{
+        success: boolean;
+        roomName: string;
+        sessionTitle: string;
+        participantName: string;
+        isCounselor: boolean;
+        audioOnly: boolean;
+        videoEnabled: boolean;
+        wsUrl?: string;
+        token?: string;
+      }>(`/api/group-sessions/${id}/audio-token`),
+    delete: (id: string) =>
+      apiCall<{ message: string }>(`/api/group-sessions/${id}`, {
+        method: "DELETE",
+      }),
+    blockUser: (id: string, targetUserId: string) =>
+      apiCall<{ session: any; message: string }>(`/api/group-sessions/${id}/block-user`, {
+        method: "POST",
+        body: JSON.stringify({ targetUserId }),
+      }),
   },
 };
 

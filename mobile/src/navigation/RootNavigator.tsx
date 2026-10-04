@@ -13,6 +13,8 @@ import PlansScreen from '../screens/landing/PlansScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import ClerkAuthScreen from '../screens/auth/ClerkAuthScreen';
 import OnboardingScreen from '../screens/auth/OnboardingScreen';
+import TherapistOnboardingScreen from '../screens/auth/TherapistOnboardingScreen';
+import OrgOnboardingScreen from '../screens/auth/OrgOnboardingScreen';
 
 // Seeker / Individual screens
 import UserDashboardScreen from '../screens/user/DashboardScreen';
@@ -24,10 +26,13 @@ import UserBookingsScreen from '../screens/user/UserBookingsScreen';
 import BreatheScreen from '../screens/user/BreatheScreen';
 import CBTJournalScreen from '../screens/user/CBTJournalScreen';
 import MoodDiaryScreen from '../screens/user/MoodDiaryScreen';
+import UserProfileScreen from '../screens/user/UserProfileScreen';
 import NotificationInboxScreen from '../screens/user/NotificationInboxScreen';
 import SessionScreen from '../screens/user/SessionScreen';
 import WalletScreen from '../screens/user/WalletScreen';
 import ReportsScreen from '../screens/user/ReportsScreen';
+import GroupSessionsScreen from '../screens/shared/GroupSessionsScreen';
+import GroupAudioRoomScreen from '../screens/shared/GroupAudioRoomScreen';
 
 // Therapist screens
 import TherapistDashboardScreen from '../screens/therapist/TherapistDashboardScreen';
@@ -111,11 +116,11 @@ const UserTabNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Mood" 
-        component={MoodDiaryScreen}
+        name="Profile" 
+        component={UserProfileScreen}
         options={{
-          tabBarLabel: 'Mood',
-          tabBarIcon: ({ color, size }) => <Smile size={size} color={color} />
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ color, size }) => <User size={size} color={color} />
         }}
       />
     </Tab.Navigator>
@@ -329,6 +334,8 @@ export const RootNavigator = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="ClerkAuth" component={ClerkAuthScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+      <Stack.Screen name="TherapistOnboarding" component={TherapistOnboardingScreen} />
+      <Stack.Screen name="OrgOnboarding" component={OrgOnboardingScreen} />
 
       {/* Post-login tab shell stack */}
       <Stack.Screen name="UserTabs" component={UserTabNavigator} />
@@ -343,6 +350,8 @@ export const RootNavigator = () => {
       <Stack.Screen name="Journal" component={CBTJournalScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="Reports" component={ReportsScreen} />
+      <Stack.Screen name="MoodDiary" component={MoodDiaryScreen} />
+      <Stack.Screen name="Mood" component={MoodDiaryScreen} />
 
       {/* Practitioner specialized overlays */}
       <Stack.Screen name="TherapistBrief" component={TherapistBriefScreen} />
@@ -350,6 +359,8 @@ export const RootNavigator = () => {
       {/* Shared authed screens */}
       <Stack.Screen name="Notifications" component={NotificationInboxScreen} />
       <Stack.Screen name="Session" component={SessionScreen} />
+      <Stack.Screen name="GroupSessions" component={GroupSessionsScreen} />
+      <Stack.Screen name="GroupAudioRoom" component={GroupAudioRoomScreen} />
     </Stack.Navigator>
   );
 };

@@ -217,7 +217,7 @@ export const SessionScreen: React.FC<SessionScreenProps> = ({ route, navigation 
                     { text: 'Cancel', style: 'cancel' },
                     {
                       text: 'Submit',
-                      onPress: async (rating) => {
+                      onPress: async (rating?: string) => {
                         const ratingNum = Number(rating);
                         if (ratingNum >= 1 && ratingNum <= 5) {
                           try {

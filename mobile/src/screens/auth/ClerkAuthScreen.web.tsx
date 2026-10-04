@@ -5,6 +5,7 @@ import { SignIn } from '@clerk/clerk-expo/web';
 import { Theme } from '../../theme';
 
 import API from '../../lib/api';
+import { routeSignedInUser } from '../../lib/roleRouter';
 
 interface ClerkAuthScreenProps {
   navigation: any;
@@ -27,28 +28,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
 
   React.useEffect(() => {
     if (isSignedIn) {
-      // If already signed in, navigate to appropriate dashboard
-      if (role === 'user') {
-        API.auth.me()
-          .then((profile) => {
-            if (profile && profile.onboarding && profile.onboarding.completedAt) {
-              navigation.replace('UserTabs', { screen: 'Home', upgradePlan });
-            } else {
-              navigation.replace('Onboarding');
-            }
-          })
-          .catch((err) => {
-            console.error("Failed to fetch user profile for onboarding check:", err);
-            // Fallback: avoid locking out user
-            navigation.replace('UserTabs', { screen: 'Home', upgradePlan });
-          });
-      } else if (role === 'therapist') {
-        navigation.replace('TherapistTabs');
-      } else if (role === 'org_admin') {
-        navigation.replace('OrgTabs');
-      } else if (role === 'super_admin') {
-        navigation.replace('AdminTabs');
-      }
+      routeSignedInUser(navigation, { role, upgradePlan });
     }
   }, [isSignedIn]);
 

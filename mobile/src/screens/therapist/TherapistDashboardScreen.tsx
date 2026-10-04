@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase, FileText, Bell, BellOff } from 'lucide-react-native';
+import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase, FileText, Bell, BellOff, Users, Radio, BookOpen } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import { useWorkspaceStore } from '../../lib/workspaceStore';
 import { getNotificationsPreference, handleNotificationToggle } from '../../lib/pushNotifications';
+import { AdBannerCarousel } from '../../components/AdBannerCarousel';
+
+interface TherapistDashboardScreenProps {
+  navigation: any;
+}
 
 const ALL_24H_SLOTS = [
   '00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
@@ -282,6 +287,43 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
             thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
           />
         </View>
+
+        {/* Verification Status Warning if pending */}
+        {(userProfile?.therapistProfile?.verificationStatus === 'pending' || (!userProfile?.verified && userProfile?.therapistProfile?.verificationStatus !== 'verified')) && (
+          <View style={[styles.notificationCard, { backgroundColor: '#FFFDF5', borderColor: '#FDE68A' }]}>
+            <View style={styles.notificationLeft}>
+              <View style={[styles.notificationIconBox, { backgroundColor: '#FEF3C7' }]}>
+                <Clock size={18} color="#B45309" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.notificationTitle, { color: '#92400E' }]}>Application Under Review</Text>
+                <Text style={[styles.notificationDesc, { color: '#B45309' }]}>
+                  Your clinical counsellor credentials are being verified by MyMindSync admin.
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Target Ad Banners */}
+        <AdBannerCarousel target="therapist" navigation={navigation} />
+
+        {/* Group Audio Sessions Shortcut */}
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('GroupSessions')}
+          style={[styles.notificationCard, { backgroundColor: Theme.colors.primary + '08', borderColor: Theme.colors.primary + '20' }]}
+        >
+          <View style={styles.notificationLeft}>
+            <View style={[styles.notificationIconBox, { backgroundColor: Theme.colors.primary + '15' }]}>
+              <Radio size={18} color={Theme.colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.notificationTitle}>Group Audio Sessions</Text>
+              <Text style={styles.notificationDesc}>Host or join live peer audio support rooms</Text>
+            </View>
+          </View>
+          <ChevronRight size={18} color={Theme.colors.primary} />
+        </TouchableOpacity>
         
         {/* Custom High-Fidelity Profile Header Card */}
         {/* <View style={styles.profileHeaderCard}>
@@ -425,9 +467,8 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
         {/* Action Menu Listings */}
         <View style={styles.menuContainer}>
           {[
-            // { id: 'schedule', name: 'Schedule', icon: Calendar },
+            { id: 'schedule', name: 'Consultations & Roster', icon: Calendar },
             { id: 'availability', name: 'Availability', icon: Clock },
-            // { id: 'earnings', name: 'Earnings', icon: Wallet },
             { id: 'profile', name: 'Profile', icon: User },
             { id: 'subscription', name: 'Subscription', icon: Sparkles },
             { id: 'invitations', name: 'Invitations', icon: Award },
@@ -478,6 +519,24 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                                   <FileText size={11} color={Theme.colors.primary} />
                                   <Text style={styles.sharedReportBtnText}>Shared Report</Text>
                                 </TouchableOpacity>
+                                {booking.journalShareState !== 'approved' && (
+                                  <TouchableOpacity
+                                    onPress={async () => {
+                                      try {
+                                        await API.booking.requestJournal(booking._id || booking.id);
+                                        Alert.alert('Request Sent ✓', 'Sent 7-day CBT journal sharing request to seeker.');
+                                      } catch (err: any) {
+                                        Alert.alert('Error', err.message || 'Could not send request.');
+                                      }
+                                    }}
+                                    style={[styles.sharedReportBtn, { backgroundColor: Theme.colors.secondaryContainer + '30', borderColor: Theme.colors.secondary + '40' }]}
+                                  >
+                                    <BookOpen size={11} color={Theme.colors.secondary} />
+                                    <Text style={[styles.sharedReportBtnText, { color: Theme.colors.secondary }]}>
+                                      {booking.journalShareState === 'requested' ? 'Requested' : 'Request Journal'}
+                                    </Text>
+                                  </TouchableOpacity>
+                                )}
                               </View>
                             </View>
                           ))

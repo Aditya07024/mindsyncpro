@@ -16,7 +16,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,   // Show banner even when app is open
     shouldPlaySound: true,
     shouldSetBadge: true,
-    shouldShowInForeground: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 

@@ -21,7 +21,8 @@ import {
   HelpCircle,
   Lock,
   Bell,
-  BellOff
+  BellOff,
+  Clock
 } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
@@ -229,6 +230,23 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
               thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
             />
           </View>
+
+          {/* Verification Status Warning if pending */}
+          {orgInfoData?.organization?.verificationStatus === 'pending' && (
+            <View style={[styles.notificationCard, { backgroundColor: '#FFFDF5', borderColor: '#FDE68A' }]}>
+              <View style={styles.notificationLeft}>
+                <View style={[styles.notificationIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <Clock size={18} color="#B45309" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.notificationTitle, { color: '#92400E' }]}>Application Under Review</Text>
+                  <Text style={[styles.notificationDesc, { color: '#B45309' }]}>
+                    Your organization domain & verification documents are under review by MyMindSync admin.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* Member Therapy Fee Policy Toggle Card */}
           <View style={styles.notificationCard}>

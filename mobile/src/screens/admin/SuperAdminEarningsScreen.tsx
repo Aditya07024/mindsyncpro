@@ -45,7 +45,7 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
       async (password) => {
         if (!password) return;
         try {
-          await API.admin.markTherapistPaid(therapistId, { password });
+          await API.admin.markTherapistPaid(therapistId, { amount: Math.round(amount * 0.70), password });
           Alert.alert('✅ Done', `Payout recorded for ${name}.`);
           queryClient.invalidateQueries({ queryKey: ['admin-therapist-earnings'] });
         } catch (err: any) {

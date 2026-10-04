@@ -18,6 +18,7 @@ const useWarmUpBrowser = () => {
   }, []);
 };
 import { Theme } from '../../theme';
+import { routeSignedInUser } from '../../lib/roleRouter';
 
 import API, { setTokenGetter } from '../../lib/api';
 
@@ -99,36 +100,10 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       const confirmedRole = res.user?.role || recoveredRole;
       console.log("[AuthRedirect] Role confirmed by backend:", confirmedRole);
 
-      // Clear storage
       await AsyncStorage.removeItem('intended_role');
       await AsyncStorage.removeItem('upgrade_plan');
 
-      if (confirmedRole === 'user') {
-        console.log("[AuthRedirect] Routing user to onboarding/dashboard...");
-        API.auth.me()
-          .then((profile) => {
-            if (profile && profile.onboarding && profile.onboarding.completedAt) {
-              console.log("[AuthRedirect] Onboarding already completed. Routing to UserTabs.");
-              navigation.replace('UserTabs', { screen: 'Home', upgradePlan: recoveredUpgrade });
-            } else {
-              console.log("[AuthRedirect] Onboarding pending. Routing to Onboarding screen.");
-              navigation.replace('Onboarding', { upgradePlan: recoveredUpgrade });
-            }
-          })
-          .catch((err) => {
-            console.error("[AuthRedirect] Failed to fetch profile for onboarding check:", err);
-            navigation.replace('UserTabs', { screen: 'Home', upgradePlan: recoveredUpgrade });
-          });
-      } else if (confirmedRole === 'therapist') {
-        console.log("[AuthRedirect] Routing to TherapistTabs.");
-        navigation.replace('TherapistTabs');
-      } else if (confirmedRole === 'org_admin') {
-        console.log("[AuthRedirect] Routing to OrgTabs.");
-        navigation.replace('OrgTabs');
-      } else if (confirmedRole === 'super_admin') {
-        console.log("[AuthRedirect] Routing to AdminTabs.");
-        navigation.replace('AdminTabs');
-      }
+      await routeSignedInUser(navigation, { role: confirmedRole, upgradePlan: recoveredUpgrade });
     } catch (err) {
       console.error("[AuthRedirect] Failed to set user role in backend:", err);
       
@@ -137,16 +112,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       await AsyncStorage.removeItem('upgrade_plan');
 
       Alert.alert('Authenticated!', `Logged in successfully as ${recoveredRole.toUpperCase().replace('_', ' ')}!`);
-      
-      if (recoveredRole === 'user') {
-        navigation.replace('UserTabs', { screen: 'Home', upgradePlan: recoveredUpgrade });
-      } else if (recoveredRole === 'therapist') {
-        navigation.replace('TherapistTabs');
-      } else if (recoveredRole === 'org_admin') {
-        navigation.replace('OrgTabs');
-      } else if (recoveredRole === 'super_admin') {
-        navigation.replace('AdminTabs');
-      }
+      await routeSignedInUser(navigation, { role: recoveredRole, upgradePlan: recoveredUpgrade });
     }
   };
 
@@ -461,7 +427,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
           const currentStatus = !isSignUpFlow ? signIn?.status : signUp?.status;
 
           if (currentStatus === 'complete' && sessionId) {
-            await setActive({ session: sessionId });
+            if (setActive) await setActive({ session: sessionId });
             return;
           } else if (isSignUpFlow && currentStatus === 'missing_requirements' && signUp) {
             const missing = signUp.missingFields || [];
@@ -487,7 +453,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
 
               await signUp.update(updateData);
               if (signUp.status === 'complete' && signUp.createdSessionId) {
-                await setActive({ session: signUp.createdSessionId });
+                if (setActive) await setActive({ session: signUp.createdSessionId });
                 return;
               }
             }
