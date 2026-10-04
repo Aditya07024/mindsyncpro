@@ -1,49 +1,83 @@
 /**
  * pushNotifications.ts — Expo Push Notification registration & listeners
  * Handles permission request, token retrieval, and foreground/background notification handling.
+ * Safeguarded for Expo Go (SDK 53+ disabled remote push in Expo Go app client).
  */
 
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Platform, Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from './api';
 
-// Configure how notifications appear when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,   // Show banner even when app is open
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+/**
+ * Check if the app is currently running inside the Expo Go app client.
+ * Expo Go SDK 53+ has removed support for Android remote push notifications.
+ * Apps running in Expo Go must skip loading `expo-notifications` to avoid immediate runtime errors.
+ */
+export const isExpoGo =
+  Constants.appOwnership === 'expo' ||
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient ||
+  Constants.executionEnvironment === 'storeClient';
+
+// Safely lazy-load `expo-notifications` ONLY when NOT running in Expo Go
+let Notifications: typeof import('expo-notifications') | null = null;
+
+if (!isExpoGo && Platform.OS !== 'web') {
+  try {
+    Notifications = require('expo-notifications');
+    if (Notifications && Notifications.setNotificationHandler) {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+    }
+  } catch (e) {
+    console.warn('[Push] expo-notifications module could not be required:', e);
+  }
+}
 
 /**
  * Request push notification permissions and get the Expo push token.
- * Returns the token string or null if permissions denied / not a physical device.
+ * Returns the token string or null if permissions denied / not a physical device / running in Expo Go.
  */
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  // Push notifications not supported/needed on web
   if (Platform.OS === 'web') {
     console.log('[Push] Web platform detected — skipping push registration');
     return null;
   }
 
-  // Push notifications only work on physical devices
+  if (isExpoGo || !Notifications) {
+    console.log('[Push] Running inside Expo Go — remote notifications require a Development Build (SDK 53+)');
+    return null;
+  }
+
   if (!Device.isDevice) {
     console.log('[Push] Not a physical device — skipping push registration');
     return null;
   }
 
   try {
-    // Check existing permission status
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'MyMindTherapyFriend',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#2E6E65',
+        sound: 'default',
+        showBadge: true,
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      });
+    }
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
-    // Request permission if not already granted
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync({
         ios: {
@@ -62,29 +96,27 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       return null;
     }
 
-    // Get the Expo push token
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ||
+      Constants.easConfig?.projectId ||
+      'faba91e4-7ec7-4b6e-9c72-4a56e7ab6ac2';
 
-    const token = tokenData.data;
-    console.log('[Push] Registered Expo push token:', token);
-
-    // Set up Android notification channel
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'MyMindTherapyFriend',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#2E6E65',
-        sound: 'default',
-        showBadge: true,
-        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
-      });
+    let tokenData;
+    try {
+      tokenData = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined
+      );
+    } catch (tokenErr) {
+      console.warn('[Push] Could not retrieve Expo push token (FCM/Expo Go limitation):', tokenErr);
+      return null;
     }
 
-    return token;
+    const token = tokenData?.data;
+    if (token) {
+      console.log('[Push] Registered Expo push token:', token);
+    }
+
+    return token || null;
   } catch (err) {
     console.error('[Push] Failed to register for push notifications:', err);
     return null;
@@ -108,37 +140,43 @@ export async function sendTokenToBackend(token: string): Promise<void> {
  * Returns a cleanup function to remove the listeners.
  */
 export function setupNotificationListeners(
-  onNotificationReceived?: (notification: Notifications.Notification) => void,
-  onNotificationTapped?: (response: Notifications.NotificationResponse) => void
+  onNotificationReceived?: (notification: any) => void,
+  onNotificationTapped?: (response: any) => void
 ): () => void {
-  // Listener for notifications received while app is in foreground
-  const receivedSubscription = Notifications.addNotificationReceivedListener(
-    (notification) => {
-      console.log('[Push] Notification received in foreground:', notification.request.content.title);
-      onNotificationReceived?.(notification);
-    }
-  );
+  if (isExpoGo || !Notifications || Platform.OS === 'web') {
+    return () => {};
+  }
 
-  // Listener for when user taps on a notification (foreground or background)
-  const responseSubscription = Notifications.addNotificationResponseReceivedListener(
-    (response) => {
-      console.log('[Push] Notification tapped:', response.notification.request.content.title);
-      onNotificationTapped?.(response);
-    }
-  );
+  try {
+    const receivedSubscription = Notifications.addNotificationReceivedListener(
+      (notification: any) => {
+        console.log('[Push] Notification received in foreground:', notification.request.content.title);
+        onNotificationReceived?.(notification);
+      }
+    );
 
-  // Return cleanup function
-  return () => {
-    receivedSubscription.remove();
-    responseSubscription.remove();
-  };
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(
+      (response: any) => {
+        console.log('[Push] Notification tapped:', response.notification.request.content.title);
+        onNotificationTapped?.(response);
+      }
+    );
+
+    return () => {
+      receivedSubscription?.remove?.();
+      responseSubscription?.remove?.();
+    };
+  } catch (err) {
+    console.warn('[Push] Unable to setup notification listeners:', err);
+    return () => {};
+  }
 }
 
 /**
  * Check if the system has granted notifications permission.
  */
 export async function checkNotificationPermissionStatus(): Promise<boolean> {
-  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'web' || isExpoGo || !Notifications) return false;
   try {
     const { status } = await Notifications.getPermissionsAsync();
     return status === 'granted';
@@ -152,7 +190,7 @@ export async function checkNotificationPermissionStatus(): Promise<boolean> {
  * Synchronize and get the notification preference status (combines storage and system permission)
  */
 export async function getNotificationsPreference(): Promise<boolean> {
-  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'web' || isExpoGo || !Notifications) return false;
   try {
     const storageVal = await AsyncStorage.getItem('notifications_enabled');
     const isStorageEnabled = storageVal === 'true';
@@ -179,6 +217,15 @@ export async function handleNotificationToggle(
 ): Promise<void> {
   if (Platform.OS === 'web') {
     Alert.alert('Not Supported', 'Push notifications are not supported on web.');
+    setNotificationsEnabledState(false);
+    return;
+  }
+
+  if (isExpoGo || !Notifications) {
+    Alert.alert(
+      'Expo Go Notice',
+      'Remote Push Notifications were removed from Expo Go in SDK 53.\n\nTo test real Android/iOS push notifications, use a Development Build (`npx expo run:android`).'
+    );
     setNotificationsEnabledState(false);
     return;
   }
@@ -227,7 +274,6 @@ export async function handleNotificationToggle(
         return;
       }
 
-      // If granted, save preference and register push token
       setNotificationsEnabledState(true);
       await AsyncStorage.setItem('notifications_enabled', 'true');
       

@@ -32,9 +32,11 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "CAMERA",
-        "RECORD_AUDIO"
-      ],
-      "useNextNotificationsApi": true
+        "RECORD_AUDIO",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
     },
     "plugins": [
       [
