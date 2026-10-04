@@ -335,7 +335,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <View style={[styles.menuIconBg, { backgroundColor: '#ECFDF5' }]}>
                 <FileText size={18} color="#059669" />
               </View>
-              <Text style={styles.menuText}>Psychological Assessment Reports</Text>
+              <Text style={styles.menuText}>Wellness Reports</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
@@ -348,7 +348,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <View style={[styles.menuIconBg, { backgroundColor: '#FFF7ED' }]}>
                 <Smile size={18} color="#EA580C" />
               </View>
-              <Text style={styles.menuText}>Mood Tracker & Pattern Reflections</Text>
+              <Text style={styles.menuText}>Mood Tracker</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
@@ -688,18 +688,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
+    width: '100%',
+    overflow: 'hidden',
   },
   moodEmojiBtn: {
-    padding: Theme.spacing.xs,
+    flex: 1,
+    paddingVertical: Theme.spacing.xs,
+    paddingHorizontal: 2,
+    marginHorizontal: 1,
     borderRadius: Theme.radius.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   moodEmojiActive: {
     backgroundColor: Theme.colors.primary + '1A',
   },
   moodEmojiText: {
-    fontSize: 24,
+    fontSize: 20,
+    textAlign: 'center',
   },
   activeDot: {
     width: 4,

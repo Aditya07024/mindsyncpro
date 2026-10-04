@@ -145,12 +145,17 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
                   item.status === 'pending_payment' ? styles.badgePendingPayment :
                   styles.badgePending
                 ]}>
-                  <Text style={[
-                    styles.statusText,
-                    item.status === 'confirmed' || item.status === 'completed' ? styles.textConfirmed :
-                    item.status === 'pending_payment' ? styles.textPendingPayment :
-                    styles.textPending
-                  ]}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
+                    style={[
+                      styles.statusText,
+                      item.status === 'confirmed' || item.status === 'completed' ? styles.textConfirmed :
+                      item.status === 'pending_payment' ? styles.textPendingPayment :
+                      styles.textPending
+                    ]}
+                  >
                     {item.status === 'pending_payment' ? 'PAYMENT PENDING' : item.status.toUpperCase()}
                   </Text>
                 </View>
@@ -405,14 +410,15 @@ const styles = StyleSheet.create({
   },
   cardHeadLeft: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 6,
   },
   statusBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: Theme.radius.sm,
     alignSelf: 'flex-start',
-    flexShrink: 0,
+    flexShrink: 1,
+    maxWidth: '45%',
   },
   badgeConfirmed: {
     backgroundColor: 'rgba(76, 175, 80, 0.1)',
@@ -422,7 +428,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
+    fontSize: 9,
+    letterSpacing: 0.2,
   },
   textConfirmed: {
     color: '#4CAF50',
