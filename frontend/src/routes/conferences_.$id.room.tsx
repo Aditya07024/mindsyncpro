@@ -62,6 +62,40 @@ function ConferenceRoomPage() {
   const [admittingId, setAdmittingId] = useState<string | null>(null);
   const [admittingAll, setAdmittingAll] = useState(false);
 
+  // Recovery email state for direct room join
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+
+  const handleRecoveryEmailSubmit = async () => {
+    const cleanEmail = recoveryEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setRecoveryLoading(true);
+    try {
+      const res = await API.conference.verifyEmail(id, cleanEmail);
+      if (res.canJoin) {
+        localStorage.setItem("guest_conf_email", cleanEmail);
+        if (res.fullName) localStorage.setItem("guest_conf_name", res.fullName);
+        toast.success("Registration verified! Entering conference room...");
+        setError(null);
+        fetchJoinInfo(undefined, false);
+      } else if (res.requiresPayment) {
+        toast.info("Registration found, but payment is pending. Please complete registration on conferences page.");
+        navigate({ to: "/conferences" });
+      } else {
+        toast.error(res.message || "Unable to join room");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "No registration found for this email");
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
   const fetchWaitingQueue = async () => {
     try {
       const res = await API.conference.getWaitingRoom(id);
@@ -898,11 +932,36 @@ function ConferenceRoomPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4">
-          <AlertTriangle className="w-16 h-16 text-rose-500 mx-auto" />
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+          <AlertTriangle className="w-14 h-14 text-rose-500 mx-auto" />
           <h3 className="text-xl font-bold text-white">Access Restricted</h3>
-          <p className="text-slate-400 text-sm">{error}</p>
-          <div className="pt-4 flex justify-center gap-3">
+          <p className="text-slate-400 text-sm leading-relaxed">{error}</p>
+
+          {/* Quick email lookup for registered users */}
+          <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-left space-y-2.5 mt-2">
+            <span className="text-xs font-semibold text-teal-300 block">
+              Already registered? Enter your email to join:
+            </span>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="name@example.com"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                className="flex-1 px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none focus:border-teal-500"
+              />
+              <button
+                type="button"
+                onClick={handleRecoveryEmailSubmit}
+                disabled={recoveryLoading || !recoveryEmail.trim()}
+                className="px-4 py-2 bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+              >
+                {recoveryLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Verify & Join"}
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-2 flex justify-center gap-3">
             <button
               onClick={() => navigate({ to: "/conferences" })}
               className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2"

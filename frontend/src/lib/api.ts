@@ -461,6 +461,8 @@ const API = {
       apiCall<any>(`/api/conferences/${id}/waiting-room`),
     checkEmailStatus: (id: string, email: string) =>
       apiCall<any>(`/api/conferences/${id}/check-email`, { method: "POST", body: JSON.stringify({ email }) }),
+    verifyEmail: (id: string, email: string) =>
+      apiCall<any>(`/api/conferences/${id}/verify-email`, { method: "POST", body: JSON.stringify({ email }) }),
     admitAttendee: (id: string, registrationId?: string, email?: string) =>
       apiCall<any>(`/api/conferences/${id}/waiting-room/admit`, { method: "POST", body: JSON.stringify({ registrationId, email }) }),
     allowWaitingRoomAttendee: (id: string, registrationId?: string, email?: string) =>

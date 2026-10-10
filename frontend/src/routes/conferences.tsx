@@ -98,6 +98,7 @@ function ConferencesPage() {
   const [timeFilter, setTimeFilter] = useState<"all" | "today" | "future" | "past">("all");
   const [selectedConference, setSelectedConference] = useState<any | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [registerModalMode, setRegisterModalMode] = useState<"register" | "already_registered">("register");
 
   const { data: conferences = [], isLoading } = useQuery({
     queryKey: ["conferences", selectedCategory, search],
@@ -124,8 +125,9 @@ function ConferencesPage() {
     return true;
   });
 
-  const handleJoinClick = (conf: any) => {
+  const handleJoinClick = (conf: any, mode: "register" | "already_registered" = "register") => {
     setSelectedConference(conf);
+    setRegisterModalMode(mode);
     setIsRegisterOpen(true);
   };
 
@@ -428,30 +430,39 @@ function ConferencesPage() {
                           <span>{isLive ? "Join Room Now" : "Enter Room"}</span>
                         </button>
                       ) : (
-                        <button
-                          onClick={() => handleJoinClick(conf)}
-                          className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-                            isLive
-                              ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
-                              : conf.platform === "teams"
-                              ? "bg-blue-600 hover:bg-blue-500 text-white shadow-md hover:scale-[1.02]"
-                              : conf.platform === "google_meet"
-                              ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
-                              : "bg-[#004038] hover:bg-[#00302a] text-white shadow-md hover:scale-[1.02]"
-                          }`}
-                        >
-                          {isLive ? (
-                            <>
-                              <Play className="w-4 h-4 fill-white" />
-                              <span>Join Now</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>Join</span>
-                              <ArrowRight className="w-4 h-4" />
-                            </>
-                          )}
-                        </button>
+                        <div className="space-y-1.5">
+                          <button
+                            onClick={() => handleJoinClick(conf, "register")}
+                            className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                              isLive
+                                ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
+                                : conf.platform === "teams"
+                                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-md hover:scale-[1.02]"
+                                : conf.platform === "google_meet"
+                                ? "bg-rose-600 hover:bg-rose-500 text-white shadow-md hover:scale-[1.02]"
+                                : "bg-[#004038] hover:bg-[#00302a] text-white shadow-md hover:scale-[1.02]"
+                            }`}
+                          >
+                            {isLive ? (
+                              <>
+                                <Play className="w-4 h-4 fill-white" />
+                                <span>Join Now</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>Join</span>
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleJoinClick(conf, "already_registered")}
+                            className="w-full text-center text-xs text-teal-700 hover:text-teal-900 font-semibold py-1 hover:underline transition-colors flex items-center justify-center gap-1"
+                          >
+                            Already registered? Click here
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -490,6 +501,7 @@ function ConferencesPage() {
         conference={selectedConference}
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
+        initialMode={registerModalMode}
       />
     </div>
   );

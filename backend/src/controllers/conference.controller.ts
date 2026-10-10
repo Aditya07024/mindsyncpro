@@ -1669,4 +1669,188 @@ export class ConferenceController {
       statusMessage,
     });
   });
+
+  /** POST /conferences/:id/verify-email — Verify if user is registered by email and return next steps */
+  static verifyEmailRegistration = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { email } = req.body;
+    if (!email) throw new AppError("Email is required", 400);
+
+    const cleanEmail = String(email).toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw new AppError("Please provide a valid email address", 400);
+    }
+
+    const conference = await Conference.findById(id);
+    if (!conference) throw new AppError("Conference not found", 404);
+
+    const isCreator = req.user?.sub && String(conference.createdBy) === String(req.user.sub);
+    const hostEmailsList = conference.hostEmail
+      ? conference.hostEmail.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean)
+      : [];
+    const isDesignatedHost = Boolean(cleanEmail && hostEmailsList.includes(cleanEmail));
+    const isAdmin = await isUserAdminOrDelegated(req);
+    const isHost = Boolean(isAdmin || isCreator || isDesignatedHost);
+
+    let registration = await ConferenceRegistration.findOne({
+      conferenceId: id,
+      email: cleanEmail,
+    });
+
+    if (isHost) {
+      return res.json({
+        success: true,
+        isRegistered: true,
+        canJoin: true,
+        isHost: true,
+        fullName: registration?.fullName || (req.user as any)?.fullName || "Host",
+        email: cleanEmail,
+        paymentStatus: "free",
+        roomName: conference.roomName,
+        platform: conference.platform || "jitsi",
+        meetingLink: conference.meetingLink || "",
+        message: "Welcome Host! Entering conference room...",
+      });
+    }
+
+    if (!registration) {
+      return res.status(404).json({
+        success: false,
+        isRegistered: false,
+        canJoin: false,
+        message: "No registration found for this email address. Please register as a new attendee.",
+      });
+    }
+
+    if (registration.approvalStatus === "rejected") {
+      throw new AppError("Your registration for this conference was rejected by the admin.", 403);
+    }
+
+    const isAdmittedToMeeting = Boolean(registration.admitted === true || registration.admitStatus === "admitted");
+    const isAllowedInWaitingRoom = Boolean(registration.currentStatus === "waiting" || registration.admitStatus === "waiting");
+    const isAllowedByAdmin = isAdmittedToMeeting || isAllowedInWaitingRoom;
+
+    // If free or already paid or allowed by admin
+    if (["free", "paid"].includes(registration.paymentStatus) || isAllowedByAdmin) {
+      return res.json({
+        success: true,
+        isRegistered: true,
+        canJoin: true,
+        isAllowedByAdmin,
+        fullName: registration.fullName,
+        email: registration.email,
+        paymentStatus: registration.paymentStatus,
+        roomName: conference.roomName,
+        platform: conference.platform || "jitsi",
+        meetingLink: conference.meetingLink || "",
+        message: isAllowedByAdmin
+          ? "Allowed by Admin! Entering conference room..."
+          : "Registration confirmed! Entering conference...",
+      });
+    }
+
+    // Check if free conference
+    const isFree = conference.priceType === "free" || conference.price === 0;
+    if (isFree) {
+      registration.paymentStatus = "free";
+      registration.paymentAmount = 0;
+      await registration.save();
+      return res.json({
+        success: true,
+        isRegistered: true,
+        canJoin: true,
+        fullName: registration.fullName,
+        email: registration.email,
+        paymentStatus: "free",
+        roomName: conference.roomName,
+        platform: conference.platform || "jitsi",
+        meetingLink: conference.meetingLink || "",
+        message: "Registration verified! Entering conference...",
+      });
+    }
+
+    // Paid conference: check if razorpay order was completed
+    const existingPayment = await ConferencePayment.findOne({ registrationId: registration._id });
+    if (existingPayment?.razorpayOrderId) {
+      const { isPaid, paymentId } = await PaymentService.isOrderPaid(existingPayment.razorpayOrderId);
+      if (isPaid) {
+        registration.paymentStatus = "paid";
+        registration.paymentAmount = conference.price;
+        await registration.save();
+        existingPayment.status = "paid";
+        if (paymentId) existingPayment.razorpayPaymentId = paymentId;
+        await existingPayment.save();
+
+        return res.json({
+          success: true,
+          isRegistered: true,
+          canJoin: true,
+          fullName: registration.fullName,
+          email: registration.email,
+          paymentStatus: "paid",
+          roomName: conference.roomName,
+          platform: conference.platform || "jitsi",
+          meetingLink: conference.meetingLink || "",
+          message: "Payment confirmed! Entering conference...",
+        });
+      }
+    }
+
+    // Create/return Razorpay order for this pending registration so user can complete payment
+    try {
+      const order = await PaymentService.createOrder({
+        amount: conference.price,
+        bookingId: `conf_${registration._id}`,
+        userEmail: registration.email,
+        userName: registration.fullName,
+      });
+
+      await ConferencePayment.create({
+        conferenceId: conference._id,
+        registrationId: registration._id,
+        userId: registration.userId,
+        razorpayOrderId: order.orderId,
+        amount: conference.price,
+        currency: "INR",
+        status: "created",
+      });
+
+      return res.json({
+        success: true,
+        isRegistered: true,
+        canJoin: false,
+        requiresPayment: true,
+        orderId: order.orderId,
+        amount: conference.price,
+        currency: "INR",
+        keyId: process.env.RAZORPAY_KEY_ID || "",
+        fullName: registration.fullName,
+        email: registration.email,
+        phone: registration.phone || "",
+        roomName: conference.roomName,
+        platform: conference.platform || "jitsi",
+        meetingLink: conference.meetingLink || "",
+        message: "Registration found. Please complete your payment to join.",
+      });
+    } catch (paymentErr) {
+      console.warn("Razorpay order creation fallback in verifyEmailRegistration:", paymentErr);
+      registration.paymentStatus = "free";
+      registration.paymentAmount = 0;
+      await registration.save();
+
+      return res.json({
+        success: true,
+        isRegistered: true,
+        canJoin: true,
+        fullName: registration.fullName,
+        email: registration.email,
+        paymentStatus: "free",
+        roomName: conference.roomName,
+        platform: conference.platform || "jitsi",
+        meetingLink: conference.meetingLink || "",
+        message: "Registration verified! Entering conference...",
+      });
+    }
+  });
 }
