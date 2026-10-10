@@ -553,12 +553,13 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-teal-400" /> Phone (Optional)
+                      <Phone className="w-3.5 h-3.5 text-teal-400" /> Phone
                     </label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
+                      required
                       placeholder="+91 9876543210"
                       className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-white placeholder-slate-500 text-sm transition-all"
                     />
