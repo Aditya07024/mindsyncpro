@@ -154,7 +154,9 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
     if (!email.trim() || !emailRegex.test(email)) {
       errs.email = "Please enter a valid email address";
     }
-    if (phone && !/^\+?[0-9\s-]{8,15}$/.test(phone.trim())) {
+    if (!phone.trim()) {
+      errs.phone = "Phone number is required";
+    } else if (!/^\+?[0-9\s-]{8,15}$/.test(phone.trim())) {
       errs.phone = "Please enter a valid phone number";
     }
     setErrors(errs);
@@ -553,7 +555,7 @@ export const ConferenceRegisterModal: React.FC<ConferenceRegisterModalProps> = (
 
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-teal-400" /> Phone
+                      <Phone className="w-3.5 h-3.5 text-teal-400" /> Phone <span className="text-teal-400">*</span>
                     </label>
                     <input
                       type="tel"
