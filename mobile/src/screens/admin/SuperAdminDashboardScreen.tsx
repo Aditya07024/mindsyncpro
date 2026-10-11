@@ -56,12 +56,12 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
     retry: false,
   });
 
-  const mrr = adminStats?.mrr || 45200;
-  const userCount = adminStats?.totalUsers || 2420;
-  const therapistCount = adminStats?.totalTherapists || 320;
-  const organizationCount = adminStats?.totalOrganizations || 45;
-  const linkedTherapists = adminStats?.linkedTherapists || 210;
-  const linkedUsers = adminStats?.linkedUsers || 1540;
+  const mrr = adminStats?.mrr ?? 0;
+  const userCount = adminStats?.users ?? adminStats?.totalUsers ?? 0;
+  const therapistCount = adminStats?.therapists ?? adminStats?.totalTherapists ?? 0;
+  const organizationCount = adminStats?.totalOrgs ?? adminStats?.totalOrganizations ?? 0;
+  const linkedTherapists = adminStats?.linkedTherapists ?? 0;
+  const linkedUsers = adminStats?.linkedUsers ?? 0;
 
   const handleVerify = async (id: string, name: string) => {
     Alert.alert(

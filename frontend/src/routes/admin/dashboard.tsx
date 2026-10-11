@@ -302,10 +302,10 @@ function SuperAdminDashboard() {
     verified: countsData?.verifiedTherapistCount ?? therapists.filter((t) => t.verified).length,
     pending: countsData?.pendingTherapistCount ?? (therapists.filter((t) => !t.verified).length + orgs.filter((o) => o.verificationStatus !== 'verified').length),
     paidSubs: countsData?.activeSubCount ?? subscriptions.filter((s) => s.status === 'active').length,
-    totalUsers: countsData?.userCount ?? 0,
+    totalUsers: countsData?.userCount ?? users.length,
     totalOrgs: countsData?.orgCount ?? orgs.length,
-    totalGrossRevenue: countsData?.totalGrossRevenue ?? (therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0) || 80000),
-    sessionRevenue: countsData?.sessionRevenue ?? (therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0) || 50000),
+    totalGrossRevenue: countsData?.totalGrossRevenue ?? therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0),
+    sessionRevenue: countsData?.sessionRevenue ?? therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0),
   };
 
   // Build chart data from all therapists (only those with earnings)
@@ -379,8 +379,7 @@ function SuperAdminDashboard() {
             <h2 className="text-lg font-bold text-white">Platform Analytics</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                // { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
-                { label: 'Total Users', value: 843, icon: Users, color: 'bg-sky-600' },
+                { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
                 { label: 'Total Counsellors', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
                 { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600' },
                 { label: 'Active Subscriptions', value: platformStats.paidSubs, icon: TrendingUp, color: 'bg-violet-600' },

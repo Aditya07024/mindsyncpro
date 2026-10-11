@@ -65,8 +65,8 @@ export class AdminController {
       .populate({ path: "planId", select: "price" })
       .lean();
     
-    const dynamicMRR = activeSubscriptions.reduce((sum, sub: any) => sum + (sub.planId?.price ?? 199), 0);
-    const mrr = dynamicMRR || 45200; // Database driven with sandbox fallback
+    const dynamicMRR = activeSubscriptions.reduce((sum, sub: any) => sum + (sub.planId?.price ?? 0), 0);
+    const mrr = dynamicMRR;
 
     // 2. Scan active conversations for high-risk flags dynamically from the database
     const highRiskConversations = await Conversation.find({
@@ -518,17 +518,21 @@ export class AdminController {
     ]);
 
     const sessionRevenue = completedBookings.reduce((s, b) => s + (b.payment?.amount ?? 0), 0);
-    const totalGrossRevenue = sessionRevenue > 0 ? (sessionRevenue >= 50000 ? 80000 : sessionRevenue + 30000) : 80000;
+    const activeSubs = await Subscription.find({ status: "active" })
+      .populate({ path: "planId", select: "price" })
+      .lean();
+    const subRevenue = activeSubs.reduce((sum, s: any) => sum + (s.planId?.price ?? 0), 0);
+    const totalGrossRevenue = sessionRevenue + subRevenue;
 
     res.json({
       userCount,
       therapistCount,
-      verifiedTherapistCount: verifiedTherapistCount || 3,
+      verifiedTherapistCount,
       pendingTherapistCount,
       orgCount,
-      activeSubCount: activeSubCount || 10,
-      sessionRevenue: sessionRevenue || 50000,
-      totalGrossRevenue: totalGrossRevenue || 80000,
+      activeSubCount,
+      sessionRevenue,
+      totalGrossRevenue,
     });
   });
 
@@ -708,14 +712,11 @@ export class AdminController {
     });
   });
 
-  /** POST /admin/seed-demo-data — Trigger revenue setup on existing users/therapists/orgs */
+  /** POST /admin/seed-demo-data — Permanently disabled */
   static seedDemoData = asyncHandler(async (_req: AuthedRequest, res: Response) => {
-    const { seedRevenueOnExistingOnly } = await import("../scripts/seed-existing-only");
-    const result = await seedRevenueOnExistingOnly();
-    res.json({
-      success: true,
-      message: "Revenue data applied to existing users, therapists, and organizations successfully.",
-      data: result,
+    res.status(400).json({
+      success: false,
+      message: "Demo data seeding has been permanently disabled.",
     });
   });
 
