@@ -18,8 +18,47 @@ import {
   Calendar,
   Users,
   Tag,
+  Video,
+  Sparkles,
+  Link as LinkIcon,
+  CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 import API from "@/lib/api";
+
+function formatMeetingDateTime(dateStr: string, timeStr: string, durationStr: string) {
+  if (!dateStr) return "";
+  try {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const dateObj = new Date(year, month - 1, day);
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const suffix = (d: number) => {
+      if (d > 3 && d < 21) return "th";
+      switch (d % 10) {
+        case 1: return "st";
+        case 2: return "nd";
+        case 3: return "rd";
+        default: return "th";
+      }
+    };
+
+    let timeFormatted = timeStr || "11:00 AM";
+    if (timeStr && timeStr.includes(":")) {
+      const [h, m] = timeStr.split(":").map(Number);
+      const ampm = h >= 12 ? "PM" : "AM";
+      const h12 = h % 12 || 12;
+      timeFormatted = `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+    }
+
+    const dayStr = `${day}${suffix(day)} ${monthNames[month - 1]} ${year}`;
+    return `${dayStr} at ${timeFormatted} IST (${durationStr})`;
+  } catch {
+    return `${dateStr} at ${timeStr}`;
+  }
+}
 
 export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" | "training" }> = ({
   activeSubTab = "selection",
@@ -51,7 +90,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   const adminPrograms = adminProgramsData?.programs || [];
   const trainingEnrollments = trainingData?.enrollments || [];
 
-  // 4. Fetch Active Admin-Verified/Approved Therapists ONLY for Admin Assignment
+  // 4. Fetch All Available Therapists / Counselors for Admin Assignment
   const { data: adminTherapistsData } = useQuery({
     queryKey: ["adminTherapistsListAll"],
     queryFn: () => API.admin.pendingTherapists(),
@@ -67,16 +106,11 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
     ...(publicTherapistsData?.therapists || []),
   ];
 
-  // Strictly include ONLY therapists where Admin has verified them (verified === true or verificationStatus === "verified"/"approved")
+  // Include platform counselors deduplicated by ID
   const activeTherapists = Array.from(
     new Map(
       rawTherapistList
-        .filter(
-          (t: any) =>
-            t.verified === true ||
-            t.verificationStatus === "verified" ||
-            t.verificationStatus === "approved"
-        )
+        .filter((t: any) => Boolean(t.id || t._id))
         .map((t: any) => [String(t.id || t._id), t])
     ).values()
   );
@@ -88,10 +122,13 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
     therapistId: "",
     assignedCounselor: "Dr. Ananya Sharma (Senior Clinical Psychologist & Counselor)",
     guidanceFee: 499,
-    meetingDate: "15th October 2026 at 11:00 AM",
-    meetingLink: "https://meet.jit.si/MindSyncPro-CareerSession",
-    adminNotes: "Admin assigned senior counselor for 1-on-1 guidance consultation.",
-    status: "proposal_sent",
+    meetingDate: "",
+    datePart: "",
+    timePart: "11:00",
+    duration: "45 mins",
+    meetingLink: "",
+    adminNotes: "Application approved. Meeting scheduled with senior counselor.",
+    status: "approved",
   });
 
   const updateSelectionMutation = useMutation({
@@ -99,28 +136,62 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
       API.careerPrograms.updateCareerSelectionStatus(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminCareerSelectionRegistrations"] });
+      toast.success("Application status updated successfully");
       setShowScheduleModal(false);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update status");
     },
   });
 
   const adminAssignMutation = useMutation({
     mutationFn: (data: any) => API.careerPrograms.adminAssign(data),
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       queryClient.invalidateQueries({ queryKey: ["adminCareerSelectionRegistrations"] });
+      toast.success(res?.message || "Counselor assigned and meeting scheduled successfully!");
       setShowScheduleModal(false);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to schedule counselor meeting");
     },
   });
 
   const handleOpenScheduleModal = (r: any) => {
     setSelectedRecord(r);
+
+    // Compute tomorrow's date YYYY-MM-DD as default date
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const dd = String(tomorrow.getDate()).padStart(2, "0");
+    const defaultDatePart = `${yyyy}-${mm}-${dd}`;
+    const defaultTimePart = "11:00";
+    const defaultDuration = "45 mins";
+
+    const computedDate = formatMeetingDateTime(defaultDatePart, defaultTimePart, defaultDuration);
+    const initialDate = r.meetingDate && r.meetingDate.trim() ? r.meetingDate : computedDate;
+
+    const roomSlug = r._id ? String(r._id).slice(-6) : Math.random().toString(36).substring(7);
+    const defaultMeetingLink = r.meetingLink && r.meetingLink.trim()
+      ? r.meetingLink
+      : `https://meet.jit.si/MindSyncPro-Career-${roomSlug}`;
+
+    const initialStatus = r.status === "proposal_sent"
+      ? "proposal_sent"
+      : "approved";
+
     setScheduleForm({
       therapistId: r.therapistId || "",
       assignedCounselor: r.assignedCounselor || "Dr. Ananya Sharma (Senior Clinical Psychologist & Counselor)",
-      guidanceFee: r.guidanceFee || 499,
-      meetingDate: r.meetingDate || "15th October 2026 at 11:00 AM",
-      meetingLink: r.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
+      guidanceFee: r.guidanceFee !== undefined ? Number(r.guidanceFee) : 499,
+      meetingDate: initialDate,
+      datePart: defaultDatePart,
+      timePart: defaultTimePart,
+      duration: defaultDuration,
+      meetingLink: defaultMeetingLink,
       adminNotes: r.adminNotes || "Application approved. Meeting scheduled with senior counselor.",
-      status: r.status === "rejected" ? "approved" : r.status || "approved",
+      status: initialStatus,
     });
     setShowScheduleModal(true);
   };
@@ -129,12 +200,16 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
     e.preventDefault();
     if (!selectedRecord) return;
     const fee = Number(scheduleForm.guidanceFee || 0);
-    const targetStatus = fee > 0 ? "proposal_sent" : "approved";
+
     adminAssignMutation.mutate({
       registrationId: selectedRecord._id,
-      ...scheduleForm,
+      therapistId: scheduleForm.therapistId,
+      assignedCounselor: scheduleForm.assignedCounselor,
       guidanceFee: fee,
-      status: targetStatus,
+      meetingDate: scheduleForm.meetingDate,
+      meetingLink: scheduleForm.meetingLink,
+      adminNotes: scheduleForm.adminNotes,
+      status: scheduleForm.status,
     });
   };
 
@@ -143,6 +218,10 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
       API.careerPrograms.updateTrainingEnrollmentStatus(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminCounselingTrainingEnrollments"] });
+      toast.success("Enrollment status updated successfully");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update enrollment status");
     },
   });
 
@@ -173,6 +252,10 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
       queryClient.invalidateQueries({ queryKey: ["trainingPrograms"] });
       setShowProgramModal(false);
       resetProgramForm();
+      toast.success("Training program cohort created successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to create program");
     },
   });
 
@@ -184,6 +267,10 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
       queryClient.invalidateQueries({ queryKey: ["trainingPrograms"] });
       setShowProgramModal(false);
       resetProgramForm();
+      toast.success("Training program updated successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update program");
     },
   });
 
@@ -192,6 +279,10 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminCounselingTrainingPrograms"] });
       queryClient.invalidateQueries({ queryKey: ["trainingPrograms"] });
+      toast.success("Training program deleted successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to delete program");
     },
   });
 
@@ -770,53 +861,71 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
 
       {/* APPROVE & SCHEDULE COUNSELOR MEETING MODAL */}
       {showScheduleModal && selectedRecord && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold flex items-center gap-2 text-teal-400">
-              <Calendar className="size-5" /> Assign Counselor & Send Fee Proposal
-            </h3>
-            <p className="text-xs text-slate-400">
-              Applicant: <strong className="text-white">{selectedRecord.fullName}</strong> ({selectedRecord.schoolOrgName})
-              <br />
-              Requested Domain: <strong className="text-teal-300">{selectedRecord.counselingType || "Clinical Counseling"}</strong>
-            </p>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-xl w-full text-white space-y-5 max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-xl font-bold flex items-center gap-2 text-teal-400">
+                  <Calendar className="size-5" /> Assign Counselor & Schedule Meeting
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Applicant: <strong className="text-white">{selectedRecord.fullName}</strong> ({selectedRecord.schoolOrgName})
+                  <br />
+                  Counseling Domain: <strong className="text-teal-300">{selectedRecord.counselingType || "Clinical Counseling"}</strong>
+                  {selectedRecord.phone && <span> · Phone: <span className="font-mono text-slate-300">{selectedRecord.phone}</span></span>}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowScheduleModal(false)}
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+              >
+                <XCircle className="size-5" />
+              </button>
+            </div>
 
             <form onSubmit={handleScheduleSubmit} className="space-y-4 text-xs">
-              {/* Therapist Selection Dropdown */}
+              {/* 1. Therapist / Counselor Selection Dropdown */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Select Active System Counselor / Therapist</label>
+                <label className="block text-slate-300 font-bold mb-1.5 flex items-center justify-between">
+                  <span>1. Select Platform Counselor / Therapist</span>
+                  <span className="text-[10px] text-teal-400 font-normal">Choose from registered platform therapists</span>
+                </label>
                 <select
                   value={scheduleForm.therapistId}
                   onChange={(e) => {
-                    const selectedTherapist = activeTherapists.find((t: any) => (t.id || t._id) === e.target.value);
+                    const selId = e.target.value;
+                    const selectedTherapist = activeTherapists.find((t: any) => (t.id || t._id) === selId);
                     const tName = selectedTherapist?.name || selectedTherapist?.fullName || selectedTherapist?.therapistProfile?.name;
                     setScheduleForm({
                       ...scheduleForm,
-                      therapistId: e.target.value,
-                      assignedCounselor: tName ? `${tName} (Clinical Counselor)` : scheduleForm.assignedCounselor,
+                      therapistId: selId,
+                      assignedCounselor: tName ? `${tName} (Clinical Counselor)` : (selId === "" ? "Dr. Ananya Sharma (Senior Clinical Psychologist & Counselor)" : scheduleForm.assignedCounselor),
                     });
                   }}
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-medium"
                 >
-                  <option value="">-- Custom / Senior Clinical Counselor --</option>
+                  <option value="">-- Dr. Ananya Sharma (Senior Clinical Psychologist & Counselor) --</option>
                   {activeTherapists.map((t: any, idx: number) => {
                     const tId = t.id || t._id || `therapist-${idx}`;
                     const tName = t.name || t.fullName || t.therapistProfile?.name || "Therapist";
                     const tSpecs = Array.isArray(t.specializations)
                       ? t.specializations.join(", ")
-                      : t.specializations || t.qualification || "Psychologist";
+                      : t.specializations || t.qualification || "Clinical Counselor";
+                    const isVerified = t.verified === true || t.verificationStatus === "verified" || t.verificationStatus === "approved";
 
                     return (
                       <option key={tId} value={tId}>
-                        {tName} ({tSpecs})
+                        {tName} — {tSpecs} {isVerified ? "✓ [Verified]" : ""}
                       </option>
                     );
                   })}
                 </select>
               </div>
 
+              {/* 2. Counselor Display Name */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Assigned Counselor Display Name</label>
+                <label className="block text-slate-300 font-bold mb-1">Assigned Counselor Display Name</label>
                 <input
                   type="text"
                   required
@@ -827,58 +936,261 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">Guidance Booking Amount / Fee (₹)</label>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  value={scheduleForm.guidanceFee}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, guidanceFee: Number(e.target.value) })}
-                  placeholder="0 for Free, or amount e.g. 499"
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-mono text-sm"
-                />
-                <p className="text-[11px] text-teal-400/90 mt-1 font-medium">
-                  * Enter <strong>₹0</strong> for a Free Session (Instant Meeting Access). If fee &gt; ₹0 (e.g. ₹499), candidate must pay online before meeting room unlocks.
-                </p>
+              {/* 3. Meeting Date & Time Interactive Picker */}
+              <div className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-teal-300 font-bold flex items-center gap-1.5 text-xs">
+                    <Clock className="size-4" /> 2. Schedule Session Date, Time & Duration
+                  </label>
+                  <span className="text-[10px] text-slate-400">Interactive Slot Setup</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Date Input */}
+                  <div>
+                    <label className="block text-slate-400 text-[11px] font-semibold mb-1">Session Date</label>
+                    <input
+                      type="date"
+                      value={scheduleForm.datePart}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        const formatted = formatMeetingDateTime(newDate, scheduleForm.timePart, scheduleForm.duration);
+                        setScheduleForm({
+                          ...scheduleForm,
+                          datePart: newDate,
+                          meetingDate: formatted,
+                        });
+                      }}
+                      className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 text-xs"
+                    />
+                  </div>
+
+                  {/* Time Input */}
+                  <div>
+                    <label className="block text-slate-400 text-[11px] font-semibold mb-1">Start Time</label>
+                    <input
+                      type="time"
+                      value={scheduleForm.timePart}
+                      onChange={(e) => {
+                        const newTime = e.target.value;
+                        const formatted = formatMeetingDateTime(scheduleForm.datePart, newTime, scheduleForm.duration);
+                        setScheduleForm({
+                          ...scheduleForm,
+                          timePart: newTime,
+                          meetingDate: formatted,
+                        });
+                      }}
+                      className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 text-xs"
+                    />
+                  </div>
+
+                  {/* Duration Selector */}
+                  <div>
+                    <label className="block text-slate-400 text-[11px] font-semibold mb-1">Duration</label>
+                    <select
+                      value={scheduleForm.duration}
+                      onChange={(e) => {
+                        const newDur = e.target.value;
+                        const formatted = formatMeetingDateTime(scheduleForm.datePart, scheduleForm.timePart, newDur);
+                        setScheduleForm({
+                          ...scheduleForm,
+                          duration: newDur,
+                          meetingDate: formatted,
+                        });
+                      }}
+                      className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 text-xs font-medium"
+                    >
+                      <option value="30 mins">30 Minutes</option>
+                      <option value="45 mins">45 Minutes</option>
+                      <option value="60 mins">60 Minutes</option>
+                      <option value="90 mins">90 Minutes</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Quick Time Slot Buttons */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-slate-400 mr-1">Quick Slots:</span>
+                  {[
+                    { label: "10:00 AM", val: "10:00" },
+                    { label: "11:30 AM", val: "11:30" },
+                    { label: "02:00 PM", val: "14:00" },
+                    { label: "04:00 PM", val: "16:00" },
+                    { label: "06:00 PM", val: "18:00" },
+                  ].map((s) => (
+                    <button
+                      key={s.val}
+                      type="button"
+                      onClick={() => {
+                        const formatted = formatMeetingDateTime(scheduleForm.datePart, s.val, scheduleForm.duration);
+                        setScheduleForm({
+                          ...scheduleForm,
+                          timePart: s.val,
+                          meetingDate: formatted,
+                        });
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+                        scheduleForm.timePart === s.val
+                          ? "bg-teal-500 text-slate-950"
+                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Compiled / Editable String Display */}
+                <div>
+                  <label className="block text-slate-400 text-[11px] font-semibold mb-1">
+                    Scheduled Meeting Date & Time Display String (Visible to Candidate)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={scheduleForm.meetingDate}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, meetingDate: e.target.value })}
+                    placeholder="e.g. 15th October 2026 at 11:00 AM IST (45 mins)"
+                    className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-teal-200 focus:outline-none focus:ring-1 focus:ring-teal-400 font-mono text-[11px]"
+                  />
+                </div>
               </div>
 
+              {/* 4. Video Meeting Link with Generator */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Scheduled Meeting Date & Time</label>
-                <input
-                  type="text"
-                  required
-                  value={scheduleForm.meetingDate}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, meetingDate: e.target.value })}
-                  placeholder="e.g. 15th October 2026 at 11:00 AM"
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">Video Meeting Link (LiveKit / Jitsi / Google Meet)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-300 font-bold flex items-center gap-1">
+                    <Video className="size-3.5 text-teal-400" /> Video Meeting Room Link
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const slug = selectedRecord._id ? String(selectedRecord._id).slice(-6) : Math.random().toString(36).substring(7);
+                      setScheduleForm({
+                        ...scheduleForm,
+                        meetingLink: `https://meet.jit.si/MindSyncPro-Career-${slug}-${Date.now().toString().slice(-4)}`,
+                      });
+                      toast.success("Generated new meeting room link!");
+                    }}
+                    className="text-[10px] text-teal-400 hover:text-teal-300 font-bold underline cursor-pointer flex items-center gap-1"
+                  >
+                    <Sparkles className="size-3" /> Generate MindSync Live Room
+                  </button>
+                </div>
                 <input
                   type="text"
                   required
                   value={scheduleForm.meetingLink}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, meetingLink: e.target.value })}
-                  placeholder="e.g. https://meet.jit.si/MindSyncPro-CareerSession"
+                  placeholder="e.g. https://meet.jit.si/MindSyncPro-CareerSession or Google Meet / Zoom link"
                   className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-mono text-[11px]"
                 />
               </div>
 
+              {/* 5. Guidance Fee and Quick Fee Chips */}
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Admin Notes / Guidance Instructions</label>
+                <label className="block text-slate-300 font-bold mb-1">Guidance Booking Amount / Fee (₹)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={scheduleForm.guidanceFee}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, guidanceFee: Number(e.target.value) })}
+                    placeholder="0 for Free, or amount e.g. 499"
+                    className="w-40 rounded-xl bg-slate-800 border border-slate-700 p-3 text-emerald-400 focus:outline-none focus:ring-1 focus:ring-teal-400 font-mono font-bold text-sm"
+                  />
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[0, 299, 499, 999, 1499].map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setScheduleForm({ ...scheduleForm, guidanceFee: f })}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                          scheduleForm.guidanceFee === f
+                            ? "bg-emerald-500 text-slate-950"
+                            : "bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        {f === 0 ? "Free (₹0)" : `₹${f}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Meeting Status Workflow Radio Selector */}
+              <div className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-2.5">
+                <label className="block text-slate-300 font-bold text-xs">
+                  Meeting Approval & Status Workflow
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
+                      scheduleForm.status === "approved"
+                        ? "bg-teal-950/60 border-teal-400 text-teal-200"
+                        : "bg-slate-900 border-slate-700/80 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="meetingStatus"
+                      value="approved"
+                      checked={scheduleForm.status === "approved"}
+                      onChange={() => setScheduleForm({ ...scheduleForm, status: "approved" })}
+                      className="mt-0.5 text-teal-500 focus:ring-teal-400"
+                    />
+                    <div>
+                      <div className="font-bold text-xs text-white flex items-center gap-1">
+                        <CheckCircle2 className="size-3.5 text-emerald-400" /> Approve & Confirm Now
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                        Candidate gets instant access to join room and scheduled time right away.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
+                      scheduleForm.status === "proposal_sent"
+                        ? "bg-teal-950/60 border-teal-400 text-teal-200"
+                        : "bg-slate-900 border-slate-700/80 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="meetingStatus"
+                      value="proposal_sent"
+                      checked={scheduleForm.status === "proposal_sent"}
+                      onChange={() => setScheduleForm({ ...scheduleForm, status: "proposal_sent" })}
+                      className="mt-0.5 text-teal-500 focus:ring-teal-400"
+                    />
+                    <div>
+                      <div className="font-bold text-xs text-white flex items-center gap-1">
+                        <Calendar className="size-3.5 text-purple-400" /> Send Fee Proposal First
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                        Candidate must pay fee (₹{scheduleForm.guidanceFee}) before video room unlocks.
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* 7. Admin Notes / Guidance Instructions */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Admin Notes / Session Focus</label>
                 <textarea
                   rows={2}
                   value={scheduleForm.adminNotes}
                   onChange={(e) => setScheduleForm({ ...scheduleForm, adminNotes: e.target.value })}
-                  placeholder="Additional guidelines for the candidate..."
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                  placeholder="Additional instructions or meeting topic for the candidate..."
+                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-teal-400 text-xs"
                 />
               </div>
 
-              <div className="pt-4 flex gap-3">
+              {/* Form Action Buttons */}
+              <div className="pt-3 flex gap-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowScheduleModal(false)}
@@ -889,13 +1201,19 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                 <button
                   type="submit"
                   disabled={adminAssignMutation.isPending || updateSelectionMutation.isPending}
-                  className="flex-1 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 transition shadow-lg cursor-pointer"
+                  className="flex-1 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-3 transition shadow-lg cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {adminAssignMutation.isPending || updateSelectionMutation.isPending
-                    ? "Saving Changes..."
-                    : Number(scheduleForm.guidanceFee || 0) > 0
-                    ? `Send ₹${scheduleForm.guidanceFee} Fee Proposal to Candidate`
-                    : "Approve & Schedule Free Session"}
+                  {adminAssignMutation.isPending || updateSelectionMutation.isPending ? (
+                    "Saving Changes..."
+                  ) : scheduleForm.status === "approved" ? (
+                    <>
+                      <CheckCircle2 className="size-4" /> Approve & Confirm Session
+                    </>
+                  ) : (
+                    <>
+                      <Calendar className="size-4" /> Send ₹{scheduleForm.guidanceFee} Proposal to Candidate
+                    </>
+                  )}
                 </button>
               </div>
             </form>

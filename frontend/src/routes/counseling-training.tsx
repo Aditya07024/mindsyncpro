@@ -71,7 +71,7 @@ function CounselingTrainingPage() {
     queryFn: () => API.careerPrograms.getTrainingPrograms(),
   });
 
-  const programs = programsData?.programs || [];
+  const programs = (programsData?.programs || []).filter((p: any) => p.isActive !== false && p.isActive === true);
 
   // Fetch user's own enrollments (Pending + Approved)
   const { data: myEnrollmentsData, isLoading: isMyEnrollmentsLoading } = useQuery({
@@ -89,6 +89,7 @@ function CounselingTrainingPage() {
   ];
 
   const filteredPrograms = programs.filter((prog: any) => {
+    if (prog.isActive === false) return false;
     const matchesCategory = selectedCategory === "All" || prog.category === selectedCategory;
     const matchesSearch =
       prog.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -213,11 +213,10 @@ export async function updateCareerSelectionStatus(req: Request, res: Response): 
             await TherapistBooking.create({
               userId: registration.userId,
               therapistId: targetTherapistId,
-              therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
               slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
               status: "confirmed",
               videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-              notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+              therapistNotes: `Career Guidance Session: ${registration.counselingType || "Career Selection"} with ${registration.assignedCounselor || "Counselor"}`,
               payment: {
                 amount: registration.guidanceFee || 0,
                 paid: true,
@@ -240,13 +239,7 @@ export async function updateCareerSelectionStatus(req: Request, res: Response): 
 
 export async function getCounselingTrainingPrograms(_req: Request, res: Response): Promise<void> {
   try {
-    let programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
-
-    if (programs.length === 0) {
-      await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
-      programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
-    }
-
+    const programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
     res.json({ success: true, programs });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to fetch training programs" });
@@ -345,13 +338,7 @@ export async function getMyCounselingTrainingEnrollments(req: AuthedRequest, res
 
 export async function getAdminCounselingTrainingPrograms(_req: Request, res: Response): Promise<void> {
   try {
-    let programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
-
-    if (programs.length === 0) {
-      await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
-      programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
-    }
-
+    const programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
     res.json({ success: true, programs });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to fetch admin training programs" });
@@ -478,9 +465,9 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
     }
 
     const numericFee = Number(guidanceFee || 0);
-    // If fee is 0, session is immediately approved and free. If fee > 0, candidate must pay first (proposal_sent).
+    // Use admin's specified status if provided; otherwise fallback to proposal_sent if fee > 0 else approved
     const targetStatus = status ? status : (numericFee > 0 ? "proposal_sent" : "approved");
-    const paymentStatus = numericFee > 0 ? (targetStatus === "approved" ? "paid" : "unpaid") : "free";
+    const paymentStatus = targetStatus === "approved" ? (numericFee > 0 ? "paid" : "free") : (numericFee > 0 ? "unpaid" : "free");
 
     const registration = await CareerSelectionRegistration.findByIdAndUpdate(
       registrationId,
@@ -492,6 +479,7 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
         meetingLink: meetingLink || "",
         adminNotes: adminNotes || "",
         status: targetStatus,
+        guidanceRequested: targetStatus === "approved" || targetStatus === "proposal_sent" ? false : true,
         paymentStatus,
       },
       { new: true }
@@ -502,7 +490,7 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
       return;
     }
 
-    // Auto-create TherapistBooking if approved & session is free or paid
+    // Auto-create or update TherapistBooking if approved
     if (targetStatus === "approved" && registration.userId) {
       try {
         const existingBooking = await TherapistBooking.findOne({
@@ -510,28 +498,39 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
           notes: { $regex: registration.counselingType || "Career Selection", $options: "i" },
         });
 
+        const slotTime = registration.meetingDate
+          ? new Date(registration.meetingDate)
+          : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        const targetTherapistId = await getValidTherapistId(registration.therapistId);
+
         if (!existingBooking) {
-          const slotTime = registration.meetingDate
-            ? new Date(registration.meetingDate)
-            : new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-          const targetTherapistId = await getValidTherapistId(registration.therapistId);
-
           if (targetTherapistId) {
             await TherapistBooking.create({
               userId: registration.userId,
               therapistId: targetTherapistId,
-              therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
               slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
               status: "confirmed",
               videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-              notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+              therapistNotes: `Career Guidance Session: ${registration.counselingType || "Career Selection"} with ${registration.assignedCounselor || "Counselor"}`,
               payment: {
                 amount: numericFee,
                 paid: true,
               },
             });
           }
+        } else {
+          await TherapistBooking.findByIdAndUpdate(existingBooking._id, {
+            slot: isNaN(slotTime.getTime()) ? existingBooking.slot : slotTime,
+            videoRoomId: registration.meetingLink || existingBooking.videoRoomId,
+            therapistNotes: `Career Guidance Session: ${registration.counselingType || "Career Selection"} with ${registration.assignedCounselor || "Counselor"}`,
+            ...(targetTherapistId ? { therapistId: targetTherapistId } : {}),
+            status: "confirmed",
+            payment: {
+              amount: numericFee,
+              paid: true,
+            },
+          });
         }
       } catch (err) {
         console.error("Non-fatal TherapistBooking creation error:", err);
@@ -541,9 +540,9 @@ export async function adminAssignCounselorAndFee(req: Request, res: Response): P
     res.json({
       success: true,
       registration,
-      message: numericFee > 0
-        ? `Proposal sent to ${registration.fullName}! Assigned counselor: ${registration.assignedCounselor}, Fee: ₹${registration.guidanceFee}`
-        : `Free guidance session approved & scheduled for ${registration.fullName}!`,
+      message: targetStatus === "approved"
+        ? `Meeting approved & scheduled with ${registration.assignedCounselor} for ${registration.fullName}!`
+        : `Fee proposal of ₹${registration.guidanceFee} sent to ${registration.fullName}!`,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to assign counselor proposal" });
@@ -589,11 +588,10 @@ export async function payAndConfirmGuidanceBooking(req: AuthedRequest, res: Resp
           booking = await TherapistBooking.create({
             userId,
             therapistId: targetTherapistId,
-            therapistName: registration.assignedCounselor || "Senior Clinical Counselor",
             slot: isNaN(slotTime.getTime()) ? new Date(Date.now() + 24 * 60 * 60 * 1000) : slotTime,
             status: "confirmed",
             videoRoomId: registration.meetingLink || "https://meet.jit.si/MindSyncPro-CareerSession",
-            notes: `Career Guidance Session: ${registration.counselingType || "Career Selection"}`,
+            therapistNotes: `Career Guidance Session: ${registration.counselingType || "Career Selection"} with ${registration.assignedCounselor || "Counselor"}`,
             payment: {
               amount: registration.guidanceFee || 0,
               paid: true,

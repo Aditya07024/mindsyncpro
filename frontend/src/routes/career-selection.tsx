@@ -1066,7 +1066,7 @@ function CounselorGuidanceBookingCard({ registration }: { registration: any }) {
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 rounded-xl bg-black/40 px-3.5 py-2 text-xs font-bold text-teal-200 border border-white/10 shrink-0">
-                  <Calendar className="size-4 text-teal-400" /> 15th October 2026 at 11:00 AM
+                  <Calendar className="size-4 text-teal-400" /> Session Schedule Pending Admin Setup
                 </div>
               )}
             </div>
