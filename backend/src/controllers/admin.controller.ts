@@ -501,7 +501,9 @@ export class AdminController {
       pendingTherapistCount,
       orgCount,
       activeSubCount,
-      completedBookings
+      completedBookings,
+      totalBookingsCount,
+      recentBookingsRaw
     ] = await Promise.all([
       User.countDocuments({ role: "user", deletedAt: null }),
       User.countDocuments({ role: "therapist", deletedAt: null }),
@@ -514,7 +516,14 @@ export class AdminController {
           { status: "completed" },
           { status: "confirmed", "payment.paid": true }
         ]
-      }).select("payment").lean()
+      }).select("payment").lean(),
+      TherapistBooking.countDocuments(),
+      TherapistBooking.find({})
+        .populate("userId", "fullName phoneMasked")
+        .populate("therapistId", "fullName therapistProfile")
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .lean()
     ]);
 
     const sessionRevenue = completedBookings.reduce((s, b) => s + (b.payment?.amount ?? 0), 0);
@@ -523,6 +532,17 @@ export class AdminController {
       .lean();
     const subRevenue = activeSubs.reduce((sum, s: any) => sum + (s.planId?.price ?? 0), 0);
     const totalGrossRevenue = sessionRevenue + subRevenue;
+
+    const recentBookings = (recentBookingsRaw || []).map((b: any) => ({
+      id: b._id,
+      userName: b.userId?.fullName || b.userId?.phoneMasked || "Seeker",
+      therapistName: b.therapistId?.therapistProfile?.name || b.therapistId?.fullName || "Therapist",
+      status: b.status,
+      slot: b.slot,
+      amount: b.payment?.amount ?? 0,
+      paid: !!b.payment?.paid,
+      createdAt: b.createdAt,
+    }));
 
     res.json({
       userCount,
@@ -533,6 +553,8 @@ export class AdminController {
       activeSubCount,
       sessionRevenue,
       totalGrossRevenue,
+      totalBookingsCount,
+      recentBookings,
     });
   });
 

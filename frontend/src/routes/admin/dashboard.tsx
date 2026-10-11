@@ -6,7 +6,9 @@ import {
   Shield, Users, BarChart2, CheckCircle, XCircle, Search,
   TrendingUp, LogOut, AlertTriangle, Star, Eye, EyeOff, Building2,
   DollarSign, CreditCard, ArrowUpRight, BadgeCheck, Banknote,
-  Trash2
+  Trash2, Video, GraduationCap, Calendar, Sparkles, RefreshCw, Clock,
+  ArrowRight, ExternalLink, ShoppingBag, Compass, Tag, Check,
+  ChevronRight, Activity, Bell, FileText, Lock, AlertCircle, Camera
 } from 'lucide-react';
 import API from '@/lib/api';
 import { getNormalizedPosterUrl } from '@/lib/utils';
@@ -98,18 +100,21 @@ function SuperAdminDashboard() {
     queryKey: ['admin-therapists'],
     queryFn: () => API.admin.pendingTherapists(),
     enabled: !!isLoaded && !!isSignedIn && (tab === 'therapists' || tab === 'overview') && Boolean(myAccess?.canManageTherapists || myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
   });
 
   const { data: subsData } = useQuery({
     queryKey: ['admin-subscriptions'],
     queryFn: () => API.subscription.admin.all(),
     enabled: !!isLoaded && !!isSignedIn && (tab === 'subscriptions' || tab === 'overview') && Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
   });
 
   const { data: orgsData, isLoading: orgsLoading } = useQuery({
     queryKey: ['admin-orgs'],
     queryFn: () => API.admin.pendingOrgs(),
     enabled: !!isLoaded && !!isSignedIn && (tab === 'organizations' || tab === 'overview') && Boolean(myAccess?.canManageOrganizations || myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
   });
 
   const { data: plansData, isLoading: plansLoading } = useQuery({
@@ -122,13 +127,98 @@ function SuperAdminDashboard() {
     queryKey: ['admin-users'],
     queryFn: () => API.admin.users(),
     enabled: !!isLoaded && !!isSignedIn && (tab === 'users' || tab === 'overview') && Boolean(myAccess?.canManageUsers || myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
   });
 
   const { data: countsData } = useQuery({
     queryKey: ['admin-platform-counts'],
     queryFn: () => API.admin.platformCounts(),
     enabled: !!isLoaded && !!isSignedIn && tab === 'overview' && Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
   });
+
+  const { data: confsData, isLoading: confsLoading } = useQuery({
+    queryKey: ['admin-conferences'],
+    queryFn: () => API.conference.list({ status: 'all' }),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'conferences' || tab === 'overview') && Boolean(myAccess?.canHostMeeting || myAccess?.canViewRegistrations || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
+  });
+
+  const { data: studentVerifData } = useQuery({
+    queryKey: ['admin-student-verifications'],
+    queryFn: () => API.admin.studentVerifications.list(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'student-verifications' || tab === 'overview') && Boolean(myAccess?.canManageUsers || myAccess?.isFullAdmin || myAccess?.isSuperAdmin),
+    refetchInterval: 30000,
+  });
+
+  const { data: careerRegsData } = useQuery({
+    queryKey: ['admin-career-registrations'],
+    queryFn: () => API.careerPrograms.getCareerSelectionRegistrations(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'career-selection' || tab === 'overview') && Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin || myAccess?.isSuperAdmin),
+    refetchInterval: 30000,
+  });
+
+  const { data: popupData } = useQuery({
+    queryKey: ['admin-popup-announcement'],
+    queryFn: () => API.popupAnnouncement.get(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'popup-announcement' || tab === 'overview') && Boolean(myAccess?.canManageWorkshopPopup || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
+  });
+
+  const { data: meetingPhotosData } = useQuery({
+    queryKey: ['admin-meeting-photos'],
+    queryFn: () => API.meetingPhotos.getAdminAll(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'meeting-photos' || tab === 'overview') && Boolean(myAccess?.canManageWorkshopPopup || myAccess?.canHostMeeting || myAccess?.isFullAdmin),
+    refetchInterval: 30000,
+  });
+
+  const { data: partnersData } = useQuery({
+    queryKey: ['adminPartners'],
+    queryFn: () => API.partners.list(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'network-partners' || tab === 'overview') && Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics),
+    refetchInterval: 30000,
+  });
+
+  const { data: digitalProductsData } = useQuery({
+    queryKey: ['adminDigitalProducts'],
+    queryFn: () => API.digitalProducts.list(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'digital-products' || tab === 'overview') && Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics),
+    refetchInterval: 30000,
+  });
+
+  const { data: adBannerData } = useQuery({
+    queryKey: ['admin-ad-banner'],
+    queryFn: () => API.admin.adBanner.get(),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'ad-banner' || tab === 'overview') && Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageWorkshopPopup),
+    refetchInterval: 30000,
+  });
+
+  const [overviewActivityFilter, setOverviewActivityFilter] = useState<'all' | 'pending' | 'users' | 'bookings' | 'subs' | 'conferences'>('all');
+
+  const [isRefreshingOverview, setIsRefreshingOverview] = useState(false);
+  const handleRefreshOverview = async () => {
+    setIsRefreshingOverview(true);
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ['admin-platform-counts'] }),
+      qc.invalidateQueries({ queryKey: ['admin-users'] }),
+      qc.invalidateQueries({ queryKey: ['admin-therapists'] }),
+      qc.invalidateQueries({ queryKey: ['admin-subscriptions'] }),
+      qc.invalidateQueries({ queryKey: ['admin-orgs'] }),
+      qc.invalidateQueries({ queryKey: ['admin-plans'] }),
+      qc.invalidateQueries({ queryKey: ['admin-conferences'] }),
+      qc.invalidateQueries({ queryKey: ['admin-student-verifications'] }),
+      qc.invalidateQueries({ queryKey: ['admin-career-registrations'] }),
+      qc.invalidateQueries({ queryKey: ['admin-popup-announcement'] }),
+      qc.invalidateQueries({ queryKey: ['admin-meeting-photos'] }),
+      qc.invalidateQueries({ queryKey: ['adminPartners'] }),
+      qc.invalidateQueries({ queryKey: ['adminDigitalProducts'] }),
+      qc.invalidateQueries({ queryKey: ['admin-ad-banner'] }),
+    ]);
+    setTimeout(() => {
+      setIsRefreshingOverview(false);
+      toast.success('Live dashboard data updated ✓');
+    }, 350);
+  };
 
   const allowedTabs = [
     { key: 'overview', label: 'Overview', allowed: Boolean(myAccess?.canViewAnalytics || myAccess?.isFullAdmin) },
@@ -300,12 +390,14 @@ function SuperAdminDashboard() {
   const platformStats = {
     totalTherapists: countsData?.therapistCount ?? therapists.length,
     verified: countsData?.verifiedTherapistCount ?? therapists.filter((t) => t.verified).length,
-    pending: countsData?.pendingTherapistCount ?? (therapists.filter((t) => !t.verified).length + orgs.filter((o) => o.verificationStatus !== 'verified').length),
+    pending: countsData?.pendingTherapistCount ?? therapists.filter((t) => !t.verified).length,
     paidSubs: countsData?.activeSubCount ?? subscriptions.filter((s) => s.status === 'active').length,
     totalUsers: countsData?.userCount ?? users.length,
     totalOrgs: countsData?.orgCount ?? orgs.length,
-    totalGrossRevenue: countsData?.totalGrossRevenue ?? therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0),
-    sessionRevenue: countsData?.sessionRevenue ?? therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0),
+    totalGrossRevenue: countsData?.totalGrossRevenue ?? 0,
+    sessionRevenue: countsData?.sessionRevenue ?? 0,
+    totalBookingsCount: countsData?.totalBookingsCount ?? 0,
+    recentBookings: (countsData?.recentBookings ?? []) as any[],
   };
 
   // Build chart data from all therapists (only those with earnings)
@@ -374,54 +466,716 @@ function SuperAdminDashboard() {
 
 
         {/* OVERVIEW TAB */}
-        {tab === 'overview' && (
-          <div className="space-y-6">
-            <h2 className="text-lg font-bold text-white">Platform Analytics</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600' },
-                { label: 'Total Counsellors', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600' },
-                { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600' },
-                { label: 'Active Subscriptions', value: platformStats.paidSubs, icon: TrendingUp, color: 'bg-violet-600' },
-              ].map((s, i) => (
-                <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  className="bg-slate-800 rounded-xl border border-slate-700 p-4">
-                  <div className={`grid size-9 place-items-center rounded-lg ${s.color} mb-3`}>
-                    <s.icon className="size-4 text-white" />
+        {tab === 'overview' && (() => {
+          const pendingTherapistsList = therapists.filter((t) => !t.verified || t.verificationStatus === 'pending');
+          const studentList: any[] = studentVerifData?.verifications || studentVerifData?.students || [];
+          const pendingStudentsList = studentList.filter((s: any) => s.studentIdVerificationStatus === 'pending' || (!s.studentIdVerificationStatus && s.studentIdCardUrl));
+          const pendingOrgsList = orgs.filter((o) => o.verificationStatus !== 'verified');
+          const hasPendingActions = pendingTherapistsList.length > 0 || pendingStudentsList.length > 0 || pendingOrgsList.length > 0;
+          const confList: any[] = Array.isArray(confsData) ? confsData : [];
+          const publishedConfs = confList.filter((c) => c.status === 'published');
+          const recentUsers = users.slice(0, 8);
+          const careerRegistrations: any[] = careerRegsData?.registrations || [];
+          const activeSubscriptions = subscriptions.filter((s: any) => s.status === 'active');
+          const subscriptionRevenue = Math.max(0, platformStats.totalGrossRevenue - platformStats.sessionRevenue);
+          const recentBookings: any[] = platformStats.recentBookings || [];
+
+          // Synthesize a live chronological events timeline across all modules
+          const allEvents = [
+            ...recentUsers.map((u: any) => ({
+              id: `user-${u.id || u._id}`,
+              category: 'users' as const,
+              title: `${u.name || 'New Seeker'} registered`,
+              subtitle: `${u.phone || 'Phone verified'} · Tier: ${(u.tier || 'free').toUpperCase()} · Streak: ${u.streak || 0}d`,
+              time: u.createdAt ? new Date(u.createdAt) : new Date(),
+              badge: (u.tier || 'free').toUpperCase(),
+              badgeColor: u.tier === 'pro' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-slate-700/80 text-slate-300 border-slate-600',
+              icon: Users,
+              iconColor: 'text-sky-400',
+              tabKey: 'users' as const,
+            })),
+            ...recentBookings.map((b: any) => ({
+              id: `booking-${b.id}`,
+              category: 'bookings' as const,
+              title: `Session: ${b.userName} ➔ ${b.therapistName}`,
+              subtitle: `Slot: ${new Date(b.slot).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} at ${new Date(b.slot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} · ${b.amount > 0 ? `₹${b.amount}` : 'Free/Covered Session'}`,
+              time: b.createdAt ? new Date(b.createdAt) : new Date(b.slot),
+              badge: (b.status || 'confirmed').toUpperCase(),
+              badgeColor: b.status === 'confirmed' || b.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+              icon: Calendar,
+              iconColor: 'text-emerald-400',
+              tabKey: 'earnings' as const,
+            })),
+            ...pendingTherapistsList.map((t: any) => ({
+              id: `therapist-${t.id || t._id}`,
+              category: 'pending' as const,
+              title: `${t.name || 'Counsellor'} credentials awaiting review`,
+              subtitle: `RCI: ${t.rciNumber || 'Submitted'} · ${t.email || t.phone || 'Application submitted'}`,
+              time: new Date(),
+              badge: 'ACTION NEEDED',
+              badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+              icon: AlertTriangle,
+              iconColor: 'text-amber-400',
+              tabKey: 'therapists' as const,
+            })),
+            ...pendingStudentsList.map((s: any) => ({
+              id: `student-${s._id || s.id}`,
+              category: 'pending' as const,
+              title: `${s.fullName || 'Student'} uploaded College ID card`,
+              subtitle: `${s.schoolCollegeName || 'Student'} · Pending student discount verification`,
+              time: s.createdAt ? new Date(s.createdAt) : new Date(),
+              badge: 'STUDENT ID',
+              badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+              icon: GraduationCap,
+              iconColor: 'text-sky-400',
+              tabKey: 'student-verifications' as const,
+            })),
+            ...activeSubscriptions.map((s: any) => ({
+              id: `sub-${s._id || s.id}`,
+              category: 'subs' as const,
+              title: `Active Subscription: ${s.plan || 'Elite Membership'}`,
+              subtitle: `ID: ${s.razorpaySubscriptionId || (s._id ? String(s._id).slice(-8) : 'Direct')} · Monthly recurring active (₹999/mo)`,
+              time: s.createdAt ? new Date(s.createdAt) : new Date(),
+              badge: 'ACTIVE SUB',
+              badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+              icon: CreditCard,
+              iconColor: 'text-emerald-400',
+              tabKey: 'subscriptions' as const,
+            })),
+            ...careerRegistrations.slice(0, 6).map((reg: any) => ({
+              id: `career-${reg._id || reg.id}`,
+              category: 'users' as const,
+              title: `Career Guidance: ${reg.fullName}`,
+              subtitle: `${reg.counselingType || reg.schoolOrgName || 'Career Guidance'} · Status: ${reg.paymentStatus || 'unpaid'}`,
+              time: reg.createdAt ? new Date(reg.createdAt) : new Date(),
+              badge: (reg.paymentStatus || 'unpaid').toUpperCase(),
+              badgeColor: reg.paymentStatus === 'paid' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+              icon: Compass,
+              iconColor: 'text-violet-400',
+              tabKey: 'career-selection' as const,
+            })),
+            ...confList.slice(0, 4).map((c: any) => ({
+              id: `conf-${c._id || c.id}`,
+              category: 'conferences' as const,
+              title: `Conference: ${c.title}`,
+              subtitle: `${c.meetingDate || 'Upcoming'} ${c.meetingTime || ''} · ${c.registeredCount || 0} attendees registered`,
+              time: c.createdAt ? new Date(c.createdAt) : new Date(),
+              badge: (c.status || 'draft').toUpperCase(),
+              badgeColor: c.status === 'published' ? 'bg-teal-500/20 text-teal-300 border-teal-500/30' : 'bg-slate-700 text-slate-300 border-slate-600',
+              icon: Video,
+              iconColor: 'text-teal-400',
+              tabKey: 'conferences' as const,
+            })),
+          ].sort((a, b) => b.time.getTime() - a.time.getTime());
+
+          const filteredEvents = overviewActivityFilter === 'all'
+            ? allEvents
+            : allEvents.filter((e) => e.category === overviewActivityFilter);
+
+          return (
+            <div className="space-y-6">
+              {/* Header with Live Status & Refresh */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Activity className="size-5 text-emerald-400" />
+                      Live Platform Overview & Updates
+                    </h2>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live Database Sync
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Auto-updates every 30s
+                    </span>
                   </div>
-                  <p className="text-3xl font-black text-white">{s.value}</p>
-                  <p className="text-xs text-slate-400 mt-1">{s.label}</p>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Secondary stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[
-                { label: 'Verified Counsellors', value: platformStats.verified, color: 'text-green-400' },
-                { label: 'Pending Review', value: platformStats.pending, color: 'text-amber-400' },
-                { label: 'Total Gross Revenue', value: `₹${platformStats.totalGrossRevenue.toLocaleString('en-IN')}`, color: 'text-violet-400' },
-              ].map((s) => (
-                <div key={s.label} className="bg-slate-800 rounded-xl border border-slate-700 p-4">
-                  <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                  <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Centralized command center: All platform updates, verifications, bookings, subscriptions, and events in one place.
+                  </p>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRefreshOverview}
+                    disabled={isRefreshingOverview}
+                    className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`size-3.5 text-slate-400 ${isRefreshingOverview ? 'animate-spin text-emerald-400' : ''}`} />
+                    {isRefreshingOverview ? 'Refreshing...' : 'Refresh Live Feed'}
+                  </button>
+                </div>
+              </div>
 
-            {/* Booking-based revenue summary */}
-            <div className="bg-gradient-to-r from-emerald-900/50 to-teal-900/50 rounded-xl border border-emerald-800 p-6">
-              <p className="text-xs text-emerald-400 uppercase tracking-wider font-bold mb-3">Total Booking Revenue</p>
-              <p className="text-4xl font-black text-white">
-                ₹{platformStats.sessionRevenue.toLocaleString('en-IN')}
-              </p>
-              <p className="text-sm text-emerald-300 mt-1">
-                Payout due (70%): ₹{therapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')} · Commission (30%): ₹{therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}
-              </p>
+              {/* Core Platform Analytics Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Users', value: platformStats.totalUsers, icon: Users, color: 'bg-sky-600', tabKey: 'users' },
+                  { label: 'Total Counsellors', value: platformStats.totalTherapists, icon: CheckCircle, color: 'bg-blue-600', tabKey: 'therapists' },
+                  { label: 'Organizations', value: platformStats.totalOrgs, icon: Building2, color: 'bg-indigo-600', tabKey: 'organizations' },
+                  { label: 'Active Subscriptions', value: platformStats.paidSubs, icon: TrendingUp, color: 'bg-violet-600', tabKey: 'subscriptions' },
+                ].map((s, i) => (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => setTab(s.tabKey as any)}
+                    className="bg-slate-800 hover:bg-slate-750 cursor-pointer rounded-xl border border-slate-700 p-4 transition hover:border-slate-600 group"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`grid size-9 place-items-center rounded-lg ${s.color}`}>
+                        <s.icon className="size-4 text-white" />
+                      </div>
+                      <ChevronRight className="size-4 text-slate-500 group-hover:text-slate-300 transition" />
+                    </div>
+                    <p className="text-3xl font-black text-white">{s.value}</p>
+                    <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Secondary stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[
+                  { label: 'Verified Counsellors', value: platformStats.verified, color: 'text-green-400', tabKey: 'therapists' },
+                  { label: 'Pending Review', value: platformStats.pending, color: platformStats.pending > 0 ? 'text-amber-400' : 'text-slate-400', tabKey: 'therapists', alert: platformStats.pending > 0 },
+                  { label: 'Total Gross Revenue', value: `₹${platformStats.totalGrossRevenue.toLocaleString('en-IN')}`, color: 'text-violet-400', tabKey: 'earnings' },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    onClick={() => setTab(s.tabKey as any)}
+                    className="bg-slate-800 hover:bg-slate-750 cursor-pointer rounded-xl border border-slate-700 p-4 transition hover:border-slate-600 flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                        {s.alert && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Action Needed
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                    </div>
+                    <ChevronRight className="size-4 text-slate-500" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Booking-based revenue summary & Breakdown */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 bg-gradient-to-r from-emerald-900/40 via-teal-900/30 to-slate-800 rounded-xl border border-emerald-800/80 p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-emerald-400 uppercase tracking-wider font-bold">Total Booking Revenue</p>
+                      <button onClick={() => setTab('earnings')} className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                        Financial Details <ChevronRight className="size-3" />
+                      </button>
+                    </div>
+                    <p className="text-4xl font-black text-white">
+                      ₹{platformStats.sessionRevenue.toLocaleString('en-IN')}
+                    </p>
+                    <p className="text-xs text-emerald-300 mt-1">
+                      Payout due (70%): ₹{therapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')} · Commission (30%): ₹{therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-emerald-800/50 flex items-center justify-between text-xs text-slate-300">
+                    <span>Completed Therapy Sessions: <strong className="text-white">{therapists.reduce((s, t) => s + (t.sessionsGiven ?? 0), 0)}</strong></span>
+                    <span>Total Bookings: <strong className="text-white">{platformStats.totalBookingsCount || therapists.reduce((s, t) => s + (t.totalBookings ?? 0), 0)}</strong></span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs text-violet-400 uppercase tracking-wider font-bold">Subscription Revenue</p>
+                      <button onClick={() => setTab('subscriptions')} className="text-xs text-violet-400 hover:text-violet-300 font-semibold flex items-center gap-1">
+                        View Subs <ChevronRight className="size-3" />
+                      </button>
+                    </div>
+                    <p className="text-3xl font-black text-white">
+                      ₹{subscriptionRevenue.toLocaleString('en-IN')}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Active Paying Subscribers: <strong className="text-white">{platformStats.paidSubs}</strong>
+                    </p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
+                    <span>Gross Total: <strong className="text-emerald-400 font-bold">₹{platformStats.totalGrossRevenue.toLocaleString('en-IN')}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTION CENTER: PENDING VERIFICATIONS & APPROVALS */}
+              <div className="bg-slate-800/80 rounded-xl border border-slate-700 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className={`size-4 ${hasPendingActions ? 'text-amber-400' : 'text-emerald-400'}`} />
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                      Pending Approvals & Verification Queue
+                    </h3>
+                    {hasPendingActions && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        {pendingTherapistsList.length + pendingStudentsList.length + pendingOrgsList.length} Pending
+                      </span>
+                    )}
+                  </div>
+                  {!hasPendingActions && (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-400 font-medium">
+                      <Check className="size-3.5" /> All Clear
+                    </span>
+                  )}
+                </div>
+
+                {hasPendingActions ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Pending Counsellors */}
+                    {pendingTherapistsList.length > 0 && (
+                      <div className="bg-slate-900/60 rounded-lg border border-amber-500/30 p-3.5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                            <CheckCircle className="size-3.5" /> Counsellors ({pendingTherapistsList.length})
+                          </span>
+                          <button onClick={() => setTab('therapists')} className="text-[11px] text-amber-400 hover:underline">
+                            Open Tab →
+                          </button>
+                        </div>
+                        <div className="space-y-1.5">
+                          {pendingTherapistsList.slice(0, 3).map((t: any) => (
+                            <div key={t.id || t._id} className="text-xs bg-slate-800/70 p-2.5 rounded border border-slate-700/60 flex items-center justify-between">
+                              <div className="truncate mr-2">
+                                <p className="font-semibold text-white truncate">{t.name || "Counsellor"}</p>
+                                <p className="text-[11px] text-slate-400 truncate">{t.email || t.phone || t.rciNumber || "Pending Review"}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  onClick={() => setVerifyModal({ open: true, id: t.id || t._id, name: t.name, verify: true, type: 'therapist' })}
+                                  className="px-2.5 py-1 text-[10px] font-bold rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40"
+                                >
+                                  Verify Now
+                                </button>
+                                <button
+                                  onClick={() => setTab('therapists')}
+                                  className="px-2 py-1 text-[10px] font-semibold rounded bg-slate-700 hover:bg-slate-600 text-slate-300"
+                                >
+                                  Details
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Student IDs */}
+                    {pendingStudentsList.length > 0 && (
+                      <div className="bg-slate-900/60 rounded-lg border border-sky-500/30 p-3.5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+                            <GraduationCap className="size-3.5" /> Student IDs ({pendingStudentsList.length})
+                          </span>
+                          <button onClick={() => setTab('student-verifications')} className="text-[11px] text-sky-400 hover:underline">
+                            Open Tab →
+                          </button>
+                        </div>
+                        <div className="space-y-1.5">
+                          {pendingStudentsList.slice(0, 3).map((s: any) => (
+                            <div key={s._id || s.id} className="text-xs bg-slate-800/70 p-2.5 rounded border border-slate-700/60 flex items-center justify-between">
+                              <div className="truncate mr-2">
+                                <p className="font-semibold text-white truncate">{s.fullName || "Student"}</p>
+                                <p className="text-[11px] text-slate-400 truncate">{s.schoolCollegeName || s.phoneMasked || "ID Uploaded"}</p>
+                              </div>
+                              <button
+                                onClick={() => setTab('student-verifications')}
+                                className="px-2.5 py-1 text-[10px] font-bold rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 shrink-0"
+                              >
+                                Review ID
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Organizations */}
+                    {pendingOrgsList.length > 0 && (
+                      <div className="bg-slate-900/60 rounded-lg border border-purple-500/30 p-3.5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+                            <Building2 className="size-3.5" /> Organizations ({pendingOrgsList.length})
+                          </span>
+                          <button onClick={() => setTab('organizations')} className="text-[11px] text-purple-400 hover:underline">
+                            Open Tab →
+                          </button>
+                        </div>
+                        <div className="space-y-1.5">
+                          {pendingOrgsList.slice(0, 3).map((o: any) => (
+                            <div key={o._id || o.id} className="text-xs bg-slate-800/70 p-2.5 rounded border border-slate-700/60 flex items-center justify-between">
+                              <div className="truncate mr-2">
+                                <p className="font-semibold text-white truncate">{o.name || "Organization"}</p>
+                                <p className="text-[11px] text-slate-400 truncate">{o.officialEmail || "Pending Approval"}</p>
+                              </div>
+                              <button
+                                onClick={() => setTab('organizations')}
+                                className="px-2.5 py-1 text-[10px] font-bold rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 shrink-0"
+                              >
+                                Review Org
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-3.5 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-400 text-xs">
+                    <CheckCircle className="size-4 shrink-0 text-emerald-400" />
+                    <span>All counsellor credentials, student ID verifications, and organization requests are fully reviewed. No actions pending.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* UNIFIED REAL-TIME ACTIVITY & UPDATES STREAM */}
+              <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-700/80">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="size-4 text-violet-400" />
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                      Live Platform Updates & Activity Stream
+                    </h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">
+                      {allEvents.length} Recent Events
+                    </span>
+                  </div>
+
+                  {/* Filter chips */}
+                  <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+                    {[
+                      { key: 'all', label: 'All Updates' },
+                      { key: 'pending', label: 'Pending Actions' },
+                      { key: 'users', label: 'Users & Programs' },
+                      { key: 'bookings', label: 'Therapy Sessions' },
+                      { key: 'subs', label: 'Subscriptions' },
+                      { key: 'conferences', label: 'Conferences' },
+                    ].map((f) => (
+                      <button
+                        key={f.key}
+                        onClick={() => setOverviewActivityFilter(f.key as any)}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition ${
+                          overviewActivityFilter === f.key
+                            ? 'bg-violet-600 text-white'
+                            : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-700/60'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {filteredEvents.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic py-2">No activity records found under this filter.</p>
+                ) : (
+                  <div className="divide-y divide-slate-700/50">
+                    {filteredEvents.slice(0, 10).map((evt) => (
+                      <div
+                        key={evt.id}
+                        onClick={() => setTab(evt.tabKey)}
+                        className="py-2.5 px-3 -mx-3 rounded-lg hover:bg-slate-750/70 transition cursor-pointer flex items-center justify-between gap-3 group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-slate-900/80 border border-slate-700/80">
+                            <evt.icon className={`size-4 ${evt.iconColor}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-200 group-hover:text-white truncate">
+                              {evt.title}
+                            </p>
+                            <p className="text-[11px] text-slate-400 truncate">
+                              {evt.subtitle}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${evt.badgeColor}`}>
+                            {evt.badge}
+                          </span>
+                          <span className="text-[10px] text-slate-500 hidden sm:inline">
+                            {evt.time.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          </span>
+                          <ChevronRight className="size-3.5 text-slate-600 group-hover:text-slate-400 transition" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 2-COLUMN SECTION A: RECENT BOOKINGS & VIDEO CONFERENCES */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* REAL THERAPY BOOKINGS FEED */}
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="size-4 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Recent Therapy Bookings</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        {platformStats.totalBookingsCount || recentBookings.length} Total
+                      </span>
+                    </div>
+                    <button onClick={() => setTab('earnings')} className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
+                      Financials <ChevronRight className="size-3" />
+                    </button>
+                  </div>
+
+                  {recentBookings.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No bookings recorded yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {recentBookings.slice(0, 5).map((b: any) => (
+                        <div key={b.id || b._id} className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-700/70 flex items-center justify-between text-xs">
+                          <div className="truncate mr-3">
+                            <p className="font-semibold text-white truncate">
+                              {b.userName || "Seeker"} ➔ {b.therapistName || "Counsellor"}
+                            </p>
+                            <p className="text-[11px] text-slate-400 truncate">
+                              Slot: {new Date(b.slot).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} at {new Date(b.slot).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-bold text-slate-300">
+                              {b.amount > 0 ? `₹${b.amount}` : 'Free'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              b.status === 'confirmed' || b.status === 'completed'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-slate-700 text-slate-400'
+                            }`}>
+                              {b.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-700/70 flex items-center justify-between text-xs text-slate-400">
+                    <span>Revenue per session & payouts tracked</span>
+                    <button onClick={() => setTab('earnings')} className="text-emerald-400 hover:underline">
+                      View Payout Details →
+                    </button>
+                  </div>
+                </div>
+
+                {/* VIDEO CONFERENCES & WEBINARS FEED */}
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Video className="size-4 text-teal-400" />
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Video Conferences & Webinars</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-300 border border-teal-500/20">
+                        {confList.length} Total ({publishedConfs.length} Live)
+                      </span>
+                    </div>
+                    <button onClick={() => setTab('conferences')} className="text-xs text-teal-400 hover:underline flex items-center gap-1 font-semibold">
+                      Manage <ChevronRight className="size-3" />
+                    </button>
+                  </div>
+
+                  {confList.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No conferences scheduled yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {confList.slice(0, 4).map((c: any) => (
+                        <div key={c._id || c.id} className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-700/80 hover:border-teal-500/40 transition">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-0.5 truncate mr-2">
+                              <p className="text-xs font-bold text-white truncate">{c.title}</p>
+                              <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                                <span>{c.meetingDate || 'TBD'}</span>
+                                <span>{c.meetingTime || ''}</span>
+                                <span className="text-emerald-400 font-semibold">{c.priceType === 'free' ? 'FREE' : `₹${c.price}`}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'published' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700 text-slate-300'}`}>
+                                {c.status}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {c.registeredCount || 0} registered
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Popup announcement banner indicator */}
+                  <div className="pt-2 border-t border-slate-700/70 flex items-center justify-between text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5">
+                      <Bell className="size-3.5 text-amber-400" />
+                      Workshop Popup: <strong className={popupData?.isActive ? "text-emerald-400" : "text-slate-400"}>{popupData?.isActive ? "ACTIVE" : "INACTIVE"}</strong>
+                    </span>
+                    <button onClick={() => setTab('popup-announcement')} className="text-xs text-slate-300 hover:text-white underline">
+                      Configure Popup →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2-COLUMN SECTION B: USERS & ACTIVE SUBSCRIPTIONS */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* RECENT USER SIGNUPS FEED */}
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="size-4 text-sky-400" />
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Latest Registered Users</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                        {platformStats.totalUsers} Total
+                      </span>
+                    </div>
+                    <button onClick={() => setTab('users')} className="text-xs text-sky-400 hover:underline flex items-center gap-1 font-semibold">
+                      View All Users <ChevronRight className="size-3" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {recentUsers.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">No users found.</p>
+                    ) : (
+                      recentUsers.slice(0, 5).map((u: any) => (
+                        <div key={u.id || u._id} className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-700/70 flex items-center justify-between text-xs">
+                          <div className="truncate mr-3">
+                            <p className="font-semibold text-white truncate">{u.name || "User"}</p>
+                            <p className="text-[11px] text-slate-400 truncate">{u.phone || u.email || "No contact"}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-slate-300 uppercase">
+                              {u.tier || "free"}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700/70 flex items-center justify-between text-xs text-slate-400">
+                    <span>Seekers across independent & partner channels</span>
+                    <button onClick={() => setTab('users')} className="text-sky-400 hover:underline">
+                      Manage all {platformStats.totalUsers} users →
+                    </button>
+                  </div>
+                </div>
+
+                {/* ACTIVE SUBSCRIPTIONS & CAREER PROGRAM */}
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="size-4 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider">Active Subscriptions</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                        {activeSubscriptions.length} Active
+                      </span>
+                    </div>
+                    <button onClick={() => setTab('subscriptions')} className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
+                      All Subscriptions <ChevronRight className="size-3" />
+                    </button>
+                  </div>
+
+                  {activeSubscriptions.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No active subscriptions currently.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {activeSubscriptions.slice(0, 3).map((s: any) => (
+                        <div key={s._id || s.id} className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-700/70 flex items-center justify-between text-xs">
+                          <div className="truncate mr-3">
+                            <p className="font-semibold text-white truncate">{s.plan || "Plan"}</p>
+                            <p className="text-[11px] text-slate-400 truncate">
+                              ID: {s.razorpaySubscriptionId || (s._id ? String(s._id).slice(-8) : 'Direct')}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                              {s.status}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {s.endDate ? `Expires: ${new Date(s.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}` : ''}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Career Selection quick banner */}
+                  <div className="pt-2 border-t border-slate-700/70 flex items-center justify-between text-xs">
+                    <span className="text-slate-400 flex items-center gap-1.5">
+                      <Compass className="size-3.5 text-violet-400" />
+                      Career Guidance Registrations: <strong className="text-white">{careerRegistrations.length} Students</strong>
+                    </span>
+                    <button onClick={() => setTab('career-selection')} className="text-xs text-violet-400 hover:underline">
+                      Review Registrations →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* ALL DASHBOARD MODULES QUICK ACCESS & OPERATIONS MATRIX */}
+              <div className="bg-slate-800/60 rounded-xl border border-slate-700 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="size-4 text-violet-400" />
+                    Complete Platform Operations Matrix & Tab Shortcuts
+                  </h3>
+                  <span className="text-[11px] text-slate-400">Click to jump directly to any tab</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
+                  {[
+                    { key: 'conferences', label: 'Conferences', icon: Video, color: 'text-teal-400', badge: confList.length },
+                    { key: 'popup-announcement', label: 'Workshop Popup', icon: Bell, color: 'text-amber-400', badge: popupData?.isActive ? 'Active' : 'Off' },
+                    { key: 'meeting-photos', label: 'Screenshots', icon: Camera, color: 'text-rose-400' },
+                    { key: 'users', label: 'Users Roster', icon: Users, color: 'text-sky-400', badge: platformStats.totalUsers },
+                    { key: 'therapists', label: 'Counsellors', icon: CheckCircle, color: 'text-blue-400', badge: platformStats.totalTherapists },
+                    { key: 'organizations', label: 'Organizations', icon: Building2, color: 'text-indigo-400', badge: platformStats.totalOrgs },
+                    { key: 'subscriptions', label: 'Subscriptions', icon: CreditCard, color: 'text-emerald-400', badge: platformStats.paidSubs },
+                    { key: 'plans', label: 'Pricing Plans', icon: Tag, color: 'text-purple-400' },
+                    { key: 'earnings', label: 'Financials', icon: DollarSign, color: 'text-green-400' },
+                    { key: 'permissions', label: 'Roles & Access', icon: Lock, color: 'text-yellow-400' },
+                    { key: 'digital-products', label: 'Digital Shop', icon: ShoppingBag, color: 'text-pink-400' },
+                    { key: 'network-partners', label: 'Partners', icon: Building2, color: 'text-cyan-400' },
+                    { key: 'career-selection', label: 'Career Program', icon: Compass, color: 'text-violet-400', badge: careerRegistrations.length },
+                    { key: 'student-verifications', label: 'Student IDs', icon: GraduationCap, color: 'text-amber-400', badge: pendingStudentsList.length ? `${pendingStudentsList.length} New` : undefined },
+                    { key: 'ad-banner', label: 'Home Ad Banner', icon: FileText, color: 'text-teal-400' },
+                  ]
+                    .filter((m) => allowedTabs.some((t) => t.key === m.key))
+                    .map((m) => (
+                      <button
+                        key={m.key}
+                        onClick={() => setTab(m.key as any)}
+                        className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/50 hover:bg-slate-700/80 border border-slate-700/70 hover:border-slate-500 transition text-left group"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <m.icon className={`size-3.5 ${m.color} shrink-0`} />
+                          <span className="text-xs font-medium text-slate-200 group-hover:text-white truncate">{m.label}</span>
+                        </div>
+                        {m.badge !== undefined && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+                            {m.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* USERS TAB */}
         {tab === 'users' && (
