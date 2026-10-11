@@ -639,8 +639,14 @@ function SuperAdminDashboard() {
                 {[
                   { label: 'Verified Counsellors', value: platformStats.verified, color: 'text-green-400', tabKey: 'therapists' },
                   { label: 'Pending Review', value: platformStats.pending, color: platformStats.pending > 0 ? 'text-amber-400' : 'text-slate-400', tabKey: 'therapists', alert: platformStats.pending > 0 },
-                  { label: 'Total Gross Revenue', value: `₹${platformStats.totalGrossRevenue.toLocaleString('en-IN')}`, color: 'text-violet-400', tabKey: 'earnings' },
-                ].map((s) => (
+                  {
+                    label: 'Total Gross Revenue',
+                    value: `₹${platformStats.totalGrossRevenue.toLocaleString('en-IN')}`,
+                    color: 'text-violet-400',
+                    tabKey: 'earnings',
+                    sub: `₹${platformStats.sessionRevenue.toLocaleString('en-IN')} Bookings + ₹${subscriptionRevenue.toLocaleString('en-IN')} Subs`,
+                  },
+                ].map((s: any) => (
                   <div
                     key={s.label}
                     onClick={() => setTab(s.tabKey as any)}
@@ -656,6 +662,9 @@ function SuperAdminDashboard() {
                         )}
                       </div>
                       <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                      {s.sub && (
+                        <p className="text-[11px] text-slate-500 mt-0.5 font-medium">{s.sub}</p>
+                      )}
                     </div>
                     <ChevronRight className="size-4 text-slate-500" />
                   </div>
@@ -1553,172 +1562,240 @@ function SuperAdminDashboard() {
         )}
 
         {/* EARNINGS TAB */}
-        {tab === 'earnings' && (
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-white">Therapist Booking Earnings</h2>
-                <p className="text-xs text-slate-400 mt-1">
+        {tab === 'earnings' && (() => {
+          const subscriptionRevenue = Math.max(0, platformStats.totalGrossRevenue - platformStats.sessionRevenue);
+          const activeSubsList = subscriptions.filter((s: any) => s.status === 'active');
+
+          return (
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Platform Financial Earnings & Revenue Ledger</h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Complete revenue transparency: Total Platform Gross (₹{platformStats.totalGrossRevenue.toLocaleString('en-IN')}) = Active Subscriptions (₹{subscriptionRevenue.toLocaleString('en-IN')}) + Therapy Bookings (₹{platformStats.sessionRevenue.toLocaleString('en-IN')}).
+                  </p>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search therapist..."
+                    className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  />
+                </div>
+              </div>
+
+              {/* Platform-wide totals */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  {
+                    label: 'Total Platform Gross',
+                    value: `₹${platformStats.totalGrossRevenue.toLocaleString('en-IN')}`,
+                    color: 'text-violet-400',
+                    sub: `₹${platformStats.sessionRevenue.toLocaleString('en-IN')} Bookings + ₹${subscriptionRevenue.toLocaleString('en-IN')} Subs`,
+                  },
+                  {
+                    label: 'Active Subscriptions',
+                    value: `₹${subscriptionRevenue.toLocaleString('en-IN')}`,
+                    color: 'text-emerald-400',
+                    sub: `${activeSubsList.length} Active paying subscriber(s) · Elite Plan`,
+                  },
+                  {
+                    label: 'Booking Gross Revenue',
+                    value: `₹${therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`,
+                    color: 'text-blue-400',
+                    sub: `${therapists.reduce((s, t) => s + (t.sessionsGiven ?? 0), 0)} paid session(s) completed`,
+                  },
+                  {
+                    label: 'Platform Commission (30%)',
+                    value: `₹${therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}`,
+                    color: 'text-pink-400',
+                    sub: 'mymindtherapyfriend retained',
+                  },
+                ].map((card) => (
+                  <div key={card.label} className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                    <p className="text-xs text-slate-400 font-semibold">{card.label}</p>
+                    <p className={`text-2xl font-black mt-2 ${card.color}`}>{card.value}</p>
+                    <p className="text-[11px] text-slate-500 mt-1">{card.sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Active Subscriptions Breakdown Card */}
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <CreditCard className="size-4 text-emerald-400" />
+                      Active Subscriptions Revenue (₹{subscriptionRevenue.toLocaleString('en-IN')})
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Monthly recurring platform plans (paid directly via Razorpay subscription links)
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setTab('subscriptions')}
+                    className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    Manage Subscriptions <ChevronRight className="size-3" />
+                  </button>
+                </div>
+
+                {activeSubsList.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic">No active subscriptions currently.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {activeSubsList.map((s: any) => (
+                      <div key={s._id || s.id} className="p-3 rounded-lg bg-slate-900/60 border border-slate-700/70 flex items-center justify-between text-xs">
+                        <div>
+                          <p className="font-semibold text-white">
+                            {s.userId?.fullName || s.userId?.phoneMasked || "Subscriber"} · <span className="text-emerald-400 font-bold">{s.plan || "Elite Plan"}</span>
+                          </p>
+                          <p className="text-[11px] text-slate-400">
+                            Razorpay Sub ID: {s.razorpaySubscriptionId || String(s._id).slice(-8)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-emerald-400 text-sm">₹999 / mo</p>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                            {s.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Therapist Session Bookings Section Header */}
+              <div className="pt-2">
+                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                  <Calendar className="size-4 text-blue-400" />
+                  Therapist Session Bookings Ledger & Payouts Due (70%: ₹{filteredTherapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')})
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
                   Booking-based revenue only. Click a therapist row to expand all individual bookings.
                 </p>
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search therapist..."
-                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
-                />
+
+              {/* Per-therapist expandable ledger */}
+              <div className="space-y-3">
+                {filteredTherapists.length === 0 && (
+                  <p className="text-slate-500 text-sm text-center py-8">No therapists found.</p>
+                )}
+                {filteredTherapists.map((t) => {
+                  const isExpanded = expandedTherapistId === t.id;
+                  const bookings: any[] = t.bookingDetails ?? [];
+                  return (
+                    <div key={t.id} className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+                      {/* Therapist summary row */}
+                      <button
+                        onClick={() => setExpandedTherapistId(isExpanded ? null : t.id)}
+                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-750 transition text-left"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="grid size-10 place-items-center rounded-xl bg-slate-700 text-slate-200 font-bold text-sm">
+                            {t.name?.charAt(0) ?? 'T'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-white">{t.name}</p>
+                            <p className="text-xs text-slate-400">{t.email || 'No email'} · {t.sessionsGiven} paid sessions</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6 text-right">
+                          <div>
+                            <p className="text-xs text-slate-500">Gross</p>
+                            <p className="font-bold text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Platform (30%)</p>
+                            <p className="font-medium text-red-400">-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500">Payout (70%)</p>
+                            <p className="font-bold text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
+                          </div>
+                          {(t.totalPayout ?? 0) > 0 && (
+                            <button
+                              disabled={markPaidMutation.isPending}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const pwd = prompt('Enter Admin Password to confirm payout:');
+                                if (pwd) markPaidMutation.mutate({ therapistId: t.id, password: pwd });
+                              }}
+                              className="flex items-center gap-1.5 text-xs font-bold bg-emerald-900/40 text-emerald-400 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-900/60 transition disabled:opacity-50"
+                            >
+                              <Banknote className="size-3.5" /> Mark Paid
+                            </button>
+                          )}
+                          <span className="text-slate-500 text-xs">{isExpanded ? '▲' : '▼'} {bookings.length} bookings</span>
+                        </div>
+                      </button>
+
+                      {/* Expanded booking rows */}
+                      {isExpanded && (
+                        <div className="border-t border-slate-700">
+                          {bookings.length === 0 ? (
+                            <p className="text-slate-500 text-xs px-5 py-3">No bookings yet.</p>
+                          ) : (
+                            <table className="w-full text-xs text-left">
+                              <thead>
+                                <tr className="bg-slate-900/60 text-slate-500 uppercase tracking-wider">
+                                  <th className="px-5 py-2">Booking ID</th>
+                                  <th className="px-5 py-2">Date & Slot</th>
+                                  <th className="px-5 py-2">Fee</th>
+                                  <th className="px-5 py-2">Status</th>
+                                  <th className="px-5 py-2">Payout (70%)</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-800/60">
+                                {bookings.map((b: any) => {
+                                  const isEarned = b.status === 'completed' || (b.status === 'confirmed' && b.paid);
+                                  return (
+                                    <tr key={b.id} className="text-slate-300 hover:bg-slate-700/30">
+                                      <td className="px-5 py-2 font-mono text-[11px] text-slate-400">#{String(b.id).slice(-6)}</td>
+                                      <td className="px-5 py-2">
+                                        {b.date ? new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                      </td>
+                                      <td className="px-5 py-2 font-semibold text-white">₹{(b.fee ?? 0).toLocaleString('en-IN')}</td>
+                                      <td className="px-5 py-2">
+                                        <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${
+                                          b.status === 'completed' ? 'bg-blue-900/40 text-blue-400' :
+                                          b.status === 'confirmed' ? 'bg-green-900/40 text-green-400' :
+                                          b.status === 'cancelled' ? 'bg-red-900/40 text-red-400' :
+                                          'bg-slate-700 text-slate-400'
+                                        }`}>{b.status}</span>
+                                      </td>
+                                      <td className="px-5 py-2 font-semibold">
+                                        {isEarned
+                                          ? <span className="text-emerald-400">₹{Math.round((b.fee ?? 0) * 0.7).toLocaleString('en-IN')}</span>
+                                          : <span className="text-slate-600">—</span>
+                                        }
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                              <tfoot>
+                                <tr className="bg-slate-900/40 font-bold border-t border-slate-600">
+                                  <td colSpan={2} className="px-5 py-3 text-slate-300">Total ({t.sessionsGiven} paid)</td>
+                                  <td className="px-5 py-3 text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</td>
+                                  <td className="px-5 py-3"></td>
+                                  <td className="px-5 py-3 text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
-
-            {/* Platform-wide totals */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                {
-                  label: 'Total Gross (Bookings)',
-                  value: `₹${therapists.reduce((s, t) => s + (t.grossEarnings ?? 0), 0).toLocaleString('en-IN')}`,
-                  color: 'text-blue-400',
-                  sub: `${therapists.reduce((s, t) => s + (t.sessionsGiven ?? 0), 0)} paid sessions across all therapists`,
-                },
-                {
-                  label: 'Platform Commission (30%)',
-                  value: `₹${therapists.reduce((s, t) => s + (t.platformCommission ?? 0), 0).toLocaleString('en-IN')}`,
-                  color: 'text-red-400',
-                  sub: 'mymindtherapyfriend retained',
-                },
-                {
-                  label: 'Total Payout Due (70%)',
-                  value: `₹${filteredTherapists.reduce((s, t) => s + (t.totalPayout ?? 0), 0).toLocaleString('en-IN')}`,
-                  color: 'text-emerald-400',
-                  sub: 'To be disbursed to therapists',
-                },
-              ].map((card) => (
-                <div key={card.label} className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-                  <p className="text-xs text-slate-400 font-semibold">{card.label}</p>
-                  <p className={`text-2xl font-black mt-2 ${card.color}`}>{card.value}</p>
-                  <p className="text-[11px] text-slate-500 mt-1">{card.sub}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Per-therapist expandable ledger */}
-            <div className="space-y-3">
-              {filteredTherapists.length === 0 && (
-                <p className="text-slate-500 text-sm text-center py-8">No therapists found.</p>
-              )}
-              {filteredTherapists.map((t) => {
-                const isExpanded = expandedTherapistId === t.id;
-                const bookings: any[] = t.bookingDetails ?? [];
-                return (
-                  <div key={t.id} className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
-                    {/* Therapist summary row */}
-                    <button
-                      onClick={() => setExpandedTherapistId(isExpanded ? null : t.id)}
-                      className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-750 transition text-left"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="grid size-10 place-items-center rounded-xl bg-slate-700 text-slate-200 font-bold text-sm">
-                          {t.name?.charAt(0) ?? 'T'}
-                        </div>
-                        <div>
-                          <p className="font-bold text-white">{t.name}</p>
-                          <p className="text-xs text-slate-400">{t.email || 'No email'} · {t.sessionsGiven} paid sessions</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-6 text-right">
-                        <div>
-                          <p className="text-xs text-slate-500">Gross</p>
-                          <p className="font-bold text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500">Platform (30%)</p>
-                          <p className="font-medium text-red-400">-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500">Payout (70%)</p>
-                          <p className="font-bold text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
-                        </div>
-                        {(t.totalPayout ?? 0) > 0 && (
-                          <button
-                            disabled={markPaidMutation.isPending}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const pwd = prompt('Enter Admin Password to confirm payout:');
-                              if (pwd) markPaidMutation.mutate({ therapistId: t.id, password: pwd });
-                            }}
-                            className="flex items-center gap-1.5 text-xs font-bold bg-emerald-900/40 text-emerald-400 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-900/60 transition disabled:opacity-50"
-                          >
-                            <Banknote className="size-3.5" /> Mark Paid
-                          </button>
-                        )}
-                        <span className="text-slate-500 text-xs">{isExpanded ? '▲' : '▼'} {bookings.length} bookings</span>
-                      </div>
-                    </button>
-
-                    {/* Expanded booking rows */}
-                    {isExpanded && (
-                      <div className="border-t border-slate-700">
-                        {bookings.length === 0 ? (
-                          <p className="text-slate-500 text-xs px-5 py-3">No bookings yet.</p>
-                        ) : (
-                          <table className="w-full text-xs text-left">
-                            <thead>
-                              <tr className="bg-slate-900/60 text-slate-500 uppercase tracking-wider">
-                                <th className="px-5 py-2">Booking ID</th>
-                                <th className="px-5 py-2">Date & Slot</th>
-                                <th className="px-5 py-2">Fee</th>
-                                <th className="px-5 py-2">Status</th>
-                                <th className="px-5 py-2">Payout (70%)</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800/60">
-                              {bookings.map((b: any) => {
-                                const isEarned = b.status === 'completed' || (b.status === 'confirmed' && b.paid);
-                                return (
-                                  <tr key={b.id} className="text-slate-300 hover:bg-slate-700/30">
-                                    <td className="px-5 py-2 font-mono text-[11px] text-slate-400">#{String(b.id).slice(-6)}</td>
-                                    <td className="px-5 py-2">
-                                      {b.date ? new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
-                                    </td>
-                                    <td className="px-5 py-2 font-semibold text-white">₹{(b.fee ?? 0).toLocaleString('en-IN')}</td>
-                                    <td className="px-5 py-2">
-                                      <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${
-                                        b.status === 'completed' ? 'bg-blue-900/40 text-blue-400' :
-                                        b.status === 'confirmed' ? 'bg-green-900/40 text-green-400' :
-                                        b.status === 'cancelled' ? 'bg-red-900/40 text-red-400' :
-                                        'bg-slate-700 text-slate-400'
-                                      }`}>{b.status}</span>
-                                    </td>
-                                    <td className="px-5 py-2 font-semibold">
-                                      {isEarned
-                                        ? <span className="text-emerald-400">₹{Math.round((b.fee ?? 0) * 0.7).toLocaleString('en-IN')}</span>
-                                        : <span className="text-slate-600">—</span>
-                                      }
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                            <tfoot>
-                              <tr className="bg-slate-900/40 font-bold border-t border-slate-600">
-                                <td colSpan={2} className="px-5 py-3 text-slate-300">Total ({t.sessionsGiven} paid)</td>
-                                <td className="px-5 py-3 text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</td>
-                                <td className="px-5 py-3"></td>
-                                <td className="px-5 py-3 text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+          );
+        })()}
         {tab === 'counseling-pricing' && <AdminCounselingPricingTab />}
         {tab === 'student-verifications' && <AdminStudentVerificationsTab />}
         {tab === 'ad-banner' && <AdminAdBannerTab />}
