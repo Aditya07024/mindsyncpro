@@ -723,18 +723,44 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Category</label>
-                  <select
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-400 font-semibold">Category</label>
+                    <span className="text-[10px] text-cyan-400">Custom Category Input</span>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    list="category-suggestions"
                     value={programForm.category}
                     onChange={(e) => setProgramForm({ ...programForm, category: e.target.value })}
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  >
-                    <option value="CBT Certification">CBT Certification</option>
-                    <option value="Child Psychology">Child Psychology</option>
-                    <option value="Trauma Care">Trauma Care</option>
-                    <option value="Clinical Supervision">Clinical Supervision</option>
-                    <option value="General Counseling">General Counseling</option>
-                  </select>
+                    placeholder="Enter or select category (e.g. CBT Certification)"
+                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 text-xs"
+                  />
+                  <datalist id="category-suggestions">
+                    <option value="CBT Certification" />
+                    <option value="Child Psychology" />
+                    <option value="Trauma Care" />
+                    <option value="Clinical Supervision" />
+                    <option value="General Counseling" />
+                    <option value="Neurodevelopmental & ADHD" />
+                    <option value="Couple & Marriage Counseling" />
+                  </datalist>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {["CBT Certification", "Child Psychology", "Trauma Care", "Clinical Supervision", "General Counseling"].map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setProgramForm({ ...programForm, category: cat })}
+                        className={`text-[10px] px-2 py-0.5 rounded-lg border transition cursor-pointer ${
+                          programForm.category === cat
+                            ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-semibold"
+                            : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
