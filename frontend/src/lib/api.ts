@@ -788,6 +788,13 @@ const API = {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
+    getProgramCardConfig: () =>
+      apiCall<{ success: boolean; config: any }>("/api/career-programs/cards-config"),
+    updateProgramCardConfig: (data: any) =>
+      apiCall<{ success: boolean; config: any; message: string }>("/api/career-programs/cards-config", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
   },
 
   adminPricing: {

@@ -44,6 +44,11 @@ function CounselingTrainingPage() {
   const [show24hPopup, setShow24hPopup] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [expandedDescIds, setExpandedDescIds] = useState<Record<string, boolean>>({});
+
+  const toggleDesc = (id: string) => {
+    setExpandedDescIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const [form, setForm] = useState({
     fullName: "",
@@ -307,9 +312,35 @@ function CounselingTrainingPage() {
                             {prog.title}
                           </h3>
 
-                          <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
-                            {prog.description}
-                          </p>
+                          {(() => {
+                            const desc = prog.description || "";
+                            const isLong = desc.length > 120;
+                            const isExpanded = Boolean(expandedDescIds[prog._id]);
+
+                            return (
+                              <div className="space-y-1.5">
+                                <p
+                                  className={`text-xs text-slate-600 leading-relaxed whitespace-pre-line transition-all ${
+                                    !isExpanded && isLong ? "line-clamp-3" : ""
+                                  }`}
+                                >
+                                  {desc}
+                                </p>
+                                {isLong && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleDesc(prog._id);
+                                    }}
+                                    className="text-[11px] font-bold text-cyan-700 hover:text-cyan-900 transition underline underline-offset-2 cursor-pointer inline-flex items-center gap-1"
+                                  >
+                                    {isExpanded ? "Read less ▴" : "Read full description ▾"}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           <div className="space-y-2 pt-2 border-t border-slate-100 text-xs text-slate-500 font-medium">
                             <div className="flex items-center gap-2">
@@ -402,6 +433,17 @@ function CounselingTrainingPage() {
                   Fee: <strong className="text-emerald-700 font-mono text-sm">₹{selectedProgram.fee}</strong> • Starts {selectedProgram.startDate}
                 </p>
               </div>
+
+              {selectedProgram.description && (
+                <div className="rounded-2xl bg-cyan-50/60 p-4 border border-cyan-100/80 text-xs text-slate-700 leading-relaxed max-h-48 overflow-y-auto space-y-1">
+                  <span className="font-bold text-cyan-950 block text-[11px] uppercase tracking-wider">
+                    Program Overview & Syllabus
+                  </span>
+                  <p className="whitespace-pre-line text-slate-600 leading-relaxed">
+                    {selectedProgram.description}
+                  </p>
+                </div>
+              )}
 
               <form onSubmit={handleEnrollSubmit} className="space-y-4 text-xs">
                 {/* 1. Full Name */}
@@ -644,7 +686,7 @@ function MyEnrolledProgramsSection({ enrollments, isLoading }: { enrollments: an
                     <h4 className="font-extrabold text-slate-900 text-lg sm:text-xl">
                       {title}
                     </h4>
-                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">
+                    <p className="text-xs text-slate-600 mt-1 whitespace-pre-line leading-relaxed">
                       {prog.description || "Supervised clinical certification and case formulation masterclass."}
                     </p>
                   </div>

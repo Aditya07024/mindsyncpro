@@ -21,5 +21,7 @@ export { MeetingPhoto, type IMeetingPhoto } from "./meeting-photo";
 export { CounselingPricing, type ICounselingPricing } from "./counseling-pricing";
 export { AdBanner, type IAdBanner } from "./ad-banner";
 export { GroupAudioSession, type IGroupAudioSession } from "./group-audio-session";
+export { ProgramCardsConfig, type IProgramCardsConfig } from "./career-program";
+
 
 

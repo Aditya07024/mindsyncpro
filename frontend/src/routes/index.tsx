@@ -36,6 +36,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import API from "@/lib/api";
 import logoUrl from "@/assets/logo.png";
 import user from "@/assets/user.jpg";
@@ -730,6 +731,14 @@ function Landing() {
   const [popupAnnouncement, setPopupAnnouncement] = useState<any | null>(null);
   const [showPopupModal, setShowPopupModal] = useState(false);
 
+  // Fetch dynamic landing page program cards configuration (editable from admin dashboard)
+  const { data: programCardsData } = useQuery({
+    queryKey: ["programCardsConfig"],
+    queryFn: () => API.careerPrograms.getProgramCardConfig(),
+    staleTime: 1000 * 60 * 5,
+  });
+  const cardsConfig = programCardsData?.config;
+
   // Fetch active popup announcement on landing page load
   useEffect(() => {
     API.popupAnnouncement
@@ -1146,66 +1155,72 @@ function Landing() {
             {/* Programs Section: Career Selection Program & Counseling Training Program */}
             <div className="relative z-10 mt-14 grid gap-6 lg:grid-cols-2">
               {/* Portion 1: Career Selection Program */}
-              <div className="group relative overflow-hidden rounded-[32px] border border-teal-200 bg-gradient-to-br from-teal-50/90 via-white to-emerald-50/80 p-8 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-teal-400 hover:shadow-xl">
-                <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-teal-400/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
-                
-                <div className="relative z-10 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-800">
-                      <Briefcase className="size-3.5 text-teal-600" />
-                      Specialized Pathway
+              {cardsConfig?.selectionIsActive !== false && (
+                <div className="group relative overflow-hidden rounded-[32px] border border-teal-200 bg-gradient-to-br from-teal-50/90 via-white to-emerald-50/80 p-8 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-teal-400 hover:shadow-xl">
+                  <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-teal-400/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
+                  
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-800">
+                        <Briefcase className="size-3.5 text-teal-600" />
+                        {cardsConfig?.selectionBadgeText || "Specialized Pathway"}
+                      </div>
+
+                      <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
+                        {cardsConfig?.selectionTitle || "Career Selection Program"}
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base whitespace-pre-line">
+                        {cardsConfig?.selectionDescription ||
+                          "Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path."}
+                      </p>
                     </div>
 
-                    <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
-                      Career Selection Program
-                    </h3>
-
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
-                      Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.
-                    </p>
-                  </div>
-
-                  <div className="mt-8 pt-4 border-t border-teal-100/60 flex items-center justify-between">
-                    <Link
-                      to="/career-selection"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
-                    >
-                      Explore Career Program →
-                    </Link>
+                    <div className="mt-8 pt-4 border-t border-teal-100/60 flex items-center justify-between">
+                      <Link
+                        to={cardsConfig?.selectionButtonLink || "/career-selection"}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
+                      >
+                        {cardsConfig?.selectionButtonText || "Explore Career Program →"}
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Portion 2: Counseling Training Program */}
-              <div className="group relative overflow-hidden rounded-[32px] border border-cyan-200 bg-gradient-to-br from-cyan-50/90 via-white to-blue-50/80 p-8 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-xl">
-                <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-cyan-400/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
-                
-                <div className="relative z-10 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-cyan-800">
-                      <GraduationCap className="size-3.5 text-cyan-600" />
-                      Professional Training
+              {cardsConfig?.trainingIsActive !== false && (
+                <div className="group relative overflow-hidden rounded-[32px] border border-cyan-200 bg-gradient-to-br from-cyan-50/90 via-white to-blue-50/80 p-8 shadow-md backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400 hover:shadow-xl">
+                  <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-cyan-400/10 blur-2xl transition-all duration-500 group-hover:scale-150" />
+                  
+                  <div className="relative z-10 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-cyan-800">
+                        <GraduationCap className="size-3.5 text-cyan-600" />
+                        {cardsConfig?.trainingBadgeText || "Professional Training"}
+                      </div>
+
+                      <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
+                        {cardsConfig?.trainingTitle || "Counseling Training Program"}
+                      </h3>
+
+                      <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base whitespace-pre-line">
+                        {cardsConfig?.trainingDescription ||
+                          "Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies."}
+                      </p>
                     </div>
 
-                    <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
-                      Counseling Training Program
-                    </h3>
-
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">
-                      Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.
-                    </p>
-                  </div>
-
-                  <div className="mt-8 pt-4 border-t border-cyan-100/60 flex items-center justify-between">
-                    <Link
-                      to="/counseling-training"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
-                    >
-                      Join Training Program →
-                    </Link>
+                    <div className="mt-8 pt-4 border-t border-cyan-100/60 flex items-center justify-between">
+                      <Link
+                        to={cardsConfig?.trainingButtonLink || "/counseling-training"}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#002f29] hover:scale-[1.02] cursor-pointer"
+                      >
+                        {cardsConfig?.trainingButtonText || "Join Training Program →"}
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>

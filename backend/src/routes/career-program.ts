@@ -17,10 +17,16 @@ import {
   getMyCounselingTrainingEnrollments,
   getCounselingTrainingEnrollments,
   updateCounselingTrainingEnrollmentStatus,
+  getProgramCardsConfig,
+  updateProgramCardsConfig,
 } from "../controllers/career-program.controller";
 import { requireAuth, optionalAuth, requireRole } from "../middleware/auth";
 
 const router = Router();
+
+// --- Program Cards Config Routes (Homepage Boxes) ---
+router.get("/cards-config", getProgramCardsConfig);
+router.put("/cards-config", requireAuth, requireRole(["super_admin", "admin"]), updateProgramCardsConfig);
 
 // --- Career Selection Routes ---
 router.post("/career-selection/register", optionalAuth, registerCareerSelection);

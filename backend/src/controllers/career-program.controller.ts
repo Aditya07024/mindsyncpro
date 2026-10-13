@@ -4,6 +4,7 @@ import {
   CareerSelectionRegistration,
   CounselingTrainingProgram,
   CounselingTrainingEnrollment,
+  ProgramCardsConfig,
 } from "../models/career-program";
 import { User, TherapistBooking } from "../models";
 import { AuthedRequest } from "../middleware/auth";
@@ -239,7 +240,11 @@ export async function updateCareerSelectionStatus(req: Request, res: Response): 
 
 export async function getCounselingTrainingPrograms(_req: Request, res: Response): Promise<void> {
   try {
-    const programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
+    let programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
+    if (programs.length === 0) {
+      await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
+      programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
+    }
     res.json({ success: true, programs });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to fetch training programs" });
@@ -338,7 +343,11 @@ export async function getMyCounselingTrainingEnrollments(req: AuthedRequest, res
 
 export async function getAdminCounselingTrainingPrograms(_req: Request, res: Response): Promise<void> {
   try {
-    const programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
+    let programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
+    if (programs.length === 0) {
+      await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
+      programs = await CounselingTrainingProgram.find().sort({ createdAt: -1 });
+    }
     res.json({ success: true, programs });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message || "Failed to fetch admin training programs" });
@@ -613,4 +622,67 @@ export async function payAndConfirmGuidanceBooking(req: AuthedRequest, res: Resp
     res.status(500).json({ success: false, message: error.message || "Failed to confirm payment and booking" });
   }
 }
+
+// --- 3. PROGRAM CARDS CONFIG (HOMEPAGE BOXES) ---
+
+export async function getProgramCardsConfig(_req: Request, res: Response): Promise<void> {
+  try {
+    let config = await ProgramCardsConfig.findOne();
+    if (!config) {
+      config = await ProgramCardsConfig.create({});
+    }
+    res.json({ success: true, config });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to fetch program cards config" });
+  }
+}
+
+export async function updateProgramCardsConfig(req: Request, res: Response): Promise<void> {
+  try {
+    const {
+      trainingBadgeText,
+      trainingTitle,
+      trainingDescription,
+      trainingButtonText,
+      trainingButtonLink,
+      trainingIsActive,
+      selectionBadgeText,
+      selectionTitle,
+      selectionDescription,
+      selectionButtonText,
+      selectionButtonLink,
+      selectionIsActive,
+    } = req.body;
+
+    let config = await ProgramCardsConfig.findOne();
+    if (!config) {
+      config = new ProgramCardsConfig();
+    }
+
+    if (trainingBadgeText !== undefined) config.trainingBadgeText = String(trainingBadgeText).trim();
+    if (trainingTitle !== undefined) config.trainingTitle = String(trainingTitle).trim();
+    if (trainingDescription !== undefined) config.trainingDescription = String(trainingDescription).trim();
+    if (trainingButtonText !== undefined) config.trainingButtonText = String(trainingButtonText).trim();
+    if (trainingButtonLink !== undefined) config.trainingButtonLink = String(trainingButtonLink).trim();
+    if (trainingIsActive !== undefined) config.trainingIsActive = Boolean(trainingIsActive);
+
+    if (selectionBadgeText !== undefined) config.selectionBadgeText = String(selectionBadgeText).trim();
+    if (selectionTitle !== undefined) config.selectionTitle = String(selectionTitle).trim();
+    if (selectionDescription !== undefined) config.selectionDescription = String(selectionDescription).trim();
+    if (selectionButtonText !== undefined) config.selectionButtonText = String(selectionButtonText).trim();
+    if (selectionButtonLink !== undefined) config.selectionButtonLink = String(selectionButtonLink).trim();
+    if (selectionIsActive !== undefined) config.selectionIsActive = Boolean(selectionIsActive);
+
+    await config.save();
+
+    res.json({
+      success: true,
+      config,
+      message: "Homepage program box content saved successfully!",
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || "Failed to update program cards config" });
+  }
+}
+
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
@@ -65,8 +65,71 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
 }) => {
   const queryClient = useQueryClient();
   const [subTab, setSubTab] = useState<"selection" | "training">(activeSubTab);
-  const [trainingViewMode, setTrainingViewMode] = useState<"programs" | "enrollments">("programs");
+  const [trainingViewMode, setTrainingViewMode] = useState<"programs" | "enrollments" | "cards">("programs");
+  const [activeCardBox, setActiveCardBox] = useState<"training" | "selection">("training");
   const [search, setSearch] = useState("");
+
+  // Homepage Program Cards Config query & state (Editable Box Content)
+  const { data: cardsConfigData, isLoading: cardsConfigLoading } = useQuery({
+    queryKey: ["adminProgramCardsConfig"],
+    queryFn: () => API.careerPrograms.getProgramCardConfig(),
+  });
+
+  const [cardsForm, setCardsForm] = useState({
+    trainingBadgeText: "Professional Training",
+    trainingTitle: "Counseling Training Program",
+    trainingDescription:
+      "Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.",
+    trainingButtonText: "Join Training Program →",
+    trainingButtonLink: "/counseling-training",
+    trainingIsActive: true,
+
+    selectionBadgeText: "Specialized Pathway",
+    selectionTitle: "Career Selection Program",
+    selectionDescription:
+      "Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.",
+    selectionButtonText: "Explore Career Program →",
+    selectionButtonLink: "/career-selection",
+    selectionIsActive: true,
+  });
+
+  useEffect(() => {
+    if (cardsConfigData?.config) {
+      const c = cardsConfigData.config;
+      setCardsForm({
+        trainingBadgeText: c.trainingBadgeText || "Professional Training",
+        trainingTitle: c.trainingTitle || "Counseling Training Program",
+        trainingDescription:
+          c.trainingDescription ||
+          "Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.",
+        trainingButtonText: c.trainingButtonText || "Join Training Program →",
+        trainingButtonLink: c.trainingButtonLink || "/counseling-training",
+        trainingIsActive: c.trainingIsActive !== undefined ? Boolean(c.trainingIsActive) : true,
+
+        selectionBadgeText: c.selectionBadgeText || "Specialized Pathway",
+        selectionTitle: c.selectionTitle || "Career Selection Program",
+        selectionDescription:
+          c.selectionDescription ||
+          "Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.",
+        selectionButtonText: c.selectionButtonText || "Explore Career Program →",
+        selectionButtonLink: c.selectionButtonLink || "/career-selection",
+        selectionIsActive: c.selectionIsActive !== undefined ? Boolean(c.selectionIsActive) : true,
+      });
+    }
+  }, [cardsConfigData]);
+
+  const updateCardsMutation = useMutation({
+    mutationFn: (data: typeof cardsForm) => API.careerPrograms.updateProgramCardConfig(data),
+    onSuccess: (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ["adminProgramCardsConfig"] });
+      queryClient.invalidateQueries({ queryKey: ["programCardsConfig"] });
+      toast.success(res?.message || "Homepage box content saved successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to update box content");
+    },
+  });
+
 
   // 1. Fetch Career Selection Registrations
   const { data: selectionData, isLoading: selectionLoading } = useQuery({
@@ -355,7 +418,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
     <div className="space-y-6">
       {/* Sub Tab Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-800/80 p-6 rounded-2xl border border-slate-700">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setSubTab("selection")}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
@@ -367,18 +430,34 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
             <Briefcase className="size-4" /> Career Selection ({selectionRegistrations.length})
           </button>
           <button
-            onClick={() => setSubTab("training")}
+            onClick={() => {
+              setSubTab("training");
+              if (trainingViewMode === "cards") setTrainingViewMode("programs");
+            }}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-              subTab === "training"
+              subTab === "training" && trainingViewMode !== "cards"
                 ? "bg-cyan-500 text-slate-950 shadow-md"
                 : "bg-slate-700 text-slate-300 hover:bg-slate-600"
             }`}
           >
             <GraduationCap className="size-4" /> Counseling Training ({adminPrograms.length} Programs)
           </button>
+          <button
+            onClick={() => {
+              setSubTab("training");
+              setTrainingViewMode("cards");
+            }}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              subTab === "training" && trainingViewMode === "cards"
+                ? "bg-amber-400 text-slate-950 shadow-md font-extrabold"
+                : "bg-slate-700 text-amber-300 hover:bg-slate-600 border border-amber-400/30"
+            }`}
+          >
+            <Sparkles className="size-4" /> Homepage Box Editor
+          </button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {subTab === "training" && (
             <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-700">
               <button
@@ -401,10 +480,20 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
               >
                 Student Enrollments ({trainingEnrollments.length})
               </button>
+              <button
+                onClick={() => setTrainingViewMode("cards")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  trainingViewMode === "cards"
+                    ? "bg-amber-400 text-slate-950 font-bold"
+                    : "text-amber-300 hover:text-white"
+                }`}
+              >
+                <Sparkles className="size-3.5" /> Box Content
+              </button>
             </div>
           )}
 
-          {subTab === "training" && (
+          {subTab === "training" && trainingViewMode === "programs" && (
             <button
               onClick={handleOpenCreateProgram}
               className="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow transition cursor-pointer flex items-center gap-1.5"
@@ -413,16 +502,18 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
             </button>
           )}
 
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, phone, program..."
-              className="bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-teal-400"
-            />
-          </div>
+          {trainingViewMode !== "cards" && (
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, phone, program..."
+                className="bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-teal-400"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -556,12 +647,17 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
               <tbody className="divide-y divide-slate-700/60">
                 {filteredPrograms.map((prog: any) => (
                   <tr key={prog._id} className="hover:bg-slate-700/30 transition">
-                    <td className="p-4 font-bold text-white">
+                    <td className="p-4 font-bold text-white max-w-sm">
                       <div>
                         <div className="text-sm text-cyan-300 font-semibold">{prog.title}</div>
                         <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full mt-1 inline-block">
                           {prog.category || "Certification"}
                         </span>
+                        {prog.description && (
+                          <div className="mt-2 text-xs font-normal text-slate-300 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/60 leading-relaxed whitespace-pre-line max-h-28 overflow-y-auto">
+                            {prog.description}
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="p-4">
@@ -688,6 +784,359 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
         </div>
       )}
 
+      {/* SUB TAB 3: HOMEPAGE BOX CONTENT EDITOR */}
+      {subTab === "training" && trainingViewMode === "cards" && (
+        <div className="space-y-6">
+          <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-700 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="flex size-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <Sparkles className="size-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Homepage Box Content Editor
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Customize the text, title, description, and button of the program boxes displayed on the landing page.
+                  </p>
+                </div>
+              </div>
+
+              {/* Box Selector */}
+              <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setActiveCardBox("training")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    activeCardBox === "training"
+                      ? "bg-cyan-500 text-slate-950 shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <GraduationCap className="size-3.5" /> Counseling Training Box
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveCardBox("selection")}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    activeCardBox === "selection"
+                      ? "bg-teal-500 text-slate-950 shadow"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Briefcase className="size-3.5" /> Career Selection Box
+                </button>
+              </div>
+            </div>
+
+            {cardsConfigLoading ? (
+              <div className="py-12 text-center text-slate-400 text-xs">
+                Loading homepage box settings...
+              </div>
+            ) : (
+              <div className="grid gap-8 lg:grid-cols-12 items-start">
+                {/* Left 7 Columns: Form */}
+                <div className="lg:col-span-7 space-y-5 bg-slate-900/60 p-6 rounded-2xl border border-slate-700/70">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                      {activeCardBox === "training" ? (
+                        <>
+                          <GraduationCap className="size-4 text-cyan-400" /> Counseling Training Box Details
+                        </>
+                      ) : (
+                        <>
+                          <Briefcase className="size-4 text-teal-400" /> Career Selection Box Details
+                        </>
+                      )}
+                    </span>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-slate-300 cursor-pointer">
+                      <span>Visible on Landing Page</span>
+                      <input
+                        type="checkbox"
+                        checked={
+                          activeCardBox === "training"
+                            ? cardsForm.trainingIsActive
+                            : cardsForm.selectionIsActive
+                        }
+                        onChange={(e) => {
+                          if (activeCardBox === "training") {
+                            setCardsForm({ ...cardsForm, trainingIsActive: e.target.checked });
+                          } else {
+                            setCardsForm({ ...cardsForm, selectionIsActive: e.target.checked });
+                          }
+                        }}
+                        className="size-4 rounded accent-cyan-500 cursor-pointer"
+                      />
+                    </label>
+                  </div>
+
+                  {activeCardBox === "training" ? (
+                    <>
+                      {/* Badge Text */}
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                          Badge Text (Pill above title)
+                        </label>
+                        <input
+                          type="text"
+                          value={cardsForm.trainingBadgeText}
+                          onChange={(e) => setCardsForm({ ...cardsForm, trainingBadgeText: e.target.value })}
+                          placeholder="e.g. PROFESSIONAL TRAINING"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      {/* Box Title */}
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                          Box Title
+                        </label>
+                        <input
+                          type="text"
+                          value={cardsForm.trainingTitle}
+                          onChange={(e) => setCardsForm({ ...cardsForm, trainingTitle: e.target.value })}
+                          placeholder="e.g. Counseling Training Program"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 font-bold"
+                        />
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-slate-400 font-semibold text-xs">
+                            Box Content / Description
+                          </label>
+                          <span className="text-[10px] text-slate-500">
+                            {cardsForm.trainingDescription.length} characters
+                          </span>
+                        </div>
+                        <textarea
+                          rows={5}
+                          value={cardsForm.trainingDescription}
+                          onChange={(e) => setCardsForm({ ...cardsForm, trainingDescription: e.target.value })}
+                          placeholder="Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations..."
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed font-sans"
+                        />
+                      </div>
+
+                      {/* Button Text & Button Link */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                            Button Text
+                          </label>
+                          <input
+                            type="text"
+                            value={cardsForm.trainingButtonText}
+                            onChange={(e) => setCardsForm({ ...cardsForm, trainingButtonText: e.target.value })}
+                            placeholder="e.g. Join Training Program →"
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                            Button Target Link
+                          </label>
+                          <input
+                            type="text"
+                            value={cardsForm.trainingButtonLink}
+                            onChange={(e) => setCardsForm({ ...cardsForm, trainingButtonLink: e.target.value })}
+                            placeholder="e.g. /counseling-training"
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Career Selection Form Fields */}
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                          Badge Text (Pill above title)
+                        </label>
+                        <input
+                          type="text"
+                          value={cardsForm.selectionBadgeText}
+                          onChange={(e) => setCardsForm({ ...cardsForm, selectionBadgeText: e.target.value })}
+                          placeholder="e.g. SPECIALIZED PATHWAY"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                          Box Title
+                        </label>
+                        <input
+                          type="text"
+                          value={cardsForm.selectionTitle}
+                          onChange={(e) => setCardsForm({ ...cardsForm, selectionTitle: e.target.value })}
+                          placeholder="e.g. Career Selection Program"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-400 font-bold"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-slate-400 font-semibold text-xs">
+                            Box Content / Description
+                          </label>
+                          <span className="text-[10px] text-slate-500">
+                            {cardsForm.selectionDescription.length} characters
+                          </span>
+                        </div>
+                        <textarea
+                          rows={5}
+                          value={cardsForm.selectionDescription}
+                          onChange={(e) => setCardsForm({ ...cardsForm, selectionDescription: e.target.value })}
+                          placeholder="Guidance and specialized tools for mental health aspirants and professionals..."
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-400 leading-relaxed font-sans"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                            Button Text
+                          </label>
+                          <input
+                            type="text"
+                            value={cardsForm.selectionButtonText}
+                            onChange={(e) => setCardsForm({ ...cardsForm, selectionButtonText: e.target.value })}
+                            placeholder="e.g. Explore Career Program →"
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1 text-xs">
+                            Button Target Link
+                          </label>
+                          <input
+                            type="text"
+                            value={cardsForm.selectionButtonLink}
+                            onChange={(e) => setCardsForm({ ...cardsForm, selectionButtonLink: e.target.value })}
+                            placeholder="e.g. /career-selection"
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-teal-400"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm("Reset box content to original defaults?")) {
+                          setCardsForm({
+                            trainingBadgeText: "Professional Training",
+                            trainingTitle: "Counseling Training Program",
+                            trainingDescription:
+                              "Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.",
+                            trainingButtonText: "Join Training Program →",
+                            trainingButtonLink: "/counseling-training",
+                            trainingIsActive: true,
+                            selectionBadgeText: "Specialized Pathway",
+                            selectionTitle: "Career Selection Program",
+                            selectionDescription:
+                              "Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.",
+                            selectionButtonText: "Explore Career Program →",
+                            selectionButtonLink: "/career-selection",
+                            selectionIsActive: true,
+                          });
+                        }
+                      }}
+                      className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                    >
+                      Reset Defaults
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={updateCardsMutation.isPending}
+                      onClick={() => updateCardsMutation.mutate(cardsForm)}
+                      className="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-lg transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {updateCardsMutation.isPending ? "Saving..." : "Save Box Content"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right 5 Columns: Live Preview matching user screenshot */}
+                <div className="lg:col-span-5 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <Eye className="size-4" /> Live Public Preview
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Matches homepage view
+                    </span>
+                  </div>
+
+                  {activeCardBox === "training" ? (
+                    <div className="group relative overflow-hidden rounded-[32px] border border-cyan-200 bg-gradient-to-br from-cyan-50/90 via-white to-blue-50/80 p-8 shadow-xl backdrop-blur-xl transition-all">
+                      <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-cyan-400/10 blur-2xl" />
+                      
+                      <div className="relative z-10 flex flex-col justify-between min-h-[300px]">
+                        <div>
+                          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-cyan-800">
+                            <GraduationCap className="size-3.5 text-cyan-600" />
+                            {cardsForm.trainingBadgeText || "PROFESSIONAL TRAINING"}
+                          </div>
+
+                          <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
+                            {cardsForm.trainingTitle || "Counseling Training Program"}
+                          </h3>
+
+                          <p className="mt-3 text-sm leading-relaxed text-slate-600 whitespace-pre-line">
+                            {cardsForm.trainingDescription || "Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies."}
+                          </p>
+                        </div>
+
+                        <div className="mt-8 pt-4 border-t border-cyan-100/60 flex items-center justify-between">
+                          <span className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md">
+                            {cardsForm.trainingButtonText || "Join Training Program →"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="group relative overflow-hidden rounded-[32px] border border-teal-200 bg-gradient-to-br from-teal-50/90 via-white to-emerald-50/80 p-8 shadow-xl backdrop-blur-xl transition-all">
+                      <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-teal-400/10 blur-2xl" />
+                      
+                      <div className="relative z-10 flex flex-col justify-between min-h-[300px]">
+                        <div>
+                          <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-100/80 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-teal-800">
+                            <Briefcase className="size-3.5 text-teal-600" />
+                            {cardsForm.selectionBadgeText || "SPECIALIZED PATHWAY"}
+                          </div>
+
+                          <h3 className="mt-4 font-display text-2xl font-bold text-[#012620]">
+                            {cardsForm.selectionTitle || "Career Selection Program"}
+                          </h3>
+
+                          <p className="mt-3 text-sm leading-relaxed text-slate-600 whitespace-pre-line">
+                            {cardsForm.selectionDescription || "Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path."}
+                          </p>
+                        </div>
+
+                        <div className="mt-8 pt-4 border-t border-teal-100/60 flex items-center justify-between">
+                          <span className="inline-flex items-center gap-2 rounded-2xl bg-[#004038] px-6 py-3 text-sm font-semibold text-white shadow-md">
+                            {cardsForm.selectionButtonText || "Explore Career Program →"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* CREATE / EDIT PROGRAM COHORT MODAL */}
       {showProgramModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
@@ -710,14 +1159,19 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
               </div>
 
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Description</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-slate-400 font-semibold">Description & Syllabus</label>
+                  <span className="text-[10px] text-slate-500">
+                    {programForm.description?.length || 0} characters
+                  </span>
+                </div>
                 <textarea
                   required
-                  rows={3}
+                  rows={7}
                   value={programForm.description}
                   onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })}
                   placeholder="Program overview, syllabus, learning outcomes..."
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed font-sans"
                 />
               </div>
 

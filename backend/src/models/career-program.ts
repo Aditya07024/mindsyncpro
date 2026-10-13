@@ -154,3 +154,59 @@ export const CounselingTrainingEnrollment = mongoose.model<ICounselingTrainingEn
   "CounselingTrainingEnrollment",
   counselingTrainingEnrollmentSchema
 );
+
+// 4. Program Cards Configuration (Landing Page Boxes)
+export interface IProgramCardsConfig extends Document {
+  // Counseling Training Program Box
+  trainingBadgeText: string;
+  trainingTitle: string;
+  trainingDescription: string;
+  trainingButtonText: string;
+  trainingButtonLink: string;
+  trainingIsActive: boolean;
+
+  // Career Selection Program Box
+  selectionBadgeText: string;
+  selectionTitle: string;
+  selectionDescription: string;
+  selectionButtonText: string;
+  selectionButtonLink: string;
+  selectionIsActive: boolean;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const programCardsConfigSchema = new Schema<IProgramCardsConfig>(
+  {
+    trainingBadgeText: { type: String, default: "Professional Training", trim: true },
+    trainingTitle: { type: String, default: "Counseling Training Program", trim: true },
+    trainingDescription: {
+      type: String,
+      default:
+        "Comprehensive hands-on clinical training, CBT case supervision, real-world case simulations, and practical experience to enhance counseling competencies.",
+      trim: true,
+    },
+    trainingButtonText: { type: String, default: "Join Training Program →", trim: true },
+    trainingButtonLink: { type: String, default: "/counseling-training", trim: true },
+    trainingIsActive: { type: Boolean, default: true },
+
+    selectionBadgeText: { type: String, default: "Specialized Pathway", trim: true },
+    selectionTitle: { type: String, default: "Career Selection Program", trim: true },
+    selectionDescription: {
+      type: String,
+      default:
+        "Guidance and specialized tools for mental health aspirants and professionals to choose, build, and excel in their ideal counseling career path.",
+      trim: true,
+    },
+    selectionButtonText: { type: String, default: "Explore Career Program →", trim: true },
+    selectionButtonLink: { type: String, default: "/career-selection", trim: true },
+    selectionIsActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
+
+export const ProgramCardsConfig =
+  (mongoose.models.ProgramCardsConfig as mongoose.Model<IProgramCardsConfig>) ||
+  mongoose.model<IProgramCardsConfig>("ProgramCardsConfig", programCardsConfigSchema);
+
