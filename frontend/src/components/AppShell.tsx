@@ -41,7 +41,7 @@ export function AppShell({
   const { data: userData } = useQuery({
     queryKey: ['me'],
     queryFn: () => API.auth.me(),
-    enabled: isSignedIn,
+    enabled: Boolean(isLoaded && isSignedIn),
   });
 
   const applyRefMutation = useMutation({
@@ -73,11 +73,19 @@ export function AppShell({
   }, [isSignedIn, userData, isStudentUnverified, loc.pathname, navigate]);
 
   // Preflight auth gate: check if the account is valid before rendering children
-  const [authStatus, setAuthStatus] = useState<'checking' | 'ok' | 'invalid'>('checking');
+  const [authStatus, setAuthStatus] = useState<'checking' | 'ok' | 'invalid'>(
+    !requireAuth || !isSignedIn ? 'ok' : 'checking'
+  );
   const hasChecked = useRef(false);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+    if (!isLoaded || !isSignedIn) {
+      hasChecked.current = false;
+      if (!requireAuth) {
+        setAuthStatus('ok');
+      }
+      return;
+    }
     if (hasChecked.current) return;
     hasChecked.current = true;
 
@@ -88,42 +96,46 @@ export function AppShell({
       })
       .catch((err: any) => {
         const msg = err?.message || '';
-        if (
-          msg.includes('deleted') ||
-          msg.includes('Unauthorized') ||
-          msg.includes('No Clerk User')
-        ) {
+        if (msg.toLowerCase().includes('deleted')) {
           setAuthStatus('invalid');
           signOut().then(() => {
             navigate({ to: '/account-deleted', replace: true });
           });
+        } else if (requireAuth) {
+          setAuthStatus('invalid');
+          signOut().then(() => {
+            navigate({ to: '/sign-in', replace: true });
+          });
         } else {
-          // Non-auth error (e.g. network issue) — let the app render anyway
+          // Public page or non-fatal error — let the app render anyway
           setAuthStatus('ok');
         }
       });
-  }, [isLoaded, isSignedIn, signOut, navigate]);
+  }, [isLoaded, isSignedIn, requireAuth, signOut, navigate]);
 
   // Also listen for 401 events from API calls that happen after the preflight
   useEffect(() => {
     const handleUnauthorized = (e: Event) => {
+      if (!isSignedIn) return;
+
       const customEvent = e as CustomEvent;
       const msg = customEvent.detail?.message || '';
-      if (
-        msg.includes('deleted') ||
-        msg.includes('Unauthorized') ||
-        msg.includes('No Clerk User')
-      ) {
+      if (msg.toLowerCase().includes('deleted')) {
         setAuthStatus('invalid');
         signOut().then(() => {
           navigate({ to: '/account-deleted', replace: true });
+        });
+      } else if (requireAuth) {
+        setAuthStatus('invalid');
+        signOut().then(() => {
+          navigate({ to: '/sign-in', replace: true });
         });
       }
     };
 
     window.addEventListener('mymind_unauthorized', handleUnauthorized);
     return () => window.removeEventListener('mymind_unauthorized', handleUnauthorized);
-  }, [signOut, navigate]);
+  }, [isSignedIn, requireAuth, signOut, navigate]);
 
   // Still loading Clerk — show minimal spinner
   if (!isLoaded) {

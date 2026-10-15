@@ -49,13 +49,14 @@ export function UserProfileDropdown({
         })
         .catch((err: any) => {
           console.error('Failed to load dbUser profile:', err);
-          if (
-            err.message?.includes('deleted') ||
-            err.message?.includes('Unauthorized') ||
-            err.message?.includes('No Clerk User')
-          ) {
+          const msg = err?.message || '';
+          if (msg.toLowerCase().includes('deleted')) {
             signOut().then(() => {
               navigate({ to: '/account-deleted', replace: true });
+            });
+          } else if (msg.includes('Unauthorized') || msg.includes('No Clerk User')) {
+            signOut().then(() => {
+              navigate({ to: '/sign-in', replace: true });
             });
           }
         });
