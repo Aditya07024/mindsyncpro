@@ -24,6 +24,12 @@ router.get("/platform-counts", requirePermission("canViewAnalytics"), AdminContr
 router.get("/users", requirePermission("canManageUsers"), AdminController.listAllUsers);
 router.delete("/user/:id", requirePermission("canManageUsers"), AdminController.deleteUser);
 
+// Custom Mobile & In-App Notifications
+router.post("/notifications/send", requirePermission("canManageUsers"), AdminController.sendCustomNotification);
+router.get("/notifications/history", requirePermission("canManageUsers"), AdminController.getNotificationHistory);
+router.get("/notifications/stats", requirePermission("canManageUsers"), AdminController.getNotificationStats);
+router.delete("/notifications/history/:id", requirePermission("canManageUsers"), AdminController.deleteNotificationHistory);
+
 // Therapist Management
 router.get("/therapists", requirePermission("canManageTherapists"), AdminController.pendingTherapists);
 router.patch("/therapist/:id/verify", requirePermission("canManageTherapists"), AdminController.verifyTherapist);

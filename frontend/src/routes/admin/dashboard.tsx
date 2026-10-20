@@ -21,6 +21,7 @@ import { AdminConferencesTab } from './-conferences';
 import { AdminPermissionsTab } from './-permissions';
 import { AdminPopupAnnouncementTab } from './-popup-announcement';
 import { AdminMeetingPhotosTab } from './-meeting-photos';
+import { AdminCustomNotificationsTab } from './-custom-notifications';
 import { DigitalProductsAdminManager } from '@/components/DigitalProductsAdminManager';
 import { AdminPartnersManager } from '@/components/AdminPartnersManager';
 import { AdminCareerProgramsManager } from '@/components/AdminCareerProgramsManager';
@@ -51,7 +52,7 @@ function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos' | 'digital-products' | 'network-partners' | 'career-selection' | 'counseling-training' | 'counseling-pricing' | 'student-verifications' | 'ad-banner'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos' | 'digital-products' | 'network-partners' | 'career-selection' | 'counseling-training' | 'counseling-pricing' | 'student-verifications' | 'ad-banner' | 'mobile-notifications'>('overview');
 
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
@@ -240,6 +241,7 @@ function SuperAdminDashboard() {
     { key: 'counseling-pricing', label: 'Counseling Category Fees', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canViewAnalytics) },
     { key: 'student-verifications', label: 'Student ID Verifications', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageUsers) },
     { key: 'ad-banner', label: 'Homepage Ad Banner', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageWorkshopPopup) },
+    { key: 'mobile-notifications', label: 'Mobile Notifications', allowed: Boolean(myAccess?.isFullAdmin || myAccess?.isSuperAdmin || myAccess?.canManageUsers) },
   ].filter((t) => t.allowed);
 
   // Auto-switch tab to first allowed capability if current tab is forbidden
@@ -1686,6 +1688,7 @@ function SuperAdminDashboard() {
         {tab === 'counseling-pricing' && <AdminCounselingPricingTab />}
         {tab === 'student-verifications' && <AdminStudentVerificationsTab />}
         {tab === 'ad-banner' && <AdminAdBannerTab />}
+        {tab === 'mobile-notifications' && <AdminCustomNotificationsTab />}
 
       </div>
 

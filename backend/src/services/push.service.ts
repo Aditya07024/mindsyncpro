@@ -68,17 +68,18 @@ export class PushService {
 
   /**
    * Send push notifications to multiple users at once.
+   * Returns recipient and token dispatch count.
    */
   static async sendToUsers(
     userIds: string[],
     title: string,
     body: string,
     data?: Record<string, any>
-  ): Promise<void> {
+  ): Promise<{ recipientCount: number; tokenCount: number }> {
     try {
-      const users = await User.find({
+      const users: any[] = await User.find({
         _id: { $in: userIds },
-        expoPushTokens: { $exists: true, $ne: [] },
+        expoPushTokens: { $exists: true, $not: { $size: 0 } },
       })
         .select("expoPushTokens")
         .lean();
@@ -86,23 +87,59 @@ export class PushService {
       const messages: ExpoPushMessage[] = [];
       for (const user of users) {
         for (const token of user.expoPushTokens || []) {
-          messages.push({
-            to: token,
-            title,
-            body,
-            data: data || {},
-            sound: "default",
-            channelId: "default",
-            priority: "high",
-          });
+          if (token && typeof token === "string") {
+            messages.push({
+              to: token,
+              title,
+              body,
+              data: data || {},
+              sound: "default",
+              channelId: "default",
+              priority: "high",
+            });
+          }
         }
       }
 
       if (messages.length > 0) {
         await PushService.sendBatch(messages);
       }
+
+      return { recipientCount: users.length, tokenCount: messages.length };
     } catch (err) {
       console.error("[PushService] sendToUsers failed:", err);
+      return { recipientCount: 0, tokenCount: 0 };
+    }
+  }
+
+  /**
+   * Send push notifications directly to raw Expo push tokens.
+   */
+  static async sendToTokens(
+    tokens: string[],
+    title: string,
+    body: string,
+    data?: Record<string, any>
+  ): Promise<number> {
+    try {
+      const uniqueTokens = Array.from(new Set(tokens.filter(Boolean)));
+      const messages: ExpoPushMessage[] = uniqueTokens.map((token) => ({
+        to: token,
+        title,
+        body,
+        data: data || {},
+        sound: "default",
+        channelId: "default",
+        priority: "high",
+      }));
+
+      if (messages.length > 0) {
+        await PushService.sendBatch(messages);
+      }
+      return messages.length;
+    } catch (err) {
+      console.error("[PushService] sendToTokens failed:", err);
+      return 0;
     }
   }
 

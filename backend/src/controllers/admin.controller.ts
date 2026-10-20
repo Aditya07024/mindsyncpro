@@ -884,6 +884,226 @@ export class AdminController {
       message: "Homepage Ad Banners updated successfully",
     });
   });
+
+  /** POST /api/admin/notifications/send — Dispatch custom notification to mobile devices and in-app inboxes */
+  static sendCustomNotification = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const {
+      title,
+      body,
+      targetType = "all", // "all" | "role" | "device_only" | "specific_users"
+      targetRole, // "user" | "therapist" | "org_admin" | "all"
+      userIds,
+      type = "custom", // "custom" | "announcement" | "system" | "promotion"
+      link,
+      metadata = {},
+    } = req.body;
+
+    if (!title || !title.trim()) {
+      throw new AppError("Notification title is required", 400);
+    }
+    if (!body || !body.trim()) {
+      throw new AppError("Notification message body is required", 400);
+    }
+
+    const { Notification } = await import("@/models/notification");
+    const { AdminNotification } = await import("@/models/admin-notification");
+    const { PushService } = await import("@/services/push.service");
+
+    // Build user filter query
+    const filter: any = {
+      $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
+    };
+
+    if (targetType === "specific_users") {
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        throw new AppError("Please select at least one recipient user", 400);
+      }
+      filter._id = { $in: userIds };
+    } else if (targetType === "role") {
+      if (!targetRole || targetRole === "all") {
+        // all roles
+      } else {
+        filter.role = targetRole;
+      }
+    } else if (targetType === "device_only") {
+      filter.expoPushTokens = { $exists: true, $not: { $size: 0 } };
+    }
+
+    // Fetch target users with their IDs and push tokens
+    const targetUsers: any[] = await User.find(filter)
+      .select("_id expoPushTokens role fullName email phoneMasked")
+      .lean();
+
+    if (targetUsers.length === 0) {
+      return res.json({
+        success: false,
+        message: "No matching active users found for the selected audience.",
+        data: { targetCount: 0, pushSentCount: 0 },
+      });
+    }
+
+    const targetUserIds = targetUsers.map((u) => String(u._id));
+
+    // Get current sender admin details
+    let senderEmail = "";
+    if (req.user?.sub) {
+      const adminUser: any = await User.findById(req.user.sub).select("email phoneMasked fullName").lean();
+      senderEmail = adminUser?.email || adminUser?.phoneMasked || adminUser?.fullName || "Admin";
+    }
+
+    // 1. Create in-app notifications in batch
+    const inAppNotifications = targetUserIds.map((uid) => ({
+      userId: uid,
+      title: title.trim(),
+      body: body.trim(),
+      type: type === "announcement" ? "announcement" : "system",
+      read: false,
+      metadata: {
+        ...metadata,
+        link: link || undefined,
+        customNotification: true,
+        sentAt: new Date().toISOString(),
+      },
+    }));
+
+    // Insert in-app notifications in chunks of 500 for safety
+    for (let i = 0; i < inAppNotifications.length; i += 500) {
+      await Notification.insertMany(inAppNotifications.slice(i, i + 500), { ordered: false }).catch((err) =>
+        console.warn("[AdminNotification] In-app batch insert warning:", err.message)
+      );
+    }
+
+    // 2. Dispatch push notifications to mobile devices via PushService
+    const pushResult = await PushService.sendToUsers(
+      targetUserIds,
+      title.trim(),
+      body.trim(),
+      {
+        type,
+        link: link || undefined,
+        ...metadata,
+      }
+    );
+
+    // 3. Log the broadcast event in AdminNotification
+    const broadcastLog = await AdminNotification.create({
+      title: title.trim(),
+      body: body.trim(),
+      targetType,
+      targetRole: targetRole || undefined,
+      targetCount: targetUsers.length,
+      pushSentCount: pushResult.tokenCount,
+      sentBy: req.user!.sub,
+      sentByEmail: senderEmail,
+      type,
+      link: link || undefined,
+      metadata: {
+        ...metadata,
+        usersWithTokensCount: pushResult.recipientCount,
+      },
+    });
+
+    console.log(
+      `[AdminNotification] Sent custom notification to ${targetUsers.length} users (${pushResult.tokenCount} push tokens delivered)`
+    );
+
+    res.json({
+      success: true,
+      message: `Notification dispatched to ${targetUsers.length} users (${pushResult.tokenCount} active mobile devices notified)!`,
+      data: {
+        id: broadcastLog._id,
+        targetCount: targetUsers.length,
+        pushSentCount: pushResult.tokenCount,
+        usersWithTokensCount: pushResult.recipientCount,
+      },
+    });
+  });
+
+  /** GET /api/admin/notifications/stats — Get platform mobile & notification stats */
+  static getNotificationStats = asyncHandler(async (_req: AuthedRequest, res: Response) => {
+    const { AdminNotification } = await import("@/models/admin-notification");
+
+    const [
+      totalUsers,
+      usersWithMobileApp,
+      usersByRole,
+      allTokensUsers,
+      totalBroadcasts,
+    ] = await Promise.all([
+      User.countDocuments({ $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }] }),
+      User.countDocuments({
+        $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
+        expoPushTokens: { $exists: true, $not: { $size: 0 } },
+      }),
+      User.aggregate([
+        { $match: { $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }] } },
+        { $group: { _id: "$role", count: { $sum: 1 } } },
+      ]),
+      User.find(
+        {
+          $or: [{ deletedAt: null }, { deletedAt: { $exists: false } }],
+          expoPushTokens: { $exists: true, $not: { $size: 0 } },
+        },
+        "expoPushTokens"
+      ).lean(),
+      AdminNotification.countDocuments(),
+    ]);
+
+    let totalMobileDevices = 0;
+    for (const u of allTokensUsers as any[]) {
+      if (Array.isArray(u.expoPushTokens)) {
+        totalMobileDevices += u.expoPushTokens.length;
+      }
+    }
+
+    const roleBreakdown: Record<string, number> = {};
+    for (const r of usersByRole) {
+      if (r._id) roleBreakdown[r._id] = r.count;
+    }
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        usersWithMobileApp,
+        totalMobileDevices,
+        usersByRole: roleBreakdown,
+        totalBroadcasts,
+      },
+    });
+  });
+
+  /** GET /api/admin/notifications/history — History of admin custom notification blasts */
+  static getNotificationHistory = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { AdminNotification } = await import("@/models/admin-notification");
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 30;
+
+    const [items, total] = await Promise.all([
+      AdminNotification.find()
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      AdminNotification.countDocuments(),
+    ]);
+
+    res.json({
+      success: true,
+      notifications: items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
+  });
+
+  /** DELETE /api/admin/notifications/history/:id — Delete history item */
+  static deleteNotificationHistory = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { AdminNotification } = await import("@/models/admin-notification");
+    const { id } = req.params;
+    await AdminNotification.findByIdAndDelete(id);
+    res.json({ success: true, message: "Notification history record removed" });
+  });
 }
 
 

@@ -199,6 +199,29 @@ const API = {
       update: (data: any) =>
         apiCall<any>("/api/admin/ad-banner", { method: "PUT", body: JSON.stringify(data) }),
     },
+    notifications: {
+      send: (data: {
+        title: string;
+        body: string;
+        targetType?: "all" | "role" | "device_only" | "specific_users";
+        targetRole?: string;
+        userIds?: string[];
+        type?: "custom" | "announcement" | "system" | "promotion";
+        link?: string;
+        metadata?: Record<string, any>;
+      }) =>
+        apiCall<any>("/api/admin/notifications/send", {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
+      getStats: () => apiCall<any>("/api/admin/notifications/stats"),
+      getHistory: (page: number = 1, limit: number = 30) =>
+        apiCall<any>(`/api/admin/notifications/history?page=${page}&limit=${limit}`),
+      deleteHistory: (id: string) =>
+        apiCall<any>(`/api/admin/notifications/history/${id}`, {
+          method: "DELETE",
+        }),
+    },
   },
 
   adBanner: {

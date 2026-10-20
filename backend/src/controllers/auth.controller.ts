@@ -252,13 +252,19 @@ export class AuthController {
     async (req: AuthedRequest, res: Response) => {
       const { token } = req.body;
 
-      if (!token || typeof token !== "string" || !token.startsWith("ExponentPushToken[")) {
-        return res.status(400).json({ error: "Invalid Expo push token" });
+      const isValidToken =
+        typeof token === "string" &&
+        (token.startsWith("ExponentPushToken[") ||
+          token.startsWith("ExpoPushToken[") ||
+          /^[a-zA-Z0-9_\-\[\]]{15,100}$/.test(token));
+
+      if (!isValidToken) {
+        return res.status(400).json({ error: "Invalid Expo push token format" });
       }
 
       // $addToSet prevents duplicate tokens
       await User.findByIdAndUpdate(req.user!.sub, {
-        $addToSet: { expoPushTokens: token },
+        $addToSet: { expoPushTokens: token.trim() },
       });
 
       console.log(`[Auth] Registered push token for user ${req.user!.sub}: ${token}`);
