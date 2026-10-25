@@ -18,22 +18,6 @@ import {
 import API from "@/lib/api";
 import { getNormalizedPosterUrl } from "@/lib/utils";
 
-interface ShowcaseCardItem {
-  cardId: string;
-  imageUrl: string;
-  imgIndex: number;
-  totalImages: number;
-  photo: any;
-  title: string;
-  caption: string;
-  speakerName: string;
-  speakerRole: string;
-  meetingType: string;
-  attendeeCount: number;
-  rating: number;
-  dateText: string;
-}
-
 export function MeetingPhotosShowcase() {
   const [photos, setPhotos] = useState<any[]>([]);
   const [selectedTag, setSelectedTag] = useState<string>("All");
@@ -66,36 +50,6 @@ export function MeetingPhotosShowcase() {
     };
   }, []);
 
-  // Transform photos into individual showcase cards so each image has its own card with top image + bottom title & about
-  const allCards = useMemo<ShowcaseCardItem[]>(() => {
-    return photos.flatMap((photo) => {
-      const imgList: string[] =
-        Array.isArray(photo.imageUrls) && photo.imageUrls.length > 0
-          ? photo.imageUrls
-          : photo.imageUrl
-          ? [photo.imageUrl]
-          : [];
-
-      if (imgList.length === 0) return [];
-
-      return imgList.map((url, imgIndex) => ({
-        cardId: `${photo._id}-${imgIndex}`,
-        imageUrl: url,
-        imgIndex,
-        totalImages: imgList.length,
-        photo,
-        title: photo.title,
-        caption: photo.caption,
-        speakerName: photo.speakerName,
-        speakerRole: photo.speakerRole,
-        meetingType: photo.meetingType,
-        attendeeCount: photo.attendeeCount,
-        rating: photo.rating,
-        dateText: photo.dateText,
-      }));
-    });
-  }, [photos]);
-
   // Extract clean distinct tags for filtering
   const allCategoryTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -112,15 +66,15 @@ export function MeetingPhotosShowcase() {
     return ["All", ...Array.from(tagSet)];
   }, [photos]);
 
-  // Filtered cards based on selected category tag
-  const displayedCards = useMemo(() => {
-    if (selectedTag === "All") return allCards;
-    return allCards.filter((card) =>
-      card.meetingType?.toLowerCase().includes(selectedTag.toLowerCase())
+  // Filtered sessions based on selected category tag
+  const displayedSessions = useMemo(() => {
+    if (selectedTag === "All") return photos;
+    return photos.filter((photo) =>
+      photo.meetingType?.toLowerCase().includes(selectedTag.toLowerCase())
     );
-  }, [allCards, selectedTag]);
+  }, [photos, selectedTag]);
 
-  // Handle horizontal scrolling
+  // Handle horizontal scrolling indicators
   const checkScrollability = () => {
     if (!scrollContainerRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
@@ -130,7 +84,7 @@ export function MeetingPhotosShowcase() {
 
   useEffect(() => {
     checkScrollability();
-  }, [displayedCards]);
+  }, [displayedSessions]);
 
   const handleScroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
@@ -194,14 +148,11 @@ export function MeetingPhotosShowcase() {
         )}
       </div>
 
-      {/* Navigation Header with Previous / Next Arrows */}
+      {/* Navigation Header with Previous / Next Arrows (Removed "Scroll horizontally to view all sessions") */}
       <div className="relative z-10 mt-10 flex items-center justify-between gap-4 px-1">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
-            {displayedCards.length} Session {displayedCards.length === 1 ? "Photo" : "Photos"}
-          </span>
-          <span className="text-xs text-slate-500 hidden sm:inline">
-            Scroll horizontally to view all sessions
+            {displayedSessions.length} {displayedSessions.length === 1 ? "Session" : "Sessions"}
           </span>
         </div>
 
@@ -234,14 +185,14 @@ export function MeetingPhotosShowcase() {
         </div>
       </div>
 
-      {/* Horizontally Scrollable Cards Container (Cards Side-by-Side: Top Image, Bottom Title & About) */}
+      {/* Horizontally Scrollable Sessions Container (Session 1 on Left, Session 2 on Right Side-by-Side) */}
       <div className="relative z-10 mt-6">
         {loading ? (
           <div className="flex items-center justify-center py-20 text-slate-500 gap-2">
             <Loader2 className="size-6 text-teal-600 animate-spin" />
             <span className="text-sm font-medium">Loading session gallery...</span>
           </div>
-        ) : displayedCards.length === 0 ? (
+        ) : displayedSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 rounded-3xl border border-teal-100 bg-white text-center max-w-lg mx-auto shadow-sm">
             <div className="size-16 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-4 border border-teal-200">
               <ImageIcon className="size-8" />
@@ -257,97 +208,193 @@ export function MeetingPhotosShowcase() {
             onScroll={checkScrollability}
             className="flex gap-6 overflow-x-auto pb-4 pt-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
-            {displayedCards.map((card, idx) => {
-              const displayUrl = card.imageUrl.startsWith("http")
-                ? card.imageUrl
-                : getNormalizedPosterUrl(card.imageUrl);
+            {displayedSessions.map((session, idx) => {
+              const imgList: string[] =
+                Array.isArray(session.imageUrls) && session.imageUrls.length > 0
+                  ? session.imageUrls
+                  : session.imageUrl
+                  ? [session.imageUrl]
+                  : [];
+
+              const extraImagesCount = imgList.length > 2 ? imgList.length - 2 : 0;
 
               return (
                 <motion.div
-                  key={card.cardId || idx}
+                  key={session._id || idx}
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: idx * 0.04 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
                   className="w-[88vw] sm:w-[75vw] md:w-[calc(50%-12px)] shrink-0 snap-start flex flex-col justify-between rounded-3xl border border-teal-100/90 bg-white p-5 sm:p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:border-teal-300 group/card"
                 >
-                  {/* TOP: Image */}
-                  <div
-                    onClick={() => openLightbox(card.photo, card.imgIndex)}
-                    className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
-                  >
-                    <img
-                      src={displayUrl}
-                      alt={`${card.title} - Photo ${card.imgIndex + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = "none";
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-50" />
-
-                    {/* Photo indicator badge */}
-                    <div className="absolute top-3 left-3">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-white text-[11px] font-bold border border-white/20">
-                        <ImageIcon className="size-3 text-teal-400" /> Photo {card.imgIndex + 1} of {card.totalImages}
-                      </span>
+                  {/* TOP: Images in One Container (Left Image & Right Image, with 2+ / 3+ if > 2 images) */}
+                  {imgList.length === 0 ? (
+                    <div className="h-48 sm:h-56 md:h-60 w-full rounded-2xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400">
+                      <ImageIcon className="size-8 mb-1" />
+                      <span className="text-xs font-medium">No screenshots available</span>
                     </div>
-
-                    {/* Maximize Lightbox button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openLightbox(card.photo, card.imgIndex);
-                      }}
-                      className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
-                      title="View full image"
+                  ) : imgList.length === 1 ? (
+                    // Single Image
+                    <div
+                      onClick={() => openLightbox(session, 0)}
+                      className="relative h-48 sm:h-56 md:h-60 w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
                     >
-                      <Maximize2 className="size-3.5" />
-                    </button>
-                  </div>
+                      <img
+                        src={
+                          imgList[0].startsWith("http")
+                            ? imgList[0]
+                            : getNormalizedPosterUrl(imgList[0])
+                        }
+                        alt={`${session.title} - Photo 1`}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = "none";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openLightbox(session, 0);
+                        }}
+                        className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                        title="View full image"
+                      >
+                        <Maximize2 className="size-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    // Two Images Side-by-Side: Left Image & Right Image
+                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 h-48 sm:h-56 md:h-60 w-full">
+                      {/* Left Side: First Image */}
+                      <div
+                        onClick={() => openLightbox(session, 0)}
+                        className="relative h-full w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
+                      >
+                        <img
+                          src={
+                            imgList[0].startsWith("http")
+                              ? imgList[0]
+                              : getNormalizedPosterUrl(imgList[0])
+                          }
+                          alt={`${session.title} - Photo 1`}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
+                            Photo 1
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openLightbox(session, 0);
+                          }}
+                          className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-md bg-teal-600 text-white shadow-xs hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                          title="View image 1"
+                        >
+                          <Maximize2 className="size-3" />
+                        </button>
+                      </div>
 
-                  {/* BOTTOM: Title & About (Quote / Caption) & Speaker */}
+                      {/* Right Side: Second Image (with 2+ / 3+ overlay if more than 2 images) */}
+                      <div
+                        onClick={() => openLightbox(session, 1)}
+                        className="relative h-full w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
+                      >
+                        <img
+                          src={
+                            imgList[1].startsWith("http")
+                              ? imgList[1]
+                              : getNormalizedPosterUrl(imgList[1])
+                          }
+                          alt={`${session.title} - Photo 2`}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+
+                        {extraImagesCount > 0 ? (
+                          // Dark frosted overlay with 2+ / 3+ count
+                          <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[2px] flex flex-col items-center justify-center text-white transition-all group-hover/img:bg-slate-950/75 p-2 text-center">
+                            <span className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow">
+                              {extraImagesCount}+
+                            </span>
+                            <span className="text-[10px] sm:text-[11px] font-bold text-teal-300 mt-0.5 tracking-wider uppercase">
+                              +{extraImagesCount} More
+                            </span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
+                            <div className="absolute top-2.5 left-2.5">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
+                                Photo 2
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openLightbox(session, 1);
+                              }}
+                              className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-md bg-teal-600 text-white shadow-xs hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                              title="View image 2"
+                            >
+                              <Maximize2 className="size-3" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* BOTTOM: Title & About (Quote / Caption) & Speaker (Appears only once per session!) */}
                   <div className="mt-5 flex flex-col justify-between flex-1">
                     <div className="space-y-3">
                       {/* Category Pill & Date */}
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold shadow-2xs">
                           <Tag className="size-3.5 text-teal-600" />
-                          {card.meetingType?.split(",")[0]?.trim() || "Live Session"}
+                          {session.meetingType?.split(",")[0]?.trim() || "Live Session"}
                         </span>
 
-                        {card.dateText && (
+                        {session.dateText && (
                           <span className="text-xs font-mono text-slate-500 flex items-center gap-1 shrink-0">
                             <Calendar className="size-3.5 text-slate-400" />
-                            {card.dateText}
+                            {session.dateText}
                           </span>
                         )}
                       </div>
 
-                      {/* Title */}
+                      {/* Title: Only once per session */}
                       <h4 className="text-lg sm:text-xl font-extrabold text-slate-900 group-hover/card:text-teal-700 transition-colors leading-snug line-clamp-2">
-                        {card.title}
+                        {session.title}
                       </h4>
 
-                      {/* About / Caption Quote */}
-                      {card.caption && (
+                      {/* About / Caption Quote: Only once per session */}
+                      {session.caption && (
                         <div className="relative rounded-2xl bg-slate-50 p-4 border border-slate-200 text-xs sm:text-sm text-slate-700 leading-relaxed font-normal shadow-2xs">
                           <MessageSquareQuote className="size-4 text-teal-600 mb-1 inline mr-2 opacity-80" />
-                          <span className="italic">"{card.caption}"</span>
+                          <span className="italic">"{session.caption}"</span>
                         </div>
                       )}
                     </div>
 
                     {/* Speaker / Host Details & Stats */}
                     <div className="flex items-center justify-between gap-3 pt-4 mt-4 border-t border-slate-100">
-                      {card.speakerName ? (
+                      {session.speakerName ? (
                         <div className="flex items-center gap-2.5">
                           <div className="size-9 rounded-full bg-gradient-to-br from-teal-600 to-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
-                            {card.speakerName.charAt(0).toUpperCase()}
+                            {session.speakerName.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900 text-xs sm:text-sm">{card.speakerName}</p>
-                            {card.speakerRole && (
-                              <p className="text-[11px] text-teal-700 font-semibold">{card.speakerRole}</p>
+                            <p className="font-bold text-slate-900 text-xs sm:text-sm">{session.speakerName}</p>
+                            {session.speakerRole && (
+                              <p className="text-[11px] text-teal-700 font-semibold">{session.speakerRole}</p>
                             )}
                           </div>
                         </div>
@@ -356,16 +403,16 @@ export function MeetingPhotosShowcase() {
                       )}
 
                       <div className="flex items-center gap-2 shrink-0">
-                        {card.attendeeCount > 0 && (
+                        {session.attendeeCount > 0 && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono font-bold border border-slate-200">
-                            <Users className="size-3.5 text-teal-600" /> {card.attendeeCount}
+                            <Users className="size-3.5 text-teal-600" /> {session.attendeeCount}
                           </span>
                         )}
 
-                        {card.rating > 0 && (
+                        {session.rating > 0 && (
                           <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-extrabold shadow-2xs">
                             <Star className="size-3.5 fill-amber-400 text-amber-500" />
-                            {card.rating}.0
+                            {session.rating}.0
                           </div>
                         )}
                       </div>
@@ -403,7 +450,7 @@ export function MeetingPhotosShowcase() {
               >
                 <button
                   onClick={() => setLightboxPhoto(null)}
-                  className="absolute top-4 right-4 z-10 flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-red-500 hover:text-white transition-all shadow-xs"
+                  className="absolute top-4 right-4 z-10 flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-red-500 hover:text-white transition-all shadow-xs cursor-pointer"
                 >
                   <X className="size-5" />
                 </button>
@@ -448,40 +495,42 @@ export function MeetingPhotosShowcase() {
                   {/* Thumbnail Bar */}
                   {gallery.length > 1 && (
                     <div className="flex items-center justify-center gap-2 overflow-x-auto pb-2">
-                      {gallery.map((url, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setLightboxImgIdx(idx)}
-                          className={`relative size-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
-                            idx === lightboxImgIdx
-                              ? "border-teal-600 scale-105 shadow-md"
-                              : "border-slate-200 opacity-60 hover:opacity-100"
-                          }`}
-                        >
-                          <img
-                            src={getNormalizedPosterUrl(url)}
-                            alt={`Thumb ${idx + 1}`}
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      ))}
+                      {gallery.map((url, idx) => {
+                        const thumbUrl = url.startsWith("http")
+                          ? url
+                          : getNormalizedPosterUrl(url);
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => setLightboxImgIdx(idx)}
+                            className={`relative size-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                              idx === lightboxImgIdx
+                                ? "border-teal-600 scale-105 shadow-md"
+                                : "border-slate-200 opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <img
+                              src={thumbUrl}
+                              alt={`Thumbnail ${idx + 1}`}
+                              className="h-full w-full object-cover"
+                            />
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
-                  {/* Details */}
+                  {/* Session Metadata & Caption */}
                   <div className="space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      {lightboxPhoto.meetingType && (
-                        <span className="px-3 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold">
-                          {lightboxPhoto.meetingType}
+                      <span className="px-3 py-1 rounded-full bg-teal-50 text-teal-800 border border-teal-200 text-xs font-bold">
+                        {lightboxPhoto.meetingType || "Live Therapy Session"}
+                      </span>
+                      {lightboxPhoto.dateText && (
+                        <span className="text-xs font-mono text-slate-500">
+                          {lightboxPhoto.dateText}
                         </span>
-                      )}
-                      {lightboxPhoto.rating > 0 && (
-                        <div className="flex items-center gap-1 text-amber-500 font-bold text-sm bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                          {Array.from({ length: lightboxPhoto.rating }).map((_, i) => (
-                            <Star key={i} className="size-4 fill-amber-400" />
-                          ))}
-                        </div>
                       )}
                     </div>
 
