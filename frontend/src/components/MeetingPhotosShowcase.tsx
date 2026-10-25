@@ -156,36 +156,38 @@ export function MeetingPhotosShowcase() {
           </span>
         </div>
 
-        {/* Scroll Control Arrows */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => handleScroll("left")}
-            disabled={!canScrollLeft}
-            className={`flex size-10 items-center justify-center rounded-full border transition-all cursor-pointer shadow-xs ${
-              canScrollLeft
-                ? "bg-white text-teal-800 border-teal-200 hover:bg-[#004038] hover:text-white hover:border-[#004038] active:scale-95"
-                : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50"
-            }`}
-            title="Previous Session"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            onClick={() => handleScroll("right")}
-            disabled={!canScrollRight}
-            className={`flex size-10 items-center justify-center rounded-full border transition-all cursor-pointer shadow-xs ${
-              canScrollRight
-                ? "bg-white text-teal-800 border-teal-200 hover:bg-[#004038] hover:text-white hover:border-[#004038] active:scale-95"
-                : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50"
-            }`}
-            title="Next Session"
-          >
-            <ChevronRight className="size-5" />
-          </button>
-        </div>
+        {/* Scroll Control Arrows (only if more than 1 session) */}
+        {displayedSessions.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleScroll("left")}
+              disabled={!canScrollLeft}
+              className={`flex size-10 items-center justify-center rounded-full border transition-all cursor-pointer shadow-xs ${
+                canScrollLeft
+                  ? "bg-white text-teal-800 border-teal-200 hover:bg-[#004038] hover:text-white hover:border-[#004038] active:scale-95"
+                  : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50"
+              }`}
+              title="Previous Session"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              onClick={() => handleScroll("right")}
+              disabled={!canScrollRight}
+              className={`flex size-10 items-center justify-center rounded-full border transition-all cursor-pointer shadow-xs ${
+                canScrollRight
+                  ? "bg-white text-teal-800 border-teal-200 hover:bg-[#004038] hover:text-white hover:border-[#004038] active:scale-95"
+                  : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50"
+              }`}
+              title="Next Session"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Horizontally Scrollable Sessions Container (Session 1 on Left, Session 2 on Right Side-by-Side) */}
+      {/* Sessions Container (Single session takes full width, multiple sessions divide 50/50 and scroll horizontally) */}
       <div className="relative z-10 mt-6">
         {loading ? (
           <div className="flex items-center justify-center py-20 text-slate-500 gap-2">
@@ -202,73 +204,53 @@ export function MeetingPhotosShowcase() {
               Meeting screenshots and participant testimonials uploaded from the Admin Dashboard will appear here dynamically.
             </p>
           </div>
-        ) : (
-          <div
-            ref={scrollContainerRef}
-            onScroll={checkScrollability}
-            className="flex gap-6 overflow-x-auto pb-4 pt-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {displayedSessions.map((session, idx) => {
-              const imgList: string[] =
-                Array.isArray(session.imageUrls) && session.imageUrls.length > 0
-                  ? session.imageUrls
-                  : session.imageUrl
-                  ? [session.imageUrl]
-                  : [];
+        ) : (() => {
+          const isSingle = displayedSessions.length === 1;
 
-              const extraImagesCount = imgList.length > 2 ? imgList.length - 2 : 0;
+          return (
+            <div
+              ref={scrollContainerRef}
+              onScroll={checkScrollability}
+              className={
+                isSingle
+                  ? "w-full"
+                  : "flex gap-6 overflow-x-auto pb-4 pt-1 scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              }
+            >
+              {displayedSessions.map((session, idx) => {
+                const imgList: string[] =
+                  Array.isArray(session.imageUrls) && session.imageUrls.length > 0
+                    ? session.imageUrls
+                    : session.imageUrl
+                    ? [session.imageUrl]
+                    : [];
 
-              return (
-                <motion.div
-                  key={session._id || idx}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  className="w-[88vw] sm:w-[75vw] md:w-[calc(50%-12px)] shrink-0 snap-start flex flex-col justify-between rounded-3xl border border-teal-100/90 bg-white p-5 sm:p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:border-teal-300 group/card"
-                >
-                  {/* TOP: Images in One Container (Left Image & Right Image, with 2+ / 3+ if > 2 images) */}
-                  {imgList.length === 0 ? (
-                    <div className="h-48 sm:h-56 md:h-60 w-full rounded-2xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400">
-                      <ImageIcon className="size-8 mb-1" />
-                      <span className="text-xs font-medium">No screenshots available</span>
-                    </div>
-                  ) : imgList.length === 1 ? (
-                    // Single Image
-                    <div
-                      onClick={() => openLightbox(session, 0)}
-                      className="relative h-48 sm:h-56 md:h-60 w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
-                    >
-                      <img
-                        src={
-                          imgList[0].startsWith("http")
-                            ? imgList[0]
-                            : getNormalizedPosterUrl(imgList[0])
-                        }
-                        alt={`${session.title} - Photo 1`}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = "none";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openLightbox(session, 0);
-                        }}
-                        className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
-                        title="View full image"
-                      >
-                        <Maximize2 className="size-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    // Two Images Side-by-Side: Left Image & Right Image
-                    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 h-48 sm:h-56 md:h-60 w-full">
-                      {/* Left Side: First Image */}
+                const extraImagesCount = imgList.length > 2 ? imgList.length - 2 : 0;
+                const imgHeightClass = isSingle ? "h-64 sm:h-80 md:h-96" : "h-48 sm:h-56 md:h-60";
+
+                return (
+                  <motion.div
+                    key={session._id || idx}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: idx * 0.05 }}
+                    className={`flex flex-col justify-between rounded-3xl border border-teal-100/90 bg-white transition-all duration-300 hover:shadow-xl hover:border-teal-300 group/card ${
+                      isSingle
+                        ? "w-full p-6 sm:p-8 shadow-lg"
+                        : "w-[88vw] sm:w-[75vw] md:w-[calc(50%-12px)] shrink-0 snap-start p-5 sm:p-6 shadow-md"
+                    }`}
+                  >
+                    {/* TOP: Images in One Container (Left Image & Right Image, with 2+ / 3+ if > 2 images) */}
+                    {imgList.length === 0 ? (
+                      <div className={`${imgHeightClass} w-full rounded-2xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400`}>
+                        <ImageIcon className="size-8 mb-1" />
+                        <span className="text-xs font-medium">No screenshots available</span>
+                      </div>
+                    ) : imgList.length === 1 ? (
+                      // Single Image
                       <div
                         onClick={() => openLightbox(session, 0)}
-                        className="relative h-full w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
+                        className={`relative ${imgHeightClass} w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img`}
                       >
                         <img
                           src={
@@ -283,74 +265,106 @@ export function MeetingPhotosShowcase() {
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
-                        <div className="absolute top-2.5 left-2.5">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
-                            Photo 1
-                          </span>
-                        </div>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             openLightbox(session, 0);
                           }}
-                          className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-md bg-teal-600 text-white shadow-xs hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
-                          title="View image 1"
+                          className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                          title="View full image"
                         >
-                          <Maximize2 className="size-3" />
+                          <Maximize2 className="size-3.5" />
                         </button>
                       </div>
-
-                      {/* Right Side: Second Image (with 2+ / 3+ overlay if more than 2 images) */}
-                      <div
-                        onClick={() => openLightbox(session, 1)}
-                        className="relative h-full w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
-                      >
-                        <img
-                          src={
-                            imgList[1].startsWith("http")
-                              ? imgList[1]
-                              : getNormalizedPosterUrl(imgList[1])
-                          }
-                          alt={`${session.title} - Photo 2`}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-
-                        {extraImagesCount > 0 ? (
-                          // Dark frosted overlay with 2+ / 3+ count
-                          <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[2px] flex flex-col items-center justify-center text-white transition-all group-hover/img:bg-slate-950/75 p-2 text-center">
-                            <span className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow">
-                              {extraImagesCount}+
-                            </span>
-                            <span className="text-[10px] sm:text-[11px] font-bold text-teal-300 mt-0.5 tracking-wider uppercase">
-                              +{extraImagesCount} More
+                    ) : (
+                      // Two Images Side-by-Side: Left Image & Right Image
+                      <div className={`grid grid-cols-2 gap-2.5 sm:gap-3 ${imgHeightClass} w-full`}>
+                        {/* Left Side: First Image */}
+                        <div
+                          onClick={() => openLightbox(session, 0)}
+                          className="relative h-full w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
+                        >
+                          <img
+                            src={
+                              imgList[0].startsWith("http")
+                                ? imgList[0]
+                                : getNormalizedPosterUrl(imgList[0])
+                            }
+                            alt={`${session.title} - Photo 1`}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
+                          <div className="absolute top-2.5 left-2.5">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
+                              Photo 1
                             </span>
                           </div>
-                        ) : (
-                          <>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
-                            <div className="absolute top-2.5 left-2.5">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
-                                Photo 2
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openLightbox(session, 0);
+                            }}
+                            className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-md bg-teal-600 text-white shadow-xs hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                            title="View image 1"
+                          >
+                            <Maximize2 className="size-3" />
+                          </button>
+                        </div>
+
+                        {/* Right Side: Second Image (with 2+ / 3+ overlay if more than 2 images) */}
+                        <div
+                          onClick={() => openLightbox(session, 1)}
+                          className="relative h-full w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 shadow-xs cursor-pointer group/img"
+                        >
+                          <img
+                            src={
+                              imgList[1].startsWith("http")
+                                ? imgList[1]
+                                : getNormalizedPosterUrl(imgList[1])
+                            }
+                            alt={`${session.title} - Photo 2`}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+
+                          {extraImagesCount > 0 ? (
+                            // Dark frosted overlay with 2+ / 3+ count
+                            <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[2px] flex flex-col items-center justify-center text-white transition-all group-hover/img:bg-slate-950/75 p-2 text-center">
+                              <span className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow">
+                                {extraImagesCount}+
+                              </span>
+                              <span className="text-[10px] sm:text-[11px] font-bold text-teal-300 mt-0.5 tracking-wider uppercase">
+                                +{extraImagesCount} More
                               </span>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openLightbox(session, 1);
-                              }}
-                              className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-md bg-teal-600 text-white shadow-xs hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
-                              title="View image 2"
-                            >
-                              <Maximize2 className="size-3" />
-                            </button>
-                          </>
-                        )}
+                          ) : (
+                            <>
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
+                              <div className="absolute top-2.5 left-2.5">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
+                                  Photo 2
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openLightbox(session, 1);
+                                }}
+                                className="absolute bottom-2.5 right-2.5 flex size-7 items-center justify-center rounded-md bg-teal-600 text-white shadow-xs hover:bg-teal-500 transition-all opacity-90 group-hover/img:opacity-100"
+                                title="View image 2"
+                              >
+                                <Maximize2 className="size-3" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* BOTTOM: Title & About (Quote / Caption) & Speaker (Appears only once per session!) */}
                   <div className="mt-5 flex flex-col justify-between flex-1">
@@ -422,8 +436,9 @@ export function MeetingPhotosShowcase() {
               );
             })}
           </div>
-        )}
-      </div>
+        );
+      })()}
+    </div>
 
       {/* Lightbox Gallery Modal with Multi-Photo Controls */}
       <AnimatePresence>
