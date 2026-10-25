@@ -297,11 +297,6 @@ export function MeetingPhotosShowcase() {
                             }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
-                          <div className="absolute top-2.5 left-2.5">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
-                              Photo 1
-                            </span>
-                          </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -345,11 +340,6 @@ export function MeetingPhotosShowcase() {
                           ) : (
                             <>
                               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-40 group-hover/img:opacity-60 transition-opacity" />
-                              <div className="absolute top-2.5 left-2.5">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-[10px] font-bold text-white border border-white/15">
-                                  Photo 2
-                                </span>
-                              </div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
