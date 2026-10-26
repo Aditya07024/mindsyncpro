@@ -208,11 +208,12 @@ function PrivacyPage() {
 
           <div className="space-y-3">
             <h4 className="font-bold text-sm text-slate-900">Third-Party Services Used by the Application:</h4>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 { name: "Google Play Services", url: "https://www.google.com/policies/privacy/", desc: "Underlying system functionality and authentication services." },
                 { name: "Google Analytics for Firebase", url: "https://firebase.google.com/support/privacy", desc: "Aggregated, anonymous application usage telemetry." },
-                { name: "Clerk", url: "https://clerk.com/legal/privacy", desc: "Secure user authentication, session handling, and identity management." }
+                { name: "Clerk", url: "https://clerk.com/legal/privacy", desc: "Secure user authentication, session handling, and identity management." },
+                { name: "WebRTC", url: "https://webrtc.googlesource.com/src/+/refs/heads/main/LICENSE", desc: "Real-time audio, video, and data communication technology for live sessions." }
               ].map((tp, idx) => (
                 <a 
                   key={idx} 
@@ -232,6 +233,54 @@ function PrivacyPage() {
                   </span>
                 </a>
               ))}
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 pt-6 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="font-bold text-sm text-slate-900">Real-Time Communication (WebRTC) Open Source License Notice</h4>
+              <a
+                href="https://webrtc.googlesource.com/src/+/refs/heads/main/LICENSE"
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-teal-600 hover:underline font-semibold inline-flex items-center gap-1"
+              >
+                Official WebRTC License Source <ExternalLink className="size-3" />
+              </a>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Our real-time video, audio, and group healing sessions utilize WebRTC software. In compliance with the WebRTC open-source license, the following copyright and disclaimer notices are incorporated herein:
+            </p>
+            <div className="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-[11px] leading-relaxed whitespace-pre-wrap select-all border border-slate-800">
+{`Copyright (c) 2011, The WebRTC project authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  * Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+
+  * Neither the name of Google nor the names of its contributors may
+    be used to endorse or promote products derived from this software
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`}
             </div>
           </div>
 
