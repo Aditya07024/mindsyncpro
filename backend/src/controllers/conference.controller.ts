@@ -76,7 +76,7 @@ export function formatHostEmails(emailStr?: any): string {
     .join(", ");
 }
 
-import { clerkClient } from "@clerk/express";
+import { getClerkUserAnyInstance } from "@/lib/clerk-multi";
 
 export async function isUserAdminOrDelegated(req: AuthedRequest): Promise<boolean> {
   if (!req.user) return false;
@@ -89,8 +89,8 @@ export async function isUserAdminOrDelegated(req: AuthedRequest): Promise<boolea
     let clerkEmail = "";
     if (req.user.clerkId) {
       try {
-        const clerkUser = await clerkClient.users.getUser(req.user.clerkId);
-        clerkEmail = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+        const clerkUser = await getClerkUserAnyInstance(req.user.clerkId);
+        clerkEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || "";
       } catch (e) {}
     }
 

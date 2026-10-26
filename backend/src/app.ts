@@ -49,7 +49,12 @@ export async function createApp() {
   app.use(cookieParser());
   app.use(morgan("dev"));
 
-  app.use(clerkMiddleware());
+  app.use(
+    clerkMiddleware({
+      publishableKey: env.CLERK_PUBLISHABLE_KEY,
+      secretKey: env.CLERK_SECRET_KEY,
+    })
+  );
 
   // Serve uploaded images statically with explicit Cross-Origin headers
   const { getUploadDirectory } = await import("@/middleware/upload.middleware");

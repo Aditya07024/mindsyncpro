@@ -622,11 +622,11 @@ export class AdminController {
     user.deletedAt = new Date();
     await user.save();
 
-    // Delete from Clerk if clerkId exists
-    if (user.clerkId) {
+    // Delete from Clerk across Web & Mobile instances if clerkId exists
+    if (user.clerkId || (Array.isArray(user.clerkIds) && user.clerkIds.length > 0)) {
       try {
-        const { clerkClient } = await import("@clerk/express");
-        await clerkClient.users.deleteUser(user.clerkId);
+        const { deleteClerkUserAnyInstance } = await import("@/lib/clerk-multi");
+        await deleteClerkUserAnyInstance([user.clerkId, ...(user.clerkIds || [])]);
       } catch (err: any) {
         console.error(`[Admin] Failed to delete user ${id} from Clerk:`, err.message);
       }

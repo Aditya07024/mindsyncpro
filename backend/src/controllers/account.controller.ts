@@ -42,13 +42,15 @@ export class AccountController {
       userEmails.push(user.therapistProfile.email.toLowerCase());
     }
 
-    // Try fetching emails from Clerk as well to ensure thorough purge
+    // Try fetching emails from Clerk across Web & Mobile instances to ensure thorough purge
     if (clerkIdToDelete) {
       try {
-        const { clerkClient } = await import("@clerk/express");
-        const clerkUser = await clerkClient.users.getUser(clerkIdToDelete);
-        for (const e of clerkUser.emailAddresses) {
-          if (e.emailAddress) userEmails.push(e.emailAddress.toLowerCase());
+        const { getClerkUserAnyInstance } = await import("@/lib/clerk-multi");
+        const clerkUser = await getClerkUserAnyInstance(clerkIdToDelete);
+        if (clerkUser?.emailAddresses) {
+          for (const e of clerkUser.emailAddresses) {
+            if (e.emailAddress) userEmails.push(e.emailAddress.toLowerCase());
+          }
         }
       } catch (err: any) {
         console.warn(`[Account] Could not fetch email from Clerk for user ${userId}:`, err.message);
@@ -113,11 +115,11 @@ export class AccountController {
       User.deleteOne({ _id: userId }),
     ]);
 
-    // Delete user from Clerk using backend Server SDK
-    if (clerkIdToDelete) {
+    // Delete user from Clerk across Web & Mobile Clerk instances
+    if (clerkIdToDelete || (Array.isArray((user as any).clerkIds) && (user as any).clerkIds.length > 0)) {
       try {
-        const { clerkClient } = await import("@clerk/express");
-        await clerkClient.users.deleteUser(clerkIdToDelete);
+        const { deleteClerkUserAnyInstance } = await import("@/lib/clerk-multi");
+        await deleteClerkUserAnyInstance([clerkIdToDelete, ...((user as any).clerkIds || [])]);
       } catch (err: any) {
         console.error(`[Account] Failed to delete user ${userId} from Clerk:`, err.message);
       }

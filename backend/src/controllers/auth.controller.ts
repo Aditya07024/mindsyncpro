@@ -281,10 +281,10 @@ export class AuthController {
       user.deletedAt = new Date();
       await user.save();
 
-      if (user.clerkId) {
+      if (user.clerkId || (Array.isArray(user.clerkIds) && user.clerkIds.length > 0)) {
         try {
-          const { clerkClient } = await import("@clerk/express");
-          await clerkClient.users.deleteUser(user.clerkId);
+          const { deleteClerkUserAnyInstance } = await import("@/lib/clerk-multi");
+          await deleteClerkUserAnyInstance([user.clerkId, ...(user.clerkIds || [])]);
         } catch (err: any) {
           console.error(`[Auth] Failed to delete user ${userId} from Clerk:`, err.message);
         }

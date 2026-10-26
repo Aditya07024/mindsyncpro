@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase,
@@ -52,6 +53,7 @@ function moodBg(score: number) {
 
 function Onboarding() {
   const nav = useNavigate();
+  const { isLoaded, isSignedIn } = useAuth();
   const completeOnboarding = useStore((s) => s.completeOnboarding);
 
   // Steps: 0=name, 2=org picker, 15=category selection & student ID, 3=mood, 4=concerns, 5=need, 6=Manas greeting
@@ -87,8 +89,13 @@ function Onboarding() {
   const [streamed, setStreamed] = useState('');
   const [streaming, setStreaming] = useState(false);
 
-  // Auto-redirect therapists/admins
+  // Auto-redirect therapists/admins once Clerk session has hydrated
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      nav({ to: '/sign-in', replace: true });
+      return;
+    }
     API.auth.me().then(async (me: any) => {
       let role = me?.role ?? 'user';
       const intendedRole = localStorage.getItem('mymindtherapyfriend_intent_role');
@@ -110,7 +117,7 @@ function Onboarding() {
       else if (role === 'super_admin') nav({ to: '/admin/dashboard', replace: true });
       else if (me?.onboarding?.completedAt) nav({ to: '/dashboard', replace: true });
     }).catch(() => {});
-  }, [nav]);
+  }, [isLoaded, isSignedIn, nav]);
 
   // Load verified orgs for school/college dropdown
   useEffect(() => {

@@ -1,8 +1,8 @@
 import { config } from "dotenv";
 import { z } from "zod";
 
-// Load environment variables from .env
-config();
+// Load environment variables from .env (override stale PM2 cached vars when .env is updated)
+config({ override: true });
 
 // Determine environment mode: support both process.env.node and process.env.NODE_ENV
 // "deployment" -> development (localhost mode)
@@ -32,6 +32,7 @@ const resolvedEnv = {
   MONGODB_URI: getEnvVar("MONGODB_URI"),
   CLERK_SECRET_KEY: getEnvVar("CLERK_SECRET_KEY"),
   CLERK_PUBLISHABLE_KEY: getEnvVar("CLERK_PUBLISHABLE_KEY"),
+  CLERK_MOBILE_SECRET_KEY: getEnvVar("CLERK_MOBILE_SECRET_KEY"),
   CLIENT_ORIGIN: getEnvVar("CLIENT_ORIGIN", !isProd ? "http://localhost:5173" : undefined),
   API_URL: getEnvVar("API_URL"),
   JWT_SECRET: getEnvVar("JWT_SECRET"),
@@ -68,6 +69,7 @@ const envSchema = z.object({
     required_error: "CLERK_SECRET_KEY is required. Please set CLERK_SECRET_KEY or CLERK_SECRET_KEY_DEV/CLERK_SECRET_KEY_PROD in your .env file.",
   }),
   CLERK_PUBLISHABLE_KEY: z.string().optional(),
+  CLERK_MOBILE_SECRET_KEY: z.string().optional(),
   CLIENT_ORIGIN: z.string().default("http://localhost:5173"),
   API_URL: z.string().optional(),
   JWT_SECRET: z.string().optional(),

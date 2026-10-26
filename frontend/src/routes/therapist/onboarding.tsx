@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, FileText, Video, CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
 import API from '@/lib/api';
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/therapist/onboarding')({
 
 function TherapistOnboarding() {
   const nav = useNavigate();
+  const { isLoaded, isSignedIn } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +42,11 @@ function TherapistOnboarding() {
 
   // Check if they are already verified or pending
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      nav({ to: '/sign-in', replace: true });
+      return;
+    }
     API.auth.me().then((me: any) => {
       const status = me?.therapistProfile?.verificationStatus;
       if (status === 'verified') {
@@ -47,8 +54,8 @@ function TherapistOnboarding() {
       } else if (status === 'pending') {
         setStep(5); // Show success/pending screen
       }
-    });
-  }, [nav]);
+    }).catch(() => {});
+  }, [isLoaded, isSignedIn, nav]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));

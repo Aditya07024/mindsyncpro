@@ -12,9 +12,9 @@ const upload = multer({
 
 const router = Router();
 
-// Public (auth required, any role)
+// Verified orgs dropdown list (publicly readable during onboarding) & user's own org
 router.get("/me", requireAuth, OrgController.me);
-router.get("/verified", requireAuth, OrgController.getVerifiedOrgs);
+router.get("/verified", OrgController.getVerifiedOrgs);
 
 // Org onboarding
 router.post("/onboarding", requireAuth, OrgController.onboarding);

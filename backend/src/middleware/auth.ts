@@ -1,6 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-import { clerkClient, getAuth } from "@clerk/express";
+import { getAuth } from "@clerk/express";
 import { AppError } from "@/lib/app-error";
+import {
+  getClerkUserAnyInstance,
+  verifyBearerTokenMultiInstance,
+} from "@/lib/clerk-multi";
 import { User } from "@/models";
 
 export type AuthedRequest = Request & {
@@ -9,8 +13,9 @@ export type AuthedRequest = Request & {
 
 /**
  * requireAuth — verifies Clerk session token from Authorization: Bearer header.
+ * Supports both Web Production Clerk (clerk.mymindtherapyfriend.com) and
+ * Play Store Mobile App Clerk (famous-caiman-64.clerk.accounts.dev) via RS256 JWKS.
  * On success, attaches req.user = { sub: mongoUserId, role, clerkId }.
- * Creates the MongoDB user record on first login (auto-provisioning).
  */
 export async function requireAuth(
   req: AuthedRequest,
@@ -19,19 +24,16 @@ export async function requireAuth(
 ) {
   try {
     let { userId: clerkUserId } = getAuth(req);
+    let verifiedTokenEmail: string | undefined;
 
     if (!clerkUserId) {
       const authHeader = req.headers.authorization;
       if (authHeader && authHeader.startsWith("Bearer ")) {
         const token = authHeader.split(" ")[1];
-        try {
-          const jwt = await import("jsonwebtoken");
-          const decoded: any = jwt.decode(token);
-          if (decoded && decoded.sub) {
-            clerkUserId = decoded.sub;
-          }
-        } catch (jwtErr) {
-          console.warn("Fallback JWT decode failed:", jwtErr);
+        const verified = await verifyBearerTokenMultiInstance(token);
+        if (verified?.sub) {
+          clerkUserId = verified.sub;
+          verifiedTokenEmail = verified.email;
         }
       }
     }
@@ -40,83 +42,124 @@ export async function requireAuth(
       return next(new AppError("Unauthorized - No Clerk User", 401));
     }
 
-    // Look up or auto-provision the MongoDB user
+    // Look up or auto-provision the MongoDB user (supports multi-instance clerkIds)
     let user: any = await User.findOne({
-      $or: [{ clerkId: clerkUserId }, { phoneHash: clerkUserId }],
+      $or: [
+        { clerkId: clerkUserId },
+        { clerkIds: clerkUserId },
+        { phoneHash: clerkUserId },
+      ],
     }).lean();
 
     if (user && user.deletedAt) {
       // Reactivate: user is signing up again after deleting their account
       await User.updateOne(
         { _id: user._id },
-        { $unset: { deletedAt: 1 }, $set: { clerkId: clerkUserId } },
+        {
+          $unset: { deletedAt: 1 },
+          $set: { clerkId: user.clerkId || clerkUserId },
+          $addToSet: { clerkIds: clerkUserId },
+        },
       );
       user.deletedAt = undefined;
-      user.clerkId = clerkUserId;
+      user.clerkId = user.clerkId || clerkUserId;
     }
 
     if (user && !user.clerkId) {
       await User.updateOne(
         { _id: user._id },
-        { $set: { clerkId: clerkUserId } },
+        {
+          $set: { clerkId: clerkUserId },
+          $addToSet: { clerkIds: clerkUserId },
+        },
       );
       user.clerkId = clerkUserId;
+    } else if (
+      user &&
+      (!Array.isArray(user.clerkIds) || !user.clerkIds.includes(clerkUserId))
+    ) {
+      await User.updateOne(
+        { _id: user._id },
+        { $addToSet: { clerkIds: clerkUserId } },
+      );
     }
 
     if (!user) {
-      // First login — fetch Clerk user profile to populate name/email
-      const clerkUser = await clerkClient.users.getUser(clerkUserId);
-      const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
-      const fullName = [clerkUser.firstName, clerkUser.lastName]
-        .filter(Boolean)
-        .join(" ");
+      // First login with this Clerk ID — fetch Clerk user profile across Web & Mobile instances
+      let email = verifiedTokenEmail || "";
+      let fullName = "";
+      let clerkMetadataRole: string | undefined;
+
+      const clerkUser = await getClerkUserAnyInstance(clerkUserId);
+      if (clerkUser) {
+        email = clerkUser.emailAddresses?.[0]?.emailAddress || email;
+        fullName = [clerkUser.firstName, clerkUser.lastName]
+          .filter(Boolean)
+          .join(" ");
+        clerkMetadataRole = clerkUser.publicMetadata?.role as string | undefined;
+      }
 
       if (email) {
-        // Search by email in phoneMasked (case-insensitive)
+        const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        // Search by email in phoneMasked or email (case-insensitive) to unify Web & Mobile accounts
         user = await User.findOne({
           $or: [
+            { email: email.toLowerCase() },
             { phoneMasked: email },
             { phoneMasked: email.toLowerCase() },
-            { phoneMasked: { $regex: new RegExp(`^${email}$`, "i") } }
-          ]
+            { phoneMasked: { $regex: new RegExp(`^${escapedEmail}$`, "i") } },
+          ],
         }).lean();
 
         if (user) {
-          // Link Clerk ID to existing MongoDB user
+          // Link new Clerk ID without overwriting existing primary clerkId if already set
           await User.updateOne(
             { _id: user._id },
-            { $set: { clerkId: clerkUserId } }
+            {
+              $set: { clerkId: user.clerkId || clerkUserId },
+              $addToSet: { clerkIds: clerkUserId },
+            },
           );
-          user.clerkId = clerkUserId;
+          user.clerkId = user.clerkId || clerkUserId;
         }
       }
 
-      try {
-        // Detect intended role from header or Clerk metadata
-        let intentRole = (req.headers["x-intent-role"] as string) || (clerkUser.publicMetadata?.role as string);
-        
-        // Normalize role
-        if (intentRole === "super admin" || intentRole === "super-admin") intentRole = "super_admin";
-        if (intentRole === "org admin" || intentRole === "org-admin") intentRole = "org_admin";
+      if (!user) {
+        try {
+          // Detect intended role from header or Clerk metadata
+          let intentRole =
+            (req.headers["x-intent-role"] as string) || clerkMetadataRole || "";
 
-        const validRoles = ["user", "therapist", "org_admin", "super_admin"];
-        const roleToAssign = validRoles.includes(intentRole) ? intentRole : "user";
+          // Normalize role
+          if (intentRole === "super admin" || intentRole === "super-admin")
+            intentRole = "super_admin";
+          if (intentRole === "org admin" || intentRole === "org-admin")
+            intentRole = "org_admin";
 
-        const created = await User.create({
-          clerkId: clerkUserId,
-          phoneHash: clerkUserId, // use clerkId as unique key
-          phoneMasked: email || clerkUserId.slice(-8),
-          fullName: fullName || undefined,
-          role: roleToAssign,
-          isAnonymous: false,
-          onboarding: { concerns: [] },
-        });
-        user = created.toObject() as any;
-      } catch (createErr: any) {
-        if (createErr.code === 11000) {
-          user = await User.findOne({ clerkId: clerkUserId }).lean();
+          const validRoles = ["user", "therapist", "org_admin", "super_admin"];
+          const roleToAssign = validRoles.includes(intentRole)
+            ? intentRole
+            : "user";
+
+          const created = await User.create({
+            clerkId: clerkUserId,
+            clerkIds: [clerkUserId],
+            phoneHash: clerkUserId, // use clerkId as unique key
+            phoneMasked: email || clerkUserId.slice(-8),
+            fullName: fullName || undefined,
+            role: roleToAssign,
+            isAnonymous: false,
+            onboarding: { concerns: [] },
+          });
+          user = created.toObject() as any;
+        } catch (createErr: any) {
+          if (createErr.code === 11000) {
+            user = await User.findOne({
+              $or: [{ clerkId: clerkUserId }, { clerkIds: clerkUserId }],
+            }).lean();
+          }
+          if (!user) throw createErr;
         }
-        if (!user) throw createErr;
       }
     }
 
@@ -187,8 +230,8 @@ export async function getPossibleUserEmails(req: AuthedRequest): Promise<string[
 
   if (req.user.clerkId) {
     try {
-      const clerkUser = await clerkClient.users.getUser(req.user.clerkId);
-      if (clerkUser.emailAddresses?.[0]?.emailAddress) {
+      const clerkUser = await getClerkUserAnyInstance(req.user.clerkId);
+      if (clerkUser?.emailAddresses?.[0]?.emailAddress) {
         emails.push(clerkUser.emailAddresses[0].emailAddress);
       }
     } catch (e) {}
@@ -243,11 +286,8 @@ export async function optionalAuth(
 
     if (!authUserId && authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      try {
-        const jwt = await import("jsonwebtoken");
-        const decoded: any = jwt.decode(token);
-        if (decoded?.sub) authUserId = decoded.sub;
-      } catch (e) {}
+      const verified = await verifyBearerTokenMultiInstance(token);
+      if (verified?.sub) authUserId = verified.sub;
     }
 
     if (authUserId) {

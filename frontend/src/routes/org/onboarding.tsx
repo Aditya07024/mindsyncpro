@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, FileText, CheckCircle, ArrowRight, Mail } from "lucide-react";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import API from "@/lib/api";
 
 export const Route = createFileRoute("/org/onboarding")({
@@ -11,6 +11,7 @@ export const Route = createFileRoute("/org/onboarding")({
 
 function OrgOnboarding() {
   const nav = useNavigate();
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -57,6 +58,11 @@ function OrgOnboarding() {
   const isPublicEmail = publicEmailDomains.includes(emailDomain);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      nav({ to: "/sign-in", replace: true });
+      return;
+    }
     // If the user already has an org and it's verified or pending, redirect
     API.org
       .me()
@@ -69,7 +75,7 @@ function OrgOnboarding() {
         }
       })
       .catch(() => {}); // No org found, stay on onboarding
-  }, [nav]);
+  }, [isLoaded, isSignedIn, nav]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
