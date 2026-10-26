@@ -212,7 +212,7 @@ function PrivacyPage() {
               {[
                 { name: "Google Play Services", url: "https://www.google.com/policies/privacy/", desc: "Underlying system functionality and authentication services." },
                 { name: "Google Analytics for Firebase", url: "https://firebase.google.com/support/privacy", desc: "Aggregated, anonymous application usage telemetry." },
-                { name: "Firebase Crashlytics", url: "https://firebase.google.com/support/privacy/", desc: "Stability diagnostics and crash logs tracking." }
+                { name: "Clerk", url: "https://clerk.com/legal/privacy", desc: "Secure user authentication, session handling, and identity management." }
               ].map((tp, idx) => (
                 <a 
                   key={idx} 
