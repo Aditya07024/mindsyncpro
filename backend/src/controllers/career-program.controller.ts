@@ -24,42 +24,189 @@ async function getValidTherapistId(therapistIdStr?: string): Promise<mongoose.Ty
 
 const DEFAULT_TRAINING_PROGRAMS = [
   {
-    title: "Clinical CBT & Diagnostic Assessment Mastery",
-    description: "Comprehensive 8-week intensive certification covering Cognitive Behavioral Therapy frameworks, DSM-5 diagnostic interviewing, case formulation, and live supervised roleplays.",
-    startDate: "15th October 2026",
-    duration: "8 Weeks (Weekend Batches)",
+    title: "MindFirst: The Art of Mental Health Support & Clinical Counseling",
+    badgeText: "Clinical Training & Supervision Cohort 2026",
+    tagline: "LEARN, PRACTICE & SUPPORT WITH EMPATHY (Clinical Mentor-Guided, Skill-Based, and Career-Oriented)",
+    modes: "Online (Live Interactive) | Case Supervision Labs",
+    modeNote: "*Participants receive live supervised roleplay sessions, structured case workbooks, and recorded replays.",
+    aboutHeadline:
+      "Master Active Listening, Counseling Ethics & Initial Emotional Support from Scratch — and graduate with supervised case experience and a verified certificate.",
+    description:
+      "A practical mental health skills training programme designed to help students, educators, community volunteers, and aspiring wellbeing facilitators understand mental health and provide appropriate initial emotional support.\n\nParticipants will learn active listening, supportive communication, stress awareness, emotional regulation basics, healthy boundaries, mental health warning signs, crisis awareness, and appropriate referral practices. The programme combines theoretical sessions with practical exercises, case-based learning, and real-world scenarios to build confidence in responding responsibly to everyday mental health concerns. It emphasizes ethical conduct, privacy, empathy, and knowing when to refer someone to a qualified mental health professional.",
+    keyOutcomes: [
+      "Structured Active Listening & Empathetic Communication Frameworks",
+      "Deep Understanding of Stress, Emotional Regulation & Warning Signs",
+      "4–5 Supervised Case Roleplays & Crisis Referral Simulations",
+      "A Portfolio & Verified Certificate Aligned to Counseling & Wellbeing Roles",
+    ],
+    objectives: [
+      "Build a foundational understanding of mental health, emotional distress, and supportive care from scratch.",
+      "Train participants in active listening, non-judgmental communication, and healthy professional boundaries.",
+      "Provide hands-on experience through real-world counseling case vignettes, roleplays, and intake simulations.",
+      "Equip learners to recognize mental health warning signs, crisis red flags, and ethical referral pathways.",
+      "Help participants apply psychological first-aid and emotional regulation tools in schools, workplaces, and communities.",
+      "Enable participants to graduate with supervised practical hours and a verified completion certificate.",
+    ],
+    targetAudience: [
+      "Psychology, Counseling & Social Work Students (UG / PG)",
+      "Teachers, School Educators & Academic Mentors",
+      "Community Volunteers, HR & Workplace Wellbeing Facilitators",
+      "Aspiring Counsellors & Mental Health Advocates",
+    ],
+    modules: [
+      {
+        title: "Module 1: Foundations of Mental Health & Ethical Support",
+        topics: [
+          "Understanding mental health, emotional wellbeing, and the mental health continuum",
+          "Breaking stigma and myths around psychological support",
+          "Core ethical principles: confidentiality, privacy, informed consent, and boundaries",
+          "Scope of initial emotional support vs. clinical psychotherapy",
+        ],
+        learningOutcome:
+          "Learners establish a strong conceptual and ethical foundation required to offer safe, responsible mental health support.",
+      },
+      {
+        title: "Module 2: Active Listening & Supportive Communication Mastery",
+        topics: [
+          "Micro-skills of counseling: attending behavior, open-ended questioning, paraphrasing, and reflection of feeling",
+          "Validating emotions without toxic positivity or premature advice-giving",
+          "Verbal and non-verbal empathy in high-distress conversations",
+          "Live paired roleplay lab with mentor feedback",
+        ],
+        learningOutcome:
+          "Participants conduct structured, empathetic supportive conversations that help individuals feel heard and grounded.",
+      },
+      {
+        title: "Module 3: Stress Awareness, Emotional Regulation & Coping Tools",
+        topics: [
+          "Recognizing academic, career, interpersonal, and burnout stressors",
+          "Evidence-based grounding techniques, breathwork, and cognitive reframing basics",
+          "Helping individuals build sustainable self-care and emotional regulation routines",
+          "Preventing helper fatigue, vicarious stress, and maintaining self-boundaries",
+        ],
+        learningOutcome:
+          "Learners confidently introduce practical grounding and emotional regulation tools while protecting their own wellbeing.",
+      },
+      {
+        title: "Module 4: Warning Signs, Crisis Awareness & Referral Practice",
+        topics: [
+          "Identifying early warning signs of anxiety, depression, trauma, and acute distress",
+          "Crisis awareness: risk indicators, de-escalation basics, and safety protocols",
+          "How and when to refer to clinical psychologists, psychiatrists, or crisis helplines",
+          "Capstone case simulation, supervised evaluation & certification review",
+        ],
+        learningOutcome:
+          "Participants demonstrate responsible risk awareness, ethical decision-making, and seamless professional referral practices.",
+      },
+    ],
+    whatYouGet: [
+      "52 Days structured live learning-cum-supervision program guided by Senior Counsellors.",
+      "Step-by-step curriculum covering foundational empathy to crisis referral protocols.",
+      "Weekly live case discussions, peer roleplays & personalized supervisor feedback.",
+      "Downloadable Counseling Toolkits, Intake Checklists & Emotional Regulation Workbooks.",
+      "Access to community peer group, Q&A mentorship sessions, and career guidance.",
+      "Verified Certificate of Completion from MyMindTherapyFriend Clinical Wing.",
+    ],
+    certificationDetails:
+      "Graduates receive a Verified Mental Health Skill Training Certificate issued by MyMindTherapyFriend with unique credential ID suitable for academic portfolios, CV/Resume, and LinkedIn.",
+    careerEnablementSubtitle:
+      "Structured professional enablement integrated into the cohort to help participants translate counseling skills into academic, institutional, and wellbeing opportunities.",
+    careerEnablementItems: [
+      {
+        title: "Psychology & Wellbeing CV / Portfolio Building",
+        description:
+          "Learn how to document supervised skill hours, case labs, and competencies effectively on your CV and postgraduate/internship applications.",
+      },
+      {
+        title: "Personalized Supervisor Feedback",
+        description:
+          "Receive constructive evaluation on your communication style, empathy markers, and boundary management during live roleplays.",
+      },
+      {
+        title: "LinkedIn & Professional Positioning Session",
+        description:
+          "Position your profile for school counseling internships, NGO mental health projects, corporate wellbeing roles, and clinical pathways.",
+      },
+      {
+        title: "Case Formulation & Interview Prep Kit",
+        description:
+          "Curated handbook with 40+ real counseling scenario questions, ethical dilemma frameworks, and referral templates.",
+      },
+      {
+        title: "Practical Competency & Case Assessment",
+        description:
+          "Simulate real-world supportive conversations and ethical referral decisions benchmarked by senior practitioners.",
+      },
+      {
+        title: "1:1 Post-Program Career Guidance Check-in",
+        description:
+          "Dedicated mentorship guidance on higher studies, RCI/clinical pathways, and specialization choices in mental health.",
+      },
+    ],
+    startDate: "5th November 2026",
+    duration: "52 Days",
     fee: 4999,
-    instructor: "Dr. Ananya Sharma (Senior Clinical Psychologist)",
-    totalSeats: 30,
-    availableSeats: 12,
-    category: "CBT Certification",
-    tags: ["CBT", "Clinical", "Certification"],
-    isActive: true,
-  },
-  {
-    title: "Child & Adolescent Therapy Supervised Cohort",
-    description: "Specialized clinical training in play therapy, school counseling techniques, ADHD/Autism behavioral interventions, and parent guidance strategies.",
-    startDate: "1st November 2026",
-    duration: "6 Weeks",
-    fee: 3999,
-    instructor: "Dr. Rajesh Verma (Child Psychologist)",
-    totalSeats: 25,
-    availableSeats: 8,
-    category: "Child Psychology",
-    tags: ["Child Therapy", "ADHD", "School Counseling"],
-    isActive: true,
-  },
-  {
-    title: "Trauma-Informed Counseling & Crisis Intervention",
-    description: "Practical masterclass on Somatic Grounding, PTSD recovery protocols, crisis de-escalation, and ethical boundaries in private practice.",
-    startDate: "20th November 2026",
-    duration: "4 Weeks",
-    fee: 2999,
-    instructor: "Dr. Meera Nambiar (Trauma Specialist)",
-    totalSeats: 30,
-    availableSeats: 15,
-    category: "Trauma Care",
-    tags: ["Trauma", "PTSD", "Crisis Support"],
+    totalProgramValue: "₹22,000+",
+    earlyCohortNote: "Subsidized Cohort Fee for Limited Seats — Enrollments Open Now",
+    feeBreakdown: [
+      { item: "Core Live Training & Supervised Roleplay Labs (52 Days)", value: "₹ 10,000" },
+      { item: "Practical Counseling Workbooks, Scripts & Referral Toolkits", value: "₹ 3,000" },
+      { item: "Career Support — Psychology CV & Portfolio Workshop", value: "₹ 2,500" },
+      { item: "Ethical Dilemma & Counseling Interview Prep Kit", value: "₹ 2,500" },
+      { item: "Live Case Competency Review & Verified Certificate", value: "₹ 2,000" },
+      { item: "1:1 Career Roadmap Mentorship Session", value: "₹ 2,000" },
+    ],
+    supportAssuranceTitle: "Learning & Cohort Completion Support Assurance",
+    supportAssuranceText:
+      "If a participant is unable to attend specific live sessions due to exams, health, or emergencies, extended academic support is provided—including session recordings, guided workbook catch-up, and complimentary attendance in the next cohort's missed module so every learner completes their certification with confidence.",
+    testimonials: [
+      {
+        name: "Riya Deshmukh",
+        role: "MA Psychology Student",
+        comment:
+          "The live roleplays and supervisor feedback completely transformed how I listen and hold space without jumping to advice. Way more practical than textbook lectures.",
+        rating: 5,
+      },
+      {
+        name: "Arjun Nair",
+        role: "High School Educator & Student Mentor",
+        comment:
+          "Understanding healthy boundaries and exact referral protocols gave me the confidence to support stressed students responsibly and ethically.",
+        rating: 5,
+      },
+    ],
+    faqs: [
+      {
+        question: "Who can enroll in this Counseling Training Program?",
+        answer:
+          "Psychology/social work students, educators, HR & wellbeing facilitators, healthcare/community volunteers, and anyone passionate about learning structured, ethical mental health support skills can enroll.",
+      },
+      {
+        question: "Do I need a prior clinical degree to join?",
+        answer:
+          "No prior clinical license is required. The curriculum starts from core foundations and progressively builds practical active listening, emotional regulation, and ethical referral skills.",
+      },
+      {
+        question: "What if I miss a live session during the cohort?",
+        answer:
+          "Session recordings, summary notes, and practice worksheets are shared with enrolled participants, along with mentor Q&A support so you never fall behind.",
+      },
+      {
+        question: "Will I receive a certificate after completing the program?",
+        answer:
+          "Yes! Upon completing the training modules and practical case exercises, you will receive an official Verified Certificate of Completion.",
+      },
+    ],
+    organizerInitiative: "An Official Clinical Training Initiative By MyMindTherapyFriend",
+    contactEmail: "contact@mymindtherapyfriend.com",
+    contactPhone: "Available via Support Desk (10:00 AM – 6:00 PM IST)",
+    cautionNote:
+      "Only training cohorts listed on mymindtherapyfriend.com are official. Enrollments are processed securely via Razorpay with instant payment receipt and Admin seat verification.",
+    instructor: "Senior Counsellor",
+    totalSeats: 60,
+    availableSeats: 60,
+    category: "Mental Health Skill Training Program",
+    tags: ["Mental Health Support", "Active Listening", "Counseling Skills", "Certification"],
     isActive: true,
   },
 ];
@@ -236,14 +383,150 @@ export async function updateCareerSelectionStatus(req: Request, res: Response): 
   }
 }
 
+function normalizeLines(val: any): string[] {
+  if (Array.isArray(val)) {
+    return val.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  if (typeof val === "string") {
+    return val
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^[•\-*]\s*/, "").trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function buildRichProgramPayload(body: any, isUpdate = false): Record<string, any> {
+  const payload: Record<string, any> = {};
+
+  const setIfDefined = (key: string, transform?: (v: any) => any) => {
+    if (body[key] !== undefined) {
+      payload[key] = transform ? transform(body[key]) : body[key];
+    } else if (!isUpdate) {
+      // leave undefined so schema defaults apply on create
+    }
+  };
+
+  setIfDefined("title", (v) => String(v || "").trim());
+  setIfDefined("badgeText", (v) => String(v || "").trim());
+  setIfDefined("tagline", (v) => String(v || "").trim());
+  setIfDefined("modes", (v) => String(v || "").trim());
+  setIfDefined("modeNote", (v) => String(v || "").trim());
+  setIfDefined("aboutHeadline", (v) => String(v || "").trim());
+  setIfDefined("description", (v) => String(v || ""));
+  setIfDefined("keyOutcomes", normalizeLines);
+  setIfDefined("objectives", normalizeLines);
+  setIfDefined("targetAudience", normalizeLines);
+
+  if (body.modules !== undefined) {
+    payload.modules = Array.isArray(body.modules)
+      ? body.modules
+          .filter((m: any) => m && String(m.title || "").trim())
+          .map((m: any) => ({
+            title: String(m.title || "").trim(),
+            topics: normalizeLines(m.topics),
+            learningOutcome: String(m.learningOutcome || "").trim(),
+          }))
+      : [];
+  }
+
+  setIfDefined("whatYouGet", normalizeLines);
+  setIfDefined("certificationDetails", (v) => String(v || "").trim());
+  setIfDefined("careerEnablementSubtitle", (v) => String(v || "").trim());
+
+  if (body.careerEnablementItems !== undefined) {
+    payload.careerEnablementItems = Array.isArray(body.careerEnablementItems)
+      ? body.careerEnablementItems
+          .filter((item: any) => item && String(item.title || "").trim())
+          .map((item: any) => ({
+            title: String(item.title || "").trim(),
+            description: String(item.description || "").trim(),
+          }))
+      : [];
+  }
+
+  setIfDefined("startDate", (v) => String(v || "").trim());
+  setIfDefined("duration", (v) => String(v || "").trim());
+  setIfDefined("fee", (v) => Number(v || 0));
+  setIfDefined("totalProgramValue", (v) => String(v || "").trim());
+  setIfDefined("earlyCohortNote", (v) => String(v || "").trim());
+
+  if (body.feeBreakdown !== undefined) {
+    payload.feeBreakdown = Array.isArray(body.feeBreakdown)
+      ? body.feeBreakdown
+          .filter((row: any) => row && String(row.item || "").trim())
+          .map((row: any) => ({
+            item: String(row.item || "").trim(),
+            value: String(row.value || "").trim(),
+          }))
+      : [];
+  }
+
+  setIfDefined("supportAssuranceTitle", (v) => String(v || "").trim());
+  setIfDefined("supportAssuranceText", (v) => String(v || "").trim());
+
+  if (body.testimonials !== undefined) {
+    payload.testimonials = Array.isArray(body.testimonials)
+      ? body.testimonials
+          .filter((t: any) => t && String(t.name || "").trim() && String(t.comment || "").trim())
+          .map((t: any) => ({
+            name: String(t.name || "").trim(),
+            role: String(t.role || "").trim(),
+            comment: String(t.comment || "").trim(),
+            rating: Number(t.rating || 5),
+          }))
+      : [];
+  }
+
+  if (body.faqs !== undefined) {
+    payload.faqs = Array.isArray(body.faqs)
+      ? body.faqs
+          .filter((f: any) => f && String(f.question || "").trim() && String(f.answer || "").trim())
+          .map((f: any) => ({
+            question: String(f.question || "").trim(),
+            answer: String(f.answer || "").trim(),
+          }))
+      : [];
+  }
+
+  setIfDefined("organizerInitiative", (v) => String(v || "").trim());
+  setIfDefined("contactEmail", (v) => String(v || "").trim());
+  setIfDefined("contactPhone", (v) => String(v || "").trim());
+  setIfDefined("cautionNote", (v) => String(v || "").trim());
+  setIfDefined("instructor", (v) => String(v || "Clinical Expert").trim());
+  setIfDefined("totalSeats", (v) => Number(v || 30));
+  setIfDefined("availableSeats", (v) => Number(v ?? body.totalSeats ?? 30));
+  setIfDefined("category", (v) => String(v || "Certification").trim());
+
+  if (body.tags !== undefined) {
+    payload.tags = Array.isArray(body.tags)
+      ? body.tags.map((t: any) => String(t).trim()).filter(Boolean)
+      : String(body.tags || "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean);
+  }
+
+  if (body.isActive !== undefined) {
+    payload.isActive = Boolean(body.isActive);
+  } else if (!isUpdate) {
+    payload.isActive = true;
+  }
+
+  return payload;
+}
+
 // --- 2. COUNSELING TRAINING PROGRAM ---
 
 export async function getCounselingTrainingPrograms(_req: Request, res: Response): Promise<void> {
   try {
     let programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
     if (programs.length === 0) {
-      await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
-      programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
+      const totalCount = await CounselingTrainingProgram.countDocuments();
+      if (totalCount === 0) {
+        await CounselingTrainingProgram.insertMany(DEFAULT_TRAINING_PROGRAMS);
+        programs = await CounselingTrainingProgram.find({ isActive: true }).sort({ createdAt: -1 });
+      }
     }
     res.json({ success: true, programs });
   } catch (error: any) {
@@ -253,21 +536,8 @@ export async function getCounselingTrainingPrograms(_req: Request, res: Response
 
 export async function createCounselingTrainingProgram(req: Request, res: Response): Promise<void> {
   try {
-    const { title, description, startDate, duration, fee, instructor, totalSeats, availableSeats, category, tags } = req.body;
-
-    const program = await CounselingTrainingProgram.create({
-      title,
-      description,
-      startDate,
-      duration,
-      fee: Number(fee || 0),
-      instructor: instructor || "Clinical Expert",
-      totalSeats: Number(totalSeats || 30),
-      availableSeats: Number(availableSeats || totalSeats || 30),
-      category: category || "Certification",
-      tags: Array.isArray(tags) ? tags : String(tags || "").split(",").map((t) => t.trim()).filter(Boolean),
-      isActive: true,
-    });
+    const createPayload = buildRichProgramPayload(req.body, false);
+    const program = await CounselingTrainingProgram.create(createPayload);
 
     res.status(201).json({ success: true, program, message: "Training program created successfully" });
   } catch (error: any) {
@@ -357,22 +627,7 @@ export async function getAdminCounselingTrainingPrograms(_req: Request, res: Res
 export async function updateCounselingTrainingProgram(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const { title, description, startDate, duration, fee, instructor, totalSeats, availableSeats, category, tags, isActive } = req.body;
-
-    const updateFields: any = {};
-    if (title !== undefined) updateFields.title = title;
-    if (description !== undefined) updateFields.description = description;
-    if (startDate !== undefined) updateFields.startDate = startDate;
-    if (duration !== undefined) updateFields.duration = duration;
-    if (fee !== undefined) updateFields.fee = Number(fee);
-    if (instructor !== undefined) updateFields.instructor = instructor;
-    if (totalSeats !== undefined) updateFields.totalSeats = Number(totalSeats);
-    if (availableSeats !== undefined) updateFields.availableSeats = Number(availableSeats);
-    if (category !== undefined) updateFields.category = category;
-    if (tags !== undefined) {
-      updateFields.tags = Array.isArray(tags) ? tags : String(tags || "").split(",").map((t) => t.trim()).filter(Boolean);
-    }
-    if (isActive !== undefined) updateFields.isActive = Boolean(isActive);
+    const updateFields = buildRichProgramPayload(req.body, true);
 
     const program = await CounselingTrainingProgram.findByIdAndUpdate(id, updateFields, { new: true });
     if (!program) {

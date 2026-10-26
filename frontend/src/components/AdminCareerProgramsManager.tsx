@@ -22,6 +22,13 @@ import {
   Sparkles,
   Link as LinkIcon,
   CheckCircle2,
+  ChevronUp,
+  ChevronDown,
+  BookOpen,
+  Award,
+  HelpCircle,
+  MessageSquare,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import API from "@/lib/api";
@@ -291,22 +298,251 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
   // Program mutations (Create, Update, Delete)
   const [showProgramModal, setShowProgramModal] = useState(false);
   const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
+  const [programEditorTab, setProgramEditorTab] = useState<
+    "hero" | "about" | "modules" | "deliverables" | "fees" | "faqs"
+  >("hero");
+
+  type ModuleFormItem = {
+    title: string;
+    topicsText: string;
+    learningOutcome: string;
+  };
+  type CareerItemForm = {
+    title: string;
+    description: string;
+  };
+  type FeeBreakdownItemForm = {
+    item: string;
+    value: string;
+  };
+  type TestimonialItemForm = {
+    name: string;
+    role: string;
+    comment: string;
+    rating: number;
+  };
+  type FaqItemForm = {
+    question: string;
+    answer: string;
+  };
 
   const initialFormState = {
     title: "",
+    badgeText: "Clinical Skill Certification & Internship",
+    tagline:
+      "LEARN, PRACTICE & COUNSEL WITH CONFIDENCE (Supervisor-Guided, Skill-Based, and Career-Oriented)",
+    modes: "Online Live Interactive | Supervised Case Labs",
+    modeNote: "*Participants receive live weekend workshops + recorded session replays.",
+    aboutHeadline: "",
     description: "",
     startDate: "15th October 2026",
-    duration: "8 Weeks (Weekend Batches)",
+    duration: "8 Weeks (Extendable Supervision)",
     fee: 4999,
+    totalProgramValue: "",
+    earlyCohortNote: "",
     instructor: "Dr. Ananya Sharma (Senior Clinical Psychologist)",
     totalSeats: 30,
     availableSeats: 30,
     category: "CBT Certification",
     tags: "CBT, Clinical, Certification",
     isActive: true,
+    keyOutcomesText: "",
+    objectivesText: "",
+    targetAudienceText: "",
+    modules: [] as ModuleFormItem[],
+    whatYouGetText: "",
+    certificationDetails: "",
+    careerEnablementSubtitle: "",
+    careerEnablementItems: [] as CareerItemForm[],
+    feeBreakdown: [] as FeeBreakdownItemForm[],
+    supportAssuranceTitle: "Learning & Completion Support Assurance",
+    supportAssuranceText: "",
+    testimonials: [] as TestimonialItemForm[],
+    faqs: [] as FaqItemForm[],
+    organizerInitiative: "An Initiative of My Mind Therapy Friend (MindFirst Clinical Wellness)",
+    contactEmail: "support@mymindtherapyfriend.com",
+    contactPhone: "",
+    cautionNote: "",
   };
 
   const [programForm, setProgramForm] = useState(initialFormState);
+
+  const handlePrefillRichTemplate = () => {
+    setProgramForm((prev) => ({
+      ...prev,
+      title:
+        prev.title.trim() ||
+        "Clinical CBT, Case Formulation & Applied Counseling Training Program",
+      badgeText: "Clinical Training & Supervised Internship",
+      tagline:
+        "LEARN, FORMULATE & COUNSEL WITH CONFIDENCE (Senior Psychologist-Guided, Skill-Based & Career-Oriented)",
+      modes: "Online Live Interactive | Supervised Case Labs",
+      modeNote:
+        "*Participants can attend live weekend clinical workshops and access recorded session replays.",
+      aboutHeadline:
+        "Master CBT Formulation, Intake Assessment & Ethical Psychotherapy from Scratch — and graduate with supervised clinical case experience and a verified certificate.",
+      description:
+        prev.description.trim() ||
+        "The Clinical CBT & Applied Counseling Training Program is an intensive, structured learning-cum-supervision cohort designed to help psychology students, aspiring therapists, and mental health practitioners build strong clinical competencies starting from foundational interviewing skills.\n\nThis program blends evidence-based theoretical frameworks with live role-plays, standardized intake documentation, DSM-5-TR / ICD-11 diagnostic orientation, and real-world case formulation under senior clinical psychologists.",
+      totalProgramValue: "₹25,000+",
+      earlyCohortNote:
+        "Subsidized cohort fee under the MindFirst Clinical Skill Initiative to make supervised practical counseling accessible to psychology students & early-career practitioners.",
+      keyOutcomesText: [
+        "Conduct structured clinical intake interviews & Mental Status Examinations (MSE)",
+        "Build individualized CBT case formulations & treatment plans for anxiety and depression",
+        "Apply cognitive restructuring, behavioral activation & Socratic questioning in live sessions",
+        "Maintain ethical clinical documentation, boundaries, and crisis safety protocols",
+        "Present real-world simulated cases during live clinical supervision rounds",
+        "Earn a Verified Clinical Training & Internship Certificate",
+      ].join("\n"),
+      objectivesText: [
+        "Bridge the gap between university textbook psychology and real-room client counseling",
+        "Develop hands-on proficiency in CBT worksheets, thought records, and behavioral experiments",
+        "Build ethical decision-making, trauma-informed empathy, and suicide risk assessment skills",
+        "Prepare candidates for clinical placements, school/corporate counseling, or private practice",
+      ].join("\n"),
+      targetAudienceText: [
+        "BA / BSc & MA / MSc Psychology Students",
+        "Early-Career Counseling Psychologists & Psychiatric Social Workers",
+        "School, College & Corporate Wellness Counselors",
+        "Allied Healthcare & HR Professionals seeking structured counseling foundations",
+      ].join("\n"),
+      modules: [
+        {
+          title: "Module 1: Clinical Interviewing, Rapport & Mental Status Examination (MSE)",
+          topicsText: [
+            "Therapeutic alliance, active listening, unconditional positive regard & micro-skills",
+            "Conducting the first 50-minute intake session & biopsychosocial history taking",
+            "Step-by-step Mental Status Examination (MSE) & red-flag clinical screening",
+          ].join("\n"),
+          learningOutcome:
+            "Confidently lead a structured first intake session and write a professional MSE report.",
+        },
+        {
+          title: "Module 2: Case Conceptualization & DSM-5-TR / ICD-11 Clinical Orientation",
+          topicsText: [
+            "5-P clinical formulation model (Presenting, Predisposing, Precipitating, Perpetuating, Protective)",
+            "Differential understanding of mood, anxiety, trauma & adjustment presentations",
+            "Collaborative goal setting (SMART therapeutic goals) with clients",
+          ].join("\n"),
+          learningOutcome:
+            "Translate raw client narratives into clear, actionable clinical case conceptualizations.",
+        },
+        {
+          title: "Module 3: Core Cognitive Behavioral Therapy (CBT) Interventions",
+          topicsText: [
+            "Identifying Automatic Negative Thoughts (ANTs), intermediate beliefs & core schemas",
+            "Socratic questioning, downward arrow technique & Dysfunctional Thought Records (DTR)",
+            "Behavioral activation, graded exposure hierarchies & relapse-prevention planning",
+          ].join("\n"),
+          learningOutcome:
+            "Deliver structured, evidence-based CBT interventions tailored to individual client needs.",
+        },
+        {
+          title: "Module 4: Crisis Triage, Ethics, Confidentiality & Documentation",
+          topicsText: [
+            "Ethical guidelines, informed consent, dual relationships & boundary management",
+            "Suicide & self-harm risk assessment, safety planning & psychiatric referral pathways",
+            "SOAP & DAP session note writing and confidential record keeping",
+          ].join("\n"),
+          learningOutcome:
+            "Manage sensitive ethical dilemmas and crisis situations safely and professionally.",
+        },
+        {
+          title: "Module 5: Supervised Role-Plays, Mock Sessions & Case Presentations",
+          topicsText: [
+            "Live dyad/triad counseling simulations with real-time supervisor feedback",
+            "End-to-end capstone clinical case presentation & peer supervision circles",
+            "Therapist self-care, managing transference/countertransference & burnout prevention",
+          ].join("\n"),
+          learningOutcome:
+            "Graduate with verified practical counseling readiness and supervisor-reviewed case logs.",
+        },
+      ],
+      whatYouGetText: [
+        "Live Interactive Clinical Training & Supervision Sessions with Senior Psychologists",
+        "Ready-to-Use Clinical Toolkit (Intake Forms, MSE Templates, CBT Worksheets & Safety Plans)",
+        "Hands-on Mock Counseling Labs & Real-Time Supervisor Feedback",
+        "Recorded Session Replays & Curated Clinical Reading Compendium",
+        "Verified Clinical Training & Supervised Practice Certificate",
+        "Top Performers Considered for MindFirst Counselor Onboarding & Mentorship",
+      ].join("\n"),
+      certificationDetails:
+        "Upon successful attendance and capstone case presentation, participants receive a Verified Counseling Training & Clinical Supervision Certificate issued by My Mind Therapy Friend (MindFirst Wellness), suitable for CV, LinkedIn, and postgraduate/clinical placement portfolios.",
+      careerEnablementSubtitle:
+        "Included at no extra cost to help you transition smoothly from learner to practicing counselor:",
+      careerEnablementItems: [
+        {
+          title: "Clinical CV & LinkedIn Profile Optimization",
+          description:
+            "Highlight your supervised hours, assessment competencies, and CBT training effectively for hospitals, clinics, NGOs, and schools.",
+        },
+        {
+          title: "Psychologist & Counselor Interview Readiness",
+          description:
+            "Practice real clinical case-vignette interview questions asked by mental health organizations and clinical boards.",
+        },
+        {
+          title: "Private Practice & Platform Onboarding Roadmap",
+          description:
+            "Step-by-step guidance on ethical tele-counseling setup, client retention, and onboarding onto verified therapy platforms.",
+        },
+      ],
+      feeBreakdown: [
+        { item: "Live Clinical CBT & Counseling Training Workshops", value: "₹10,000" },
+        { item: "Small-Group Case Formulation & Mock Session Supervision", value: "₹6,000" },
+        { item: "Clinical Assessment, MSE & CBT Worksheet Toolkit", value: "₹3,500" },
+        { item: "Verified Certificate & Capstone Case Evaluation", value: "₹3,000" },
+        { item: "Career Enablement & Counselor Interview Guidance", value: "₹2,500" },
+      ],
+      supportAssuranceTitle: "Learning & Completion Support Assurance",
+      supportAssuranceText:
+        "Every participant receives structured supervisor guidance, session recordings for missed classes, doubt-clearing mentorship circles, and step-by-step feedback on their capstone case formulation so no learner is left behind.",
+      testimonials: [
+        {
+          name: "Riya Deshmukh",
+          role: "MA Clinical Psychology Student",
+          comment:
+            "The live mock counseling labs and 5-P CBT case formulation rounds completely transformed my confidence before starting my hospital internship.",
+          rating: 5,
+        },
+        {
+          name: "Karthik Nair",
+          role: "School & Adolescent Counselor",
+          comment:
+            "Practical, ethical, and deeply structured. The MSE templates and Socratic questioning demonstrations are tools I now use every single week.",
+          rating: 5,
+        },
+      ],
+      faqs: [
+        {
+          question: "Who is eligible to enroll in this Counseling Training Program?",
+          answer:
+            "Undergraduate/Postgraduate Psychology students, aspiring counselors, social work students, educators, and early-career mental health practitioners are welcome. Foundational concepts are taught systematically from the ground up.",
+        },
+        {
+          question: "What if I miss a live training or supervision session?",
+          answer:
+            "All core teaching modules include recorded replay access along with downloadable clinical handouts and worksheets so you can catch up seamlessly.",
+        },
+        {
+          question: "Will I get practical hands-on counseling practice or only theory?",
+          answer:
+            "This is a practice-first cohort. You will participate in structured intake role-plays, MSE drafting, CBT thought-record exercises, and supervised case presentations.",
+        },
+        {
+          question: "How does enrollment and seat confirmation work?",
+          answer:
+            "Click 'Enroll Now', complete your registration details and secure Razorpay fee payment, and our Clinical Program Leads will verify and confirm your cohort seat within 24 hours.",
+        },
+      ],
+      organizerInitiative: "An Initiative of My Mind Therapy Friend (MindFirst Clinical Wellness)",
+      contactEmail: "support@mymindtherapyfriend.com",
+      cautionNote:
+        "Official registrations and fee payments for MindFirst Counseling Training Cohorts are processed exclusively through our verified portal (mymindtherapyfriend.com). Please do not transfer fees to unauthorized personal accounts.",
+    }));
+    toast.success("Rich counseling template loaded! Review & customize across the 6 tabs.");
+  };
 
   const createProgramMutation = useMutation({
     mutationFn: (data: any) => API.careerPrograms.createTrainingProgram(data),
@@ -351,6 +587,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
 
   const resetProgramForm = () => {
     setEditingProgramId(null);
+    setProgramEditorTab("hero");
     setProgramForm(initialFormState);
   };
 
@@ -361,28 +598,166 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
 
   const handleOpenEditProgram = (prog: any) => {
     setEditingProgramId(prog._id);
+    setProgramEditorTab("hero");
     setProgramForm({
       title: prog.title || "",
+      badgeText: prog.badgeText || "Clinical Skill Certification & Internship",
+      tagline: prog.tagline || "",
+      modes: prog.modes || "",
+      modeNote: prog.modeNote || "",
+      aboutHeadline: prog.aboutHeadline || "",
       description: prog.description || "",
       startDate: prog.startDate || "",
       duration: prog.duration || "",
-      fee: prog.fee || 0,
+      fee: prog.fee ?? 0,
+      totalProgramValue: prog.totalProgramValue || "",
+      earlyCohortNote: prog.earlyCohortNote || "",
       instructor: prog.instructor || "",
       totalSeats: prog.totalSeats || 30,
       availableSeats: prog.availableSeats ?? prog.totalSeats ?? 30,
       category: prog.category || "CBT Certification",
       tags: Array.isArray(prog.tags) ? prog.tags.join(", ") : prog.tags || "",
       isActive: prog.isActive !== false,
+      keyOutcomesText: Array.isArray(prog.keyOutcomes) ? prog.keyOutcomes.join("\n") : "",
+      objectivesText: Array.isArray(prog.objectives) ? prog.objectives.join("\n") : "",
+      targetAudienceText: Array.isArray(prog.targetAudience) ? prog.targetAudience.join("\n") : "",
+      modules: Array.isArray(prog.modules)
+        ? prog.modules.map((m: any) => ({
+            title: m.title || "",
+            topicsText: Array.isArray(m.topics) ? m.topics.join("\n") : "",
+            learningOutcome: m.learningOutcome || "",
+          }))
+        : [],
+      whatYouGetText: Array.isArray(prog.whatYouGet) ? prog.whatYouGet.join("\n") : "",
+      certificationDetails: prog.certificationDetails || "",
+      careerEnablementSubtitle: prog.careerEnablementSubtitle || "",
+      careerEnablementItems: Array.isArray(prog.careerEnablementItems)
+        ? prog.careerEnablementItems.map((c: any) => ({
+            title: c.title || "",
+            description: c.description || "",
+          }))
+        : [],
+      feeBreakdown: Array.isArray(prog.feeBreakdown)
+        ? prog.feeBreakdown.map((f: any) => ({
+            item: f.item || "",
+            value: f.value || "",
+          }))
+        : [],
+      supportAssuranceTitle:
+        prog.supportAssuranceTitle || "Learning & Completion Support Assurance",
+      supportAssuranceText: prog.supportAssuranceText || "",
+      testimonials: Array.isArray(prog.testimonials)
+        ? prog.testimonials.map((t: any) => ({
+            name: t.name || "",
+            role: t.role || "",
+            comment: t.comment || "",
+            rating: Number(t.rating || 5),
+          }))
+        : [],
+      faqs: Array.isArray(prog.faqs)
+        ? prog.faqs.map((q: any) => ({
+            question: q.question || "",
+            answer: q.answer || "",
+          }))
+        : [],
+      organizerInitiative: prog.organizerInitiative || "",
+      contactEmail: prog.contactEmail || "",
+      contactPhone: prog.contactPhone || "",
+      cautionNote: prog.cautionNote || "",
     });
     setShowProgramModal(true);
   };
 
   const handleProgramSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!programForm.title.trim()) {
+      setProgramEditorTab("hero");
+      toast.error("Please enter a Program Title in Tab 1 (Hero & Core Info).");
+      return;
+    }
+    if (!programForm.description.trim()) {
+      setProgramEditorTab("about");
+      toast.error("Please enter the Program Overview / Description in Tab 2 (About & Outcomes).");
+      return;
+    }
+
+    const splitLines = (txt: string) =>
+      txt
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    const payload = {
+      title: programForm.title.trim(),
+      description: programForm.description.trim(),
+      startDate: programForm.startDate.trim(),
+      duration: programForm.duration.trim(),
+      fee: Number(programForm.fee || 0),
+      instructor: programForm.instructor.trim(),
+      totalSeats: Number(programForm.totalSeats || 30),
+      availableSeats: Number(programForm.availableSeats || 0),
+      category: programForm.category.trim() || "CBT Certification",
+      tags: programForm.tags,
+      isActive: programForm.isActive,
+
+      badgeText: programForm.badgeText.trim(),
+      tagline: programForm.tagline.trim(),
+      modes: programForm.modes.trim(),
+      modeNote: programForm.modeNote.trim(),
+      aboutHeadline: programForm.aboutHeadline.trim(),
+      keyOutcomes: splitLines(programForm.keyOutcomesText),
+      objectives: splitLines(programForm.objectivesText),
+      targetAudience: splitLines(programForm.targetAudienceText),
+      modules: programForm.modules
+        .filter((m) => m.title.trim())
+        .map((m) => ({
+          title: m.title.trim(),
+          topics: splitLines(m.topicsText),
+          learningOutcome: m.learningOutcome.trim(),
+        })),
+      whatYouGet: splitLines(programForm.whatYouGetText),
+      certificationDetails: programForm.certificationDetails.trim(),
+      careerEnablementSubtitle: programForm.careerEnablementSubtitle.trim(),
+      careerEnablementItems: programForm.careerEnablementItems
+        .filter((c) => c.title.trim())
+        .map((c) => ({
+          title: c.title.trim(),
+          description: c.description.trim(),
+        })),
+      totalProgramValue: programForm.totalProgramValue.trim(),
+      earlyCohortNote: programForm.earlyCohortNote.trim(),
+      feeBreakdown: programForm.feeBreakdown
+        .filter((f) => f.item.trim())
+        .map((f) => ({
+          item: f.item.trim(),
+          value: f.value.trim(),
+        })),
+      supportAssuranceTitle: programForm.supportAssuranceTitle.trim(),
+      supportAssuranceText: programForm.supportAssuranceText.trim(),
+      testimonials: programForm.testimonials
+        .filter((t) => t.name.trim() && t.comment.trim())
+        .map((t) => ({
+          name: t.name.trim(),
+          role: t.role.trim(),
+          comment: t.comment.trim(),
+          rating: Math.min(5, Math.max(1, Number(t.rating || 5))),
+        })),
+      faqs: programForm.faqs
+        .filter((q) => q.question.trim() && q.answer.trim())
+        .map((q) => ({
+          question: q.question.trim(),
+          answer: q.answer.trim(),
+        })),
+      organizerInitiative: programForm.organizerInitiative.trim(),
+      contactEmail: programForm.contactEmail.trim(),
+      contactPhone: programForm.contactPhone.trim(),
+      cautionNote: programForm.cautionNote.trim(),
+    };
+
     if (editingProgramId) {
-      updateProgramMutation.mutate({ id: editingProgramId, data: programForm });
+      updateProgramMutation.mutate({ id: editingProgramId, data: payload });
     } else {
-      createProgramMutation.mutate(programForm);
+      createProgramMutation.mutate(payload);
     }
   };
 
@@ -647,14 +1022,36 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
               <tbody className="divide-y divide-slate-700/60">
                 {filteredPrograms.map((prog: any) => (
                   <tr key={prog._id} className="hover:bg-slate-700/30 transition">
-                    <td className="p-4 font-bold text-white max-w-sm">
+                    <td className="p-4 font-bold text-white max-w-md">
                       <div>
                         <div className="text-sm text-cyan-300 font-semibold">{prog.title}</div>
-                        <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full mt-1 inline-block">
-                          {prog.category || "Certification"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <span className="text-[10px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
+                            {prog.category || "Certification"}
+                          </span>
+                          {Array.isArray(prog.modules) && prog.modules.length > 0 && (
+                            <span className="text-[10px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                              {prog.modules.length} Modules
+                            </span>
+                          )}
+                          {Array.isArray(prog.faqs) && prog.faqs.length > 0 && (
+                            <span className="text-[10px] bg-teal-500/15 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded-full">
+                              {prog.faqs.length} FAQs
+                            </span>
+                          )}
+                          {Array.isArray(prog.testimonials) && prog.testimonials.length > 0 && (
+                            <span className="text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                              {prog.testimonials.length} Reviews
+                            </span>
+                          )}
+                          {prog.totalProgramValue && (
+                            <span className="text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                              Value: {prog.totalProgramValue}
+                            </span>
+                          )}
+                        </div>
                         {prog.description && (
-                          <div className="mt-2 text-xs font-normal text-slate-300 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/60 leading-relaxed whitespace-pre-line max-h-28 overflow-y-auto">
+                          <div className="mt-2 text-xs font-normal text-slate-300 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/60 leading-relaxed whitespace-pre-line max-h-24 overflow-y-auto">
                             {prog.description}
                           </div>
                         )}
@@ -1137,202 +1534,1067 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
         </div>
       )}
 
-      {/* CREATE / EDIT PROGRAM COHORT MODAL */}
+      {/* CREATE / EDIT PROGRAM COHORT MODAL (6-TAB RICH PROGRAM BUILDER) */}
       {showProgramModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold">
-              {editingProgramId ? "Edit Counseling Training Program Cohort" : "Create Counseling Training Program Cohort"}
-            </h3>
-
-            <form onSubmit={handleProgramSubmit} className="space-y-4 text-xs">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-7 max-w-5xl w-full text-white flex flex-col max-h-[92vh] shadow-2xl">
+            {/* Modal Top Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800 shrink-0">
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Program Title</label>
-                <input
-                  type="text"
-                  required
-                  value={programForm.title}
-                  onChange={(e) => setProgramForm({ ...programForm, title: e.target.value })}
-                  placeholder="e.g. Clinical CBT & Diagnostic Assessment Mastery"
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                />
+                <h3 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-cyan-300">
+                  <GraduationCap className="size-5" />
+                  {editingProgramId
+                    ? "Edit Rich Counseling Training Program"
+                    : "Create Rich Counseling Training Program"}
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Author comprehensive program landing sections (Hero, Outcomes, Expandable Modules, Career Support, Value Breakdown, Reviews & FAQs).
+                </p>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-slate-400 font-semibold">Description & Syllabus</label>
-                  <span className="text-[10px] text-slate-500">
-                    {programForm.description?.length || 0} characters
-                  </span>
-                </div>
-                <textarea
-                  required
-                  rows={7}
-                  value={programForm.description}
-                  onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })}
-                  placeholder="Program overview, syllabus, learning outcomes..."
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed font-sans"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-slate-400 font-semibold">Category</label>
-                    <span className="text-[10px] text-cyan-400">Custom Category Input</span>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    list="category-suggestions"
-                    value={programForm.category}
-                    onChange={(e) => setProgramForm({ ...programForm, category: e.target.value })}
-                    placeholder="Enter or select category (e.g. CBT Certification)"
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 text-xs"
-                  />
-                  <datalist id="category-suggestions">
-                    <option value="CBT Certification" />
-                    <option value="Child Psychology" />
-                    <option value="Trauma Care" />
-                    <option value="Clinical Supervision" />
-                    <option value="General Counseling" />
-                    <option value="Neurodevelopmental & ADHD" />
-                    <option value="Couple & Marriage Counseling" />
-                  </datalist>
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {["CBT Certification", "Child Psychology", "Trauma Care", "Clinical Supervision", "General Counseling"].map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setProgramForm({ ...programForm, category: cat })}
-                        className={`text-[10px] px-2 py-0.5 rounded-lg border transition cursor-pointer ${
-                          programForm.category === cat
-                            ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-semibold"
-                            : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Instructor / Lead Expert</label>
-                  <input
-                    type="text"
-                    required
-                    value={programForm.instructor}
-                    onChange={(e) => setProgramForm({ ...programForm, instructor: e.target.value })}
-                    placeholder="e.g. Dr. Ananya Sharma"
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Start Date</label>
-                  <input
-                    type="text"
-                    required
-                    value={programForm.startDate}
-                    onChange={(e) => setProgramForm({ ...programForm, startDate: e.target.value })}
-                    placeholder="e.g. 15th October 2026"
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Duration</label>
-                  <input
-                    type="text"
-                    required
-                    value={programForm.duration}
-                    onChange={(e) => setProgramForm({ ...programForm, duration: e.target.value })}
-                    placeholder="e.g. 8 Weeks (Weekend Batches)"
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Fee (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    value={programForm.fee}
-                    onChange={(e) => setProgramForm({ ...programForm, fee: Number(e.target.value) })}
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Total Seats</label>
-                  <input
-                    type="number"
-                    required
-                    value={programForm.totalSeats}
-                    onChange={(e) => setProgramForm({ ...programForm, totalSeats: Number(e.target.value) })}
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-400 font-semibold mb-1">Available Seats</label>
-                  <input
-                    type="number"
-                    required
-                    value={programForm.availableSeats}
-                    onChange={(e) => setProgramForm({ ...programForm, availableSeats: Number(e.target.value) })}
-                    className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">Tags (Comma-separated)</label>
-                <input
-                  type="text"
-                  value={programForm.tags}
-                  onChange={(e) => setProgramForm({ ...programForm, tags: e.target.value })}
-                  placeholder="e.g. CBT, Clinical, DSM-5"
-                  className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="isActiveToggle"
-                  checked={programForm.isActive}
-                  onChange={(e) => setProgramForm({ ...programForm, isActive: e.target.checked })}
-                  className="size-4 rounded border-slate-700 text-cyan-500 focus:ring-cyan-400"
-                />
-                <label htmlFor="isActiveToggle" className="text-xs text-slate-300 font-medium cursor-pointer">
-                  Is Program Active & Visible to Students?
-                </label>
-              </div>
-
-              <div className="pt-4 flex gap-3">
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handlePrefillRichTemplate}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-teal-500/20 hover:from-cyan-500/30 hover:to-teal-500/30 border border-cyan-500/40 px-3 py-2 text-[11px] font-bold text-cyan-200 transition cursor-pointer"
+                >
+                  <Sparkles className="size-3.5 text-cyan-300" />
+                  Pre-fill Rich Counseling Template
+                </button>
                 <button
                   type="button"
                   onClick={() => {
                     setShowProgramModal(false);
                     resetProgramForm();
                   }}
-                  className="flex-1 rounded-xl bg-slate-800 border border-slate-700 py-3 font-semibold text-slate-400 hover:text-white transition cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                  title="Close"
                 >
-                  Cancel
+                  <XCircle className="size-5" />
                 </button>
+              </div>
+            </div>
+
+            {/* 6-Tab Navigation */}
+            <div className="flex flex-wrap gap-1.5 py-3 border-b border-slate-800 shrink-0">
+              {[
+                { id: "hero", label: "1. Hero & Core Info" },
+                { id: "about", label: "2. About, Outcomes & Objectives" },
+                { id: "modules", label: `3. Syllabus Modules (${programForm.modules.length})` },
+                { id: "deliverables", label: "4. What You Get & Career" },
+                { id: "fees", label: "5. Fee Value & Assurance" },
+                { id: "faqs", label: `6. Reviews (${programForm.testimonials.length}) & FAQs (${programForm.faqs.length})` },
+              ].map((t) => (
                 <button
-                  type="submit"
-                  disabled={createProgramMutation.isPending || updateProgramMutation.isPending}
-                  className="flex-1 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 transition shadow-lg cursor-pointer"
+                  key={t.id}
+                  type="button"
+                  onClick={() => setProgramEditorTab(t.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer border ${
+                    programEditorTab === t.id
+                      ? "bg-cyan-500 text-slate-950 border-cyan-400 shadow"
+                      : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white"
+                  }`}
                 >
-                  {editingProgramId ? "Update Program Cohort" : "Create Program Cohort"}
+                  {t.label}
                 </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleProgramSubmit} className="flex-1 flex flex-col min-h-0 pt-4 text-xs">
+              {/* Scrollable Tab Body */}
+              <div className="flex-1 overflow-y-auto pr-1 space-y-5">
+                {/* TAB 1: HERO & CORE INFO */}
+                {programEditorTab === "hero" && (
+                  <div className="space-y-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Top Hero Badge Text
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.badgeText}
+                          onChange={(e) => setProgramForm({ ...programForm, badgeText: e.target.value })}
+                          placeholder="e.g. Clinical Training & Supervised Internship"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-slate-300 font-semibold">Category *</label>
+                          <span className="text-[10px] text-cyan-400">Select or type custom</span>
+                        </div>
+                        <input
+                          type="text"
+                          list="category-suggestions"
+                          value={programForm.category}
+                          onChange={(e) => setProgramForm({ ...programForm, category: e.target.value })}
+                          placeholder="e.g. CBT Certification"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                        <datalist id="category-suggestions">
+                          <option value="CBT Certification" />
+                          <option value="Child Psychology" />
+                          <option value="Trauma Care" />
+                          <option value="Clinical Supervision" />
+                          <option value="General Counseling" />
+                          <option value="Neurodevelopmental & ADHD" />
+                          <option value="Couple & Marriage Counseling" />
+                        </datalist>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Program Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={programForm.title}
+                        onChange={(e) => setProgramForm({ ...programForm, title: e.target.value })}
+                        placeholder="e.g. Clinical CBT, Case Formulation & Applied Counseling Training Program"
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 text-sm font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Hero Banner Tagline (Uppercase / Highlight Strip)
+                      </label>
+                      <input
+                        type="text"
+                        value={programForm.tagline}
+                        onChange={(e) => setProgramForm({ ...programForm, tagline: e.target.value })}
+                        placeholder="e.g. LEARN, FORMULATE & COUNSEL WITH CONFIDENCE (Senior Psychologist-Guided & Career-Oriented)"
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                      />
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Training Modes
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.modes}
+                          onChange={(e) => setProgramForm({ ...programForm, modes: e.target.value })}
+                          placeholder="e.g. Online Live Interactive | Supervised Case Labs"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Mode Sub-Note (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.modeNote}
+                          onChange={(e) => setProgramForm({ ...programForm, modeNote: e.target.value })}
+                          placeholder="e.g. *Participants receive live weekend workshops + recorded replays."
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">Start Date *</label>
+                        <input
+                          type="text"
+                          value={programForm.startDate}
+                          onChange={(e) => setProgramForm({ ...programForm, startDate: e.target.value })}
+                          placeholder="e.g. 15th October 2026"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">Duration *</label>
+                        <input
+                          type="text"
+                          value={programForm.duration}
+                          onChange={(e) => setProgramForm({ ...programForm, duration: e.target.value })}
+                          placeholder="e.g. 4 - 6 Weeks (Extendable to 2 Months)"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Instructor / Clinical Lead *
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.instructor}
+                          onChange={(e) => setProgramForm({ ...programForm, instructor: e.target.value })}
+                          placeholder="e.g. Dr. Ananya Sharma"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Enrollment Fee (₹) *
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={programForm.fee}
+                          onChange={(e) => setProgramForm({ ...programForm, fee: Number(e.target.value) })}
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-emerald-300 font-bold focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">Total Seats *</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={programForm.totalSeats}
+                          onChange={(e) => setProgramForm({ ...programForm, totalSeats: Number(e.target.value) })}
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">Available Seats *</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={programForm.availableSeats}
+                          onChange={(e) => setProgramForm({ ...programForm, availableSeats: Number(e.target.value) })}
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Topic Tags (Comma-separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={programForm.tags}
+                        onChange={(e) => setProgramForm({ ...programForm, tags: e.target.value })}
+                        placeholder="e.g. CBT, Clinical Formulation, MSE, DSM-5-TR, Ethics"
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: ABOUT, OUTCOMES & OBJECTIVES */}
+                {programEditorTab === "about" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        About the Program — Bold Lead Headline
+                      </label>
+                      <input
+                        type="text"
+                        value={programForm.aboutHeadline}
+                        onChange={(e) => setProgramForm({ ...programForm, aboutHeadline: e.target.value })}
+                        placeholder="e.g. Master CBT Formulation & Ethical Psychotherapy from Scratch — and graduate with a verified certificate."
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-slate-300 font-semibold">
+                          Detailed Program Overview ("About the Program") *
+                        </label>
+                        <span className="text-[10px] text-slate-400">
+                          {programForm.description?.length || 0} chars (multi-paragraph supported)
+                        </span>
+                      </div>
+                      <textarea
+                        rows={6}
+                        value={programForm.description}
+                        onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })}
+                        placeholder="Write comprehensive overview paragraphs about what makes this program unique, clinical methodology, tools practiced, and hands-on supervision..."
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          "By the end of this program, you won't just know theory — you will:" (1 outcome per line)
+                        </label>
+                        <textarea
+                          rows={6}
+                          value={programForm.keyOutcomesText}
+                          onChange={(e) => setProgramForm({ ...programForm, keyOutcomesText: e.target.value })}
+                          placeholder={"Conduct structured clinical intake interviews & MSE\nBuild individualized 5-P CBT case formulations\nApply cognitive restructuring & behavioral activation\nEarn a Verified Clinical Training Certificate"}
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Program Objectives (1 objective per line)
+                        </label>
+                        <textarea
+                          rows={6}
+                          value={programForm.objectivesText}
+                          onChange={(e) => setProgramForm({ ...programForm, objectivesText: e.target.value })}
+                          placeholder={"Bridge the gap between textbook psychology and real client counseling\nDevelop hands-on proficiency in CBT worksheets & thought records\nBuild ethical crisis assessment & boundary skills"}
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Who Should Attend / Eligibility (1 audience group per line)
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={programForm.targetAudienceText}
+                        onChange={(e) => setProgramForm({ ...programForm, targetAudienceText: e.target.value })}
+                        placeholder={"BA / BSc & MA / MSc Psychology Students\nEarly-Career Counseling Psychologists & Social Workers\nSchool, College & Corporate Wellness Counselors"}
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: PROGRAM OUTLINE / CURRICULUM MODULES */}
+                {programEditorTab === "modules" && (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-800/70 p-4 rounded-2xl border border-slate-700">
+                      <div>
+                        <h4 className="font-bold text-cyan-300 text-sm flex items-center gap-1.5">
+                          <BookOpen className="size-4" /> Structured Curriculum Modules (Expandable on Public Page)
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Add Module 1, Module 2, Capstone Project, etc. Each module displays expandable bullet topics and a highlighted Learning Outcome.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setProgramForm({
+                            ...programForm,
+                            modules: [
+                              ...programForm.modules,
+                              {
+                                title: `Module ${programForm.modules.length + 1}: `,
+                                topicsText: "",
+                                learningOutcome: "",
+                              },
+                            ],
+                          })
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3.5 py-2 text-xs transition cursor-pointer shrink-0"
+                      >
+                        <Plus className="size-4" /> Add Module
+                      </button>
+                    </div>
+
+                    {programForm.modules.length === 0 ? (
+                      <div className="text-center py-10 bg-slate-800/40 rounded-2xl border border-dashed border-slate-700 space-y-2">
+                        <p className="text-slate-400 text-xs">
+                          No curriculum modules added yet. Click <strong>"+ Add Module"</strong> or use <strong>"Pre-fill Rich Counseling Template"</strong> above.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {programForm.modules.map((mod, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 space-y-3"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-2.5 py-0.5 rounded-full">
+                                Module #{idx + 1}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={() => {
+                                    const copy = [...programForm.modules];
+                                    [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                                    setProgramForm({ ...programForm, modules: copy });
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:text-white disabled:opacity-30 cursor-pointer"
+                                  title="Move Up"
+                                >
+                                  <ChevronUp className="size-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === programForm.modules.length - 1}
+                                  onClick={() => {
+                                    const copy = [...programForm.modules];
+                                    [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
+                                    setProgramForm({ ...programForm, modules: copy });
+                                  }}
+                                  className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:text-white disabled:opacity-30 cursor-pointer"
+                                  title="Move Down"
+                                >
+                                  <ChevronDown className="size-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const copy = programForm.modules.filter((_, i) => i !== idx);
+                                    setProgramForm({ ...programForm, modules: copy });
+                                  }}
+                                  className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 cursor-pointer"
+                                  title="Remove Module"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-400 font-semibold mb-1">
+                                Module Title
+                              </label>
+                              <input
+                                type="text"
+                                value={mod.title}
+                                onChange={(e) => {
+                                  const copy = [...programForm.modules];
+                                  copy[idx] = { ...copy[idx], title: e.target.value };
+                                  setProgramForm({ ...programForm, modules: copy });
+                                }}
+                                placeholder="e.g. Module 1: Clinical Interviewing, Rapport & MSE"
+                                className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 font-semibold"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-400 font-semibold mb-1">
+                                Key Topics Covered (1 bullet point per line)
+                              </label>
+                              <textarea
+                                rows={3}
+                                value={mod.topicsText}
+                                onChange={(e) => {
+                                  const copy = [...programForm.modules];
+                                  copy[idx] = { ...copy[idx], topicsText: e.target.value };
+                                  setProgramForm({ ...programForm, modules: copy });
+                                }}
+                                placeholder={"Therapeutic alliance & active listening micro-skills\nConducting the first 50-minute intake interview\nMental Status Examination (MSE) walkthrough"}
+                                className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-slate-400 font-semibold mb-1">
+                                Module Learning Outcome
+                              </label>
+                              <input
+                                type="text"
+                                value={mod.learningOutcome}
+                                onChange={(e) => {
+                                  const copy = [...programForm.modules];
+                                  copy[idx] = { ...copy[idx], learningOutcome: e.target.value };
+                                  setProgramForm({ ...programForm, modules: copy });
+                                }}
+                                placeholder="e.g. Confidently lead a structured intake session and write a professional MSE report."
+                                className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-emerald-300 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* TAB 4: WHAT YOU GET & CAREER ENABLEMENT */}
+                {programEditorTab === "deliverables" && (
+                  <div className="space-y-5">
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        "What You Get" — Core Program Deliverables (1 item per line)
+                      </label>
+                      <textarea
+                        rows={5}
+                        value={programForm.whatYouGetText}
+                        onChange={(e) => setProgramForm({ ...programForm, whatYouGetText: e.target.value })}
+                        placeholder={"Live Interactive Clinical Training & Supervision Sessions\nReady-to-Use Clinical Toolkit (Intake Forms, MSE Templates, CBT Worksheets)\nHands-on Mock Counseling Labs\nVerified Clinical Training Certificate"}
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Certification Highlight Details
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={programForm.certificationDetails}
+                        onChange={(e) =>
+                          setProgramForm({ ...programForm, certificationDetails: e.target.value })
+                        }
+                        placeholder="Describe the verified certificate issued upon completion, eligibility criteria, and portfolio value..."
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400 leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="border-t border-slate-800 pt-4 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-cyan-300 text-sm flex items-center gap-1.5">
+                            <Award className="size-4" /> Career Enablement & Supervision Bonuses
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Showcase career-readiness guidance included at no extra cost (CV review, mock interviews, private practice setup).
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setProgramForm({
+                              ...programForm,
+                              careerEnablementItems: [
+                                ...programForm.careerEnablementItems,
+                                { title: "", description: "" },
+                              ],
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-bold px-3 py-1.5 text-xs transition cursor-pointer shrink-0"
+                        >
+                          <Plus className="size-3.5" /> Add Career Bonus Card
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1">
+                          Career Enablement Section Subtitle
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.careerEnablementSubtitle}
+                          onChange={(e) =>
+                            setProgramForm({
+                              ...programForm,
+                              careerEnablementSubtitle: e.target.value,
+                            })
+                          }
+                          placeholder="e.g. Included at no extra cost to help you transition smoothly from learner to practicing counselor:"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      {programForm.careerEnablementItems.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="grid sm:grid-cols-12 gap-3 bg-slate-800/80 border border-slate-700 rounded-2xl p-3 items-start"
+                        >
+                          <div className="sm:col-span-4">
+                            <input
+                              type="text"
+                              value={item.title}
+                              onChange={(e) => {
+                                const copy = [...programForm.careerEnablementItems];
+                                copy[idx] = { ...copy[idx], title: e.target.value };
+                                setProgramForm({ ...programForm, careerEnablementItems: copy });
+                              }}
+                              placeholder="Bonus Title (e.g. Clinical CV Optimization)"
+                              className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white font-semibold"
+                            />
+                          </div>
+                          <div className="sm:col-span-7">
+                            <input
+                              type="text"
+                              value={item.description}
+                              onChange={(e) => {
+                                const copy = [...programForm.careerEnablementItems];
+                                copy[idx] = { ...copy[idx], description: e.target.value };
+                                setProgramForm({ ...programForm, careerEnablementItems: copy });
+                              }}
+                              placeholder="Short explanation of how this helps participants..."
+                              className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-slate-200"
+                            />
+                          </div>
+                          <div className="sm:col-span-1 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const copy = programForm.careerEnablementItems.filter(
+                                  (_, i) => i !== idx
+                                );
+                                setProgramForm({ ...programForm, careerEnablementItems: copy });
+                              }}
+                              className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 cursor-pointer"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 5: FEE STRUCTURE BREAKDOWN & COMPLETION ASSURANCE */}
+                {programEditorTab === "fees" && (
+                  <div className="space-y-5">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Total Program Value (Anchor Comparison, e.g. ₹25,000+)
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.totalProgramValue}
+                          onChange={(e) =>
+                            setProgramForm({ ...programForm, totalProgramValue: e.target.value })
+                          }
+                          placeholder="e.g. ₹25,000+"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-300 font-semibold mb-1">
+                          Actual Payable Fee (₹) — Synced with Tab 1
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={programForm.fee}
+                          onChange={(e) =>
+                            setProgramForm({ ...programForm, fee: Number(e.target.value) })
+                          }
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-emerald-300 font-bold focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Subsidized / Early Cohort Note
+                      </label>
+                      <input
+                        type="text"
+                        value={programForm.earlyCohortNote}
+                        onChange={(e) =>
+                          setProgramForm({ ...programForm, earlyCohortNote: e.target.value })
+                        }
+                        placeholder="e.g. Subsidized fee under MindFirst Clinical Skill Initiative to make practical training accessible."
+                        className="w-full rounded-xl bg-slate-800 border border-slate-700 p-3 text-white focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                      />
+                    </div>
+
+                    <div className="space-y-3 border-t border-slate-800 pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-cyan-300 text-sm">
+                            Value Breakdown Line Items (IIT-Style Fee Transparency Table)
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Show individual component values (e.g. "Live Clinical CBT Workshops — ₹10,000").
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setProgramForm({
+                              ...programForm,
+                              feeBreakdown: [
+                                ...programForm.feeBreakdown,
+                                { item: "", value: "" },
+                              ],
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-bold px-3 py-1.5 text-xs transition cursor-pointer"
+                        >
+                          <Plus className="size-3.5" /> Add Value Row
+                        </button>
+                      </div>
+
+                      {programForm.feeBreakdown.map((row, idx) => (
+                        <div
+                          key={idx}
+                          className="grid sm:grid-cols-12 gap-3 bg-slate-800/80 border border-slate-700 rounded-2xl p-3 items-center"
+                        >
+                          <div className="sm:col-span-8">
+                            <input
+                              type="text"
+                              value={row.item}
+                              onChange={(e) => {
+                                const copy = [...programForm.feeBreakdown];
+                                copy[idx] = { ...copy[idx], item: e.target.value };
+                                setProgramForm({ ...programForm, feeBreakdown: copy });
+                              }}
+                              placeholder="Component (e.g. Live Clinical Training & Case Labs)"
+                              className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white"
+                            />
+                          </div>
+                          <div className="sm:col-span-3">
+                            <input
+                              type="text"
+                              value={row.value}
+                              onChange={(e) => {
+                                const copy = [...programForm.feeBreakdown];
+                                copy[idx] = { ...copy[idx], value: e.target.value };
+                                setProgramForm({ ...programForm, feeBreakdown: copy });
+                              }}
+                              placeholder="Value (e.g. ₹10,000)"
+                              className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-emerald-300 font-semibold"
+                            />
+                          </div>
+                          <div className="sm:col-span-1 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const copy = programForm.feeBreakdown.filter((_, i) => i !== idx);
+                                setProgramForm({ ...programForm, feeBreakdown: copy });
+                              }}
+                              className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 cursor-pointer"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3 border-t border-slate-800 pt-4">
+                      <h4 className="font-bold text-cyan-300 text-sm flex items-center gap-1.5">
+                        <ShieldCheck className="size-4" /> Learning & Completion Support Assurance Banner
+                      </h4>
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1">
+                          Assurance Heading
+                        </label>
+                        <input
+                          type="text"
+                          value={programForm.supportAssuranceTitle}
+                          onChange={(e) =>
+                            setProgramForm({
+                              ...programForm,
+                              supportAssuranceTitle: e.target.value,
+                            })
+                          }
+                          placeholder="e.g. Learning & Completion Support Assurance"
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1">
+                          Assurance Statement
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={programForm.supportAssuranceText}
+                          onChange={(e) =>
+                            setProgramForm({
+                              ...programForm,
+                              supportAssuranceText: e.target.value,
+                            })
+                          }
+                          placeholder="Explain recorded session backup, mentor doubt-clearing support, and guided capstone completion..."
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white leading-relaxed"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 6: TESTIMONIALS, FAQS & OFFICIAL INITIATIVE / CONTACT */}
+                {programEditorTab === "faqs" && (
+                  <div className="space-y-6">
+                    {/* Student Testimonials */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-cyan-300 text-sm flex items-center gap-1.5">
+                            <MessageSquare className="size-4" /> Participant Feedbacks / Testimonials
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Add past trainee reviews to build credibility.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setProgramForm({
+                              ...programForm,
+                              testimonials: [
+                                ...programForm.testimonials,
+                                { name: "", role: "", comment: "", rating: 5 },
+                              ],
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-bold px-3 py-1.5 text-xs transition cursor-pointer"
+                        >
+                          <Plus className="size-3.5" /> Add Feedback
+                        </button>
+                      </div>
+
+                      {programForm.testimonials.map((t, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 space-y-2.5"
+                        >
+                          <div className="grid sm:grid-cols-12 gap-2.5 items-center">
+                            <div className="sm:col-span-5">
+                              <input
+                                type="text"
+                                value={t.name}
+                                onChange={(e) => {
+                                  const copy = [...programForm.testimonials];
+                                  copy[idx] = { ...copy[idx], name: e.target.value };
+                                  setProgramForm({ ...programForm, testimonials: copy });
+                                }}
+                                placeholder="Participant Name (e.g. Riya Deshmukh)"
+                                className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2 text-white font-semibold"
+                              />
+                            </div>
+                            <div className="sm:col-span-5">
+                              <input
+                                type="text"
+                                value={t.role}
+                                onChange={(e) => {
+                                  const copy = [...programForm.testimonials];
+                                  copy[idx] = { ...copy[idx], role: e.target.value };
+                                  setProgramForm({ ...programForm, testimonials: copy });
+                                }}
+                                placeholder="Role / College (e.g. MA Clinical Psychology)"
+                                className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2 text-slate-300"
+                              />
+                            </div>
+                            <div className="sm:col-span-1">
+                              <select
+                                value={t.rating}
+                                onChange={(e) => {
+                                  const copy = [...programForm.testimonials];
+                                  copy[idx] = { ...copy[idx], rating: Number(e.target.value) };
+                                  setProgramForm({ ...programForm, testimonials: copy });
+                                }}
+                                className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2 text-amber-300 font-bold"
+                              >
+                                {[5, 4, 3].map((r) => (
+                                  <option key={r} value={r}>
+                                    {r}★
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="sm:col-span-1 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const copy = programForm.testimonials.filter((_, i) => i !== idx);
+                                  setProgramForm({ ...programForm, testimonials: copy });
+                                }}
+                                className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 cursor-pointer"
+                              >
+                                <Trash2 className="size-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={t.comment}
+                            onChange={(e) => {
+                              const copy = [...programForm.testimonials];
+                              copy[idx] = { ...copy[idx], comment: e.target.value };
+                              setProgramForm({ ...programForm, testimonials: copy });
+                            }}
+                            placeholder="Participant quote / feedback..."
+                            className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* FAQs */}
+                    <div className="space-y-3 border-t border-slate-800 pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-bold text-cyan-300 text-sm flex items-center gap-1.5">
+                            <HelpCircle className="size-4" /> Frequently Asked Questions (FAQs)
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Interactive accordion Q&As displayed near the bottom of the program page.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setProgramForm({
+                              ...programForm,
+                              faqs: [...programForm.faqs, { question: "", answer: "" }],
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-bold px-3 py-1.5 text-xs transition cursor-pointer"
+                        >
+                          <Plus className="size-3.5" /> Add FAQ
+                        </button>
+                      </div>
+
+                      {programForm.faqs.map((faq, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-slate-800/80 border border-slate-700 rounded-2xl p-3.5 space-y-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={faq.question}
+                              onChange={(e) => {
+                                const copy = [...programForm.faqs];
+                                copy[idx] = { ...copy[idx], question: e.target.value };
+                                setProgramForm({ ...programForm,faqs: copy });
+                              }}
+                              placeholder={`Question #${idx + 1} (e.g. What if I miss a live session?)`}
+                              className="flex-1 rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-white font-semibold"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const copy = programForm.faqs.filter((_, i) => i !== idx);
+                                setProgramForm({ ...programForm, faqs: copy });
+                              }}
+                              className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 cursor-pointer"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={faq.answer}
+                            onChange={(e) => {
+                              const copy = [...programForm.faqs];
+                              copy[idx] = { ...copy[idx], answer: e.target.value };
+                              setProgramForm({ ...programForm, faqs: copy });
+                            }}
+                            placeholder="Clear, reassuring answer..."
+                            className="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-slate-200"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Organizer Initiative, Contact & Caution Note */}
+                    <div className="space-y-3 border-t border-slate-800 pt-4">
+                      <h4 className="font-bold text-cyan-300 text-sm">
+                        Initiative Attribution, Query Contact & Official Caution Notice
+                      </h4>
+                      <div className="grid sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">
+                            Initiative Line
+                          </label>
+                          <input
+                            type="text"
+                            value={programForm.organizerInitiative}
+                            onChange={(e) =>
+                              setProgramForm({
+                                ...programForm,
+                                organizerInitiative: e.target.value,
+                              })
+                            }
+                            placeholder="An Initiative of My Mind Therapy Friend"
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">
+                            Support Email
+                          </label>
+                          <input
+                            type="text"
+                            value={programForm.contactEmail}
+                            onChange={(e) =>
+                              setProgramForm({ ...programForm, contactEmail: e.target.value })
+                            }
+                            placeholder="support@mymindtherapyfriend.com"
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 font-semibold mb-1">
+                            Helpline / WhatsApp (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={programForm.contactPhone}
+                            onChange={(e) =>
+                              setProgramForm({ ...programForm, contactPhone: e.target.value })
+                            }
+                            placeholder="+91 ..."
+                            className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-400 font-semibold mb-1">
+                          Official Caution / Legitimacy Note (Footer Warning Box)
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={programForm.cautionNote}
+                          onChange={(e) =>
+                            setProgramForm({ ...programForm, cautionNote: e.target.value })
+                          }
+                          placeholder="e.g. Official registrations and fee payments are processed exclusively on mymindtherapyfriend.com..."
+                          className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-amber-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Sticky Modal Footer */}
+              <div className="pt-4 mt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isActiveToggle"
+                    checked={programForm.isActive}
+                    onChange={(e) => setProgramForm({ ...programForm, isActive: e.target.checked })}
+                    className="size-4 rounded border-slate-700 text-cyan-500 focus:ring-cyan-400"
+                  />
+                  <label
+                    htmlFor="isActiveToggle"
+                    className="text-xs text-slate-300 font-medium cursor-pointer"
+                  >
+                    Active & Publicly Visible on Counseling Training Page
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProgramModal(false);
+                      resetProgramForm();
+                    }}
+                    className="rounded-xl bg-slate-800 border border-slate-700 px-5 py-2.5 font-semibold text-slate-300 hover:text-white transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createProgramMutation.isPending || updateProgramMutation.isPending}
+                    className="rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 transition shadow-lg cursor-pointer disabled:opacity-50"
+                  >
+                    {createProgramMutation.isPending || updateProgramMutation.isPending
+                      ? "Saving..."
+                      : editingProgramId
+                      ? "Save & Update Program"
+                      : "Create Program Cohort"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

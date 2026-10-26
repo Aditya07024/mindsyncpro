@@ -70,12 +70,64 @@ export const CareerSelectionRegistration = mongoose.model<ICareerSelectionRegist
 );
 
 // 2. Counseling Training Program Details Model
-export interface ICounselingTrainingProgram extends Document {
+export interface ITrainingModule {
+  title: string;
+  topics: string[];
+  learningOutcome?: string;
+}
+
+export interface ICareerEnablementItem {
   title: string;
   description: string;
+}
+
+export interface IFeeBreakdownItem {
+  item: string;
+  value: string;
+}
+
+export interface IProgramTestimonial {
+  name: string;
+  role?: string;
+  comment: string;
+  rating?: number;
+}
+
+export interface IProgramFaq {
+  question: string;
+  answer: string;
+}
+
+export interface ICounselingTrainingProgram extends Document {
+  title: string;
+  badgeText?: string;
+  tagline?: string;
+  modes?: string;
+  modeNote?: string;
+  aboutHeadline?: string;
+  description: string;
+  keyOutcomes?: string[];
+  objectives?: string[];
+  targetAudience?: string[];
+  modules?: ITrainingModule[];
+  whatYouGet?: string[];
+  certificationDetails?: string;
+  careerEnablementSubtitle?: string;
+  careerEnablementItems?: ICareerEnablementItem[];
   startDate: string;
   duration: string;
   fee: number;
+  totalProgramValue?: string;
+  earlyCohortNote?: string;
+  feeBreakdown?: IFeeBreakdownItem[];
+  supportAssuranceTitle?: string;
+  supportAssuranceText?: string;
+  testimonials?: IProgramTestimonial[];
+  faqs?: IProgramFaq[];
+  organizerInitiative?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  cautionNote?: string;
   instructor: string;
   totalSeats: number;
   availableSeats: number;
@@ -89,10 +141,62 @@ export interface ICounselingTrainingProgram extends Document {
 const counselingTrainingProgramSchema = new Schema<ICounselingTrainingProgram>(
   {
     title: { type: String, required: true, trim: true },
+    badgeText: { type: String, default: "", trim: true },
+    tagline: { type: String, default: "", trim: true },
+    modes: { type: String, default: "Online (Live Interactive)", trim: true },
+    modeNote: { type: String, default: "", trim: true },
+    aboutHeadline: { type: String, default: "", trim: true },
     description: { type: String, required: true },
+    keyOutcomes: [{ type: String }],
+    objectives: [{ type: String }],
+    targetAudience: [{ type: String }],
+    modules: [
+      {
+        title: { type: String, required: true },
+        topics: [{ type: String }],
+        learningOutcome: { type: String, default: "" },
+      },
+    ],
+    whatYouGet: [{ type: String }],
+    certificationDetails: { type: String, default: "" },
+    careerEnablementSubtitle: { type: String, default: "" },
+    careerEnablementItems: [
+      {
+        title: { type: String, required: true },
+        description: { type: String, default: "" },
+      },
+    ],
     startDate: { type: String, required: true },
     duration: { type: String, required: true },
     fee: { type: Number, required: true, default: 0 },
+    totalProgramValue: { type: String, default: "", trim: true },
+    earlyCohortNote: { type: String, default: "", trim: true },
+    feeBreakdown: [
+      {
+        item: { type: String, required: true },
+        value: { type: String, default: "" },
+      },
+    ],
+    supportAssuranceTitle: { type: String, default: "", trim: true },
+    supportAssuranceText: { type: String, default: "" },
+    testimonials: [
+      {
+        name: { type: String, required: true },
+        role: { type: String, default: "" },
+        comment: { type: String, required: true },
+        rating: { type: Number, default: 5 },
+      },
+    ],
+    faqs: [
+      {
+        question: { type: String, required: true },
+        answer: { type: String, required: true },
+      },
+    ],
+    organizerInitiative: { type: String, default: "", trim: true },
+    contactEmail: { type: String, default: "", trim: true },
+    contactPhone: { type: String, default: "", trim: true },
+    cautionNote: { type: String, default: "" },
     instructor: { type: String, default: "Expert Clinical Psychologist" },
     totalSeats: { type: Number, default: 30 },
     availableSeats: { type: Number, default: 30 },
