@@ -42,12 +42,15 @@ import logoUrl from "@/assets/logo.png";
 import user from "@/assets/user.jpg";
 import therapist from "@/assets/therapist.avif";
 import org from "@/assets/org.avif";
-import app from "@/assets/app.png";
 import play from "@/assets/play.webp";
 import { LandingPopupModal } from "@/components/LandingPopupModal";
 import { MeetingPhotosShowcase } from "@/components/MeetingPhotosShowcase";
 import { DigitalProductShopSection } from "@/components/DigitalProductShopSection";
 import { WeArePartOfSection } from "@/components/WeArePartOfSection";
+import {
+  MobileAppDownloadSection,
+  PLAY_STORE_APP_URL,
+} from "@/components/MobileAppDownloadSection";
 
 
 
@@ -842,6 +845,16 @@ function Landing() {
             Pricing
           </Link>
 
+          <a
+            href={PLAY_STORE_APP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50/80 px-4 py-2 text-sm font-semibold text-[#004038] transition hover:border-teal-300 hover:bg-teal-100/80"
+          >
+            <img src={play} alt="" className="size-4 object-contain" />
+            <span>Get App</span>
+          </a>
+
           <button
             onClick={handleGetStarted}
             className="rounded-full bg-[#004038] px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer"
@@ -897,6 +910,20 @@ function Landing() {
                 <span>Pricing</span>
                 <ChevronRight className="size-4 text-slate-400" />
               </Link>
+
+              <a
+                href={PLAY_STORE_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl border border-teal-200 bg-teal-50/70 px-4 py-3 text-base font-semibold text-[#004038] transition hover:bg-teal-100"
+              >
+                <span className="inline-flex items-center gap-2.5">
+                  <img src={play} alt="" className="size-5 object-contain" />
+                  Download on Google Play
+                </span>
+                <ChevronRight className="size-4 text-teal-700" />
+              </a>
 
               <hr className="my-1.5 border-slate-100" />
 
@@ -954,23 +981,37 @@ function Landing() {
               mymindtherapyfriend is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and verified online counsellor booking into one private, affordable wellness experience. Starting free.
             </motion.p>
 
-            <div className="mt-8 flex flex-wrap gap-4 items-center">
-              <a
-                href="#pricing"
-                className="text-[#004038] font-semibold hover:translate-x-1 transition"
-              >
-                Request a demo →
-              </a>
-
+            <div className="mt-8 flex flex-wrap gap-3.5 items-center">
               <a
                 href="#portals-section"
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById("portals-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="rounded-2xl bg-[#004038] px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer inline-flex items-center gap-2"
+                className="rounded-2xl bg-[#004038] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer inline-flex items-center gap-2"
               >
                 Choose Your Role →
+              </a>
+
+              <a
+                href={PLAY_STORE_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-2.5 rounded-2xl border border-teal-200 bg-white px-5 py-3 text-sm font-bold text-[#012620] shadow-md transition hover:scale-[1.03] hover:border-teal-400 hover:shadow-lg"
+              >
+                <img
+                  src={play}
+                  alt="Google Play"
+                  className="size-5 object-contain transition-transform group-hover:scale-110"
+                />
+                <span>Get it on Google Play</span>
+              </a>
+
+              <a
+                href="#pricing"
+                className="text-[#004038] text-sm font-semibold hover:translate-x-1 transition px-1"
+              >
+                Request a demo →
               </a>
             </div>
 
@@ -1225,6 +1266,9 @@ function Landing() {
           </div>
         </section>
 
+        {/* Official Mobile App Download Showcase */}
+        <MobileAppDownloadSection />
+
         {/* Testimonials Section */}
         <section className="mt-24">
           <div className="mx-auto max-w-3xl text-center">
@@ -1464,9 +1508,29 @@ function Landing() {
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-600">
               mymindtherapyfriend - India's AI-powered mental health platform. Affordable, private, and always available.
             </p>
+
+            <div className="mt-5">
+              <a
+                href={PLAY_STORE_APP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-md"
+              >
+                <img src={play} alt="Google Play" className="size-6 object-contain shrink-0" />
+                <div>
+                  <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500 leading-none">
+                    Get it on
+                  </span>
+                  <span className="font-display text-sm font-bold text-[#012620] leading-tight">
+                    Google Play
+                  </span>
+                </div>
+              </a>
+            </div>
+
             <button
               onClick={(e) => handlePortalClick(e, "super_admin", "/admin/sign-in")}
-              className="mt-5 text-sm font-bold text-teal-700 hover:text-teal-600 transition"
+              className="mt-5 block text-sm font-bold text-teal-700 hover:text-teal-600 transition"
             >
               Admin Login
             </button>
