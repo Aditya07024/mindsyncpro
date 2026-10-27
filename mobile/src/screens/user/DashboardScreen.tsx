@@ -94,6 +94,20 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     retry: false,
   });
 
+  // Fetch mood history so today's selected mood stays synced with Website & Mood Diary
+  const { data: moodHistoryData } = useQuery({
+    queryKey: ['moodHistory'],
+    queryFn: () => API.mood.list(),
+    retry: false,
+  });
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayEntry = (moodHistoryData?.moods || []).find((x: any) => {
+    const rawDate = x.date || x.createdAt;
+    return rawDate && new Date(rawDate).toISOString().slice(0, 10) === todayStr;
+  });
+  const activeMoodScore = selectedMood ?? todayEntry?.score ?? null;
+
   // Mutation for 1-time referral prompt
   const applyRefMutation = useMutation({
     mutationFn: (data: { referralCode?: string; skip?: boolean }) => API.auth.applyReferral(data),
@@ -171,6 +185,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     setSelectedMood(moodVal);
     try {
       await API.mood.create({ score: moodVal });
+      queryClient.invalidateQueries({ queryKey: ['moodHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['userDashboardStats'] });
       Alert.alert('Mood Saved ✨', 'Thank you for checking in! Your daily log has been updated.');
     } catch (e) {
       Alert.alert('Error', 'Failed to save mood log.');
@@ -215,7 +231,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           </TouchableOpacity>
         </View>
 
-        {/* Today's Mood Selector */}
+        {/* Today's Mood Selector (10-point emoji scale synced with Website) */}
         <View style={styles.card}>
           <View style={styles.cardTitleRow}>
             <Smile size={18} color={Theme.colors.primary} />
@@ -229,21 +245,32 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               { val: 4, emoji: '😐' },
               { val: 5, emoji: '🙂' },
               { val: 6, emoji: '😊' },
-              { val: 7, emoji: '🥰' },
-            ].map((item) => (
-              <TouchableOpacity
-                key={item.val}
-                onPress={() => handleMoodSelect(item.val)}
-                style={[
-                  styles.moodEmojiBtn,
-                  selectedMood === item.val && styles.moodEmojiActive,
-                ]}
-              >
-                <Text style={styles.moodEmojiText}>{item.emoji}</Text>
-                {selectedMood === item.val && <View style={styles.activeDot} />}
-              </TouchableOpacity>
-            ))}
+              { val: 7, emoji: '😄' },
+              { val: 8, emoji: '😁' },
+              { val: 9, emoji: '🤩' },
+              { val: 10, emoji: '🥰' },
+            ].map((item) => {
+              const isActive = activeMoodScore === item.val;
+              return (
+                <TouchableOpacity
+                  key={item.val}
+                  onPress={() => handleMoodSelect(item.val)}
+                  style={[
+                    styles.moodEmojiBtn,
+                    isActive && styles.moodEmojiActive,
+                  ]}
+                >
+                  <Text style={[styles.moodEmojiText, isActive && styles.moodEmojiTextActive]}>
+                    {item.emoji}
+                  </Text>
+                  {isActive && <View style={styles.activeDot} />}
+                </TouchableOpacity>
+              );
+            })}
           </View>
+          {activeMoodScore ? (
+            <Text style={styles.moodLoggedHint}>Logged for today ({activeMoodScore}/10).</Text>
+          ) : null}
         </View>
 
         {/* Daily CBT Reflective Prompt */}
@@ -690,12 +717,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
     width: '100%',
-    overflow: 'hidden',
   },
   moodEmojiBtn: {
     flex: 1,
-    paddingVertical: Theme.spacing.xs,
-    paddingHorizontal: 2,
+    paddingVertical: 6,
+    paddingHorizontal: 0,
     marginHorizontal: 1,
     borderRadius: Theme.radius.md,
     alignItems: 'center',
@@ -703,10 +729,21 @@ const styles = StyleSheet.create({
   },
   moodEmojiActive: {
     backgroundColor: Theme.colors.primary + '1A',
+    transform: [{ scale: 1.08 }],
   },
   moodEmojiText: {
-    fontSize: 20,
+    fontSize: 18,
     textAlign: 'center',
+  },
+  moodEmojiTextActive: {
+    fontSize: 19,
+  },
+  moodLoggedHint: {
+    marginTop: 8,
+    textAlign: 'center',
+    fontFamily: Theme.fonts.body,
+    fontSize: 11,
+    color: Theme.colors.textMuted || '#64748B',
   },
   activeDot: {
     width: 4,
