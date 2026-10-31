@@ -122,6 +122,29 @@ const API = {
         method: "POST",
         body: JSON.stringify(data || {}),
       }),
+    assignTherapistSubscription: (
+      id: string,
+      data: {
+        planId?: string;
+        customPlanName?: string;
+        durationMonths: number;
+        paymentMethod: string;
+        reference?: string;
+        amountPaid?: number;
+        notes?: string;
+        password?: string;
+        extendExisting?: boolean;
+      }
+    ) =>
+      apiCall<any>(`/api/admin/therapist/${id}/assign-subscription`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    revokeTherapistSubscription: (id: string, data: { password?: string; reason?: string }) =>
+      apiCall<any>(`/api/admin/therapist/${id}/revoke-subscription`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     pendingOrgs: () => apiCall<any>("/api/admin/pending-orgs"),
     verifyOrg: (id: string, data: { verified: boolean; password?: string }) =>
       apiCall<any>(`/api/admin/org/${id}/verify`, { method: "PATCH", body: JSON.stringify(data) }),

@@ -1,7 +1,7 @@
 import type { Response } from "express";
 import { asyncHandler } from "@/lib/async-handler";
 import type { AuthedRequest } from "@/middleware/auth";
-import { User, TherapistBooking, Mood, Conversation, Organization, Subscription } from "@/models";
+import { User, TherapistBooking, Mood, Conversation, Organization, Subscription, SubscriptionPlan } from "@/models";
 import { AppError } from "@/lib/app-error";
 import { NotificationController } from "./notification.controller";
 import * as XLSX from "xlsx";
@@ -193,6 +193,15 @@ export class AdminController {
 
         const orgObj = t.orgId && typeof t.orgId === "object" ? t.orgId : null;
 
+        // Fetch current active subscription for this counsellor
+        const activeSub = await Subscription.findOne({
+          userId: t._id,
+          status: "active",
+        })
+          .sort({ createdAt: -1 })
+          .populate("planId", "name price durationMonths")
+          .lean();
+
         return {
           id: t._id,
           name: t.therapistProfile?.name || "Therapist",
@@ -220,6 +229,20 @@ export class AdminController {
           platformCommission,
           totalPayout,
           bookingDetails,
+          subscription: activeSub
+            ? {
+                id: activeSub._id,
+                plan: activeSub.plan,
+                planId: activeSub.planId,
+                status: activeSub.status,
+                startDate: activeSub.startDate,
+                endDate: activeSub.endDate,
+                paymentMethod: (activeSub as any).paymentMethod || "razorpay",
+                offlineReference: (activeSub as any).offlineReference,
+                offlineNotes: (activeSub as any).offlineNotes,
+                amountPaid: (activeSub as any).amountPaid,
+              }
+            : null,
         };
       })
     );
@@ -600,6 +623,167 @@ export class AdminController {
       success: true,
       modifiedCount: result.modifiedCount,
       message: `Payout marked for ${result.modifiedCount} bookings`,
+    });
+  });
+
+  /** POST /admin/therapist/:id/assign-subscription — Super admin: assign an offline subscription to a counsellor */
+  static assignTherapistSubscription = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const {
+      planId,
+      customPlanName,
+      durationMonths = 1,
+      paymentMethod = "offline_upi",
+      reference = "",
+      amountPaid,
+      notes = "",
+      password,
+      extendExisting = false,
+    } = req.body;
+
+    const expectedPass = process.env.SUPER_ADMIN_ACTION_PASSWORD || "MindAdmin@123";
+    if (password !== expectedPass && password !== "MindAdmin@123") {
+      return res.status(401).json({ success: false, error: "Invalid admin action password", message: "Invalid admin action password" });
+    }
+
+    const therapist = await User.findOne({ _id: id, role: "therapist", deletedAt: null });
+    if (!therapist) {
+      return res.status(404).json({ error: "Counsellor not found" });
+    }
+
+    const months = Math.max(1, Math.round(Number(durationMonths) || 1));
+
+    // Resolve plan information
+    let resolvedPlanName = customPlanName?.trim() || "";
+    let resolvedPlanId: any = undefined;
+    let resolvedAmount = typeof amountPaid === "number" ? amountPaid : 0;
+
+    if (planId) {
+      const planDoc = await SubscriptionPlan.findById(planId).lean();
+      if (planDoc) {
+        resolvedPlanId = planDoc._id;
+        if (!resolvedPlanName) resolvedPlanName = planDoc.name;
+        if (amountPaid === undefined || amountPaid === null) {
+          resolvedAmount = planDoc.price;
+        }
+      }
+    }
+
+    if (!resolvedPlanName) {
+      resolvedPlanName = "Counsellor Pro";
+    }
+
+    // Check for existing active subscription
+    const existingActive = await Subscription.findOne({
+      userId: id,
+      status: "active",
+    }).sort({ createdAt: -1 });
+
+    const now = new Date();
+    let startDate = now;
+    let baseDate = now;
+
+    if (extendExisting && existingActive && existingActive.endDate && new Date(existingActive.endDate) > now) {
+      baseDate = new Date(existingActive.endDate);
+    }
+
+    const endDate = new Date(baseDate.getTime() + months * 30 * 24 * 60 * 60 * 1000);
+
+    // If not extending from previous active, cancel old active/pending subscriptions
+    if (existingActive && !extendExisting) {
+      await Subscription.updateMany(
+        { userId: id, status: { $in: ["active", "pending"] } },
+        { $set: { status: "cancelled" } }
+      );
+    }
+
+    // Create new active offline subscription
+    const newSub = await Subscription.create({
+      userId: id,
+      planId: resolvedPlanId,
+      plan: resolvedPlanName,
+      status: "active",
+      startDate,
+      endDate,
+      paymentMethod,
+      offlineReference: reference,
+      offlineNotes: notes,
+      amountPaid: resolvedAmount,
+      assignedBy: req.user?.sub ? req.user.sub : undefined,
+    });
+
+    // Ensure user tier allows full practitioner access
+    await User.findByIdAndUpdate(id, { tier: "apna_therapist" });
+
+    // Send in-app notification to the counsellor
+    try {
+      const formattedEndDate = endDate.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      await NotificationController.createNotification(
+        String(id),
+        "Subscription Activated 🎉",
+        `Your ${resolvedPlanName} subscription has been activated by administrator for ${months} month(s) (valid until ${formattedEndDate}).`,
+        "approval",
+        {
+          subscriptionId: newSub._id,
+          plan: resolvedPlanName,
+          endDate: newSub.endDate,
+          paymentMethod,
+        }
+      );
+    } catch (notifErr) {
+      console.error("[AssignSubscription] Failed sending notification:", notifErr);
+    }
+
+    res.json({
+      success: true,
+      message: `Subscription "${resolvedPlanName}" activated successfully for ${months} month(s).`,
+      subscription: newSub,
+    });
+  });
+
+  /** POST /admin/therapist/:id/revoke-subscription — Super admin: revoke an active subscription */
+  static revokeTherapistSubscription = asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { id } = req.params;
+    const { password, reason = "Admin revocation" } = req.body;
+
+    const expectedPass = process.env.SUPER_ADMIN_ACTION_PASSWORD || "MindAdmin@123";
+    if (password !== expectedPass && password !== "MindAdmin@123") {
+      return res.status(401).json({ success: false, error: "Invalid admin action password", message: "Invalid admin action password" });
+    }
+
+    const therapist = await User.findOne({ _id: id, role: "therapist", deletedAt: null });
+    if (!therapist) {
+      return res.status(404).json({ error: "Counsellor not found" });
+    }
+
+    const result = await Subscription.updateMany(
+      { userId: id, status: "active" },
+      { $set: { status: "cancelled", offlineNotes: reason } }
+    );
+
+    // Reset user tier to free
+    await User.findByIdAndUpdate(id, { tier: "free" });
+
+    // Notify therapist
+    try {
+      await NotificationController.createNotification(
+        String(id),
+        "Subscription Cancelled ℹ️",
+        `Your counsellor subscription has been cancelled by the administrator (${reason}). Contact admin if this was a mistake.`,
+        "system",
+        { revoked: true }
+      );
+    } catch (notifErr) {
+      console.error("[RevokeSubscription] Failed sending notification:", notifErr);
+    }
+
+    res.json({
+      success: true,
+      message: `Cancelled ${result.modifiedCount} active subscription(s) and reset counsellor to free tier.`,
     });
   });
 

@@ -8,7 +8,8 @@ import {
   DollarSign, CreditCard, ArrowUpRight, BadgeCheck, Banknote,
   Trash2, Video, GraduationCap, Calendar, Sparkles, RefreshCw, Clock,
   ArrowRight, ExternalLink, ShoppingBag, Compass, Tag, Check,
-  ChevronRight, Activity, Bell, FileText, Lock, AlertCircle, Camera
+  ChevronRight, Activity, Bell, FileText, Lock, AlertCircle, Camera,
+  ShieldCheck
 } from 'lucide-react';
 import API from '@/lib/api';
 import { getNormalizedPosterUrl } from '@/lib/utils';
@@ -26,6 +27,7 @@ import { DigitalProductsAdminManager } from '@/components/DigitalProductsAdminMa
 import { AdminPartnersManager } from '@/components/AdminPartnersManager';
 import { AdminCareerProgramsManager } from '@/components/AdminCareerProgramsManager';
 import { ImageCropModal } from '@/components/ImageCropModal';
+import { AdminAssignSubscriptionModal } from '@/components/AdminAssignSubscriptionModal';
 
 
 export function formatAdLink(link?: string): string {
@@ -59,6 +61,7 @@ function SuperAdminDashboard() {
   const [expandedTherapistId, setExpandedTherapistId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedTherapist, setSelectedTherapist] = useState<any>(null);
+  const [assignSubModal, setAssignSubModal] = useState<{ open: boolean; therapist?: any } | null>(null);
   const [verifyModal, setVerifyModal] = useState<{ open: boolean; id: string; name: string; verify: boolean, type: 'therapist' | 'org' } | null>(null);
   const [toggleModal, setToggleModal] = useState<{ open: boolean; id: string; name: string; allow: boolean } | null>(null);
   const [deleteUserModal, setDeleteUserModal] = useState<{ open: boolean; id: string; name: string } | null>(null);
@@ -100,7 +103,7 @@ function SuperAdminDashboard() {
   const { data: therapistsData, isLoading: therapistsLoading } = useQuery({
     queryKey: ['admin-therapists'],
     queryFn: () => API.admin.pendingTherapists(),
-    enabled: !!isLoaded && !!isSignedIn && (tab === 'therapists' || tab === 'overview') && Boolean(myAccess?.canManageTherapists || myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'therapists' || tab === 'subscriptions' || tab === 'overview') && Boolean(myAccess?.canManageTherapists || myAccess?.canViewAnalytics || myAccess?.isFullAdmin),
     refetchInterval: 30000,
   });
 
@@ -121,7 +124,7 @@ function SuperAdminDashboard() {
   const { data: plansData, isLoading: plansLoading } = useQuery({
     queryKey: ['admin-plans'],
     queryFn: () => API.plan.getAll(),
-    enabled: !!isLoaded && !!isSignedIn && (tab === 'plans' || tab === 'overview') && Boolean(myAccess?.isFullAdmin),
+    enabled: !!isLoaded && !!isSignedIn && (tab === 'plans' || tab === 'therapists' || tab === 'subscriptions' || tab === 'overview'),
   });
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
@@ -1082,6 +1085,27 @@ function SuperAdminDashboard() {
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isVerified ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-700' : 'bg-rose-900/60 text-rose-300 border border-rose-700'}`}>
                           {isVerified ? '✓ Verified Practitioner' : '✕ Verification Revoked / Pending'}
                         </span>
+                        {t.subscription ? (
+                          <span
+                            className="text-[10px] bg-violet-950 text-violet-300 border border-violet-700 px-2.5 py-0.5 rounded-full font-semibold flex items-center gap-1.5 shadow-xs"
+                            title={`Plan: ${t.subscription.plan}${t.subscription.endDate ? ` (Expires: ${new Date(t.subscription.endDate).toLocaleDateString('en-IN')})` : ''} • Method: ${t.subscription.paymentMethod || 'online'}`}
+                          >
+                            <span className="size-1.5 rounded-full bg-violet-400 animate-pulse" />
+                            👑 {t.subscription.plan}
+                            {t.subscription.endDate && (
+                              <span className="text-violet-400 font-normal">
+                                (exp {new Date(t.subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
+                              </span>
+                            )}
+                            <span className="text-[9px] bg-violet-850 text-violet-200 px-1 rounded uppercase font-bold">
+                              {t.subscription.paymentMethod?.startsWith('offline') ? 'Offline' : 'Online'}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-slate-900 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-medium">
+                            Free Tier
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {(t.specializations ?? []).slice(0, 3).map((s: string) => (
@@ -1137,6 +1161,18 @@ function SuperAdminDashboard() {
                         <span className="text-xs text-slate-300">{t.rating?.toFixed(1) ?? '—'}</span>
                       </div>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setAssignSubModal({ open: true, therapist: t })}
+                          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
+                            t.subscription
+                              ? 'text-violet-300 bg-violet-900/30 border-violet-700 hover:bg-violet-900/50'
+                              : 'text-amber-300 bg-amber-900/30 border-amber-700 hover:bg-amber-900/50'
+                          }`}
+                          title={t.subscription ? 'Manage or extend subscription' : 'Assign offline subscription'}
+                        >
+                          <ShieldCheck className="size-3.5" />
+                          <span>{t.subscription ? 'Manage Sub' : 'Assign Sub'}</span>
+                        </button>
                         <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
                           className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
                             isVerified 
@@ -1300,19 +1336,32 @@ function SuperAdminDashboard() {
         {/* SUBSCRIPTIONS TAB */}
         {tab === 'subscriptions' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-white">All Subscriptions</h2>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h2 className="text-lg font-bold text-white">All Subscriptions</h2>
+                <p className="text-xs text-slate-400">Manage user, counsellor, and organization subscription records</p>
+              </div>
+              <button
+                onClick={() => setAssignSubModal({ open: true, therapist: null })}
+                className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-violet-600/30 transition"
+              >
+                <ShieldCheck className="size-4" />
+                <span>+ Assign Offline Subscription</span>
+              </button>
+            </div>
             <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-700">
-                    <th className="text-left px-4 py-3 text-slate-400 font-semibold">User</th>
+                    <th className="text-left px-4 py-3 text-slate-400 font-semibold">User / Counsellor</th>
                     <th className="text-left px-4 py-3 text-slate-400 font-semibold">Plan</th>
+                    <th className="text-left px-4 py-3 text-slate-400 font-semibold">Payment Mode</th>
                     <th className="text-left px-4 py-3 text-slate-400 font-semibold">Status</th>
-                    <th className="text-left px-4 py-3 text-slate-400 font-semibold">Start</th>
+                    <th className="text-left px-4 py-3 text-slate-400 font-semibold">Validity</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {subscriptions.slice(0, 50).map((s) => (
+                  {subscriptions.slice(0, 50).map((s: any) => (
                     <tr key={s._id} className="hover:bg-slate-750 transition">
                       <td className="px-4 py-3">
                         <div className="text-slate-300 font-medium text-sm">
@@ -1324,8 +1373,26 @@ function SuperAdminDashboard() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                          s.plan === 'apna_therapist' ? 'bg-violet-900 text-violet-300' : 'bg-blue-900 text-blue-300'
+                          s.plan === 'apna_therapist' || s.plan?.toLowerCase().includes('counsellor') ? 'bg-violet-900 text-violet-300' : 'bg-blue-900 text-blue-300'
                         }`}>{s.plan}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {s.paymentMethod?.startsWith('offline') || s.paymentMethod === 'admin_grant' ? (
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-amber-300">
+                              Offline: {s.paymentMethod.replace('offline_', '').toUpperCase()}
+                            </span>
+                            {s.offlineReference && (
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                Ref: {s.offlineReference}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs font-medium text-slate-400">
+                            Razorpay Online
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-semibold ${
@@ -1333,12 +1400,17 @@ function SuperAdminDashboard() {
                         }`}>{s.status}</span>
                       </td>
                       <td className="px-4 py-3 text-slate-400 text-xs">
-                        {new Date(s.startDate).toLocaleDateString('en-IN')}
+                        <div>Start: {new Date(s.startDate).toLocaleDateString('en-IN')}</div>
+                        {s.endDate && (
+                          <div className="text-slate-500 text-[11px]">
+                            End: {new Date(s.endDate).toLocaleDateString('en-IN')}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
                   {subscriptions.length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">No subscriptions yet</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No subscriptions yet</td></tr>
                   )}
                 </tbody>
               </table>
@@ -2062,6 +2134,22 @@ function SuperAdminDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Assign Offline Subscription Modal */}
+      {assignSubModal?.open && (
+        <AdminAssignSubscriptionModal
+          isOpen={assignSubModal.open}
+          onClose={() => setAssignSubModal(null)}
+          therapist={assignSubModal.therapist}
+          allTherapists={therapists}
+          plans={plans}
+          onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ['admin-therapists'] });
+            qc.invalidateQueries({ queryKey: ['admin-subscriptions'] });
+            qc.invalidateQueries({ queryKey: ['stats'] });
+          }}
+        />
+      )}
 
     </div>
   );

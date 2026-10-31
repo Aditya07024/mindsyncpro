@@ -9,6 +9,11 @@ export interface ISubscription extends Document {
   razorpaySubscriptionId?: string;
   startDate: Date;
   endDate?: Date;
+  paymentMethod?: "razorpay" | "offline_cash" | "offline_upi" | "offline_bank_transfer" | "offline_cheque" | "admin_grant" | "offline_other";
+  offlineReference?: string;
+  offlineNotes?: string;
+  amountPaid?: number;
+  assignedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,7 +34,16 @@ const SubscriptionSchema = new Schema<ISubscription>(
     },
     razorpaySubscriptionId: { type: String },
     startDate: { type: Date, default: Date.now },
-    endDate: { type: Date }
+    endDate: { type: Date },
+    paymentMethod: {
+      type: String,
+      enum: ["razorpay", "offline_cash", "offline_upi", "offline_bank_transfer", "offline_cheque", "admin_grant", "offline_other"],
+      default: "razorpay"
+    },
+    offlineReference: { type: String },
+    offlineNotes: { type: String },
+    amountPaid: { type: Number },
+    assignedBy: { type: Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
 );

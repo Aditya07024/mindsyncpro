@@ -35,6 +35,8 @@ router.get("/therapists", requirePermission("canManageTherapists"), AdminControl
 router.patch("/therapist/:id/verify", requirePermission("canManageTherapists"), AdminController.verifyTherapist);
 router.post("/therapists/:id/revoke-org", requirePermission("canManageTherapists"), AdminController.revokeTherapistOrg);
 router.patch("/therapist/:id/mark-paid", requireRole(["super_admin"]), AdminController.markTherapistPaid);
+router.post("/therapist/:id/assign-subscription", requirePermission("canManageTherapists"), AdminController.assignTherapistSubscription);
+router.post("/therapist/:id/revoke-subscription", requirePermission("canManageTherapists"), AdminController.revokeTherapistSubscription);
 
 // Password verification helpers
 router.post("/verify-password-public", AdminController.verifyPasswordPublic);
