@@ -38,6 +38,7 @@ import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as TherapistOnboardingRouteImport } from './routes/therapist/onboarding'
 import { Route as TherapistDashboardRouteImport } from './routes/therapist/dashboard'
 import { Route as SignUpSsoCallbackRouteImport } from './routes/sign-up/sso-callback'
@@ -45,6 +46,7 @@ import { Route as SignInSsoCallbackRouteImport } from './routes/sign-in/sso-call
 import { Route as SessionBookingIdRouteImport } from './routes/session.$bookingId'
 import { Route as OrgOnboardingRouteImport } from './routes/org/onboarding'
 import { Route as OrgDashboardRouteImport } from './routes/org/dashboard'
+import { Route as CoursesCourseSlugRouteImport } from './routes/courses.$courseSlug'
 import { Route as BookingTherapistIdRouteImport } from './routes/booking.$therapistId'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as GroupAudioSessionIdRoomRouteImport } from './routes/group-audio.$sessionId.room'
@@ -195,6 +197,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoursesIndexRoute = CoursesIndexRouteImport.update({
+  id: '/courses/',
+  path: '/courses/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TherapistOnboardingRoute = TherapistOnboardingRouteImport.update({
   id: '/therapist/onboarding',
   path: '/therapist/onboarding',
@@ -228,6 +235,11 @@ const OrgOnboardingRoute = OrgOnboardingRouteImport.update({
 const OrgDashboardRoute = OrgDashboardRouteImport.update({
   id: '/org/dashboard',
   path: '/org/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseSlugRoute = CoursesCourseSlugRouteImport.update({
+  id: '/courses/$courseSlug',
+  path: '/courses/$courseSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingTherapistIdRoute = BookingTherapistIdRouteImport.update({
@@ -283,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
+  '/courses/$courseSlug': typeof CoursesCourseSlugRoute
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
@@ -290,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/sign-up/sso-callback': typeof SignUpSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
+  '/courses/': typeof CoursesIndexRoute
   '/conferences/$id/room': typeof ConferencesIdRoomRoute
   '/group-audio/$sessionId/room': typeof GroupAudioSessionIdRoomRoute
 }
@@ -325,6 +339,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
+  '/courses/$courseSlug': typeof CoursesCourseSlugRoute
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
@@ -332,6 +347,7 @@ export interface FileRoutesByTo {
   '/sign-up/sso-callback': typeof SignUpSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
+  '/courses': typeof CoursesIndexRoute
   '/conferences/$id/room': typeof ConferencesIdRoomRoute
   '/group-audio/$sessionId/room': typeof GroupAudioSessionIdRoomRoute
 }
@@ -368,6 +384,7 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/booking/$therapistId': typeof BookingTherapistIdRoute
+  '/courses/$courseSlug': typeof CoursesCourseSlugRoute
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/onboarding': typeof OrgOnboardingRoute
   '/session/$bookingId': typeof SessionBookingIdRoute
@@ -375,6 +392,7 @@ export interface FileRoutesById {
   '/sign-up/sso-callback': typeof SignUpSsoCallbackRoute
   '/therapist/dashboard': typeof TherapistDashboardRoute
   '/therapist/onboarding': typeof TherapistOnboardingRoute
+  '/courses/': typeof CoursesIndexRoute
   '/conferences_/$id/room': typeof ConferencesIdRoomRoute
   '/group-audio/$sessionId/room': typeof GroupAudioSessionIdRoomRoute
 }
@@ -412,6 +430,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/admin/dashboard'
     | '/booking/$therapistId'
+    | '/courses/$courseSlug'
     | '/org/dashboard'
     | '/org/onboarding'
     | '/session/$bookingId'
@@ -419,6 +438,7 @@ export interface FileRouteTypes {
     | '/sign-up/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
+    | '/courses/'
     | '/conferences/$id/room'
     | '/group-audio/$sessionId/room'
   fileRoutesByTo: FileRoutesByTo
@@ -454,6 +474,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/admin/dashboard'
     | '/booking/$therapistId'
+    | '/courses/$courseSlug'
     | '/org/dashboard'
     | '/org/onboarding'
     | '/session/$bookingId'
@@ -461,6 +482,7 @@ export interface FileRouteTypes {
     | '/sign-up/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
+    | '/courses'
     | '/conferences/$id/room'
     | '/group-audio/$sessionId/room'
   id:
@@ -496,6 +518,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/admin/dashboard'
     | '/booking/$therapistId'
+    | '/courses/$courseSlug'
     | '/org/dashboard'
     | '/org/onboarding'
     | '/session/$bookingId'
@@ -503,6 +526,7 @@ export interface FileRouteTypes {
     | '/sign-up/sso-callback'
     | '/therapist/dashboard'
     | '/therapist/onboarding'
+    | '/courses/'
     | '/conferences_/$id/room'
     | '/group-audio/$sessionId/room'
   fileRoutesById: FileRoutesById
@@ -539,11 +563,13 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   BookingTherapistIdRoute: typeof BookingTherapistIdRoute
+  CoursesCourseSlugRoute: typeof CoursesCourseSlugRoute
   OrgDashboardRoute: typeof OrgDashboardRoute
   OrgOnboardingRoute: typeof OrgOnboardingRoute
   SessionBookingIdRoute: typeof SessionBookingIdRoute
   TherapistDashboardRoute: typeof TherapistDashboardRoute
   TherapistOnboardingRoute: typeof TherapistOnboardingRoute
+  CoursesIndexRoute: typeof CoursesIndexRoute
   ConferencesIdRoomRoute: typeof ConferencesIdRoomRoute
   GroupAudioSessionIdRoomRoute: typeof GroupAudioSessionIdRoomRoute
 }
@@ -753,6 +779,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/courses/': {
+      id: '/courses/'
+      path: '/courses'
+      fullPath: '/courses/'
+      preLoaderRoute: typeof CoursesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/therapist/onboarding': {
       id: '/therapist/onboarding'
       path: '/therapist/onboarding'
@@ -800,6 +833,13 @@ declare module '@tanstack/react-router' {
       path: '/org/dashboard'
       fullPath: '/org/dashboard'
       preLoaderRoute: typeof OrgDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/$courseSlug': {
+      id: '/courses/$courseSlug'
+      path: '/courses/$courseSlug'
+      fullPath: '/courses/$courseSlug'
+      preLoaderRoute: typeof CoursesCourseSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/booking/$therapistId': {
@@ -887,11 +927,13 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   BookingTherapistIdRoute: BookingTherapistIdRoute,
+  CoursesCourseSlugRoute: CoursesCourseSlugRoute,
   OrgDashboardRoute: OrgDashboardRoute,
   OrgOnboardingRoute: OrgOnboardingRoute,
   SessionBookingIdRoute: SessionBookingIdRoute,
   TherapistDashboardRoute: TherapistDashboardRoute,
   TherapistOnboardingRoute: TherapistOnboardingRoute,
+  CoursesIndexRoute: CoursesIndexRoute,
   ConferencesIdRoomRoute: ConferencesIdRoomRoute,
   GroupAudioSessionIdRoomRoute: GroupAudioSessionIdRoomRoute,
 }

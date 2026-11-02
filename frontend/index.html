@@ -3,58 +3,123 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18369432084"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) & CRO Tracking -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18369432084"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-18369432084');
+      document.addEventListener('click', function(e) {
+        var a = e.target.closest('[data-track]');
+        if (!a) return;
+        gtag('event', a.dataset.track, {
+          item: a.dataset.item || 'general',
+          batch: a.dataset.batch || ''
+        });
+      });
+    </script>
+    <title>MyMindTherapyFriend (MMTF): AI Mental Health App, India</title>
+    <meta name="description" content="MyMindTherapyFriend (MMTF): India's AI mental health platform with Manas AI companion, CBT tools, mood tracking and therapist sessions. Free to start." />
+    <link rel="canonical" href="https://mymindtherapyfriend.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="alternate" hreflang="en-IN" href="https://mymindtherapyfriend.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://mymindtherapyfriend.com/" />
+    <meta name="geo.region" content="IN" />
 
-  gtag('config', 'AW-18369432084');
-</script>
-    <title>MyMindTherapyFriend AI Mental Health Platform India</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MyMindTherapyFriend" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:url" content="https://mymindtherapyfriend.com/" />
+    <meta property="og:title" content="MyMindTherapyFriend (MMTF): AI Mental Health App, India" />
+    <meta property="og:description" content="Manas AI companion, CBT tools, mood tracking and therapist sessions. Private, affordable, free to start." />
+    <meta property="og:image" content="https://mymindtherapyfriend.com/favicon.png" />
+    <meta property="og:image:alt" content="MyMindTherapyFriend AI mental health platform for India" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="MyMindTherapyFriend (MMTF): AI Mental Health App, India" />
+    <meta name="twitter:description" content="Manas AI companion, CBT tools, mood tracking and therapist sessions. Free to start." />
+    <meta name="twitter:image" content="https://mymindtherapyfriend.com/favicon.png" />
+
     <meta name="google-site-verification" content="cli7lEKh6jtGBC5rrs4l8T7SMT1zsE_DEbLIfpNbuvo" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/favicon.png" />
-    <meta name="description" content="MyMindTherapyFriend is India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and verified therapists. Private, affordable, and free to start." />
-    <meta property="og:title" content="MyMindTherapyFriend AI Mental Health Platform India" />
-    <meta property="og:description" content="MyMindTherapyFriend is India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and verified therapists. Private, affordable, and free to start." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+    <!-- JSON-LD Schema: Organization, WebSite & WebApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "MyMindTherapyFriend",
-      "alternateName": "MyMindTherapyFriend",
-      "description": "MyMindTherapyFriend is India's AI-powered mental health platform combining Manas AI companion, CBT tools, mood tracking, and verified online therapist booking.",
-      "url": "https://mymindtherapyfriend.com",
-      "applicationCategory": "HealthApplication",
-      "operatingSystem": "Web, iOS, Android",
-      "inLanguage": ["en-IN", "hi"],
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "INR",
-        "description": "Free plan available. Paid plans from ₹499/month."
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "127",
-        "bestRating": "5"
-      },
-      "provider": {
-        "@type": "Organization",
-        "name": "MyMindTherapyFriend",
-        "url": "https://mymindtherapyfriend.com",
-        "email": "contact@mymindtherapyfriend.com",
-        "sameAs": [
-          "https://www.instagram.com/mymindtherapyfriend/",
-          "https://www.linkedin.com/company/107088242"
-        ]
-      }
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://mymindtherapyfriend.com/#org",
+          "name": "MyMindTherapyFriend",
+          "alternateName": [
+            "MMTF",
+            "My Mind Therapy Friend",
+            "MyMind Therapy Friend",
+            "Mind Therapy Friend"
+          ],
+          "url": "https://mymindtherapyfriend.com",
+          "logo": "https://mymindtherapyfriend.com/favicon.png",
+          "email": "contact@mymindtherapyfriend.com",
+          "description": "MyMindTherapyFriend (MMTF) is an India-focused AI mental health platform and mental health skills training provider.",
+          "areaServed": {
+            "@type": "Country",
+            "name": "India"
+          },
+          "sameAs": [
+            "https://www.linkedin.com/company/107088242",
+            "https://www.instagram.com/mymindtherapyfriend/"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://mymindtherapyfriend.com/#website",
+          "url": "https://mymindtherapyfriend.com",
+          "name": "MyMindTherapyFriend",
+          "alternateName": [
+            "MMTF",
+            "My Mind Therapy Friend"
+          ],
+          "publisher": {
+            "@id": "https://mymindtherapyfriend.com/#org"
+          },
+          "inLanguage": "en-IN"
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://mymindtherapyfriend.com/#app",
+          "name": "MyMindTherapyFriend",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Web",
+          "description": "AI mental health platform for India with the Manas AI companion, CBT tools, mood tracking and therapist sessions. Not an emergency service.",
+          "url": "https://mymindtherapyfriend.com",
+          "publisher": {
+            "@id": "https://mymindtherapyfriend.com/#org"
+          },
+          "inLanguage": "en-IN",
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Free plan",
+              "price": "0",
+              "priceCurrency": "INR"
+            },
+            {
+              "@type": "Offer",
+              "name": "Paid plans",
+              "price": "499",
+              "priceCurrency": "INR",
+              "description": "From ₹499/month."
+            }
+          ]
+        }
+      ]
     }
     </script>
     <script type="application/ld+json">

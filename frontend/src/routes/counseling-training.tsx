@@ -1772,6 +1772,13 @@ function MyEnrolledProgramsSection({
           </div>
         </div>
       )}
+
+      {/* Course Safety Disclosure */}
+      <footer className="mt-12 pt-6 border-t border-slate-200 text-center">
+        <p className="text-xs text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          Educational skills programme, not a professional licence or clinical service. No external accreditation is claimed. In an emergency call 112 (India).
+        </p>
+      </footer>
     </div>
   );
 }

@@ -126,8 +126,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "mymindtherapyfriend AI Mental Health Platform India" },
-      { name: "description", content: "India's AI-powered mental health platform offering Manas AI companion, CBT tools, mood tracking, and verified counsellors. Private, affordable, and free to start." },
+      { title: "MyMindTherapyFriend (MMTF): AI Mental Health App, India" },
+      { name: "description", content: "MyMindTherapyFriend (MMTF): India's AI mental health platform with Manas AI companion, CBT tools, mood tracking and therapist sessions. Free to start." },
     ],
   }),
 });
@@ -816,7 +816,7 @@ function Landing() {
       <header className="sticky top-4 z-50 mx-auto mt-4 flex w-[95%] max-w-7xl items-center justify-between rounded-2xl border border-white/60 bg-white/80 px-4 py-3 sm:px-6 sm:py-4 shadow-lg backdrop-blur-xl">
         <Link to="/" className="flex items-center gap-3">
           <div className="flex size-10 sm:size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
-            <img src={logoUrl} alt="mymindtherapyfriend AI mental health India" className="size-full object-cover scale-125" />
+            <img src={logoUrl} alt="MyMindTherapyFriend (MMTF) logo" className="size-full object-cover scale-125" />
           </div>
 
           <div>
@@ -826,6 +826,13 @@ function Landing() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-3">
+          <Link
+            to="/courses"
+            data-track="course_view_click"
+            className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            Courses
+          </Link>
           <Link
             to="/meeting_workspace"
             className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
@@ -884,6 +891,16 @@ function Landing() {
             className="sticky top-20 z-40 mx-auto mt-2 w-[95%] max-w-7xl md:hidden rounded-2xl border border-white/80 bg-white/95 p-5 shadow-2xl backdrop-blur-xl"
           >
             <div className="flex flex-col gap-2">
+              <Link
+                to="/courses"
+                data-track="course_view_click"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-[#004038]"
+              >
+                <span>Courses</span>
+                <ChevronRight className="size-4 text-slate-400" />
+              </Link>
+
               <Link
                 to="/meeting_workspace"
                 onClick={() => setMobileMenuOpen(false)}
@@ -959,16 +976,12 @@ function Landing() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.8 }}
-              className="mt-7 font-display text-5xl font-bold leading-[1.02] tracking-tight text-[#012620] sm:text-6xl lg:text-7xl"
+              className="mt-7 font-display text-4xl font-bold leading-[1.08] tracking-tight text-[#012620] sm:text-5xl lg:text-6xl"
             >
-              <span className="block text-xl sm:text-2xl lg:text-3xl font-medium text-[#333942] mb-4">
-                The future-ready wellness platform
-              </span>
-              India's AI-Powered
+              MyMindTherapyFriend (MMTF):
               <br />
-              Mental Wellness
               <span className="bg-gradient-to-r from-[#004038] to-[#00a693] bg-clip-text text-transparent">
-                {" "}Experience
+                Your AI Mental Health Companion in India
               </span>
             </motion.h1>
 
@@ -978,20 +991,32 @@ function Landing() {
               transition={{ delay: 0.3, duration: 0.7 }}
               className="mt-7 max-w-xl text-lg leading-relaxed text-[#333942]"
             >
-              mymindtherapyfriend is India's AI-powered mental health platform - combining Manas AI companion, CBT self-help tools, mood tracking, and verified online counsellor booking into one private, affordable wellness experience. Starting free.
+              Talk to Manas, use CBT tools, track your mood and book sessions with therapists. Free to start.
+              Also from MMTF: live 52-day mental health skills courses.
             </motion.p>
 
             <div className="mt-8 flex flex-wrap gap-3.5 items-center">
               <a
                 href="#portals-section"
+                data-track="signup_start"
+                data-item="hero"
                 onClick={(e) => {
                   e.preventDefault();
                   document.getElementById("portals-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="rounded-2xl bg-[#004038] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:scale-[1.03] cursor-pointer inline-flex items-center gap-2"
               >
-                Choose Your Role →
+                Start free →
               </a>
+
+              <Link
+                to="/courses"
+                data-track="course_view_click"
+                data-item="hero"
+                className="rounded-2xl border border-teal-200 bg-teal-50 px-5 py-3 text-sm font-bold text-[#004038] shadow-sm transition hover:scale-[1.03] hover:bg-teal-100"
+              >
+                52-Day Live Courses
+              </Link>
 
               <a
                 href={PLAY_STORE_APP_URL}
@@ -1004,14 +1029,7 @@ function Landing() {
                   alt="Google Play"
                   className="size-5 object-contain transition-transform group-hover:scale-110"
                 />
-                <span>Get it on Google Play</span>
-              </a>
-
-              <a
-                href="#pricing"
-                className="text-[#004038] text-sm font-semibold hover:translate-x-1 transition px-1"
-              >
-                Request a demo →
+                <span>Get App</span>
               </a>
             </div>
 
@@ -1049,7 +1067,7 @@ function Landing() {
                 <div className="h-20 w-20 min-[400px]:h-28 min-[400px]:w-28 sm:h-36 sm:w-36 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 backdrop-blur flex items-center justify-center text-5xl">
                   <img
                     src={user}
-                    alt="mymindtherapyfriend"
+                    alt="Manas AI client mental wellness companion"
                     className="h-full w-full object-cover border-2 sm:border-4 border-red rounded-lg min-[400px]:rounded-xl sm:rounded-2xl"
                   />
                 </div>
@@ -1063,7 +1081,7 @@ function Landing() {
                 <div className="h-16 w-16 min-[400px]:h-24 min-[400px]:w-24 sm:h-32 sm:w-32 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
                   <img
                     src={therapist}
-                    alt="mymindtherapyfriend"
+                    alt="Verified online therapist and counsellor"
                     className="h-full w-full object-cover border-2 sm:border-4 border-white rounded-lg min-[400px]:rounded-xl sm:rounded-2xl shadow-lg"
                   />
                 </div>
@@ -1077,7 +1095,7 @@ function Landing() {
                 <div className="h-16 w-16 min-[400px]:h-24 min-[400px]:w-24 sm:h-32 sm:w-32 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl bg-white/40 flex items-center justify-center text-5xl">
                   <img
                     src={org}
-                    alt="mymindtherapyfriend"
+                    alt="Organisation and campus student wellness analytics"
                     className="h-full w-full object-cover border-2 sm:border-4 border-red rounded-lg min-[400px]:rounded-xl sm:rounded-2xl shadow-lg"
                   />
                 </div>
@@ -1098,7 +1116,7 @@ function Landing() {
               <div className="absolute left-1/2 top-1/2 h-28 w-28 min-[400px]:h-36 min-[400px]:w-36 min-[500px]:h-44 min-[500px]:w-44 sm:h-52 sm:w-52 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl min-[400px]:rounded-3xl sm:rounded-[40px] bg-red shadow-2xl z-10">
                 <img
                   src={logoUrl}
-                  alt="mymindtherapyfriend"
+                  alt="MyMindTherapyFriend wellness emblem"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -1142,7 +1160,7 @@ function Landing() {
 
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
                 Whether you need emotional support, therapy tools, organisation wellness insights,
-                or platform administration — mymindtherapyfriend adapts to your role beautifully.
+                or platform administration — our wellness platform adapts to your role beautifully.
               </p>
             </motion.div>
 
@@ -1284,22 +1302,25 @@ function Landing() {
             </h2>
 
             <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">
-              mymindtherapyfriend is designed to feel emotionally warm, calming, and deeply human.
+              Our platform is designed to feel emotionally warm, calming, and deeply human.
             </p>
           </div>
 
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {[
               {
-                name: "Engineering Student",
-                quote: "mymindtherapyfriend helped me calm my anxiety during stressful exam weeks.",
+                name: "Aakash S.",
+                role: "College Student",
+                quote: "Manas AI and the mood journal helped me stay organized and mindful during exam season.",
               },
               {
-                name: "Counsellor Portal User",
+                name: "Pooja M.",
+                role: "Verified Counsellor",
                 quote: "The counsellor dashboard feels modern, clean, and emotionally aware.",
               },
               {
-                name: "HR Wellness Lead",
+                name: "Neha R.",
+                role: "HR Wellness Lead",
                 quote: "The organisation analytics gave us meaningful wellness insights privately.",
               },
             ].map((t) => (
@@ -1317,7 +1338,7 @@ function Landing() {
 
                 <div className="mt-6">
                   <p className="font-semibold text-[#012620]">{t.name}</p>
-                  <p className="text-xs text-slate-500">mymindtherapyfriend User</p>
+                  <p className="text-xs text-slate-500">{t.role}</p>
                 </div>
               </div>
             ))}
@@ -1497,16 +1518,16 @@ function Landing() {
           <div>
             <div className="flex items-center gap-3">
               <div className="flex size-11 items-center justify-center rounded-md bg-white shadow-lg shadow-slate-200 overflow-hidden">
-                <img src={logoUrl} alt="mymindtherapyfriend AI mental health India" className="size-full object-cover scale-125" />
+                <img src={logoUrl} alt="MyMindTherapyFriend (MMTF) logo" className="size-full object-cover scale-125" />
               </div>
 
               <div>
-                <p className="font-display text-lg font-bold text-[#012620]">mymindtherapyfriend</p>
+                <p className="font-display text-lg font-bold text-[#012620]">MyMindTherapyFriend</p>
               </div>
             </div>
 
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-slate-600">
-              mymindtherapyfriend - India's AI-powered mental health platform. Affordable, private, and always available.
+              MyMindTherapyFriend (MMTF) - India's AI-powered mental health platform. Affordable, private, and always available.
             </p>
 
             <div className="mt-5">
@@ -1542,11 +1563,12 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600 flex flex-col items-start">
+              <Link to="/courses" data-track="course_view_click" className="hover:text-teal-600 font-semibold transition text-left text-teal-800">52-Day Mental Health Courses</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Manas AI Companion</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book Verified Counsellor</Link>
-              <a href={WHATSAPP_COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 font-medium transition text-left flex items-center gap-1.5 text-emerald-700">
+              <a href={WHATSAPP_COMMUNITY_URL} data-track="whatsapp_click" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 font-medium transition text-left flex items-center gap-1.5 text-emerald-700">
                 <WhatsAppIcon className="size-4" /> WhatsApp Community
               </a>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</Link>
@@ -1560,7 +1582,7 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600">
-              <Link to="/about" className="block hover:text-teal-600 transition">About mymindtherapyfriend</Link>
+              <Link to="/about" className="block hover:text-teal-600 transition">About MyMindTherapyFriend</Link>
               <Link to="/careers" className="block hover:text-teal-600 transition font-medium text-teal-700">Careers</Link>
               <Link to="/privacy" className="block hover:text-teal-600 transition">Privacy Policy</Link>
               <Link to="/terms" className="block hover:text-teal-600 transition">Terms & Conditions</Link>
@@ -1623,10 +1645,32 @@ function Landing() {
               </a>
             </div>
 
-            <p className="mt-6 text-sm text-slate-500">© 2026 mymindtherapyfriend™. All rights reserved.</p>
+            <p className="mt-4 text-xs text-slate-500 max-w-xl leading-relaxed">
+              MyMindTherapyFriend is a wellbeing support platform, not an emergency service. AI features do not replace professional care. In an emergency call 112 (India) or Tele-MANAS 14416.
+            </p>
+            <p className="mt-3 text-sm text-slate-500">© 2026 MyMindTherapyFriend (MMTF) · contact@mymindtherapyfriend.com</p>
           </div>
         </div>
       </footer>
+
+      {/* Mobile Sticky CRO bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] flex gap-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+        <Link
+          to="/sign-in"
+          data-track="signup_start"
+          data-item="sticky"
+          className="flex-1 text-center py-2.5 px-4 rounded-xl bg-[#004038] text-white font-semibold text-sm shadow transition hover:bg-[#002f29]"
+        >
+          Start free
+        </Link>
+        <Link
+          to="/courses"
+          data-track="course_view_click"
+          className="flex-1 text-center py-2.5 px-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 font-semibold text-sm transition hover:bg-teal-100"
+        >
+          Courses
+        </Link>
+      </div>
 
       {/* Super Admin Password Modal */}
       {adminModalOpen && (
