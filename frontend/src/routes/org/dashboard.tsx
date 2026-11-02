@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, BarChart2, Shield, Building2, TrendingUp, AlertTriangle, Download,
   CheckCircle, Clock, UserCheck, UserX, Upload, X, Loader2, ChevronRight,
-  CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle, UserMinus
+  CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle, UserMinus,
+  Menu, ChevronDown
 } from 'lucide-react';
 import API from '@/lib/api';
 import { useClerk, useAuth } from '@clerk/clerk-react';
@@ -129,6 +130,7 @@ function OrgDashboard() {
   const [isExporting, setIsExporting] = useState(false);
   const [orgData, setOrgData] = useState<any>(null);
   const [tab, setTab] = useState<'overview' | 'therapists' | 'external-therapists' | 'requests' | 'members' | 'subscriptions' | 'settings'>('overview');
+  const [mobileTabMenuOpen, setMobileTabMenuOpen] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   // Excel upload modal
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -540,35 +542,127 @@ function OrgDashboard() {
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-slate-200 print:hidden">
-        <div className="max-w-6xl mx-auto px-4 flex gap-4 overflow-x-auto">
-          {(['overview', 'therapists', 'external-therapists', 'requests', 'members', 'subscriptions', 'settings'] as const).map((t) => {
-            const disabled = orgSubRequired && t !== 'subscriptions';
-            if (t === 'external-therapists' && !orgData?.allowExternalTherapists) return null;
-            
-            const labels: Record<string, string> = {
-              overview: 'Overview',
-              therapists: 'Counsellors',
-              'external-therapists': 'Invite External',
-              requests: 'Join Requests',
-              members: 'Members & Access',
-              subscriptions: 'Subscription',
-              settings: 'Org Settings',
-            };
+      <div className="bg-white border-b border-slate-200 print:hidden sticky top-[73px] z-20">
+        {(() => {
+          const labels: Record<string, string> = {
+            overview: 'Overview',
+            therapists: 'Counsellors',
+            'external-therapists': 'Invite External',
+            requests: 'Join Requests',
+            members: 'Members & Access',
+            subscriptions: 'Subscription',
+            settings: 'Org Settings',
+          };
 
-            return (
-              <button key={t} 
-                onClick={() => !disabled && setTab(t)}
-                disabled={disabled}
-                className={`px-1 py-3 text-sm font-semibold border-b-2 transition relative whitespace-nowrap ${
-                  tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
-                } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {labels[t] || (t.charAt(0).toUpperCase() + t.slice(1))}
-                {disabled && <Shield className="size-3 absolute top-1 -right-2 text-slate-400" />}
-              </button>
-            );
-          })}
-        </div>
+          const orgTabs = (['overview', 'therapists', 'external-therapists', 'requests', 'members', 'subscriptions', 'settings'] as const)
+            .filter((t) => t !== 'external-therapists' || Boolean(orgData?.allowExternalTherapists))
+            .map((t) => ({
+              key: t,
+              label: labels[t] || (t.charAt(0).toUpperCase() + t.slice(1)),
+              disabled: Boolean(orgSubRequired && t !== 'subscriptions'),
+            }));
+
+          const currentTabInfo = orgTabs.find((t) => t.key === tab);
+
+          return (
+            <>
+              {/* Mobile View: Hamburger Menu Selector */}
+              <div className="md:hidden px-4 py-2.5">
+                <button
+                  type="button"
+                  onClick={() => setMobileTabMenuOpen(!mobileTabMenuOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 shadow-sm hover:bg-slate-100 transition active:scale-[0.99] cursor-pointer"
+                  aria-label="Toggle Dashboard Sections Menu"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+                      {mobileTabMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+                    </div>
+                    <div className="text-left truncate">
+                      <span className="text-[10px] uppercase font-bold text-blue-600 block tracking-wider leading-none">
+                        Organization Section
+                      </span>
+                      <span className="text-sm font-bold text-slate-900 truncate block mt-0.5">
+                        {currentTabInfo?.label || 'Select Section'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 pl-2 text-xs font-semibold text-slate-500">
+                    <span>
+                      {Math.max(1, orgTabs.findIndex((t) => t.key === tab) + 1)}/{orgTabs.length}
+                    </span>
+                    <ChevronDown
+                      className={`size-4 transition-transform duration-200 ${
+                        mobileTabMenuOpen ? 'rotate-180 text-blue-600' : ''
+                      }`}
+                    />
+                  </div>
+                </button>
+
+                {/* Mobile Dropdown Menu with all tabs */}
+                <AnimatePresence>
+                  {mobileTabMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -8, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[60vh] overflow-y-auto"
+                    >
+                      <div className="p-2 space-y-1">
+                        {orgTabs.map((t) => {
+                          const isActive = tab === t.key;
+                          return (
+                            <button
+                              key={t.key}
+                              disabled={t.disabled}
+                              onClick={() => {
+                                if (!t.disabled) {
+                                  setTab(t.key as any);
+                                  setMobileTabMenuOpen(false);
+                                }
+                              }}
+                              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold transition cursor-pointer ${
+                                isActive
+                                  ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/30'
+                                  : t.disabled
+                                  ? 'text-slate-300 opacity-50 cursor-not-allowed'
+                                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <span className="truncate">{t.label}</span>
+                                {t.disabled && <Shield className="size-3 text-slate-400 shrink-0" />}
+                              </div>
+                              {isActive && <Check className="size-4 shrink-0 text-white" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop View: Horizontal Scrolling Tab Bar */}
+              <div className="hidden md:flex max-w-6xl mx-auto px-4 gap-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {orgTabs.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => !t.disabled && setTab(t.key as any)}
+                    disabled={t.disabled}
+                    className={`px-1 py-3 text-sm font-semibold border-b-2 transition relative whitespace-nowrap cursor-pointer ${
+                      tab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+                    } ${t.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {t.label}
+                    {t.disabled && <Shield className="size-3 absolute top-1 -right-2 text-slate-400" />}
+                  </button>
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* The content to be captured in PDF */}

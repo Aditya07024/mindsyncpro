@@ -9,7 +9,7 @@ import {
   Trash2, Video, GraduationCap, Calendar, Sparkles, RefreshCw, Clock,
   ArrowRight, ExternalLink, ShoppingBag, Compass, Tag, Check,
   ChevronRight, Activity, Bell, FileText, Lock, AlertCircle, Camera,
-  ShieldCheck
+  ShieldCheck, Menu, X, ChevronDown
 } from 'lucide-react';
 import API from '@/lib/api';
 import { getNormalizedPosterUrl } from '@/lib/utils';
@@ -55,6 +55,7 @@ function SuperAdminDashboard() {
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'overview' | 'users' | 'therapists' | 'organizations' | 'subscriptions' | 'plans' | 'earnings' | 'conferences' | 'permissions' | 'popup-announcement' | 'meeting-photos' | 'digital-products' | 'network-partners' | 'career-selection' | 'counseling-training' | 'counseling-pricing' | 'student-verifications' | 'ad-banner' | 'mobile-notifications'>('overview');
+  const [mobileTabMenuOpen, setMobileTabMenuOpen] = useState(false);
 
 
   const [selectedOrgForUsers, setSelectedOrgForUsers] = useState<any | null>(null);
@@ -439,13 +440,78 @@ function SuperAdminDashboard() {
       </header>
 
       {/* Tab Nav */}
-      <div className="bg-slate-900 border-b border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="sticky top-[57px] z-20 bg-slate-900 border-b border-slate-800">
+        {/* Mobile View: Hamburger Menu Selector */}
+        <div className="md:hidden px-4 py-2.5">
+          <button
+            type="button"
+            onClick={() => setMobileTabMenuOpen(!mobileTabMenuOpen)}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-white shadow-sm hover:bg-slate-800 transition active:scale-[0.99] cursor-pointer"
+            aria-label="Toggle Dashboard Sections Menu"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 rounded-lg bg-violet-600/20 text-violet-400 border border-violet-500/30">
+                {mobileTabMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+              </div>
+              <div className="text-left truncate">
+                <span className="text-[10px] uppercase font-bold text-violet-400 block tracking-wider leading-none">
+                  Admin Section
+                </span>
+                <span className="text-sm font-bold text-slate-100 truncate block mt-0.5">
+                  {allowedTabs.find((t) => t.key === tab)?.label || 'Select Section'}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 pl-2 text-xs font-semibold text-slate-400">
+              <span>{allowedTabs.findIndex((t) => t.key === tab) + 1}/{allowedTabs.length}</span>
+              <ChevronDown className={`size-4 transition-transform duration-200 ${mobileTabMenuOpen ? 'rotate-180 text-violet-400' : ''}`} />
+            </div>
+          </button>
+
+          {/* Mobile Dropdown Menu with all tabs */}
+          <AnimatePresence>
+            {mobileTabMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -8, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden mt-2 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl max-h-[65vh] overflow-y-auto"
+              >
+                <div className="p-2 space-y-1">
+                  {allowedTabs.map((t) => {
+                    const isActive = tab === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        onClick={() => {
+                          setTab(t.key as any);
+                          setMobileTabMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold transition cursor-pointer ${
+                          isActive
+                            ? 'bg-violet-600 text-white font-bold shadow-md shadow-violet-600/30'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <span className="truncate">{t.label}</span>
+                        {isActive && <Check className="size-4 shrink-0 text-white" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Desktop View: Horizontal Scrolling Tab Bar */}
+        <div className="hidden md:flex max-w-6xl mx-auto px-4 gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {allowedTabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key as any)}
-              className={`px-4 py-3 text-sm font-semibold transition border-b-2 shrink-0 ${
+              className={`px-4 py-3 text-sm font-semibold transition border-b-2 shrink-0 cursor-pointer ${
                 tab === t.key ? 'border-violet-500 text-violet-400' : 'border-transparent text-slate-500 hover:text-slate-300'
               }`}
             >

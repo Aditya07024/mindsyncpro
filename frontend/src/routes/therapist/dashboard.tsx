@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users, X, Trash2 } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Minus, LogOut, MessageCircle, Shield, Loader2, FileText, Heart, Smile, Sparkles, BookOpen, AlertCircle, Building2, Users, X, Trash2, Menu, ChevronDown, Check } from 'lucide-react';
 import API from '@/lib/api';
 import { formatAdLink, getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -71,6 +71,7 @@ function TherapistDashboard() {
   const { isSignedIn, isLoaded } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'schedule' | 'availability' | 'earnings' | 'profile' | 'subscription' | 'invitations' | 'organization' | 'reports' | 'group-sessions'>('schedule');
+  const [mobileTabMenuOpen, setMobileTabMenuOpen] = useState(false);
   const [briefBookingId, setBriefBookingId] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [viewJournalsBookingId, setViewJournalsBookingId] = useState<string | null>(null);
@@ -505,26 +506,118 @@ function TherapistDashboard() {
 
       {/* Tab Nav */}
       <div className="sticky top-[73px] z-20 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 flex gap-2 overflow-x-auto">
-          {(['schedule', 'group-sessions', 'availability', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
-            .filter(t => (t !== 'subscription' || !isOrgLinked) && (t !== 'organization' || isOrgLinked))
+        {(() => {
+          const therapistTabs = (['schedule', 'group-sessions', 'availability', 'profile', 'subscription', 'invitations', 'organization', 'reports'] as const)
+            .filter((t) => (t !== 'subscription' || !isOrgLinked) && (t !== 'organization' || isOrgLinked))
             .map((t) => {
-            const disabled = subRequired && t !== 'subscription' && t !== 'invitations' && t !== 'profile';
-            return (
-              <button key={t} 
-                onClick={() => !disabled && setTab(t)}
-                disabled={disabled}
-                className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative whitespace-nowrap ${
-                  tab === t ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
-                } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {t === 'group-sessions' ? '🎙️ Group Audio Sessions' : t === 'reports' ? 'Shared Reports' : t}
-                {disabled && (
-                  <Shield className="size-3 absolute top-2 right-2 text-slate-400" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+              const disabled = subRequired && t !== 'subscription' && t !== 'invitations' && t !== 'profile';
+              const label = t === 'group-sessions' ? '🎙️ Group Audio Sessions' : t === 'reports' ? 'Shared Reports' : t.charAt(0).toUpperCase() + t.slice(1);
+              return { key: t, label, disabled };
+            });
+
+          const currentTabInfo = therapistTabs.find((t) => t.key === tab);
+
+          return (
+            <>
+              {/* Mobile View: Hamburger Menu Selector */}
+              <div className="md:hidden px-4 py-2.5">
+                <button
+                  type="button"
+                  onClick={() => setMobileTabMenuOpen(!mobileTabMenuOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 shadow-sm hover:bg-slate-100 transition active:scale-[0.99] cursor-pointer"
+                  aria-label="Toggle Dashboard Sections Menu"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
+                      {mobileTabMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+                    </div>
+                    <div className="text-left truncate">
+                      <span className="text-[10px] uppercase font-bold text-teal-600 block tracking-wider leading-none">
+                        Counsellor Section
+                      </span>
+                      <span className="text-sm font-bold text-slate-900 truncate block mt-0.5">
+                        {currentTabInfo?.label || 'Select Section'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 pl-2 text-xs font-semibold text-slate-500">
+                    <span>
+                      {Math.max(1, therapistTabs.findIndex((t) => t.key === tab) + 1)}/{therapistTabs.length}
+                    </span>
+                    <ChevronDown
+                      className={`size-4 transition-transform duration-200 ${
+                        mobileTabMenuOpen ? 'rotate-180 text-teal-600' : ''
+                      }`}
+                    />
+                  </div>
+                </button>
+
+                {/* Mobile Dropdown Menu with all tabs */}
+                <AnimatePresence>
+                  {mobileTabMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto' }}
+                      exit={{ opacity: 0, y: -8, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[60vh] overflow-y-auto"
+                    >
+                      <div className="p-2 space-y-1">
+                        {therapistTabs.map((t) => {
+                          const isActive = tab === t.key;
+                          return (
+                            <button
+                              key={t.key}
+                              disabled={t.disabled}
+                              onClick={() => {
+                                if (!t.disabled) {
+                                  setTab(t.key as any);
+                                  setMobileTabMenuOpen(false);
+                                }
+                              }}
+                              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-sm font-semibold transition cursor-pointer ${
+                                isActive
+                                  ? 'bg-teal-600 text-white font-bold shadow-md shadow-teal-600/30'
+                                  : t.disabled
+                                  ? 'text-slate-300 opacity-50 cursor-not-allowed'
+                                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <span className="truncate">{t.label}</span>
+                                {t.disabled && <Shield className="size-3 text-slate-400 shrink-0" />}
+                              </div>
+                              {isActive && <Check className="size-4 shrink-0 text-white" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop View: Horizontal Scrolling Tab Bar */}
+              <div className="hidden md:flex max-w-5xl mx-auto px-4 gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {therapistTabs.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => !t.disabled && setTab(t.key as any)}
+                    disabled={t.disabled}
+                    className={`px-5 py-3.5 text-sm font-bold capitalize border-b-2 transition relative whitespace-nowrap cursor-pointer ${
+                      tab === t.key ? 'border-teal-600 text-teal-700' : 'border-transparent text-slate-500 hover:text-slate-800'
+                    } ${t.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {t.label}
+                    {t.disabled && (
+                      <Shield className="size-3 absolute top-2 right-2 text-slate-400" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
