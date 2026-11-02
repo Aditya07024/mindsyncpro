@@ -827,7 +827,7 @@ function Landing() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-3">
           <Link
-            to="/courses"
+            to="/counseling-training"
             data-track="course_view_click"
             className="rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
@@ -892,7 +892,7 @@ function Landing() {
           >
             <div className="flex flex-col gap-2">
               <Link
-                to="/courses"
+                to="/counseling-training"
                 data-track="course_view_click"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center justify-between rounded-xl px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-[#004038]"
@@ -976,12 +976,16 @@ function Landing() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.8 }}
-              className="mt-7 font-display text-4xl font-bold leading-[1.08] tracking-tight text-[#012620] sm:text-5xl lg:text-6xl"
+              className="mt-7 font-display text-5xl font-bold leading-[1.02] tracking-tight text-[#012620] sm:text-6xl lg:text-7xl"
             >
-              MyMindTherapyFriend (MMTF):
+              <span className="block text-base sm:text-lg lg:text-2xl font-semibold text-slate-600 mb-3.5 tracking-normal">
+                <span className="font-bold text-[#004038]">MyMindTherapyFriend (MMTF):</span> The future-ready wellness platform
+              </span>
+              India's AI-Powered
               <br />
+              Mental Wellness
               <span className="bg-gradient-to-r from-[#004038] to-[#00a693] bg-clip-text text-transparent">
-                Your AI Mental Health Companion in India
+                {" "}Experience
               </span>
             </motion.h1>
 
@@ -1010,7 +1014,7 @@ function Landing() {
               </a>
 
               <Link
-                to="/courses"
+                to="/counseling-training"
                 data-track="course_view_click"
                 data-item="hero"
                 className="rounded-2xl border border-teal-200 bg-teal-50 px-5 py-3 text-sm font-bold text-[#004038] shadow-sm transition hover:scale-[1.03] hover:bg-teal-100"
@@ -1563,7 +1567,7 @@ function Landing() {
             </h3>
 
             <div className="mt-5 space-y-3 text-sm text-slate-600 flex flex-col items-start">
-              <Link to="/courses" data-track="course_view_click" className="hover:text-teal-600 font-semibold transition text-left text-teal-800">52-Day Mental Health Courses</Link>
+              <Link to="/counseling-training" data-track="course_view_click" className="hover:text-teal-600 font-semibold transition text-left text-teal-800">52-Day Mental Health Courses</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Manas AI Companion</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">CBT Self-Help Tools Online</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Daily Mood Tracker</Link>
@@ -1664,7 +1668,7 @@ function Landing() {
           Start free
         </Link>
         <Link
-          to="/courses"
+          to="/counseling-training"
           data-track="course_view_click"
           className="flex-1 text-center py-2.5 px-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 font-semibold text-sm transition hover:bg-teal-100"
         >
