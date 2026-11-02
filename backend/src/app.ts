@@ -6,7 +6,6 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import morgan from "morgan";
-import { clerkMiddleware } from "@clerk/express";
 import { errorHandler } from "@/middleware/error-handler";
 import { apiRouter } from "@/routes";
 
@@ -49,12 +48,7 @@ export async function createApp() {
   app.use(cookieParser());
   app.use(morgan("dev"));
 
-  app.use(
-    clerkMiddleware({
-      publishableKey: env.CLERK_PUBLISHABLE_KEY,
-      secretKey: env.CLERK_SECRET_KEY,
-    })
-  );
+
 
   // Serve uploaded images statically with explicit Cross-Origin headers
   const { getUploadDirectory } = await import("@/middleware/upload.middleware");

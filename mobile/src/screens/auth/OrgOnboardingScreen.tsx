@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { Building2, Mail, FileText, CheckCircle, LogOut } from 'lucide-react-native';
-import { useClerk, useUser } from '@clerk/clerk-expo';
+import { useClerk, useUser } from '../../context/AuthContext';
 import API from '../../lib/api';
 
 interface OrgOnboardingScreenProps {

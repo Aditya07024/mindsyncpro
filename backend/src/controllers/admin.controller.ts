@@ -806,6 +806,16 @@ export class AdminController {
     user.deletedAt = new Date();
     await user.save();
 
+    // Delete from Firebase Auth if firebaseUid exists
+    if (user.firebaseUid || (Array.isArray(user.firebaseUids) && user.firebaseUids.length > 0)) {
+      try {
+        const { deleteFirebaseUsers } = await import("@/lib/firebase");
+        await deleteFirebaseUsers([user.firebaseUid, ...(user.firebaseUids || [])]);
+      } catch (err: any) {
+        console.error(`[Admin] Failed to delete user ${id} from Firebase:`, err.message);
+      }
+    }
+
     // Delete from Clerk across Web & Mobile instances if clerkId exists
     if (user.clerkId || (Array.isArray(user.clerkIds) && user.clerkIds.length > 0)) {
       try {

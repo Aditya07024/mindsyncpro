@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, FileText, CheckCircle, ArrowRight, Mail } from "lucide-react";
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@/context/AuthContext";
 import API from "@/lib/api";
 
 export const Route = createFileRoute("/org/onboarding")({

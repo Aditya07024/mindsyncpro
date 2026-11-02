@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '../../context/AuthContext';
 import * as WebBrowser from 'expo-web-browser';
 import { CheckCircle } from 'lucide-react-native';
 import API from '../../lib/api';

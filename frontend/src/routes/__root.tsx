@@ -5,15 +5,9 @@ import {
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Toaster } from "sonner";
 import { setTokenGetter } from "@/lib/api";
-
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY environment variable");
-}
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   {
@@ -23,7 +17,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   },
 );
 
-function ClerkTokenWirer() {
+function AuthTokenWirer() {
   const { getToken } = useAuth();
   // Set synchronously during render so it's available immediately to children
   setTokenGetter(() => getToken());
@@ -33,22 +27,13 @@ function ClerkTokenWirer() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      afterSignOutUrl="/"
-      allowedRedirectOrigins={[
-        "https://mymindtherapyfriend.com",
-        "https://api.mymindtherapyfriend.com",
-        "http://localhost:5173",
-        "http://localhost:8080"
-      ]}
-    >
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
-        <ClerkTokenWirer />
+        <AuthTokenWirer />
         <Outlet />
         <Toaster position="top-center" richColors closeButton />
       </QueryClientProvider>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }
 

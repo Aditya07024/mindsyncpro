@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { Send, AlertTriangle } from 'lucide-react';
 import { useStore, FREE_DAILY_LIMIT } from '@/lib/store';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@/context/AuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import API from '@/lib/api';
 import { AppShell } from '@/components/AppShell';

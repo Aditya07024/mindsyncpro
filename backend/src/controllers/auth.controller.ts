@@ -281,6 +281,15 @@ export class AuthController {
       user.deletedAt = new Date();
       await user.save();
 
+      if (user.firebaseUid || (Array.isArray(user.firebaseUids) && user.firebaseUids.length > 0)) {
+        try {
+          const { deleteFirebaseUsers } = await import("@/lib/firebase");
+          await deleteFirebaseUsers([user.firebaseUid, ...(user.firebaseUids || [])]);
+        } catch (err: any) {
+          console.error(`[Auth] Failed to delete user ${userId} from Firebase:`, err.message);
+        }
+      }
+
       if (user.clerkId || (Array.isArray(user.clerkIds) && user.clerkIds.length > 0)) {
         try {
           const { deleteClerkUserAnyInstance } = await import("@/lib/clerk-multi");

@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import { getAuth } from "@clerk/express";
 import { AppError } from "@/lib/app-error";
+import {
+  verifyFirebaseToken,
+  getFirebaseUser,
+} from "@/lib/firebase";
 import {
   getClerkUserAnyInstance,
   verifyBearerTokenMultiInstance,
@@ -8,14 +11,19 @@ import {
 import { User } from "@/models";
 
 export type AuthedRequest = Request & {
-  user?: { sub: string; role: string; clerkId: string };
+  user?: {
+    sub: string;
+    role: string;
+    firebaseUid?: string;
+    clerkId?: string; // backwards compatibility
+    email?: string;
+  };
 };
 
 /**
- * requireAuth — verifies Clerk session token from Authorization: Bearer header.
- * Supports both Web Production Clerk (clerk.mymindtherapyfriend.com) and
- * Play Store Mobile App Clerk (famous-caiman-64.clerk.accounts.dev) via RS256 JWKS.
- * On success, attaches req.user = { sub: mongoUserId, role, clerkId }.
+ * requireAuth — verifies Firebase ID token from Authorization: Bearer header.
+ * Also supports legacy Clerk session tokens during migration.
+ * On success, attaches req.user = { sub: mongoUserId, role, firebaseUid, clerkId, email }.
  */
 export async function requireAuth(
   req: AuthedRequest,
@@ -23,31 +31,44 @@ export async function requireAuth(
   next: NextFunction,
 ) {
   try {
-    let { userId: clerkUserId } = getAuth(req);
-    let verifiedTokenEmail: string | undefined;
+    let authUid: string | undefined;
+    let verifiedEmail: string | undefined;
+    let verifiedName: string | undefined;
+    let verifiedRole: string | undefined;
 
-    if (!clerkUserId) {
-      const authHeader = req.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        const token = authHeader.split(" ")[1];
-        const verified = await verifyBearerTokenMultiInstance(token);
-        if (verified?.sub) {
-          clerkUserId = verified.sub;
-          verifiedTokenEmail = verified.email;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+
+      // 1. Try Firebase verification first
+      const fbVerified = await verifyFirebaseToken(token);
+      if (fbVerified?.uid) {
+        authUid = fbVerified.uid;
+        verifiedEmail = fbVerified.email;
+        verifiedName = fbVerified.name;
+        verifiedRole = fbVerified.role;
+      } else {
+        // 2. Fallback to legacy Clerk token verification
+        const clerkVerified = await verifyBearerTokenMultiInstance(token);
+        if (clerkVerified?.sub) {
+          authUid = clerkVerified.sub;
+          verifiedEmail = clerkVerified.email;
         }
       }
     }
 
-    if (!clerkUserId) {
-      return next(new AppError("Unauthorized - No Clerk User", 401));
+    if (!authUid) {
+      return next(new AppError("Unauthorized - No Valid Session", 401));
     }
 
-    // Look up or auto-provision the MongoDB user (supports multi-instance clerkIds)
+    // Look up or auto-provision the MongoDB user
     let user: any = await User.findOne({
       $or: [
-        { clerkId: clerkUserId },
-        { clerkIds: clerkUserId },
-        { phoneHash: clerkUserId },
+        { firebaseUid: authUid },
+        { firebaseUids: authUid },
+        { clerkId: authUid },
+        { clerkIds: authUid },
+        { phoneHash: authUid },
       ],
     }).lean();
 
@@ -57,51 +78,68 @@ export async function requireAuth(
         { _id: user._id },
         {
           $unset: { deletedAt: 1 },
-          $set: { clerkId: user.clerkId || clerkUserId },
-          $addToSet: { clerkIds: clerkUserId },
+          $set: { firebaseUid: user.firebaseUid || authUid },
+          $addToSet: { firebaseUids: authUid },
         },
       );
       user.deletedAt = undefined;
-      user.clerkId = user.clerkId || clerkUserId;
+      user.firebaseUid = user.firebaseUid || authUid;
     }
 
-    if (user && !user.clerkId) {
+    if (user && !user.firebaseUid) {
       await User.updateOne(
         { _id: user._id },
         {
-          $set: { clerkId: clerkUserId },
-          $addToSet: { clerkIds: clerkUserId },
+          $set: { firebaseUid: authUid },
+          $addToSet: { firebaseUids: authUid },
         },
       );
-      user.clerkId = clerkUserId;
+      user.firebaseUid = authUid;
     } else if (
       user &&
-      (!Array.isArray(user.clerkIds) || !user.clerkIds.includes(clerkUserId))
+      (!Array.isArray(user.firebaseUids) || !user.firebaseUids.includes(authUid))
     ) {
       await User.updateOne(
         { _id: user._id },
-        { $addToSet: { clerkIds: clerkUserId } },
+        { $addToSet: { firebaseUids: authUid } },
       );
     }
 
     if (!user) {
-      // First login with this Clerk ID — fetch Clerk user profile across Web & Mobile instances
-      let email = verifiedTokenEmail || "";
-      let fullName = "";
-      let clerkMetadataRole: string | undefined;
+      // First login with this auth ID
+      let email = verifiedEmail || "";
+      let fullName = verifiedName || "";
 
-      const clerkUser = await getClerkUserAnyInstance(clerkUserId);
-      if (clerkUser) {
-        email = clerkUser.emailAddresses?.[0]?.emailAddress || email;
-        fullName = [clerkUser.firstName, clerkUser.lastName]
-          .filter(Boolean)
-          .join(" ");
-        clerkMetadataRole = clerkUser.publicMetadata?.role as string | undefined;
+      // Try fetching Firebase user info if needed
+      if (!email || !fullName) {
+        try {
+          const fbUser = await getFirebaseUser(authUid);
+          if (fbUser) {
+            email = fbUser.email || email;
+            fullName = fbUser.displayName || fullName;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // Try fetching Clerk user info if it's a legacy Clerk ID
+      if (!email && authUid.startsWith("user_")) {
+        try {
+          const clerkUser = await getClerkUserAnyInstance(authUid);
+          if (clerkUser) {
+            email = clerkUser.emailAddresses?.[0]?.emailAddress || email;
+            fullName = [clerkUser.firstName, clerkUser.lastName]
+              .filter(Boolean)
+              .join(" ");
+          }
+        } catch {
+          // ignore
+        }
       }
 
       if (email) {
         const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        // Search by email in phoneMasked or email (case-insensitive) to unify Web & Mobile accounts
         user = await User.findOne({
           $or: [
             { email: email.toLowerCase() },
@@ -112,25 +150,25 @@ export async function requireAuth(
         }).lean();
 
         if (user) {
-          // Link new Clerk ID without overwriting existing primary clerkId if already set
           await User.updateOne(
             { _id: user._id },
             {
-              $set: { clerkId: user.clerkId || clerkUserId },
-              $addToSet: { clerkIds: clerkUserId },
+              $set: {
+                firebaseUid: user.firebaseUid || authUid,
+                email: user.email || email.toLowerCase(),
+              },
+              $addToSet: { firebaseUids: authUid },
             },
           );
-          user.clerkId = user.clerkId || clerkUserId;
+          user.firebaseUid = user.firebaseUid || authUid;
         }
       }
 
       if (!user) {
         try {
-          // Detect intended role from header or Clerk metadata
           let intentRole =
-            (req.headers["x-intent-role"] as string) || clerkMetadataRole || "";
+            (req.headers["x-intent-role"] as string) || verifiedRole || "";
 
-          // Normalize role
           if (intentRole === "super admin" || intentRole === "super-admin")
             intentRole = "super_admin";
           if (intentRole === "org admin" || intentRole === "org-admin")
@@ -142,12 +180,16 @@ export async function requireAuth(
             : "user";
 
           const created = await User.create({
-            clerkId: clerkUserId,
-            clerkIds: [clerkUserId],
-            phoneHash: clerkUserId, // use clerkId as unique key
-            phoneMasked: email || clerkUserId.slice(-8),
+            firebaseUid: authUid,
+            firebaseUids: [authUid],
+            clerkId: authUid, // keep for compatibility
+            clerkIds: [authUid],
+            phoneHash: authUid,
+            phoneMasked: email || authUid.slice(-8),
+            email: email ? email.toLowerCase() : undefined,
             fullName: fullName || undefined,
             role: roleToAssign,
+            tier: "free",
             isAnonymous: false,
             onboarding: { concerns: [] },
           });
@@ -155,7 +197,12 @@ export async function requireAuth(
         } catch (createErr: any) {
           if (createErr.code === 11000) {
             user = await User.findOne({
-              $or: [{ clerkId: clerkUserId }, { clerkIds: clerkUserId }],
+              $or: [
+                { firebaseUid: authUid },
+                { firebaseUids: authUid },
+                { clerkId: authUid },
+                { clerkIds: authUid },
+              ],
             }).lean();
           }
           if (!user) throw createErr;
@@ -197,12 +244,14 @@ export async function requireAuth(
     req.user = {
       sub: String(user._id),
       role: user.role || "user",
-      clerkId: clerkUserId,
+      firebaseUid: authUid,
+      clerkId: user.clerkId || authUid,
+      email: user.email || verifiedEmail,
     };
 
     next();
   } catch (err: any) {
-    console.error("Clerk Token Verification Failed:", err.message);
+    console.error("Auth Token Verification Failed:", err.message);
     return next(new AppError("Invalid or expired session", 401));
   }
 }
@@ -222,13 +271,24 @@ export async function getPossibleUserEmails(req: AuthedRequest): Promise<string[
 
   try {
     const { User } = await import("@/models/user");
-    const dbUser: any = await User.findById(req.user.sub).select("email phoneMasked therapistProfile role");
+    const dbUser: any = await User.findById(req.user.sub).select("email phoneMasked therapistProfile role firebaseUid");
     if (dbUser?.email) emails.push(dbUser.email);
     if (dbUser?.phoneMasked) emails.push(dbUser.phoneMasked);
     if (dbUser?.therapistProfile?.email) emails.push(dbUser.therapistProfile.email);
   } catch (e) {}
 
-  if (req.user.clerkId) {
+  if (req.user.email) {
+    emails.push(req.user.email);
+  }
+
+  if (req.user.firebaseUid) {
+    try {
+      const fbUser = await getFirebaseUser(req.user.firebaseUid);
+      if (fbUser?.email) emails.push(fbUser.email);
+    } catch (e) {}
+  }
+
+  if (req.user.clerkId && req.user.clerkId.startsWith("user_")) {
     try {
       const clerkUser = await getClerkUserAnyInstance(req.user.clerkId);
       if (clerkUser?.emailAddresses?.[0]?.emailAddress) {
@@ -281,16 +341,8 @@ export async function optionalAuth(
   next: NextFunction,
 ) {
   try {
-    let authUserId = getAuth(req)?.userId;
     const authHeader = req.headers.authorization;
-
-    if (!authUserId && authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.split(" ")[1];
-      const verified = await verifyBearerTokenMultiInstance(token);
-      if (verified?.sub) authUserId = verified.sub;
-    }
-
-    if (authUserId) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       return requireAuth(req, res, (err?: any) => {
         if (err) {
           console.warn("[optionalAuth] Auth attempt failed, continuing as guest:", err.message);

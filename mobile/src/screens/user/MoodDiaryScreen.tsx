@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useUser } from '@clerk/clerk-expo';
+import { useUser } from '../../context/AuthContext';
 import Svg, { Path, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { Sparkles, Calendar, Plus } from 'lucide-react-native';
 import API from '../../lib/api';

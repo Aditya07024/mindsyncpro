@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import { FileText, ArrowLeft, Scale, AlertCircle, Info } from 'lucide-react';
+import { FileText, ArrowLeft, Scale, AlertCircle, Info, Shield } from 'lucide-react';
 import logoUrl from '@/assets/logo.png';
 
 export const Route = createFileRoute('/terms')({
@@ -19,6 +19,11 @@ function TermsPage() {
       icon: AlertCircle,
       iconColor: "text-rose-500",
       content: "MyMindTherapyFriend is a wellness platform, not a crisis intervention or medical emergency service. If you are experiencing a life-threatening emergency or thoughts of self-harm, please contact your local emergency services or a crisis hotline immediately."
+    },
+    {
+      title: "Account Security & Authentication",
+      icon: Shield,
+      content: "User authentication, profile verification, and session management are securely handled through Google Firebase Authentication and Google OAuth single sign-on. You are responsible for maintaining the confidentiality of your authenticated Google credentials and for all activities conducted under your account."
     },
     {
       title: "User Conduct",

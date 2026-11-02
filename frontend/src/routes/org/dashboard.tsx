@@ -7,7 +7,7 @@ import {
   CreditCard, Check, Crown, Zap, ShieldCheck, AlertCircle, UserMinus
 } from 'lucide-react';
 import API from '@/lib/api';
-import { useClerk, useAuth } from '@clerk/clerk-react';
+import { useClerk, useAuth } from '@/context/AuthContext';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { useEffect, useRef, useState, useCallback } from 'react';

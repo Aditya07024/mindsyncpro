@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useAuth, useUser, SignInButton } from "@clerk/clerk-react";
+import { useAuth, useUser, SignInButton } from "@/context/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {

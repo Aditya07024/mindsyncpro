@@ -23,14 +23,24 @@ async function apiCall<T>(
     ...(options.headers as Record<string, string>),
   };
 
-  // Attach Clerk session token if available
+  // Attach session token if available
   if (_getToken) {
     try {
       const token = await _getToken();
       if (token) headers["Authorization"] = `Bearer ${token}`;
     } catch (e) {
-      console.warn("Failed to get Clerk JWT token:", e);
+      console.warn("Failed to get JWT token:", e);
     }
+  }
+
+  if (!headers["Authorization"]) {
+    try {
+      const { auth } = await import("./firebase");
+      if (auth.currentUser) {
+        const token = await auth.currentUser.getIdToken();
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+      }
+    } catch (e) {}
   }
 
   const response = await fetch(`${API_URL}${endpoint}`, {

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useUser, useClerk } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@/context/AuthContext';
 import { useNavigate } from '@tanstack/react-router';
 import { User, Settings, LogOut, HelpCircle, Trash2, Shield, X } from 'lucide-react';
 import API from '@/lib/api';

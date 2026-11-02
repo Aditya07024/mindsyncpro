@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, LogBox, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider, SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
+import { AuthProvider, SignedIn, SignedOut, useAuth } from './src/context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -256,7 +256,7 @@ export default function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <AuthBridge>
           <NavigationContainer linking={linking}>
@@ -267,7 +267,7 @@ export default function App() {
           </NavigationContainer>
         </AuthBridge>
       </QueryClientProvider>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }
 

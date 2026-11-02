@@ -212,7 +212,7 @@ function PrivacyPage() {
               {[
                 { name: "Google Play Services", url: "https://www.google.com/policies/privacy/", desc: "Underlying system functionality and authentication services." },
                 { name: "Google Analytics for Firebase", url: "https://firebase.google.com/support/privacy", desc: "Aggregated, anonymous application usage telemetry." },
-                { name: "Clerk", url: "https://clerk.com/legal/privacy", desc: "Secure user authentication, session handling, and identity management." },
+                { name: "Google Firebase Authentication", url: "https://firebase.google.com/support/privacy", desc: "Industry-standard identity management, Google OAuth single sign-on, and secure token verification." },
                 { name: "WebRTC", url: "https://webrtc.googlesource.com/src/+/refs/heads/main/LICENSE", desc: "Real-time audio, video, and data communication technology for live sessions." }
               ].map((tp, idx) => (
                 <a 

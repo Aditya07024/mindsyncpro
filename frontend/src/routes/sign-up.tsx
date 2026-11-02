@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SignUp } from "@clerk/clerk-react";
+import { FirebaseAuthCard } from "@/components/auth/FirebaseAuthCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck,
@@ -396,46 +396,11 @@ function SignUpPage() {
                 </button>
               </div>
 
-              {/* Styled Clerk SignUp Card */}
+              {/* Styled Firebase SignUp Card */}
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/15 to-amber-500/15 rounded-[2rem] blur-xl opacity-60 pointer-events-none" />
-                <div className="relative bg-slate-50/60 backdrop-blur-xl rounded-[1.75rem] border border-slate-200/80 shadow-md p-1.5 sm:p-3">
-                  <SignUp
-                    routing="path"
-                    path="/sign-up"
-                    fallbackRedirectUrl="/onboarding"
-                    signInFallbackRedirectUrl="/dashboard"
-                    appearance={{
-                      elements: {
-                        rootBox: "w-full",
-                        cardBox: "shadow-none border-0 w-full bg-transparent",
-                        card: "shadow-none border-0 w-full bg-transparent p-3 sm:p-4",
-                        avatarBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
-                        logoBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
-                        logoImage: "rounded-xl object-contain",
-                        headerTitle: "font-display font-bold text-slate-900 text-lg text-center",
-                        headerSubtitle: "text-slate-500 text-xs text-center",
-                        socialButtonsBlockButton:
-                          "rounded-xl border border-slate-200 bg-white hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 font-medium text-slate-700 h-10 text-xs shadow-sm",
-                        socialButtonsBlockButtonText: "font-semibold text-slate-700 text-xs",
-                        dividerLine: "bg-slate-200",
-                        dividerText: "text-slate-400 text-[10px] uppercase font-medium tracking-wider bg-white px-2",
-                        formButtonPrimary:
-                          "rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold h-10 text-xs shadow-md shadow-teal-700/20 transition-all duration-200 transform active:scale-[0.99]",
-                        footerActionLink: "text-teal-700 font-bold hover:underline",
-                        formFieldInput:
-                          "rounded-xl border-slate-200 bg-white focus:ring-2 focus:ring-teal-600 focus:border-teal-600 h-10 text-xs transition-all shadow-sm",
-                        formFieldLabel: "text-[11px] font-semibold text-slate-700 mb-1",
-                        footer: "bg-transparent border-t border-slate-100 mt-2 pt-2 text-center text-xs",
-                      },
-                      variables: {
-                        colorPrimary: "#2C6B6A",
-                        colorBackground: "#ffffff",
-                        borderRadius: "0.75rem",
-                        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                      },
-                    }}
-                  />
+                <div className="relative bg-slate-50/60 backdrop-blur-xl rounded-[1.75rem] border border-slate-200/80 shadow-md">
+                  <FirebaseAuthCard mode="signUp" redirectUrl="/onboarding" />
                 </div>
               </div>
             </motion.div>

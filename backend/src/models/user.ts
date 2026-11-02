@@ -14,8 +14,11 @@ export interface IOnboardingState {
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  clerkId?: string;          // Primary Clerk user ID (set on first OAuth login)
-  clerkIds?: string[];       // Linked Clerk user IDs across Web & Mobile Clerk instances
+  firebaseUid?: string;      // Primary Firebase UID
+  firebaseUids?: string[];   // Linked Firebase UIDs
+  email?: string;
+  clerkId?: string;          // Legacy Clerk user ID
+  clerkIds?: string[];       // Legacy Clerk user IDs
   phoneHash: string;
   phoneMasked: string;
   fullName?: string;
@@ -100,6 +103,9 @@ const OnboardingSchema = new Schema<IOnboardingState>(
 
 const UserSchema = new Schema<IUser>(
   {
+    firebaseUid: { type: String, unique: true, sparse: true, index: true },
+    firebaseUids: { type: [String], index: true, default: [] },
+    email: { type: String, sparse: true, index: true },
     clerkId: { type: String, unique: true, sparse: true, index: true },
     clerkIds: { type: [String], index: true, default: [] },
     phoneHash: { type: String, required: false, unique: true, sparse: true, index: true },

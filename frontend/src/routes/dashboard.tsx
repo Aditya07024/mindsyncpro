@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Flame, MessageCircle, Wind, ChevronRight, Heart, CalendarCheck, Users, Sparkles, Clock, BookOpen, FileText, Wallet, ArrowRight, Calendar, GraduationCap, Building2, MapPin, User, Mail, Briefcase, BarChart3, X, Lock, ShieldAlert, RotateCw, LogOut } from 'lucide-react';
 import { useStore } from '@/lib/store';
-import { useUser, useClerk } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@/context/AuthContext';
 import { AppShell } from '@/components/AppShell';
 import { MessageCounter } from '@/components/MessageCounter';
 import { CrisisOverlay } from '@/components/CrisisButton';

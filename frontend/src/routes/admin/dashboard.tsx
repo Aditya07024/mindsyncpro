@@ -14,7 +14,7 @@ import {
 import API from '@/lib/api';
 import { getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '@/context/AuthContext';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';

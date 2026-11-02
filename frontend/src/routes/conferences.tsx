@@ -19,7 +19,7 @@ import {
 import API from "@/lib/api";
 import { ConferenceRegisterModal } from "@/components/conference/ConferenceRegisterModal";
 import logoUrl from "@/assets/logo.png";
-import { useUser } from "@clerk/clerk-react";
+import { useUser } from "@/context/AuthContext";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { formatTime12Hour, formatDateDDMMYYYY, getNormalizedPosterUrl } from "@/lib/utils";
 

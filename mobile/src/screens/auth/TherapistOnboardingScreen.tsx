@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { ArrowRight, CheckCircle, ShieldCheck, FileText, Video, CreditCard, User, LogOut } from 'lucide-react-native';
-import { useClerk } from '@clerk/clerk-expo';
+import { useClerk } from '../../context/AuthContext';
 import API from '../../lib/api';
 
 interface TherapistOnboardingScreenProps {

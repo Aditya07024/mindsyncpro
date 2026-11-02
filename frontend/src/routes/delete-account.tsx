@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useAuth, useUser, useClerk } from '@clerk/clerk-react';
+import { useAuth, useUser, useClerk } from '@/context/AuthContext';
 import { useState } from 'react';
 import { Shield, AlertTriangle, ArrowLeft, Lock, Trash2, CheckSquare, Square, X, CheckCircle } from 'lucide-react';
 import logoUrl from '@/assets/logo.png';
@@ -160,7 +160,7 @@ function DeleteAccountPage() {
                 </div>
               </div>
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full border border-emerald-200">
-                <Shield className="size-3" /> Clerk Verified
+                <Shield className="size-3" /> Firebase Verified
               </span>
             </div>
 

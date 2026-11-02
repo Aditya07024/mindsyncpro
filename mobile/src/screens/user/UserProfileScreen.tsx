@@ -13,7 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../../context/AuthContext';
 import {
   Gift,
   Copy,

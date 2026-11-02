@@ -6,7 +6,7 @@ import { Calendar, Clock, TrendingUp, Star, Video, Brain, ChevronRight, Plus, Mi
 import API from '@/lib/api';
 import { formatAdLink, getNormalizedPosterUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useClerk, useAuth } from '@clerk/clerk-react';
+import { useClerk, useAuth } from '@/context/AuthContext';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { toast } from 'sonner';
 import { openSubscriptionCheckout } from "@/lib/razorpay";

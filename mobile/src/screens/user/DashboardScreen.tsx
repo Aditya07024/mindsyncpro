@@ -40,7 +40,7 @@ import { SOSButton } from '../../components/SOSButton';
 import { CrisisOverlay } from '../../components/CrisisOverlay';
 import { getNotificationsPreference } from '../../lib/pushNotifications';
 import { AdBannerCarousel } from '../../components/AdBannerCarousel';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../../context/AuthContext';
 
 import Animated from 'react-native-reanimated';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';

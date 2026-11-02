@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { useAuth, useClerk, SignInButton } from '@clerk/clerk-react';
+import { useAuth, useClerk, SignInButton } from '@/context/AuthContext';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { Home, MessageCircle, Heart, Users, CalendarCheck, Wallet, User as UserIcon, Gift, Sparkles, X } from 'lucide-react';
 import { CrisisButton } from './CrisisButton';

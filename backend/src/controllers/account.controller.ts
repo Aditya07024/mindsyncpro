@@ -115,6 +115,16 @@ export class AccountController {
       User.deleteOne({ _id: userId }),
     ]);
 
+    // Delete user from Firebase Auth
+    if (user.firebaseUid || (Array.isArray((user as any).firebaseUids) && (user as any).firebaseUids.length > 0)) {
+      try {
+        const { deleteFirebaseUsers } = await import("@/lib/firebase");
+        await deleteFirebaseUsers([user.firebaseUid, ...((user as any).firebaseUids || [])]);
+      } catch (err: any) {
+        console.error(`[Account] Failed to delete user ${userId} from Firebase:`, err.message);
+      }
+    }
+
     // Delete user from Clerk across Web & Mobile Clerk instances
     if (clerkIdToDelete || (Array.isArray((user as any).clerkIds) && (user as any).clerkIds.length > 0)) {
       try {

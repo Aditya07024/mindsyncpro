@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SignIn } from "@clerk/clerk-react";
+import { FirebaseAuthCard } from "@/components/auth/FirebaseAuthCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck,
@@ -246,87 +246,76 @@ function SignInPage() {
         </div>
 
         {/* Auth Card Container */}
-        <div className="w-full max-w-md mx-auto space-y-3.5 my-auto shrink-0">
+        <div className="w-full max-w-md mx-auto space-y-5 my-auto shrink-0">
           {/* Logo & Heading Header with Rounded Square Box Logo */}
-          <div className="text-center space-y-1.5">
-            <div className="size-14 rounded-2xl bg-white border border-slate-200/90 p-2.5 flex items-center justify-center mx-auto shrink-0 shadow-md aspect-square">
-              <img src={logoUrl} alt="MyMindTherapyFriend Logo" className="size-full object-contain rounded-xl" />
+          <div className="text-center space-y-2">
+            <div className="relative inline-block">
+              <div className="absolute -inset-2 bg-gradient-to-r from-teal-500/20 to-amber-400/20 rounded-3xl blur-md pointer-events-none" />
+              <div className="size-16 rounded-2xl bg-white border border-slate-200/90 p-2.5 flex items-center justify-center relative shadow-lg aspect-square">
+                <img src={logoUrl} alt="MyMindTherapyFriend Logo" className="size-full object-contain rounded-xl" />
+              </div>
             </div>
-            <h1 className="font-display text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              MyMindTherapyFriend
-            </h1>
-            <p className="text-teal-700 font-semibold text-xs">Apna Dil Kholo</p>
+            <div>
+              <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                MyMindTherapyFriend
+              </h1>
+              <div className="mt-1.5 flex items-center justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-teal-50 to-emerald-50 text-teal-800 text-[11px] font-bold border border-teal-200/80 shadow-2xs">
+                  <Heart className="size-3 text-rose-500 fill-rose-500" /> Apna Dil Kholo
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="text-xs text-slate-500 font-medium">Safe Space</span>
+              </div>
+            </div>
           </div>
 
           {/* Original Portal Role Heading (If set from landing page) */}
           {portalRole && PORTAL_NAMES[portalRole] && (
             <div className="text-center">
-              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-teal-50 text-teal-900 text-[11px] font-bold border border-teal-200 shadow-sm">
-                <CheckCircle2 className="size-3 text-teal-600" />
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-teal-50/90 text-teal-900 text-xs font-bold border border-teal-200 shadow-xs">
+                <CheckCircle2 className="size-3.5 text-teal-600" />
                 {PORTAL_NAMES[portalRole]}
               </span>
             </div>
           )}
 
-          {/* Styled Clerk SignIn Card */}
+          {/* Styled Firebase Google Sign-In Card */}
           <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/15 to-amber-500/15 rounded-[2rem] blur-xl opacity-60 pointer-events-none" />
-            <div className="relative bg-slate-50/60 backdrop-blur-xl rounded-[1.75rem] border border-slate-200/80 shadow-md p-1.5 sm:p-3">
-              <SignIn
-                routing="path"
-                path="/sign-in"
-                fallbackRedirectUrl={new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("redirect") || "/dashboard"}
-                signUpFallbackRedirectUrl={new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("redirect") || "/onboarding"}
-                appearance={{
-                  elements: {
-                    rootBox: "w-full",
-                    cardBox: "shadow-none border-0 w-full bg-transparent",
-                    card: "shadow-none border-0 w-full bg-transparent p-3 sm:p-4",
-                    avatarBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
-                    logoBox: "rounded-2xl overflow-hidden aspect-square border border-slate-200 shadow-sm",
-                    logoImage: "rounded-xl object-contain",
-                    headerTitle: "font-display font-bold text-slate-900 text-lg text-center",
-                    headerSubtitle: "text-slate-500 text-xs text-center",
-                    socialButtonsBlockButton:
-                      "rounded-xl border border-slate-200 bg-white hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 font-medium text-slate-700 h-10 text-xs shadow-sm",
-                    socialButtonsBlockButtonText: "font-semibold text-slate-700 text-xs",
-                    dividerLine: "bg-slate-200",
-                    dividerText: "text-slate-400 text-[10px] uppercase font-medium tracking-wider bg-white px-2",
-                    formButtonPrimary:
-                      "rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold h-10 text-xs shadow-md shadow-teal-700/20 transition-all duration-200 transform active:scale-[0.99]",
-                    footerActionLink: "text-teal-700 font-bold hover:underline",
-                    formFieldInput:
-                      "rounded-xl border-slate-200 bg-white focus:ring-2 focus:ring-teal-600 focus:border-teal-600 h-10 text-xs transition-all shadow-sm",
-                    formFieldLabel: "text-[11px] font-semibold text-slate-700 mb-1",
-                    footer: "bg-transparent border-t border-slate-100 mt-2 pt-2 text-center text-xs",
-                  },
-                  variables: {
-                    colorPrimary: "#2C6B6A",
-                    colorBackground: "#ffffff",
-                    borderRadius: "0.75rem",
-                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-                  },
-                }}
+            <div className="absolute -inset-1 bg-gradient-to-r from-teal-500/20 via-emerald-400/15 to-amber-400/20 rounded-[2rem] blur-xl opacity-70 pointer-events-none" />
+            <div className="relative bg-white/95 backdrop-blur-xl rounded-[1.75rem] border border-slate-200/90 shadow-xl overflow-hidden">
+              <FirebaseAuthCard
+                mode="signIn"
+                redirectUrl={
+                  new URLSearchParams(
+                    typeof window !== "undefined" ? window.location.search : ""
+                  ).get("redirect") || "/dashboard"
+                }
               />
             </div>
           </div>
 
-          {/* Emergency Crisis Helpline Banner */}
-          <div className="p-2.5 rounded-xl bg-rose-50/90 border border-rose-200/80 flex items-center justify-between text-xs shadow-sm">
-            <div className="flex items-center gap-2 text-rose-900">
-              <div className="p-1 rounded-md bg-rose-100 text-rose-600 shrink-0">
-                <PhoneCall className="size-3.5" />
+          {/* Emergency Crisis Helpline Banner - Elevated Compassionate Design */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-rose-50 via-rose-50/80 to-amber-50/40 border border-rose-200/80 shadow-sm flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative size-9 rounded-xl bg-rose-100/90 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0 aspect-square shadow-2xs">
+                <PhoneCall className="size-4.5 animate-bounce" />
+                <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-rose-500 animate-ping" />
               </div>
-              <div>
-                <span className="font-bold block text-[11px]">In Crisis or Need Immediate Support?</span>
-                <span className="text-rose-700 text-[10px]">Free 24/7 Helpline: <strong>Tele-MANAS 14416</strong></span>
+              <div className="min-w-0">
+                <span className="font-display font-bold text-slate-900 block text-xs truncate">
+                  Need Immediate Support?
+                </span>
+                <span className="text-rose-700 text-[11px] font-medium block truncate">
+                  National Helpline: <strong>Tele-MANAS 14416</strong> (24/7 Free)
+                </span>
               </div>
             </div>
             <a
               href="tel:14416"
-              className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] shrink-0 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs shrink-0 shadow-md shadow-rose-600/20 transition-all cursor-pointer"
             >
-              Call 14416
+              <PhoneCall className="size-3" />
+              <span>Call 14416</span>
             </a>
           </div>
         </div>

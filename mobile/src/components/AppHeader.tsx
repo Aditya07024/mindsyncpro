@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, Image, Modal, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeartHandshake, LogOut, X, Bell, Sparkles, Wallet, FileText } from 'lucide-react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { Theme } from '../theme';
 

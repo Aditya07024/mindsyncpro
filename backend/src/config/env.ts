@@ -33,6 +33,7 @@ const resolvedEnv = {
   CLERK_SECRET_KEY: getEnvVar("CLERK_SECRET_KEY"),
   CLERK_PUBLISHABLE_KEY: getEnvVar("CLERK_PUBLISHABLE_KEY"),
   CLERK_MOBILE_SECRET_KEY: getEnvVar("CLERK_MOBILE_SECRET_KEY"),
+  FIREBASE_PROJECT_ID: getEnvVar("FIREBASE_PROJECT_ID", "my-mind-therapy-friend"),
   CLIENT_ORIGIN: getEnvVar("CLIENT_ORIGIN", !isProd ? "http://localhost:5173" : undefined),
   API_URL: getEnvVar("API_URL"),
   JWT_SECRET: getEnvVar("JWT_SECRET"),
@@ -65,11 +66,10 @@ const envSchema = z.object({
   MONGODB_URI: z.string({
     required_error: "MONGODB_URI is required. Please set MONGODB_URI or MONGODB_URI_DEV/MONGODB_URI_PROD in your .env file.",
   }),
-  CLERK_SECRET_KEY: z.string({
-    required_error: "CLERK_SECRET_KEY is required. Please set CLERK_SECRET_KEY or CLERK_SECRET_KEY_DEV/CLERK_SECRET_KEY_PROD in your .env file.",
-  }),
+  CLERK_SECRET_KEY: z.string().optional(),
   CLERK_PUBLISHABLE_KEY: z.string().optional(),
   CLERK_MOBILE_SECRET_KEY: z.string().optional(),
+  FIREBASE_PROJECT_ID: z.string().default("my-mind-therapy-friend"),
   CLIENT_ORIGIN: z.string().default("http://localhost:5173"),
   API_URL: z.string().optional(),
   JWT_SECRET: z.string().optional(),
