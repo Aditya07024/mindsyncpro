@@ -200,7 +200,14 @@ function TherapistDashboard() {
               qc.invalidateQueries({ queryKey: ["auth-me"] });
               toast.success("Subscription activated successfully!");
             },
-            onCancel: () => {
+            onCancel: async () => {
+              try {
+                await API.subscription.cancelPending();
+              } catch {
+                // ignore error
+              }
+              qc.invalidateQueries({ queryKey: ["subscription"] });
+              qc.invalidateQueries({ queryKey: ["auth-me"] });
               qc.invalidateQueries({ queryKey: ["therapist-stats"] });
               toast.info("Payment cancelled");
             }
@@ -232,6 +239,18 @@ function TherapistDashboard() {
       toast.success(data.message || "Subscription status synced successfully!");
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cancelPendingMutation = useMutation({
+    mutationFn: () => API.subscription.cancelPending(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["subscription"] });
+      qc.invalidateQueries({ queryKey: ["auth-me"] });
+      qc.invalidateQueries({ queryKey: ["therapist-stats"] });
+      qc.invalidateQueries({ queryKey: ["therapist-bookings"] });
+      toast.success(data?.message || "Pending payment request cancelled.");
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to cancel pending request"),
   });
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -1672,13 +1691,35 @@ function TherapistDashboard() {
                       If you completed payment via Razorpay, gateway verification may take a moment. Click below to refresh and instantly synchronize your tier.
                     </p>
                   </div>
-                  <Button
-                    onClick={() => syncMutation.mutate()}
-                    disabled={syncMutation.isPending}
-                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs shadow-md active:scale-95 transition cursor-pointer"
-                  >
-                    {syncMutation.isPending ? "Syncing..." : "Verify & Sync Status"}
-                  </Button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
+                    <Button
+                      onClick={() => syncMutation.mutate()}
+                      disabled={syncMutation.isPending || cancelPendingMutation.isPending}
+                      className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs shadow-md active:scale-95 transition cursor-pointer"
+                    >
+                      {syncMutation.isPending ? (
+                        <>
+                          <Loader2 className="size-3.5 animate-spin mr-1.5" /> Syncing...
+                        </>
+                      ) : (
+                        "Verify & Sync Status"
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => cancelPendingMutation.mutate()}
+                      disabled={cancelPendingMutation.isPending || syncMutation.isPending}
+                      className="w-full sm:w-auto border-amber-300 text-amber-950 hover:bg-amber-100/80 rounded-xl py-2.5 px-5 text-xs font-bold transition cursor-pointer"
+                    >
+                      {cancelPendingMutation.isPending ? (
+                        <>
+                          <Loader2 className="size-3.5 animate-spin mr-1.5" /> Cancelling...
+                        </>
+                      ) : (
+                        "Cancel Request"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
 

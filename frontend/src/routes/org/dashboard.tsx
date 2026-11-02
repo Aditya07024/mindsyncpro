@@ -348,6 +348,15 @@ function OrgDashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const cancelPendingMutation = useMutation({
+    mutationFn: () => API.subscription.cancelPending(),
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ['subscription'] });
+      toast.success(data.message || 'Pending payment request cancelled.');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const demoActivateMutation = useMutation({
     mutationFn: () => API.subscription.demoActivate(),
     onSuccess: (data: any) => {
@@ -1118,13 +1127,20 @@ function OrgDashboard() {
                     We've registered your organization plan, but the payment confirmation is pending. If you have already completed the transaction on Razorpay, click sync to activate benefits instantly.
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => syncMutation.mutate()}
-                    disabled={syncMutation.isPending}
-                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50"
+                    disabled={syncMutation.isPending || cancelPendingMutation.isPending}
+                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50 cursor-pointer"
                   >
                     {syncMutation.isPending ? 'Syncing...' : 'Sync Payment Status'}
+                  </button>
+                  <button
+                    onClick={() => cancelPendingMutation.mutate()}
+                    disabled={cancelPendingMutation.isPending || syncMutation.isPending}
+                    className="bg-white border border-amber-300 text-amber-900 hover:bg-amber-50 font-bold py-2 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0 shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {cancelPendingMutation.isPending ? 'Cancelling...' : 'Cancel Request'}
                   </button>
                   {/* {import.meta.env.DEV && (
                     <button

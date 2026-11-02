@@ -342,6 +342,44 @@ export class SubscriptionController {
     },
   );
 
+  /** POST /subscription/cancel-pending — cancel any pending subscription attempt */
+  static cancelPendingSubscription = asyncHandler(
+    async (req: AuthedRequest, res: Response) => {
+      const userId = req.user!.sub;
+      const user = await User.findById(userId).lean();
+
+      const query: any = {
+        status: "pending",
+      };
+      if (user?.orgId) {
+        query.$or = [{ userId }, { orgId: user.orgId }];
+      } else {
+        query.userId = userId;
+      }
+
+      const pendingSubs = await Subscription.find(query);
+
+      for (const pendingSub of pendingSubs) {
+        if (pendingSub.razorpaySubscriptionId) {
+          try {
+            await SubscriptionService.cancelSubscription(
+              pendingSub.razorpaySubscriptionId,
+            );
+          } catch (err) {
+            console.warn(
+              `[CancelPending] Failed to cancel subscription ${pendingSub.razorpaySubscriptionId} on Razorpay:`,
+              err
+            );
+          }
+        }
+        pendingSub.status = "cancelled";
+        await pendingSub.save();
+      }
+
+      res.json({ success: true, message: "Pending payment request cancelled successfully." });
+    },
+  );
+
   /** Process subscription webhook event logic */
   static async processWebhookEvent(event: any) {
     const subId = event?.payload?.subscription?.entity?.id || event?.payload?.invoice?.entity?.subscription_id || event?.payload?.payment?.entity?.subscription_id;

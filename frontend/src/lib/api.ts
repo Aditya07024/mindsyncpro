@@ -449,6 +449,7 @@ const API = {
     upgrade: (data: { tier: string }) =>
       apiCall<any>("/api/subscription/upgrade", { method: "POST", body: JSON.stringify(data) }),
     cancel: () => apiCall<any>("/api/subscription/cancel", { method: "POST" }),
+    cancelPending: () => apiCall<any>("/api/subscription/cancel-pending", { method: "POST" }),
     demoActivate: () => apiCall<any>("/api/subscription/demo-activate", { method: "POST" }),
     sync: () => apiCall<any>("/api/subscription/sync", { method: "POST" }),
     admin: { all: () => apiCall<any>("/api/subscription/admin/all") },

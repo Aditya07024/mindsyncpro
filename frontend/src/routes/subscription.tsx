@@ -148,6 +148,16 @@ function SubscriptionPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const cancelPendingMutation = useMutation({
+    mutationFn: () => API.subscription.cancelPending(),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["subscription"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success(data?.message || "Pending payment request cancelled.");
+    },
+    onError: (e: Error) => toast.error(e.message || "Failed to cancel pending request"),
+  });
+
   const demoActivateMutation = useMutation({
     mutationFn: () => API.subscription.demoActivate(),
     onSuccess: (data) => {
@@ -240,7 +250,7 @@ function SubscriptionPage() {
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <Button 
                 onClick={() => syncMutation.mutate()} 
-                disabled={syncMutation.isPending}
+                disabled={syncMutation.isPending || cancelPendingMutation.isPending}
                 className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {syncMutation.isPending ? (
@@ -252,16 +262,21 @@ function SubscriptionPage() {
                   "Sync Payment Status"
                 )}
               </Button>
-              {/* {import.meta.env.DEV && (
-                <Button 
-                  onClick={() => demoActivateMutation.mutate()} 
-                  disabled={demoActivateMutation.isPending}
-                  variant="outline"
-                  className="border-amber-300 text-amber-700 hover:bg-amber-100 font-semibold py-2 px-5 rounded-xl text-xs flex items-center justify-center gap-2"
-                >
-                  {demoActivateMutation.isPending ? "Bypassing..." : "Demo: Bypass Payment"}
-                </Button>
-              )} */}
+              <Button 
+                variant="outline"
+                onClick={() => cancelPendingMutation.mutate()} 
+                disabled={cancelPendingMutation.isPending || syncMutation.isPending}
+                className="border-amber-300 text-amber-900 hover:bg-amber-100/80 font-semibold py-2 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5"
+              >
+                {cancelPendingMutation.isPending ? (
+                  <>
+                    <Loader className="size-3.5 animate-spin" />
+                    Cancelling...
+                  </>
+                ) : (
+                  "Cancel Request"
+                )}
+              </Button>
             </div>
           </div>
         )}

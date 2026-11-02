@@ -8,6 +8,7 @@ const router = Router();
 router.get("/", requireAuth, SubscriptionController.getMySubscription);
 router.post("/upgrade", requireAuth, SubscriptionController.upgradeSubscription);
 router.post("/cancel", requireAuth, SubscriptionController.cancelSubscription);
+router.post("/cancel-pending", requireAuth, SubscriptionController.cancelPendingSubscription);
 router.post("/demo-activate", requireAuth, SubscriptionController.demoActivate);
 router.post("/sync", requireAuth, SubscriptionController.syncSubscription);
 
