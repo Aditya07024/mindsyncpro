@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -80,19 +81,49 @@ function ErrorComponent({
 }) {
   console.error(error);
   const router = useRouter();
+
+  const isChunkError =
+    error?.message?.includes("Importing a module script failed") ||
+    error?.message?.includes("Failed to fetch dynamically imported module") ||
+    error?.message?.includes("error loading dynamically imported module") ||
+    error?.message?.includes("Load failed");
+
+  useEffect(() => {
+    if (isChunkError) {
+      const key = "mmtf_chunk_reload_ts";
+      const now = Date.now();
+      const last = parseInt(sessionStorage.getItem(key) || "0", 10);
+      if (now - last > 10000) {
+        sessionStorage.setItem(key, String(now));
+        window.location.reload();
+      }
+    }
+  }, [isChunkError]);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">This page didn't load</h1>
+        <h1 className="text-xl font-semibold">
+          {isChunkError ? "App Update Available" : "This page didn't load"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {isChunkError
+            ? "A newer version of the website is available or your connection was interrupted. Please refresh to load the latest version."
+            : "An unexpected error occurred while loading this page."}
+        </p>
         <div className="mt-6 flex gap-2 justify-center">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              if (isChunkError) {
+                window.location.reload();
+              } else {
+                router.invalidate();
+                reset();
+              }
             }}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer"
           >
-            Try again
+            {isChunkError ? "Refresh Page" : "Try again"}
           </button>
           <a
             href="/"

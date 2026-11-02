@@ -1016,7 +1016,8 @@ function SuperAdminDashboard() {
 
             {!usersLoading && (
               <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-700 bg-slate-900/40 text-slate-400 font-semibold text-xs uppercase tracking-wider">
                       <th className="text-left px-5 py-3.5">User</th>
@@ -1088,6 +1089,7 @@ function SuperAdminDashboard() {
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
           </div>
@@ -1116,161 +1118,229 @@ function SuperAdminDashboard() {
         {/* THERAPISTS TAB */}
         {tab === 'therapists' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-white flex-1">Counsellor Verification</h2>
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-white">Counsellor Verification</h2>
+                <p className="text-xs text-slate-400">Review credentials, manage subscriptions, and verify or revoke practitioners</p>
+              </div>
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                <input value={search} onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name"
-                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name..."
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                />
               </div>
             </div>
 
             {therapistsLoading && (
               <div className="space-y-3">
-                {[1,2,3].map(i => <div key={i} className="h-20 rounded-xl bg-slate-800 animate-pulse" />)}
+                {[1,2,3].map(i => <div key={i} className="h-28 rounded-2xl bg-slate-800 animate-pulse" />)}
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {filteredTherapists.map((t) => {
                 const isVerified = t.verified === true || t.verificationStatus === 'verified';
                 return (
-                  <div key={t.id} className="bg-slate-800 rounded-xl border border-slate-700 p-4 flex items-center gap-4">
-                    <div className="grid size-12 place-items-center rounded-full bg-slate-700 text-white font-bold text-lg flex-shrink-0">
-                      {t.name?.charAt(0) ?? '?'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-white">{t.name}</p>
-                        {t.orgName && (
-                          <span className="text-[10px] bg-blue-900/60 text-blue-300 border border-blue-700 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                            🏢 {t.orgName}
-                          </span>
-                        )}
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${isVerified ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-700' : 'bg-rose-900/60 text-rose-300 border border-rose-700'}`}>
-                          {isVerified ? '✓ Verified Practitioner' : '✕ Verification Revoked / Pending'}
-                        </span>
-                        {t.subscription ? (
-                          <span
-                            className="text-[10px] bg-violet-950 text-violet-300 border border-violet-700 px-2.5 py-0.5 rounded-full font-semibold flex items-center gap-1.5 shadow-xs"
-                            title={`Plan: ${t.subscription.plan}${t.subscription.endDate ? ` (Expires: ${new Date(t.subscription.endDate).toLocaleDateString('en-IN')})` : ''} • Method: ${t.subscription.paymentMethod || 'online'}`}
-                          >
-                            <span className="size-1.5 rounded-full bg-violet-400 animate-pulse" />
-                            👑 {t.subscription.plan}
-                            {t.subscription.endDate && (
-                              <span className="text-violet-400 font-normal">
-                                (exp {new Date(t.subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
+                  <div key={t.id} className="bg-slate-800/90 rounded-2xl border border-slate-700/80 p-4 sm:p-5 flex flex-col gap-4 shadow-sm">
+                    {/* Top Bar: Doctor Avatar, Name, Badges, Rating */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="grid size-11 sm:size-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-600/30 to-violet-900/40 text-violet-300 font-bold text-base sm:text-lg border border-violet-500/30 shrink-0">
+                          {t.name?.charAt(0) ?? '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-white text-base leading-tight truncate sm:whitespace-normal">{t.name}</h3>
+                            {t.orgName && (
+                              <span className="text-[10px] bg-blue-900/60 text-blue-300 border border-blue-700 px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+                                🏢 {t.orgName}
                               </span>
                             )}
-                            <span className="text-[9px] bg-violet-850 text-violet-200 px-1 rounded uppercase font-bold">
-                              {t.subscription.paymentMethod?.startsWith('offline') ? 'Offline' : 'Online'}
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${isVerified ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-700' : 'bg-rose-900/60 text-rose-300 border border-rose-700'}`}>
+                              {isVerified ? '✓ Verified Practitioner' : '✕ Verification Revoked / Pending'}
                             </span>
-                          </span>
-                        ) : (
-                          <span className="text-[10px] bg-slate-900 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-medium">
-                            Free Tier
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {(t.specializations ?? []).slice(0, 3).map((s: string) => (
-                          <span key={s} className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{s}</span>
-                        ))}
-                      </div>
-                      {/* Expanded details */}
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-700 pt-3">
-                        <div>
-                          <p className="text-xs text-slate-400 font-semibold mb-1">Professional Details</p>
-                          <p className="text-xs text-slate-300">Tier: {t.experienceCategory}</p>
-                          <p className="text-xs text-slate-300">Fee: ₹{t.sessionFee}</p>
-                          <p className="text-xs text-slate-300">Qual: {t.qualification}</p>
-                          <p className="text-xs text-slate-300 line-clamp-1" title={t.clinicDetails}>Clinic: {t.clinicDetails}</p>
-                          {t.email && <p className="text-xs text-slate-300">Email: {t.email}</p>}
-                          {t.website && (
-                            <p className="text-xs text-slate-300 line-clamp-1" title={t.website}>
-                              Website: <a href={t.website} target="_blank" rel="noreferrer" className="text-violet-450 text-violet-400 hover:underline">{t.website} ↗</a>
-                            </p>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-400 font-semibold mb-1">Earnings & Payouts</p>
-                          <p className="text-xs text-slate-300">Total Bookings: {t.totalBookings}</p>
-                          <p className="text-xs text-slate-300">Sessions Given: {t.sessionsGiven}</p>
-                          <p className="text-xs text-slate-300">Gross Earned (100%): ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
-                          <p className="text-xs text-red-400">Platform Fee (30%): -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
-                          <p className="text-xs font-bold text-emerald-450 text-emerald-400">Payout Due (70%): ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
-                          <div className="flex flex-col gap-1 mt-1">
-                            {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
-                            {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">License ↗</a>}
-                            {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" className="text-[11px] text-violet-400 hover:underline">Government ID ↗</a>}
-                            {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" className="text-[11px] text-blue-400 hover:underline">Intro Video ↗</a>}
+                            {t.subscription ? (
+                              <span
+                                className="text-[10px] bg-violet-950 text-violet-300 border border-violet-700 px-2.5 py-0.5 rounded-full font-semibold inline-flex items-center gap-1.5 shadow-xs"
+                                title={`Plan: ${t.subscription.plan}${t.subscription.endDate ? ` (Expires: ${new Date(t.subscription.endDate).toLocaleDateString('en-IN')})` : ''} • Method: ${t.subscription.paymentMethod || 'online'}`}
+                              >
+                                <span className="size-1.5 rounded-full bg-violet-400 animate-pulse" />
+                                👑 {t.subscription.plan}
+                                {t.subscription.endDate && (
+                                  <span className="text-violet-400 font-normal">
+                                    (exp {new Date(t.subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })})
+                                  </span>
+                                )}
+                                <span className="text-[9px] bg-violet-850 text-violet-200 px-1 rounded uppercase font-bold">
+                                  {t.subscription.paymentMethod?.startsWith('offline') ? 'Offline' : 'Online'}
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] bg-slate-900 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-medium">
+                                Free Tier
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-400 font-semibold mb-1">Payment Details</p>
-                          {t.paymentDetails?.upiId ? (
-                            <p className="text-xs text-slate-300 font-mono">UPI: {t.paymentDetails.upiId}</p>
-                          ) : null}
-                          {t.paymentDetails?.bankDetails ? (
-                            <p className="text-xs text-slate-300 whitespace-pre-wrap font-mono leading-tight">{t.paymentDetails.bankDetails}</p>
-                          ) : null}
-                          {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
-                            <p className="text-xs text-slate-500 italic">No banking info added</p>
-                          ) : null}
-                        </div>
+                      </div>
+
+                      {/* Rating badge */}
+                      <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-700 shrink-0">
+                        <Star className="size-3.5 text-amber-400 fill-amber-400" />
+                        <span className="text-xs font-bold text-slate-200">{t.rating ? t.rating.toFixed(1) : '—'}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end justify-between gap-4 flex-shrink-0 self-stretch">
-                      <div className="flex items-center gap-1">
-                        <Star className="size-3 text-amber-400 fill-amber-400" />
-                        <span className="text-xs text-slate-300">{t.rating?.toFixed(1) ?? '—'}</span>
+
+                    {/* Specialization Tags */}
+                    {(t.specializations ?? []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {t.specializations.map((s: string) => (
+                          <span key={s} className="text-[10px] sm:text-[11px] bg-slate-700/80 text-slate-300 px-2 py-0.5 rounded-md border border-slate-600/50">
+                            {s}
+                          </span>
+                        ))}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setAssignSubModal({ open: true, therapist: t })}
-                          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
-                            t.subscription
-                              ? 'text-violet-300 bg-violet-900/30 border-violet-700 hover:bg-violet-900/50'
-                              : 'text-amber-300 bg-amber-900/30 border-amber-700 hover:bg-amber-900/50'
-                          }`}
-                          title={t.subscription ? 'Manage or extend subscription' : 'Assign offline subscription'}
-                        >
-                          <ShieldCheck className="size-3.5" />
-                          <span>{t.subscription ? 'Manage Sub' : 'Assign Sub'}</span>
-                        </button>
-                        <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
-                          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
-                            isVerified 
-                              ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
-                              : 'text-green-400 bg-green-900/30 border-green-800 hover:bg-green-900/50'
-                          }`}
-                          disabled={isVerified}>
-                          <CheckCircle className="size-3.5" /> Verify
-                        </button>
-                        <button onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
-                          className={`flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border ${
-                            !isVerified 
-                              ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
-                              : 'text-red-400 bg-red-900/30 border-red-800 hover:bg-red-900/50'
-                          }`}
-                          disabled={!isVerified}>
-                          <XCircle className="size-3.5" /> Revoke
-                        </button>
-                        {t.orgId && (
-                          <button
-                            onClick={() => {
-                              if (confirm(`Revoke organization affiliation for Dr. ${t.name}?`)) {
-                                revokeTherapistOrgMutation.mutate({ therapistId: t.id });
-                              }
-                            }}
-                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg transition border text-amber-400 bg-amber-900/30 border-amber-800 hover:bg-amber-900/50"
-                            title="Unlink therapist from organization"
-                          >
-                            <Building2 className="size-3.5" /> Unlink Org
-                          </button>
+                    )}
+
+                    {/* Expanded details grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 bg-slate-900/60 rounded-xl p-3.5 sm:p-4 border border-slate-750 text-xs">
+                      {/* Professional Details */}
+                      <div className="space-y-1">
+                        <p className="text-[11px] text-violet-400 font-bold uppercase tracking-wider mb-1.5">Professional Details</p>
+                        <p className="text-slate-300"><span className="text-slate-400 font-medium">Tier:</span> {t.experienceCategory || 'N/A'}</p>
+                        <p className="text-slate-300"><span className="text-slate-400 font-medium">Fee:</span> ₹{t.sessionFee ?? 0}</p>
+                        <p className="text-slate-300"><span className="text-slate-400 font-medium">Qual:</span> {t.qualification || 'N/A'}</p>
+                        {t.clinicDetails && (
+                          <p className="text-slate-300 line-clamp-1" title={t.clinicDetails}>
+                            <span className="text-slate-400 font-medium">Clinic:</span> {t.clinicDetails}
+                          </p>
+                        )}
+                        {t.email && (
+                          <p className="text-slate-300 truncate" title={t.email}>
+                            <span className="text-slate-400 font-medium">Email:</span> {t.email}
+                          </p>
+                        )}
+                        {t.website && (
+                          <p className="text-slate-300 truncate" title={t.website}>
+                            <span className="text-slate-400 font-medium">Website:</span>{' '}
+                            <a href={t.website} target="_blank" rel="noreferrer" className="text-violet-400 hover:underline">
+                              {t.website.replace(/^https?:\/\//, '')} ↗
+                            </a>
+                          </p>
                         )}
                       </div>
+
+                      {/* Earnings & Payouts */}
+                      <div className="space-y-1 border-t md:border-t-0 md:border-l md:border-slate-800 pt-3 md:pt-0 md:pl-3.5">
+                        <p className="text-[11px] text-emerald-400 font-bold uppercase tracking-wider mb-1.5">Earnings & Payouts</p>
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                          <p className="text-slate-300"><span className="text-slate-400 font-medium">Bookings:</span> {t.totalBookings ?? 0}</p>
+                          <p className="text-slate-300"><span className="text-slate-400 font-medium">Sessions:</span> {t.sessionsGiven ?? 0}</p>
+                          <p className="text-slate-300 col-span-2">
+                            <span className="text-slate-400 font-medium">Gross Earned (100%):</span> ₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}
+                          </p>
+                          <p className="text-rose-400 col-span-2">
+                            <span className="text-slate-400 font-medium">Platform Fee (30%):</span> -₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}
+                          </p>
+                          <p className="font-bold text-emerald-400 col-span-2">
+                            <span className="text-slate-400 font-medium">Payout Due (70%):</span> ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}
+                          </p>
+                        </div>
+                        
+                        {/* Documents */}
+                        {(t.documents?.degreeUrl || t.documents?.licenseUrl || t.documents?.governmentIdUrl || t.introVideoUrl) && (
+                          <div className="flex flex-wrap gap-2 pt-1.5 border-t border-slate-800">
+                            {t.documents?.degreeUrl && <a href={t.documents.degreeUrl} target="_blank" rel="noreferrer" className="text-[11px] text-violet-400 hover:underline">Degree / Certificate ↗</a>}
+                            {t.documents?.licenseUrl && <a href={t.documents.licenseUrl} target="_blank" rel="noreferrer" className="text-[11px] text-violet-400 hover:underline">License ↗</a>}
+                            {t.documents?.governmentIdUrl && <a href={t.documents.governmentIdUrl} target="_blank" rel="noreferrer" className="text-[11px] text-violet-400 hover:underline">Government ID ↗</a>}
+                            {t.introVideoUrl && <a href={t.introVideoUrl} target="_blank" rel="noreferrer" className="text-[11px] text-blue-400 hover:underline">Intro Video ↗</a>}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Payment Details */}
+                      <div className="space-y-1 border-t md:border-t-0 md:border-l md:border-slate-800 pt-3 md:pt-0 md:pl-3.5">
+                        <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider mb-1.5">Payment Details</p>
+                        {t.paymentDetails?.upiId ? (
+                          <p className="text-slate-300 font-mono text-xs break-all">
+                            <span className="text-slate-400 font-sans font-medium">UPI:</span> {t.paymentDetails.upiId}
+                          </p>
+                        ) : null}
+                        {t.paymentDetails?.bankDetails ? (
+                          <p className="text-slate-300 font-mono text-[11px] whitespace-pre-wrap leading-tight break-all">
+                            {t.paymentDetails.bankDetails}
+                          </p>
+                        ) : null}
+                        {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails && (
+                          <p className="text-slate-500 italic text-xs">No banking info added</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons Bar */}
+                    <div className="flex items-center justify-end gap-2 flex-wrap pt-2 border-t border-slate-700/60">
+                      <button
+                        type="button"
+                        onClick={() => setAssignSubModal({ open: true, therapist: t })}
+                        className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition border flex-1 sm:flex-initial cursor-pointer active:scale-95 ${
+                          t.subscription
+                            ? 'text-violet-300 bg-violet-900/30 border-violet-700 hover:bg-violet-900/50'
+                            : 'text-amber-300 bg-amber-900/30 border-amber-700 hover:bg-amber-900/50'
+                        }`}
+                        title={t.subscription ? 'Manage or extend subscription' : 'Assign offline subscription'}
+                      >
+                        <ShieldCheck className="size-3.5 shrink-0" />
+                        <span>{t.subscription ? 'Manage Sub' : 'Assign Sub'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: true, type: 'therapist' })}
+                        className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition border flex-1 sm:flex-initial cursor-pointer active:scale-95 ${
+                          isVerified 
+                            ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
+                            : 'text-emerald-400 bg-emerald-900/30 border-emerald-800 hover:bg-emerald-900/50'
+                        }`}
+                        disabled={isVerified}
+                      >
+                        <CheckCircle className="size-3.5 shrink-0" />
+                        <span>Verify</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setVerifyModal({ open: true, id: t.id, name: t.name, verify: false, type: 'therapist' })}
+                        className={`flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition border flex-1 sm:flex-initial cursor-pointer active:scale-95 ${
+                          !isVerified 
+                            ? 'text-slate-500 bg-slate-800/40 border-slate-700 cursor-not-allowed opacity-55' 
+                            : 'text-rose-400 bg-rose-900/30 border-rose-800 hover:bg-rose-900/50'
+                        }`}
+                        disabled={!isVerified}
+                      >
+                        <XCircle className="size-3.5 shrink-0" />
+                        <span>Revoke</span>
+                      </button>
+
+                      {t.orgId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Revoke organization affiliation for Dr. ${t.name}?`)) {
+                              revokeTherapistOrgMutation.mutate({ therapistId: t.id });
+                            }
+                          }}
+                          className="flex items-center justify-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl transition border text-amber-400 bg-amber-900/30 border-amber-800 hover:bg-amber-900/50 flex-1 sm:flex-initial cursor-pointer active:scale-95"
+                          title="Unlink therapist from organization"
+                        >
+                          <Building2 className="size-3.5 shrink-0" />
+                          <span>Unlink Org</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1285,101 +1355,129 @@ function SuperAdminDashboard() {
         {/* ORGANIZATIONS TAB */}
         {tab === 'organizations' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-white flex-1">Organization Verification</h2>
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-white">Organization Verification</h2>
+                <p className="text-xs text-slate-400">Review institutions, corporate partners, and access permissions</p>
+              </div>
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                <input value={search} onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name…"
-                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name..."
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                />
               </div>
             </div>
 
             {orgsLoading && (
               <div className="space-y-3">
-                {[1,2].map(i => <div key={i} className="h-20 rounded-xl bg-slate-800 animate-pulse" />)}
+                {[1,2].map(i => <div key={i} className="h-28 rounded-2xl bg-slate-800 animate-pulse" />)}
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {filteredOrgs.map((o) => (
-                <div key={o.id} className="bg-slate-800 rounded-xl border border-slate-700 p-4 flex items-center gap-4">
-                  <div className="grid size-12 place-items-center rounded-xl bg-slate-700 text-white font-bold text-lg flex-shrink-0">
-                    <Building2 className="size-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white">{o.name}</p>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide">{o.type}</p>
-                    
-                    {/* Expanded details */}
-                    <div className="mt-4 grid grid-cols-2 gap-4 border-t border-slate-700 pt-3">
-                      <div>
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Contact Details</p>
-                        <p className="text-xs text-slate-300">Rep: {o.contactPerson}</p>
-                        <p className="text-xs text-slate-300">Email: {o.officialEmail}</p>
-                        <p className="text-xs text-slate-300">Phone: {o.phone}</p>
-                        <p className="text-xs text-slate-300 line-clamp-1">Address: {o.address}</p>
+                <div key={o.id} className="bg-slate-800/90 rounded-2xl border border-slate-700/80 p-4 sm:p-5 flex flex-col gap-4 shadow-sm">
+                  {/* Org Top Bar */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="grid size-11 sm:size-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-600/30 to-blue-900/40 text-blue-300 font-bold text-base sm:text-lg border border-blue-500/30 shrink-0">
+                        <Building2 className="size-5 sm:size-6" />
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-400 font-semibold mb-1">Verification Links</p>
-                        <div className="flex flex-col gap-1">
-                          {o.documents?.registrationUrl && <a href={o.documents.registrationUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Registration / Trust ↗</a>}
-                          {o.documents?.accreditationUrl && <a href={o.documents.accreditationUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Accreditation ↗</a>}
-                          {o.documents?.governmentIdUrl && <a href={o.documents.governmentIdUrl} target="_blank" className="text-xs text-violet-400 hover:underline">Government ID ↗</a>}
-                          {o.website && <a href={o.website} target="_blank" className="text-xs text-blue-400 hover:underline">Website ↗</a>}
-                        </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-white text-base leading-tight truncate sm:whitespace-normal">{o.name}</h3>
+                        <p className="text-xs text-slate-400 uppercase tracking-wide mt-0.5">{o.type}</p>
+                      </div>
+                    </div>
+                    {o.verificationStatus === 'pending' ? (
+                      <span className="text-xs text-amber-400 bg-amber-900/30 border border-amber-800/60 px-2.5 py-1 rounded-lg font-semibold shrink-0">Pending</span>
+                    ) : (
+                      <span className="text-xs text-emerald-400 bg-emerald-900/30 border border-emerald-800/60 px-2.5 py-1 rounded-lg font-semibold shrink-0">Verified</span>
+                    )}
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-900/60 rounded-xl p-3.5 sm:p-4 border border-slate-750 text-xs">
+                    <div className="space-y-1">
+                      <p className="text-[11px] text-blue-400 font-bold uppercase tracking-wider mb-1.5">Contact Details</p>
+                      <p className="text-slate-300"><span className="text-slate-400 font-medium">Rep:</span> {o.contactPerson || 'N/A'}</p>
+                      <p className="text-slate-300"><span className="text-slate-400 font-medium">Email:</span> {o.officialEmail || 'N/A'}</p>
+                      <p className="text-slate-300"><span className="text-slate-400 font-medium">Phone:</span> {o.phone || 'N/A'}</p>
+                      <p className="text-slate-300 line-clamp-1"><span className="text-slate-400 font-medium">Address:</span> {o.address || 'N/A'}</p>
+                    </div>
+                    <div className="space-y-1 border-t sm:border-t-0 sm:border-l sm:border-slate-800 pt-3 sm:pt-0 sm:pl-3.5">
+                      <p className="text-[11px] text-violet-400 font-bold uppercase tracking-wider mb-1.5">Verification Links</p>
+                      <div className="flex flex-col gap-1">
+                        {o.documents?.registrationUrl && <a href={o.documents.registrationUrl} target="_blank" rel="noreferrer" className="text-xs text-violet-400 hover:underline">Registration / Trust ↗</a>}
+                        {o.documents?.accreditationUrl && <a href={o.documents.accreditationUrl} target="_blank" rel="noreferrer" className="text-xs text-violet-400 hover:underline">Accreditation ↗</a>}
+                        {o.documents?.governmentIdUrl && <a href={o.documents.governmentIdUrl} target="_blank" rel="noreferrer" className="text-xs text-violet-400 hover:underline">Government ID ↗</a>}
+                        {o.website && <a href={o.website} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline">Website ↗</a>}
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end justify-between gap-4 flex-shrink-0 self-stretch">
-                    <div className="flex flex-col items-end gap-2">
-                      {o.verificationStatus === 'pending' && <span className="text-xs text-amber-400 bg-amber-900/30 px-2 py-1 rounded">Pending</span>}
+
+                  {/* Actions Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-700/60">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button 
+                        type="button"
                         onClick={() => setToggleModal({ open: true, id: o.id, name: o.name, allow: !o.allowExternalTherapists })}
-                        className={`text-[10px] font-bold px-2 py-1 rounded transition-colors ${
+                        className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border cursor-pointer ${
                           o.allowExternalTherapists 
-                            ? 'bg-violet-900/40 text-violet-300 border border-violet-800 hover:bg-violet-900/60' 
-                            : 'bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600'
+                            ? 'bg-violet-900/40 text-violet-300 border-violet-800 hover:bg-violet-900/60' 
+                            : 'bg-slate-750 text-slate-400 border border-slate-700 hover:bg-slate-700'
                         }`}
                       >
                         {o.allowExternalTherapists ? 'External Therapists: ON' : 'External Therapists: OFF'}
                       </button>
                       <button 
+                        type="button"
                         onClick={() => toggleCoverTherapyMutation.mutate({ id: o.id, coverMemberTherapyFees: !o.coverMemberTherapyFees })}
-                        className={`text-[10px] font-bold px-2 py-1 rounded transition-colors ${
+                        className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors border cursor-pointer ${
                           o.coverMemberTherapyFees 
-                            ? 'bg-blue-900/40 text-blue-300 border border-blue-800 hover:bg-blue-900/60' 
-                            : 'bg-slate-700 text-slate-400 border border-slate-600 hover:bg-slate-600'
+                            ? 'bg-blue-900/40 text-blue-300 border-blue-800 hover:bg-blue-900/60' 
+                            : 'bg-slate-750 text-slate-400 border border-slate-700 hover:bg-slate-700'
                         }`}
                       >
                         {o.coverMemberTherapyFees ? 'Member Fee: COVERED' : 'Member Fee: CHARGED'}
                       </button>
                       <button 
+                        type="button"
                         onClick={() => setSelectedOrgForUsers(o)}
-                        className="text-[10px] font-bold px-2 py-1 rounded bg-teal-900/40 text-teal-300 border border-teal-700 hover:bg-teal-900/60 transition-colors flex items-center gap-1"
+                        className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-teal-900/40 text-teal-300 border border-teal-700 hover:bg-teal-900/60 transition-colors flex items-center gap-1 cursor-pointer"
                       >
-                        <Users className="size-3" /> View Linked Users & Whitelist
+                        <Users className="size-3.5" /> View Linked Users & Whitelist
                       </button>
                     </div>
+
                     <div className="flex items-center gap-2">
                       {o.verificationStatus === 'verified' ? (
-                        <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: false, type: 'org' })}
-                          className="flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-900/30 border border-amber-800 px-3 py-1.5 rounded-lg hover:bg-amber-900/50 transition">
+                        <button
+                          type="button"
+                          onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: false, type: 'org' })}
+                          className="flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-900/30 border border-amber-800 px-3 py-1.5 rounded-lg hover:bg-amber-900/50 transition cursor-pointer"
+                        >
                           <XCircle className="size-3.5" /> Revoke
                         </button>
                       ) : (
-                        <button onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: true, type: 'org' })}
-                          className="flex items-center gap-1 text-xs font-semibold text-green-400 bg-green-900/30 border border-green-800 px-3 py-1.5 rounded-lg hover:bg-green-900/50 transition">
+                        <button
+                          type="button"
+                          onClick={() => setVerifyModal({ open: true, id: o.id, name: o.name, verify: true, type: 'org' })}
+                          className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-900/30 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-900/50 transition cursor-pointer"
+                        >
                           <CheckCircle className="size-3.5" /> Verify
                         </button>
                       )}
                       <button 
+                        type="button"
                         onClick={() => {
                           if (confirm(`Are you sure you want to permanently delete organization "${o.name}" and purge all its associated records?`)) {
                             deleteOrgMutation.mutate(o.id);
                           }
                         }}
-                        className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-950/80 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/80 transition"
+                        className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-950/80 border border-red-800 px-3 py-1.5 rounded-lg hover:bg-red-900/80 transition cursor-pointer"
                         title="Permanently Delete Organization"
                       >
                         <Trash2 className="size-3.5" /> Delete
@@ -1416,7 +1514,8 @@ function SuperAdminDashboard() {
               </button>
             </div>
             <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-700">
                     <th className="text-left px-4 py-3 text-slate-400 font-semibold">User / Counsellor</th>
@@ -1480,6 +1579,7 @@ function SuperAdminDashboard() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         )}
@@ -1719,29 +1819,29 @@ function SuperAdminDashboard() {
                       {/* Therapist summary row */}
                       <button
                         onClick={() => setExpandedTherapistId(isExpanded ? null : t.id)}
-                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-750 transition text-left"
+                        className="w-full flex flex-col md:flex-row md:items-center justify-between p-4 sm:px-5 sm:py-4 hover:bg-slate-750 transition text-left gap-3"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="grid size-10 place-items-center rounded-xl bg-slate-700 text-slate-200 font-bold text-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="grid size-10 place-items-center rounded-xl bg-slate-700 text-slate-200 font-bold text-sm shrink-0">
                             {t.name?.charAt(0) ?? 'T'}
                           </div>
-                          <div>
-                            <p className="font-bold text-white">{t.name}</p>
-                            <p className="text-xs text-slate-400">{t.email || 'No email'} · {t.sessionsGiven} paid sessions</p>
+                          <div className="min-w-0">
+                            <p className="font-bold text-white truncate">{t.name}</p>
+                            <p className="text-xs text-slate-400 truncate">{t.email || 'No email'} · {t.sessionsGiven} paid sessions</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 text-right">
+                        <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 sm:gap-6 text-right w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-700/60">
                           <div>
-                            <p className="text-xs text-slate-500">Gross</p>
-                            <p className="font-bold text-white">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">Gross</p>
+                            <p className="font-bold text-white text-xs sm:text-sm">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-slate-500">Platform (30%)</p>
-                            <p className="font-medium text-red-400">-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">Platform (30%)</p>
+                            <p className="font-medium text-red-400 text-xs sm:text-sm">-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-slate-500">Payout (70%)</p>
-                            <p className="font-bold text-emerald-400">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] text-slate-500 uppercase font-semibold">Payout (70%)</p>
+                            <p className="font-bold text-emerald-400 text-xs sm:text-sm">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</p>
                           </div>
                           {(t.totalPayout ?? 0) > 0 && (
                             <button
@@ -1756,7 +1856,7 @@ function SuperAdminDashboard() {
                               <Banknote className="size-3.5" /> Mark Paid
                             </button>
                           )}
-                          <span className="text-slate-500 text-xs">{isExpanded ? '▲' : '▼'} {bookings.length} bookings</span>
+                          <span className="text-slate-400 text-xs font-semibold">{isExpanded ? '▲' : '▼'} {bookings.length}</span>
                         </div>
                       </button>
 
@@ -1766,7 +1866,8 @@ function SuperAdminDashboard() {
                           {bookings.length === 0 ? (
                             <p className="text-slate-500 text-xs px-5 py-3">No bookings yet.</p>
                           ) : (
-                            <table className="w-full text-xs text-left">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-xs text-left">
                               <thead>
                                 <tr className="bg-slate-900/60 text-slate-500 uppercase tracking-wider">
                                   <th className="px-5 py-2">Booking ID</th>
@@ -1813,6 +1914,7 @@ function SuperAdminDashboard() {
                                 </tr>
                               </tfoot>
                             </table>
+                            </div>
                           )}
                         </div>
                       )}
