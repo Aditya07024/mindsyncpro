@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, FileText, Video, CheckCircle, ArrowRight, CreditCard } from 'lucide-react';
+import { User, FileText, Video, CheckCircle, ArrowRight, CreditCard, ArrowLeft, Sparkles } from 'lucide-react';
 import API from '@/lib/api';
 import { IntroVideoPlayer } from '@/components/IntroVideoPlayer';
 
@@ -13,13 +13,15 @@ export const Route = createFileRoute('/therapist/onboarding')({
 function TherapistOnboarding() {
   const nav = useNavigate();
   const { isLoaded, isSignedIn } = useAuth();
+  const { user: clerkUser } = useUser();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [verifiedOrgs, setVerifiedOrgs] = useState<any[]>([]);
+  const [isAutoFilled, setIsAutoFilled] = useState(false);
 
   useEffect(() => {
-    API.org.verifiedOrgs().then(res => setVerifiedOrgs(res.organizations)).catch(console.error);
+    API.org.verifiedOrgs().then(res => setVerifiedOrgs(res.organizations || [])).catch(console.error);
   }, []);
 
   const [formData, setFormData] = useState({
@@ -40,7 +42,24 @@ function TherapistOnboarding() {
     bankDetails: '',
   });
 
-  // Check if they are already verified or pending
+  // Pre-fill from Clerk when clerkUser is loaded
+  useEffect(() => {
+    if (clerkUser) {
+      const clerkFullName = clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
+      const clerkEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+      setFormData((prev) => {
+        const next = { ...prev };
+        if (!next.fullName && clerkFullName) next.fullName = clerkFullName;
+        if (!next.email && clerkEmail) next.email = clerkEmail;
+        return next;
+      });
+      if (clerkFullName || clerkEmail) {
+        setIsAutoFilled(true);
+      }
+    }
+  }, [clerkUser]);
+
+  // Check if they are already verified or pending, and auto-fill details from existing profile
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) {
@@ -48,14 +67,74 @@ function TherapistOnboarding() {
       return;
     }
     API.auth.me().then((me: any) => {
-      const status = me?.therapistProfile?.verificationStatus;
+      const profile = me?.therapistProfile;
+      const status = profile?.verificationStatus;
+
+      // Extract experience category if numerical
+      let expCategory = profile?.experienceCategory || '';
+      if (!expCategory && profile?.experienceYears !== undefined && profile?.experienceYears !== null) {
+        const yrs = Number(profile.experienceYears);
+        if (yrs < 5) expCategory = 'less than 5 yr';
+        else if (yrs <= 10) expCategory = '5 to 10 yr';
+        else if (yrs <= 15) expCategory = '10 to 15 yr';
+        else expCategory = 'more than 15 yr';
+      }
+
+      // Convert specializations to comma separated string if array
+      let specStr = '';
+      if (Array.isArray(profile?.specializations)) {
+        specStr = profile.specializations.join(', ');
+      } else if (typeof profile?.specializations === 'string') {
+        specStr = profile.specializations;
+      }
+
+      // Clinic / Organization
+      let orgVal = '';
+      if (me?.orgId) {
+        orgVal = typeof me.orgId === 'object' ? (me.orgId._id || me.orgId.id) : me.orgId;
+      } else if (profile?.clinicDetails || (profile && !me?.orgId)) {
+        orgVal = 'independent';
+      }
+
+      const clerkFullName = clerkUser?.fullName || (clerkUser?.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : '');
+      const clerkEmail = clerkUser?.primaryEmailAddress?.emailAddress || '';
+
+      const filledFullName = profile?.name || me?.fullName || clerkFullName || '';
+      const filledEmail = profile?.email || me?.email || clerkEmail || '';
+      const filledLocation = me?.location || profile?.location || '';
+
+      setFormData((prev) => ({
+        fullName: prev.fullName || filledFullName,
+        email: prev.email || filledEmail,
+        website: prev.website || profile?.website || '',
+        qualification: prev.qualification || profile?.qualification || '',
+        experienceCategory: prev.experienceCategory || expCategory,
+        specializations: prev.specializations || specStr,
+        clinicDetails: prev.clinicDetails || profile?.clinicDetails || '',
+        degreeUrl: prev.degreeUrl || profile?.documents?.degreeUrl || '',
+        licenseUrl: prev.licenseUrl || profile?.documents?.licenseUrl || '',
+        governmentIdUrl: prev.governmentIdUrl || profile?.documents?.governmentIdUrl || '',
+        introVideoUrl: prev.introVideoUrl || profile?.introVideoUrl || '',
+        orgId: prev.orgId || orgVal,
+        location: prev.location || filledLocation,
+        upiId: prev.upiId || profile?.paymentDetails?.upiId || '',
+        bankDetails: prev.bankDetails || profile?.paymentDetails?.bankDetails || '',
+      }));
+
+      if (filledFullName || filledEmail || profile?.qualification || filledLocation) {
+        setIsAutoFilled(true);
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const isEditRequested = urlParams.get('edit') === 'true';
+
       if (status === 'verified') {
         nav({ to: '/therapist/dashboard', replace: true });
-      } else if (status === 'pending') {
+      } else if (status === 'pending' && !isEditRequested) {
         setStep(5); // Show success/pending screen
       }
     }).catch(() => {});
-  }, [isLoaded, isSignedIn, nav]);
+  }, [isLoaded, isSignedIn, clerkUser, nav]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -83,12 +162,20 @@ function TherapistOnboarding() {
 
   return (
     <div className="min-h-screen bg-canvas-gradient pb-20">
-      <header className="px-6 py-5">
-        <h1 className="font-display text-2xl font-bold text-primary-deep">Counsellor Verification</h1>
-        <p className="text-sm text-muted-foreground mt-1">Join the mymindtherapyfriend network</p>
+      <header className="px-6 py-5 max-w-md mx-auto flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-primary-deep">Counsellor Verification</h1>
+          <p className="text-sm text-muted-foreground mt-1">Join the mymindtherapyfriend network</p>
+        </div>
+        <button
+          onClick={() => nav({ to: '/therapist/dashboard' })}
+          className="text-xs font-semibold text-muted-foreground hover:text-primary transition flex items-center gap-1 cursor-pointer bg-white/70 border border-border/60 px-3 py-1.5 rounded-xl shadow-2xs"
+        >
+          <ArrowLeft className="size-3.5" /> Dashboard
+        </button>
       </header>
 
-      <main className="mx-auto max-w-md px-6 mt-6">
+      <main className="mx-auto max-w-md px-6 mt-4">
         {/* Step Indicator */}
         <div className="flex items-center justify-between mb-8 relative">
           <div className="absolute left-0 top-1/2 w-full h-0.5 bg-border -z-10 -translate-y-1/2" />
@@ -112,7 +199,14 @@ function TherapistOnboarding() {
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="space-y-4 rounded-3xl bg-card p-6 shadow-sm border border-border">
-                <h2 className="font-display text-xl font-bold text-primary-deep">Professional Details</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="font-display text-xl font-bold text-primary-deep">Professional Details</h2>
+                  {isAutoFilled && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-200/80 px-2.5 py-1 rounded-full shadow-2xs">
+                      <Sparkles className="size-3 text-teal-600" /> Auto-filled
+                    </span>
+                  )}
+                </div>
                 
                 <div>
                   <label className="text-xs font-semibold text-muted-foreground uppercase">Full Name</label>
@@ -367,9 +461,20 @@ function TherapistOnboarding() {
                 <div className="bg-primary-soft/50 border border-primary/20 p-4 rounded-xl mt-4">
                   <p className="text-sm text-primary-deep font-medium">You will be notified once your profile is marked as <strong>"Verified"</strong>. Until then, your dashboard access is locked.</p>
                 </div>
-                <button onClick={() => nav({ to: '/sign-in' })} className="mt-4 text-sm font-semibold text-primary hover:underline">
-                  Return to Home
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-muted transition cursor-pointer"
+                  >
+                    Review / Edit Details
+                  </button>
+                  <button
+                    onClick={() => nav({ to: '/therapist/dashboard' })}
+                    className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition cursor-pointer"
+                  >
+                    Return to Dashboard
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}

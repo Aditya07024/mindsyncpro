@@ -22,11 +22,13 @@ function serializeUser(user: any) {
     streak: user.streak,
     onboarding: user.onboarding,
     orgId: user.orgId,
+    location: user.location || "",
+    email: user.email || user.therapistProfile?.email || "",
     referralCode: user.referralCode || `MMTP-${user._id.toString().slice(-6).toUpperCase()}`,
     referredBy: user.referredBy || "",
     referralPromptProcessed: user.referralPromptProcessed ?? false,
     freeSessionCredits: user.freeSessionCredits || 0,
-    therapistProfile: user.role === "therapist" ? user.therapistProfile : undefined,
+    therapistProfile: user.therapistProfile,
   };
 }
 
