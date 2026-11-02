@@ -57,6 +57,8 @@ import {
 const API_BASE = import.meta.env.VITE_API_URL || "https://api.mymindtherapyfriend.com";
 const ENTERPRISE_EMAIL ="contact@mymindtherapyfriend.com";
 const WHATSAPP_COMMUNITY_URL = "https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL";
+const WHATSAPP_CHAT_NUMBER = "+91 7889714018";
+const WHATSAPP_CHAT_URL = "https://wa.me/917889714018";
 const LINKEDIN_PROFILE_URL = "https://www.linkedin.com/in/mymindtherapyfriend-mmtf-752866434/";
 const REDDIT_PROFILE_URL = "https://www.reddit.com/user/MyMindTherapyFriend/";
 
@@ -1490,6 +1492,18 @@ function Landing() {
                 <WhatsAppIcon className="size-5 text-emerald-600" />
                 Join WhatsApp Group
               </a>
+
+              <a
+                href={WHATSAPP_CHAT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-track="whatsapp_click"
+                className="inline-flex items-center gap-2.5 rounded-full border border-white/40 bg-white/15 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/25 hover:scale-105 active:scale-95"
+              >
+                <WhatsAppIcon className="size-4 text-emerald-200" />
+                Chat on WhatsApp ({WHATSAPP_CHAT_NUMBER})
+              </a>
+
               <span className="text-xs text-emerald-200 font-medium">Safe • Supportive • 24/7 Available</span>
             </div>
           </div>
@@ -1574,6 +1588,9 @@ function Landing() {
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Book Verified Counsellor</Link>
               <a href={WHATSAPP_COMMUNITY_URL} data-track="whatsapp_click" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 font-medium transition text-left flex items-center gap-1.5 text-emerald-700">
                 <WhatsAppIcon className="size-4" /> WhatsApp Community
+              </a>
+              <a href={WHATSAPP_CHAT_URL} data-track="whatsapp_click" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 font-medium transition text-left flex items-center gap-1.5 text-emerald-700">
+                <WhatsAppIcon className="size-4" /> WhatsApp Chat ({WHATSAPP_CHAT_NUMBER})
               </a>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Employee Mental Wellness</Link>
               <Link to="/sign-in" className="hover:text-teal-600 transition text-left">Free Crisis Support India</Link>

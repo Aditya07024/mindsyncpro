@@ -31,6 +31,7 @@ import {
   Target,
   Layers,
   BadgeCheck,
+  MessageSquare,
 } from "lucide-react";
 import API from "@/lib/api";
 import { AppShell } from "@/components/AppShell";
@@ -1570,6 +1571,15 @@ function RichProgramDetailShowcase({
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+              <a
+                href="https://wa.me/917889714018?text=Hi%2C%20I%20have%20a%20query%20regarding%20the%20training%20cohorts."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 px-4 py-2.5 transition"
+              >
+                <MessageSquare className="size-4 text-emerald-600" />
+                WhatsApp: +91 7889714018
+              </a>
               {prog.contactEmail && (
                 <a
                   href={`mailto:${prog.contactEmail}`}

@@ -81,18 +81,28 @@ function SupportPage() {
               <div className="size-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-6">
                 <MessageSquare className="size-7" />
               </div>
-              <h3 className="text-xl font-bold mb-2 text-slate-900">WhatsApp Community</h3>
-              <p className="text-emerald-700 font-bold mb-1">Join MyMindFriend Community</p>
-              <p className="text-sm text-slate-600">Connect, share & find support with peers 24/7</p>
+              <h3 className="text-xl font-bold mb-2 text-slate-900">WhatsApp Chat & Group</h3>
+              <p className="text-emerald-700 font-bold mb-1">+91 7889714018</p>
+              <p className="text-sm text-slate-600">Chat with support or join peer community group</p>
             </div>
-            <a
-              href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition shadow-md shadow-emerald-600/20"
-            >
-              Join WhatsApp Group
-            </a>
+            <div className="mt-6 flex flex-col sm:flex-row gap-2.5 w-full justify-center">
+              <a
+                href="https://wa.me/917889714018"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-full text-xs transition shadow-md shadow-emerald-600/20"
+              >
+                Chat on WhatsApp
+              </a>
+              <a
+                href="https://chat.whatsapp.com/CbMYSt00R0KDEdiEsp9IeL"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-50 font-semibold px-4 py-2.5 rounded-full text-xs transition"
+              >
+                Join Group
+              </a>
+            </div>
           </div>
 
           <div className="bg-rose-50/40 p-8 rounded-3xl border border-rose-200 shadow-sm text-center flex flex-col justify-between items-center">

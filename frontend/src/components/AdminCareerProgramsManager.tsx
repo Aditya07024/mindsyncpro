@@ -2529,7 +2529,7 @@ export const AdminCareerProgramsManager: React.FC<{ activeSubTab?: "selection" |
                             onChange={(e) =>
                               setProgramForm({ ...programForm, contactPhone: e.target.value })
                             }
-                            placeholder="+91 ..."
+                            placeholder="+91 7889714018"
                             className="w-full rounded-xl bg-slate-800 border border-slate-700 p-2.5 text-white"
                           />
                         </div>
