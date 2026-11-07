@@ -238,9 +238,10 @@ export async function sendPaymentConfirmedToTherapist(opts: {
     hour12: true,
   });
 
+  const isFree = fee === 0;
   const body = `
-    <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0f172a;">Payment Received! 💰</h2>
-    <p style="margin:0 0 24px;color:#64748b;font-size:15px;">Great news, Dr. ${therapistName}! Your client has paid for the upcoming session.</p>
+    <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#0f172a;">${isFree ? "New Confirmed Session! 📅" : "Payment Received! 💰"}</h2>
+    <p style="margin:0 0 24px;color:#64748b;font-size:15px;">Great news, Dr. ${therapistName}! Your client has ${isFree ? "confirmed" : "paid for and confirmed"} the upcoming session.</p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:24px;">
       <tr><td style="padding:20px 24px;">
@@ -253,6 +254,12 @@ export async function sendPaymentConfirmedToTherapist(opts: {
             <span style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;">Session Slot</span>
             <p style="margin:3px 0 0;font-size:15px;font-weight:700;color:#0f172a;">📅 ${formattedSlot} IST</p>
           </td></tr>
+          ${isFree ? `
+          <tr><td style="padding:6px 0;">
+            <span style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;">Session Fee</span>
+            <p style="margin:3px 0 0;font-size:15px;font-weight:700;color:#0d9488;">Free / Sponsored Session (100% Covered)</p>
+          </td></tr>
+          ` : `
           <tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;">
             <span style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;">Gross Fee</span>
             <p style="margin:3px 0 0;font-size:15px;font-weight:700;color:#0f172a;">₹${fee.toLocaleString("en-IN")}</p>
@@ -265,6 +272,7 @@ export async function sendPaymentConfirmedToTherapist(opts: {
             <span style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;">Your Payout (70%)</span>
             <p style="margin:3px 0 0;font-size:18px;font-weight:800;color:#0d9488;">₹${netPayout.toLocaleString("en-IN")}</p>
           </td></tr>
+          `}
         </table>
       </td></tr>
     </table>
@@ -286,8 +294,10 @@ export async function sendPaymentConfirmedToTherapist(opts: {
   await transporter.sendMail({
     from: FROM,
     to: therapistEmail,
-    subject: `💰 Payment Confirmed — Session with ${seekerName} · MyMindTherapyFriend`,
-    html: htmlWrap("Payment Confirmed", body),
+    subject: isFree
+      ? `📅 Confirmed Session — ${seekerName} · MyMindTherapyFriend`
+      : `💰 Payment Confirmed — Session with ${seekerName} · MyMindTherapyFriend`,
+    html: htmlWrap(isFree ? "Session Confirmed" : "Payment Confirmed", body),
   });
 }
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import { useQuery } from '@tanstack/react-query';
-import { Calendar as CalendarIcon, Clock, CreditCard, ChevronRight } from 'lucide-react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Calendar as CalendarIcon, Clock, CreditCard, ChevronRight, Gift, Sparkles, Check } from 'lucide-react-native';
 import API from '../../lib/api';
 
 import { Theme } from '../../theme';
@@ -29,10 +29,44 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
   const therapist: TherapistData = route.params?.therapist;
 
   const therapistId = therapist?.id || therapist?._id;
+  const queryClient = useQueryClient();
 
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [loading, setLoading] = useState(false);
+  const [referralInput, setReferralInput] = useState('');
+
+  // Fetch user profile to check free session credits & referral status
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => API.user.profile(),
+    retry: false,
+  });
+  const dbUser = profileData?.user;
+
+  // Apply Referral Code Mutation
+  const applyRefMutation = useMutation({
+    mutationFn: (code: string) => API.auth.applyReferral({ referralCode: code }),
+    onSuccess: (data: any) => {
+      Alert.alert('🎁 1 Free Session Unlocked!', data?.message || 'Referral applied! Your session is now completely free.');
+      setReferralInput('');
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['userDashboardStats'] });
+      queryClient.invalidateQueries({ queryKey: ['therapist', therapistId] });
+    },
+    onError: (err: any) => {
+      Alert.alert('Referral Error', err?.message || 'Invalid referral code. Please check and try again.');
+    },
+  });
+
+  const rawFee = therapist?.sessionFee ?? therapist?.hourlyRate ?? 1500;
+  const hasFreeCredit =
+    (dbUser?.freeSessionCredits || 0) > 0 ||
+    therapist?.pricingInfo?.hasFreeSessionCredit ||
+    therapist?.pricingInfo?.isOrgCovered ||
+    therapist?.sessionFee === 0;
+
+  const totalFee = hasFreeCredit ? 0 : rawFee;
 
   // Generate next 7 days for the calendar date picker
   const [days, setDays] = useState<{ dateStr: string; dayName: string; dayNum: number }[]>([]);
@@ -111,11 +145,17 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
           throw new Error("Could not retrieve secure booking ID.");
         }
 
-        // Check if booking is free (covered by organization benefits or active plan)
+        // Check if booking is free (covered by referral credits, organization benefits, or active plan)
         const isFreeOrPaid = bookingRes?.booking?.payment?.paid || bookingRes?.booking?.payment?.amount === 0 || bookingRes?.booking?.status === 'confirmed';
         if (isFreeOrPaid) {
           setLoading(false);
-          Alert.alert('Session Confirmed!', 'Your booking has been confirmed under your organization benefits.');
+          queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+          queryClient.invalidateQueries({ queryKey: ['userDashboardStats'] });
+          queryClient.invalidateQueries({ queryKey: ['userBookings'] });
+          const successMsg = bookingRes?.booking?.usedFreeReferralCredit || hasFreeCredit
+            ? 'Your booking has been confirmed for free using your referral session credit! 🎉'
+            : 'Your booking has been confirmed successfully under your benefits.';
+          Alert.alert('Session Confirmed! 🎉', successMsg);
           navigation.replace('UserTabs', { screen: 'Bookings' });
           return;
         }
@@ -249,20 +289,74 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
         )}
       </View>
 
+      {/* Referral / Promo Code Section if not free yet and has not applied referral code */}
+      {!hasFreeCredit && !dbUser?.referredBy && (
+        <View style={styles.promoCard}>
+          <View style={styles.promoHeader}>
+            <Gift size={16} color={Theme.colors.primary} />
+            <Text style={styles.promoTitle}>Have a Referral Code?</Text>
+          </View>
+          <View style={styles.promoRow}>
+            <TextInput
+              style={styles.promoInput}
+              placeholder="e.g. MMTP-1A2B"
+              placeholderTextColor="#94A3B8"
+              value={referralInput}
+              onChangeText={setReferralInput}
+              autoCapitalize="characters"
+            />
+            <TouchableOpacity
+              style={[styles.promoApplyBtn, (!referralInput.trim() || applyRefMutation.isPending) && styles.promoBtnDisabled]}
+              disabled={!referralInput.trim() || applyRefMutation.isPending}
+              onPress={() => applyRefMutation.mutate(referralInput.trim())}
+            >
+              {applyRefMutation.isPending ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Text style={styles.promoApplyText}>Apply</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.promoHint}>Enter a friend's code to make this session 100% free!</Text>
+        </View>
+      )}
+
+      {/* Free Session Active Banner */}
+      {hasFreeCredit && (
+        <View style={styles.freeCreditBanner}>
+          <View style={styles.freeCreditHeader}>
+            <Gift size={18} color="#047857" />
+            <Text style={styles.freeCreditTitle}>Free Session Credit Active 🎉</Text>
+          </View>
+          <Text style={styles.freeCreditSub}>
+            Your referral/membership credit has been applied. This session will be 100% free!
+          </Text>
+        </View>
+      )}
+
       {/* Total panel */}
       <View style={styles.totalCard}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Hourly Session</Text>
-          <Text style={styles.totalPrice}>₹{therapist?.sessionFee || therapist?.hourlyRate || 1500}</Text>
+          <Text style={styles.totalPrice}>₹{rawFee}</Text>
         </View>
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Platform Fee</Text>
-          <Text style={styles.totalPrice}>₹0</Text>
-        </View>
+        {hasFreeCredit ? (
+          <View style={styles.totalRow}>
+            <Text style={[styles.totalLabel, { color: '#047857', fontWeight: '600' }]}>Free Session Credit (100% OFF)</Text>
+            <Text style={[styles.totalPrice, { color: '#047857', fontWeight: '700' }]}>-₹{rawFee}</Text>
+          </View>
+        ) : (
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Platform Fee</Text>
+            <Text style={styles.totalPrice}>₹0</Text>
+          </View>
+        )}
         <View style={styles.divider} />
         <View style={styles.totalRow}>
           <Text style={styles.totalLabelBold}>Total Amount</Text>
-          <Text style={styles.totalPriceBold}>₹{therapist?.sessionFee || therapist?.hourlyRate || 1500}</Text>
+          <Text style={[styles.totalPriceBold, hasFreeCredit && { color: '#047857' }]}>
+            {hasFreeCredit ? '₹0 (FREE)' : `₹${totalFee}`}
+          </Text>
         </View>
       </View>
 
@@ -270,14 +364,20 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
       <TouchableOpacity 
         onPress={handleBooking} 
         disabled={loading}
-        style={styles.payBtn}
+        style={[styles.payBtn, hasFreeCredit && { backgroundColor: '#059669' }]}
       >
         {loading ? (
           <ActivityIndicator color="#FFF" />
         ) : (
           <>
-            <CreditCard size={18} color="#FFF" />
-            <Text style={styles.payBtnText}>Proceed to Checkout</Text>
+            {hasFreeCredit ? (
+              <Check size={18} color="#FFF" />
+            ) : (
+              <CreditCard size={18} color="#FFF" />
+            )}
+            <Text style={styles.payBtnText}>
+              {hasFreeCredit ? 'Confirm Free Session' : 'Proceed to Checkout'}
+            </Text>
             <ChevronRight size={16} color="#FFF" />
           </>
         )}
@@ -375,6 +475,83 @@ const styles = StyleSheet.create({
     fontFamily: Theme.fonts.bodyMedium,
     fontSize: 12,
     color: Theme.colors.onSurface,
+  },
+  promoCard: {
+    backgroundColor: '#F0FDFA',
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    gap: 8,
+  },
+  promoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  promoTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 14,
+    color: '#0F766E',
+  },
+  promoRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  promoInput: {
+    flex: 1,
+    height: 42,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#99F6E4',
+    borderRadius: Theme.radius.lg,
+    paddingHorizontal: 12,
+    fontSize: 13,
+    fontFamily: Theme.fonts.bodyMedium,
+    color: '#0F172A',
+  },
+  promoApplyBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 16,
+    borderRadius: Theme.radius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  promoBtnDisabled: {
+    opacity: 0.5,
+  },
+  promoApplyText: {
+    color: '#FFF',
+    fontFamily: Theme.fonts.bodyBold,
+    fontSize: 13,
+  },
+  promoHint: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 11,
+    color: '#0D9488',
+  },
+  freeCreditBanner: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: Theme.radius.xl,
+    padding: Theme.spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#6EE7B7',
+    gap: 4,
+  },
+  freeCreditHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  freeCreditTitle: {
+    fontFamily: Theme.fonts.headline,
+    fontSize: 15,
+    color: '#065F46',
+  },
+  freeCreditSub: {
+    fontFamily: Theme.fonts.body,
+    fontSize: 12,
+    color: '#047857',
   },
   totalCard: {
     backgroundColor: '#FFF',

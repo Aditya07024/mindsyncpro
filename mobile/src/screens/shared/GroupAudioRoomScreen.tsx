@@ -48,7 +48,7 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  const recordingRef = useRef<any>(null);
   const webStreamRef = useRef<any>(null);
 
   // Fetch token & room information
@@ -238,20 +238,29 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
 
   const requestMicPermissionManually = async () => {
     try {
-      const { status } = await Audio.requestPermissionsAsync();
+      if (!ExpoAudio) {
+        Alert.alert('Audio Ready', 'Live audio is active in web mode.');
+        setHasMicPermission(true);
+        return;
+      }
+      const { status } = await ExpoAudio.requestPermissionsAsync();
       if (status === 'granted') {
         setHasMicPermission(true);
         setPermissionError(null);
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-          shouldDuckAndroid: true,
-        });
-        const { recording } = await Audio.Recording.createAsync(
-          Audio.RecordingOptionsPresets.HIGH_QUALITY
-        );
-        recordingRef.current = recording;
+        if (ExpoAudio.setAudioModeAsync) {
+          await ExpoAudio.setAudioModeAsync({
+            allowsRecordingIOS: true,
+            playsInSilentModeIOS: true,
+            staysActiveInBackground: true,
+            shouldDuckAndroid: true,
+          });
+        }
+        if (ExpoAudio.Recording?.createAsync) {
+          const { recording } = await ExpoAudio.Recording.createAsync(
+            ExpoAudio.RecordingOptionsPresets.HIGH_QUALITY
+          );
+          recordingRef.current = recording;
+        }
         Alert.alert('Permission Granted ✅', 'Your microphone is now ready for live audio sessions!');
       } else {
         Alert.alert('Permission Denied', 'Please grant microphone access in device settings.');

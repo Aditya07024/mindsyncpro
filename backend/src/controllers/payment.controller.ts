@@ -111,13 +111,14 @@ function sendCallbackResponse(
 async function notifyBookingConfirmation(booking: any) {
   try {
     const { NotificationController } = await import("@/controllers/notification.controller");
-    const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
-    const seeker = await User.findById(booking.userId).select("fullName").lean();
+    const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
+    const therapist = await User.findById(booking.therapistId).select("therapistProfile email fullName").lean();
+    const seeker = await User.findById(booking.userId).select("fullName email").lean();
     const seekerName = seeker?.fullName || "A Seeker";
-    const therapistName = therapist?.therapistProfile?.name || "Therapist";
+    const therapistName = therapist?.therapistProfile?.name || therapist?.fullName || "Counsellor";
     const formattedSlot = new Date(booking.slot).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-    // Notify Seeker
+    // Notify Seeker (in-app)
     await NotificationController.createNotification(
       booking.userId.toString(),
       "Booking Confirmed",
@@ -126,7 +127,7 @@ async function notifyBookingConfirmation(booking: any) {
       { bookingId: booking._id.toString(), therapistId: booking.therapistId.toString() }
     );
 
-    // Notify Therapist
+    // Notify Therapist (in-app)
     await NotificationController.createNotification(
       booking.therapistId.toString(),
       "New Session Booked & Confirmed",
@@ -134,6 +135,19 @@ async function notifyBookingConfirmation(booking: any) {
       "booking",
       { bookingId: booking._id.toString(), seekerId: booking.userId.toString() }
     );
+
+    // Send Confirmed Booking Email to Therapist
+    const therapistEmail = therapist?.therapistProfile?.email || therapist?.email;
+    if (therapistEmail) {
+      sendPaymentConfirmedToTherapist({
+        therapistEmail,
+        therapistName,
+        seekerName,
+        slot: new Date(booking.slot),
+        fee: booking.payment?.amount || 0,
+        bookingId: booking._id.toString(),
+      }).catch((err) => console.error("[Email] Therapist confirmation email failed:", err));
+    }
   } catch (err) {
     console.error("Non-fatal booking confirmation notification error:", err);
   }

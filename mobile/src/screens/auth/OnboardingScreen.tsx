@@ -95,7 +95,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
         studentIdCardUrl,
         schoolCollegeName: finalSchoolName,
         phone,
-        referralCode,
+        referralCode: referralCode.trim().toUpperCase() || undefined,
       });
 
       if (firstName.trim()) {

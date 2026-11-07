@@ -18,7 +18,7 @@ import API from './api';
 export const isExpoGo =
   Constants.appOwnership === 'expo' ||
   Constants.executionEnvironment === ExecutionEnvironment.StoreClient ||
-  Constants.executionEnvironment === 'storeClient';
+  (Constants.executionEnvironment as any) === 'storeClient';
 
 // Safely lazy-load `expo-notifications` ONLY when NOT running in Expo Go
 let Notifications: typeof import('expo-notifications') | null = null;

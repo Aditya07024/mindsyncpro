@@ -124,7 +124,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   });
 
   const streak = userStats?.streak ?? 0;
-  const freeSessionCredits = userStats?.freeSessionCredits ?? 0;
+  const freeSessionCredits = profileData?.user?.freeSessionCredits ?? userStats?.freeSessionCredits ?? 0;
   const tierRaw = profileData?.user?.tier || 'free';
   const tier =
     tierRaw === 'apna_therapist'

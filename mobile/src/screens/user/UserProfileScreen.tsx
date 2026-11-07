@@ -104,6 +104,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
       );
       setFriendCode('');
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['userDashboardStats'] });
       queryClient.invalidateQueries({ queryKey: ['authMe'] });
       refetchMe();
     },
@@ -291,8 +292,8 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
             <Text style={{ fontWeight: '700' }}>both of you earn 1 Free Session Credit.</Text>
           </Text>
 
-          {/* Apply Friend's Code (renders ONLY IF not processed yet) */}
-          {dbUser && dbUser.referralPromptProcessed === false && !dbUser.referredBy && (
+          {/* Apply Friend's Code (renders if not applied yet) */}
+          {dbUser && !dbUser.referredBy ? (
             <View style={styles.applySection}>
               <Text style={styles.inputLabel}>Have a Friend's Referral Code?</Text>
               <View style={styles.applyRow}>
@@ -320,7 +321,13 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
                 </TouchableOpacity>
               </View>
             </View>
-          )}
+          ) : dbUser?.referredBy ? (
+            <View style={{ marginTop: 14, padding: 12, backgroundColor: '#F0FDF4', borderRadius: 12, borderWidth: 1, borderColor: '#BBF7D0' }}>
+              <Text style={{ fontSize: 13, color: '#166534', fontWeight: '600' }}>
+                ✓ Referral code applied ({dbUser.referredBy}). You earned 1 Free Session Credit!
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Account Services & Plans */}

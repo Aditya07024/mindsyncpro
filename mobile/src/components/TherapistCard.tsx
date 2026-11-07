@@ -27,6 +27,7 @@ export interface TherapistData {
   state?: string;
   location?: string;
   sessionCount?: number;
+  pricingInfo?: any;
 }
 
 interface TherapistCardProps {

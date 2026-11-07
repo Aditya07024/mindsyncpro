@@ -126,11 +126,31 @@ export class BookingController {
         }
       }
 
+      // Check if user passed an inline referralCode
+      const inlineReferralCode = (req.body.referralCode || "").trim().toUpperCase();
+      if (!isOrgCovered && inlineReferralCode && seekerUser && !seekerUser.referredBy) {
+        if (!seekerUser.referralCode && seekerUser._id) {
+          seekerUser.referralCode = `MMTP-${seekerUser._id.toString().slice(-6).toUpperCase()}`;
+        }
+        if (inlineReferralCode !== seekerUser.referralCode) {
+          const referrer = await User.findOne({ referralCode: inlineReferralCode });
+          if (referrer && referrer._id.toString() !== seekerUser._id.toString()) {
+            seekerUser.referredBy = inlineReferralCode;
+            seekerUser.referralPromptProcessed = true;
+            seekerUser.freeSessionCredits = (seekerUser.freeSessionCredits || 0) + 1;
+            referrer.freeSessionCredits = (referrer.freeSessionCredits || 0) + 1;
+            await referrer.save();
+          }
+        }
+      }
+
       // Check if user has Referral Free Session Credits
-      if (!isOrgCovered && amount > 0 && seekerUser && seekerUser.freeSessionCredits > 0) {
+      let usedFreeReferralCredit = false;
+      if (!isOrgCovered && seekerUser && (seekerUser.freeSessionCredits || 0) > 0) {
         seekerUser.freeSessionCredits -= 1;
         await seekerUser.save();
         amount = 0;
+        usedFreeReferralCredit = true;
       }
 
       const isFree = amount === 0;
@@ -183,12 +203,12 @@ export class BookingController {
           );
 
           // Send EMAIL to therapist only if booking is free (confirmed immediately).
-          const therapistEmail = therapist.therapistProfile.email;
+          const therapistEmail = therapist.therapistProfile?.email || therapist.email;
           if (therapistEmail) {
             const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
             sendPaymentConfirmedToTherapist({
               therapistEmail,
-              therapistName: therapist.therapistProfile.name || "Therapist",
+              therapistName: therapist.therapistProfile?.name || therapist.fullName || "Counsellor",
               seekerName,
               slot: slotDate,
               fee: 0,
@@ -209,6 +229,9 @@ export class BookingController {
           slot: booking.slot,
           status: booking.status,
           amount: booking.payment?.amount ?? 0,
+          isFree,
+          usedFreeReferralCredit,
+          payment: booking.payment,
           videoRoomId: booking.videoRoomId,
         },
       });

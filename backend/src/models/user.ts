@@ -18,6 +18,7 @@ export interface IUser extends Document {
   clerkIds?: string[];       // Linked Clerk user IDs across Web & Mobile Clerk instances
   phoneHash: string;
   phoneMasked: string;
+  email?: string;
   fullName?: string;
   userType: UserType;
   studentIdCardUrl?: string;
@@ -110,6 +111,7 @@ const UserSchema = new Schema<IUser>(
     referralPromptProcessed: { type: Boolean, default: false },
     freeSessionCredits: { type: Number, default: 0 },
     fullName: { type: String },
+    email: { type: String, sparse: true, index: true },
     userType: {
       type: String,
       enum: ["school_student", "college_student", "regular"],

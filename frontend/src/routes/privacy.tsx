@@ -590,20 +590,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`}
             
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
+                <span className="bg-emerald-500/15 text-emerald-800 text-xs font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-emerald-500/30">
+                  Certified Compliant (Score: 96%)
+                </span>
                 <span className="bg-amber-500/20 text-amber-800 text-xs font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-amber-500/30">
-                  Certified Compliant
+                  DPDPA.COM Verified
                 </span>
                 <span className="text-slate-500 text-xs font-semibold">
-                  Registry Code: MSP-DPDPA-2023-993
+                  Date of Issue: 06 November 2026
                 </span>
               </div>
               <h2 className="font-display text-2xl font-black text-slate-900">
                 Digital Personal Data Protection Act (DPDPA) 2023
               </h2>
               <p className="text-slate-600 text-sm leading-relaxed">
-                MyMindTherapyFriend is fully certified and compliant with the DPDP Act 2023 of India. We uphold 
+                <strong>MY MIND THERAPY FRIEND PRIVATE LIMITED</strong> is certified and compliant with the DPDP Act 2023 of India (Score: 96%). We uphold 
                 the highest standards of data principal rights, secure consent management, and localize all data residency 
-                within India.
+                strictly within India.
               </p>
             </div>
           </div>
@@ -613,7 +616,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`}
               {[
                 { title: "Local Data Residency", desc: "All user databases reside strictly inside secure data centers in India." },
                 { title: "Consent Manager", desc: "Users have granular and revocable consent control over their personal records." },
-                { title: "Principal Rights", desc: "Full rights of access, correction, update, and complete erasure of personal data." }
+                { title: "Principal Rights", desc: "Full rights of access, correction, update, and complete erasure of personal data." },
+                { title: "Official Certification", desc: "Exam passed on 06 November 2026 with a 96% score via DPDPA.com." }
               ].map((f, i) => (
                 <div key={i} className="space-y-1">
                   <h4 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
@@ -627,17 +631,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`}
               ))}
             </div>
             
-            <div className="w-full md:w-64 flex-shrink-0">
+            <div className="w-full md:w-72 flex-shrink-0">
               <div className="group relative rounded-2xl overflow-hidden border border-slate-200 bg-white p-2 shadow-sm transition hover:shadow-md hover:border-amber-500/40">
-                <a href={dpdpaCertUrl} target="_blank" rel="noreferrer" className="block relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-100">
+                <a href={dpdpaCertUrl} target="_blank" rel="noreferrer" className="block relative aspect-[1024/725] rounded-xl overflow-hidden bg-white">
                   <img 
                     src={dpdpaCertUrl} 
-                    alt="DPDPA 2023 Certificate of Compliance" 
-                    className="size-full object-cover transition duration-300 group-hover:scale-105"
+                    alt="DPDPA 2023 Certificate of Completion - MY MIND THERAPY FRIEND PRIVATE LIMITED" 
+                    className="size-full object-contain transition duration-300 group-hover:scale-102"
                   />
                   <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                     <span className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow">
-                      View Certificate
+                      View Official Certificate ↗
                     </span>
                   </div>
                 </a>

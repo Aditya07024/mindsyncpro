@@ -64,9 +64,17 @@ export async function getEffectivePricingForUser(userId?: string) {
     }
   }
 
+  const hasFreeSessionCredit = !isOrgCovered && (seekerUser.freeSessionCredits || 0) > 0;
+  if (hasFreeSessionCredit) {
+    baseFee = 0;
+  }
+
   return {
     fee: baseFee,
+    regularFee: pricing.regularPersonFee,
     isOrgCovered,
+    hasFreeSessionCredit,
+    freeSessionCredits: seekerUser.freeSessionCredits || 0,
     feeCategory: seekerUser.userType || "regular",
     orgName,
     seekerUser,

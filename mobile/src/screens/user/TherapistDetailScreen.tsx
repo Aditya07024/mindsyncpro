@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { View, StyleSheet, Text, ScrollView, Image, TouchableOpacity, Modal, Dimensions, Linking, ActivityIndicator, Platform } from 'react-native';
-import { Star, ShieldCheck, Heart, Award, ArrowLeft, PlayCircle, X, Video as VideoIcon, ExternalLink } from 'lucide-react-native';
+import { Star, ShieldCheck, Heart, Award, ArrowLeft, PlayCircle, X, Video as VideoIcon, ExternalLink, Gift } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
 import { WebView } from 'react-native-webview';
+import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';
 import { IntroVideoPlayer } from '../../components/IntroVideoPlayer';
@@ -33,7 +35,7 @@ interface TherapistDetailScreenProps {
 export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ navigation, route }) => {
   const therapist: TherapistData = route.params?.therapist;
   const [videoError, setVideoError] = useState(false);
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
 
   if (!therapist) {
     return (
@@ -49,7 +51,21 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
       ? therapist.specializations.join(', ')
       : 'Clinical Psychology';
 
-  const hourlyRate = therapist.sessionFee || therapist.hourlyRate || 1500;
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => API.user.profile(),
+    retry: false,
+  });
+  const dbUser = profileData?.user;
+
+  const rawHourlyRate = therapist.sessionFee || therapist.hourlyRate || 1500;
+  const hasFreeCredit =
+    (dbUser?.freeSessionCredits || 0) > 0 ||
+    therapist?.pricingInfo?.hasFreeSessionCredit ||
+    therapist?.pricingInfo?.isOrgCovered ||
+    therapist?.sessionFee === 0;
+
+  const hourlyRate = hasFreeCredit ? 0 : rawHourlyRate;
   const experience = therapist.experience || therapist.experienceYears || 3;
 
   const hasVideo = !!therapist.introVideoUrl;
@@ -122,9 +138,11 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
             </View>
             <View style={styles.verticalDivider} />
             <View style={styles.statBox}>
-              <Heart size={18} color={Theme.colors.secondary} />
+              <Heart size={18} color={hasFreeCredit ? '#059669' : Theme.colors.secondary} />
               <Text style={styles.statLabel}>HOURLY RATE</Text>
-              <Text style={styles.statVal}>₹{hourlyRate}</Text>
+              <Text style={[styles.statVal, hasFreeCredit && { color: '#059669', fontSize: 13 }]}>
+                {hasFreeCredit ? '₹0 (Free Credit)' : `₹${hourlyRate}`}
+              </Text>
             </View>
           </View>
 
@@ -140,9 +158,11 @@ export const TherapistDetailScreen: React.FC<TherapistDetailScreenProps> = ({ na
         {/* Booking button */}
         <TouchableOpacity
           onPress={() => navigation.navigate('Booking', { therapist })}
-          style={styles.bookBtn}
+          style={[styles.bookBtn, hasFreeCredit && { backgroundColor: '#059669' }]}
         >
-          <Text style={styles.bookBtnText}>Book Secure Session (₹{hourlyRate})</Text>
+          <Text style={styles.bookBtnText}>
+            {hasFreeCredit ? '🎁 Book Free Session (1 Credit Available)' : `Book Secure Session (₹${hourlyRate})`}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </>

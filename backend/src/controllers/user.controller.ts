@@ -45,10 +45,21 @@ export class UserController {
   /** GET /user/profile — full profile data for the profile page */
   static profile = asyncHandler(async (req: AuthedRequest, res: Response) => {
     const user = await User.findById(req.user!.sub)
-      .select("role fullName language location emergencyContact therapistProfile phoneMasked tier")
+      .select("role fullName email language location emergencyContact therapistProfile phoneMasked tier userType studentIdVerificationStatus freeSessionCredits referralCode referredBy referralPromptProcessed")
       .lean();
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json({ user });
+
+    const safeReferralCode = user.referralCode || `MMTP-${user._id.toString().slice(-6).toUpperCase()}`;
+
+    res.json({
+      user: {
+        ...user,
+        referralCode: safeReferralCode,
+        freeSessionCredits: user.freeSessionCredits || 0,
+        referralPromptProcessed: user.referralPromptProcessed ?? false,
+        referredBy: user.referredBy || "",
+      }
+    });
   });
 
   /** GET /user/notifications — real notifications derived from DB activity */

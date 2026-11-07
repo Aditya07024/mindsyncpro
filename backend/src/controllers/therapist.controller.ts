@@ -24,11 +24,14 @@ export async function getEffectivePricingForUser(userId?: string) {
     };
   }
 
-  const seekerUser = await User.findById(userId).select("orgId phoneMasked userType");
+  const seekerUser = await User.findById(userId).select("orgId phoneMasked userType freeSessionCredits");
   if (!seekerUser) {
     return {
       fee: pricing.regularPersonFee,
+      regularFee: pricing.regularPersonFee,
       isOrgCovered: false,
+      hasFreeSessionCredit: false,
+      freeSessionCredits: 0,
       feeCategory: "regular",
       orgName: undefined,
     };
@@ -66,9 +69,17 @@ export async function getEffectivePricingForUser(userId?: string) {
     }
   }
 
+  const hasFreeSessionCredit = !isOrgCovered && (seekerUser.freeSessionCredits || 0) > 0;
+  if (hasFreeSessionCredit) {
+    baseFee = 0;
+  }
+
   return {
     fee: baseFee,
+    regularFee: pricing.regularPersonFee,
     isOrgCovered,
+    hasFreeSessionCredit,
+    freeSessionCredits: seekerUser.freeSessionCredits || 0,
     feeCategory: seekerUser.userType || "regular",
     orgName,
   };

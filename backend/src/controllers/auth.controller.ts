@@ -51,21 +51,21 @@ export class AuthController {
     const user = await User.findById(req.user!.sub);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (user.referralPromptProcessed) {
-      return res.status(400).json({ error: "Referral prompt has already been processed for this account." });
+    if (user.referredBy) {
+      return res.status(400).json({ error: "A referral code has already been applied to this account." });
     }
 
     if (skip || !referralCode || !referralCode.trim()) {
       user.referralPromptProcessed = true;
       await user.save();
-      return res.json({ success: true, message: "Referral code skipped.", user: serializeUser(user) });
+      return res.json({ success: true, message: "Referral prompt dismissed.", user: serializeUser(user) });
     }
 
     const cleanCode = referralCode.trim().toUpperCase();
 
-    if (!user.referralCode) {
-      const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-      user.referralCode = `MMTP-${randomStr}`;
+    if (!user.referralCode && user._id) {
+      const codeSuffix = user._id.toString().slice(-6).toUpperCase();
+      user.referralCode = `MMTP-${codeSuffix}`;
     }
 
     if (cleanCode === user.referralCode) {
@@ -73,7 +73,7 @@ export class AuthController {
     }
 
     const referrer = await User.findOne({ referralCode: cleanCode });
-    if (!referrer) {
+    if (!referrer || referrer._id.toString() === user._id.toString()) {
       return res.status(404).json({ error: "Invalid referral code. Please check and try again." });
     }
 
@@ -117,11 +117,16 @@ export class AuthController {
           user.studentIdVerificationStatus = "approved";
         }
 
-        if (referralCode && !user.referralPromptProcessed) {
+        if (!user.referralCode && user._id) {
+          const codeSuffix = user._id.toString().slice(-6).toUpperCase();
+          user.referralCode = `MMTP-${codeSuffix}`;
+        }
+
+        if (referralCode && !user.referredBy) {
           const cleanCode = referralCode.trim().toUpperCase();
           if (cleanCode !== user.referralCode) {
             const referrer = await User.findOne({ referralCode: cleanCode });
-            if (referrer) {
+            if (referrer && referrer._id.toString() !== user._id.toString()) {
               user.referredBy = cleanCode;
               user.freeSessionCredits = (user.freeSessionCredits || 0) + 1;
               referrer.freeSessionCredits = (referrer.freeSessionCredits || 0) + 1;
