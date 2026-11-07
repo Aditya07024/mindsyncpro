@@ -160,41 +160,41 @@ export class BookingController {
         const seekerName = seekerUser?.fullName || "A Seeker";
         const formattedSlot = slotDate.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-        // Seeker confirmation notification
+        // Seeker notification
         await NotificationController.createNotification(
           req.user!.sub,
           isFree ? "Booking Confirmed" : "Booking Reserved",
           isFree 
             ? `Your appointment with Dr. ${therapist.therapistProfile.name} is confirmed for ${formattedSlot}.`
-            : `Your appointment with Dr. ${therapist.therapistProfile.name} is reserved for ${formattedSlot}.`,
+            : `Your appointment with Dr. ${therapist.therapistProfile.name} is reserved for ${formattedSlot}. Please complete payment within 30 minutes to confirm.`,
           "booking",
           { bookingId: booking._id.toString(), therapistId }
         );
 
-        // Therapist notification alert
-        await NotificationController.createNotification(
-          therapistId,
-          isFree ? "New Session Booked & Confirmed" : "New Session Booked",
-          isFree 
-            ? `${seekerName} has booked and paid (Free Benefit) a session with you for ${formattedSlot}.`
-            : `${seekerName} has booked a counseling session with you for ${formattedSlot}.`,
-          "booking",
-          { bookingId: booking._id.toString(), seekerId: req.user!.sub }
-        );
+        // Therapist notification alert ONLY if session is confirmed immediately (free / org-covered)
+        // For paid sessions, notification will be sent upon successful payment verification.
+        if (isFree) {
+          await NotificationController.createNotification(
+            therapistId,
+            "New Session Booked & Confirmed",
+            `${seekerName} has booked and confirmed a session with you for ${formattedSlot}.`,
+            "booking",
+            { bookingId: booking._id.toString(), seekerId: req.user!.sub }
+          );
 
-        // Send EMAIL to therapist only if booking is free (confirmed immediately).
-        // For paid bookings, email will be sent after payment is confirmed.
-        const therapistEmail = therapist.therapistProfile.email;
-        if (therapistEmail && isFree) {
-          const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
-          sendPaymentConfirmedToTherapist({
-            therapistEmail,
-            therapistName: therapist.therapistProfile.name || "Therapist",
-            seekerName,
-            slot: slotDate,
-            fee: 0,
-            bookingId: booking._id.toString(),
-          }).catch(err => console.error("[Email] Free therapist booking email failed:", err));
+          // Send EMAIL to therapist only if booking is free (confirmed immediately).
+          const therapistEmail = therapist.therapistProfile.email;
+          if (therapistEmail) {
+            const { sendPaymentConfirmedToTherapist } = await import("@/services/email.service");
+            sendPaymentConfirmedToTherapist({
+              therapistEmail,
+              therapistName: therapist.therapistProfile.name || "Therapist",
+              seekerName,
+              slot: slotDate,
+              fee: 0,
+              bookingId: booking._id.toString(),
+            }).catch(err => console.error("[Email] Free therapist booking email failed:", err));
+          }
         }
 
       } catch (err) {
@@ -230,24 +230,28 @@ export class BookingController {
       if (booking.status === "completed")
         throw new AppError("Cannot cancel a completed session", 400);
 
+      const wasConfirmed = booking.status === "confirmed" || !!booking.payment?.paid;
+
       booking.status = "cancelled";
       await booking.save();
 
-      // Send live cancellation notifications
-      try {
-        const seekerName = (await User.findById(req.user!.sub).select("fullName"))?.fullName || "A Seeker";
-        const formattedSlot = new Date(booking.slot).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      // Send live cancellation notifications only if the session was confirmed
+      if (wasConfirmed) {
+        try {
+          const seekerName = (await User.findById(req.user!.sub).select("fullName"))?.fullName || "A Seeker";
+          const formattedSlot = new Date(booking.slot).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-        // Notify Therapist of cancellation
-        await NotificationController.createNotification(
-          booking.therapistId.toString(),
-          "Session Cancelled",
-          `${seekerName} has cancelled the session booked for ${formattedSlot}.`,
-          "booking",
-          { bookingId: booking._id.toString(), seekerId: req.user!.sub }
-        );
-      } catch (err) {
-        console.error("[Notifications] Failed sending cancellation alert:", err);
+          // Notify Therapist of cancellation
+          await NotificationController.createNotification(
+            booking.therapistId.toString(),
+            "Session Cancelled",
+            `${seekerName} has cancelled the session booked for ${formattedSlot}.`,
+            "booking",
+            { bookingId: booking._id.toString(), seekerId: req.user!.sub }
+          );
+        } catch (err) {
+          console.error("[Notifications] Failed sending cancellation alert:", err);
+        }
       }
 
       res.json({ message: "Booking cancelled successfully", bookingId });

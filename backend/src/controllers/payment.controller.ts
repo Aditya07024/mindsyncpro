@@ -108,6 +108,37 @@ function sendCallbackResponse(
   res.send(html);
 }
 
+async function notifyBookingConfirmation(booking: any) {
+  try {
+    const { NotificationController } = await import("@/controllers/notification.controller");
+    const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
+    const seeker = await User.findById(booking.userId).select("fullName").lean();
+    const seekerName = seeker?.fullName || "A Seeker";
+    const therapistName = therapist?.therapistProfile?.name || "Therapist";
+    const formattedSlot = new Date(booking.slot).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+    // Notify Seeker
+    await NotificationController.createNotification(
+      booking.userId.toString(),
+      "Booking Confirmed",
+      `Your appointment with Dr. ${therapistName} is confirmed for ${formattedSlot}.`,
+      "booking",
+      { bookingId: booking._id.toString(), therapistId: booking.therapistId.toString() }
+    );
+
+    // Notify Therapist
+    await NotificationController.createNotification(
+      booking.therapistId.toString(),
+      "New Session Booked & Confirmed",
+      `${seekerName} has booked and confirmed a session with you for ${formattedSlot}.`,
+      "booking",
+      { bookingId: booking._id.toString(), seekerId: booking.userId.toString() }
+    );
+  } catch (err) {
+    console.error("Non-fatal booking confirmation notification error:", err);
+  }
+}
+
 export class PaymentController {
   /**
    * Initiate a payment for a booking
@@ -219,6 +250,9 @@ export class PaymentController {
       booking.status = "confirmed";
       await booking.save();
 
+      // Send live booking confirmed in-app notifications
+      await notifyBookingConfirmation(booking);
+
       // Send payment-confirmed email to therapist
       try {
         const therapist = await User.findById(booking.therapistId).select("therapistProfile").lean();
@@ -269,6 +303,9 @@ export class PaymentController {
       booking.payment.paid = true;
       booking.status = "confirmed";
       await booking.save();
+
+      // Send live booking confirmed in-app notifications
+      await notifyBookingConfirmation(booking);
 
       // Send payment-confirmed email to therapist (demo mode)
       try {
@@ -456,6 +493,9 @@ export class PaymentController {
               booking.status = "confirmed";
               await booking.save();
 
+              // Send live booking confirmed in-app notifications
+              await notifyBookingConfirmation(booking);
+
               // Send payment-confirmed email to therapist
               try {
                 const therapist = await User.findById(booking.therapistId)
@@ -614,6 +654,9 @@ export class PaymentController {
           booking.payment.razorpayPaymentId = razorpay_payment_id;
           booking.status = "confirmed";
           await booking.save();
+
+          // Send live booking confirmed in-app notifications
+          await notifyBookingConfirmation(booking);
 
           // Send confirmation email to therapist
           try {
@@ -1008,6 +1051,9 @@ export class PaymentController {
       booking.payment.paid = true;
       booking.status = "confirmed";
       await booking.save();
+
+      // Send live booking confirmed in-app notifications
+      await notifyBookingConfirmation(booking);
 
       // Send email notifications
       try {

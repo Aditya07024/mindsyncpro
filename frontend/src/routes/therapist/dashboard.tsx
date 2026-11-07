@@ -459,10 +459,24 @@ function TherapistDashboard() {
     })
     .sort((a, b) => a.key.localeCompare(b.key));
 
+  const confirmedBookings = useMemo(() => {
+    return bookings.filter(
+      (b) => (b.status === 'confirmed' || b.status === 'completed') && (b.paid || b.fee === 0)
+    );
+  }, [bookings]);
+
   const today = new Date().toDateString();
-  const todayBookings = bookings.filter((b) => new Date(b.slot).toDateString() === today && b.status === 'confirmed');
-  const upcomingBookings = bookings.filter((b) => new Date(b.slot) > new Date() && b.status === 'confirmed')
-    .sort((a, b) => new Date(a.slot).getTime() - new Date(b.slot).getTime());
+  const todayBookings = useMemo(() => {
+    return confirmedBookings.filter(
+      (b) => new Date(b.slot).toDateString() === today && b.status === 'confirmed'
+    );
+  }, [confirmedBookings, today]);
+
+  const upcomingBookings = useMemo(() => {
+    return confirmedBookings
+      .filter((b) => new Date(b.slot) > new Date() && b.status === 'confirmed')
+      .sort((a, b) => new Date(a.slot).getTime() - new Date(b.slot).getTime());
+  }, [confirmedBookings]);
 
   const canJoin = (slot: string) => {
     const diff = new Date(slot).getTime() - Date.now();
@@ -505,7 +519,7 @@ function TherapistDashboard() {
   }, [calendarDate]);
 
   const hasBookingOnDate = (day: number) => {
-    return bookings.some((b) => {
+    return confirmedBookings.some((b) => {
       const d = new Date(b.slot);
       return (
         d.getFullYear() === calendarDate.getFullYear() &&
@@ -527,8 +541,8 @@ function TherapistDashboard() {
   const displayedBookings = useMemo(() => {
     if (scheduleFilter === 'today') return todayBookings;
     if (scheduleFilter === 'upcoming') return upcomingBookings;
-    return bookings;
-  }, [scheduleFilter, todayBookings, upcomingBookings, bookings]);
+    return confirmedBookings;
+  }, [scheduleFilter, todayBookings, upcomingBookings, confirmedBookings]);
 
   const isAvailabilityDirty = useMemo(() => {
     if (!savedAvailability) return false;
@@ -1132,7 +1146,7 @@ function TherapistDashboard() {
                             : 'text-slate-400 hover:text-slate-700'
                         }`}
                       >
-                        All ({bookings.length})
+                        All ({confirmedBookings.length})
                       </button>
                       <button
                         onClick={() => setScheduleFilter('today')}

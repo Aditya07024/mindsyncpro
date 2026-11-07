@@ -376,11 +376,20 @@ export class TherapistController {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    const validBookingFilter = {
+      therapistId: userId,
+      status: { $in: ["confirmed", "completed"] },
+      $or: [
+        { "payment.paid": true },
+        { "payment.amount": 0 },
+      ],
+    };
+
     const [totalBookings, monthBookings, completedAll, completedMonth] =
       await Promise.all([
-        TherapistBooking.countDocuments({ therapistId: userId }),
+        TherapistBooking.countDocuments(validBookingFilter),
         TherapistBooking.countDocuments({
-          therapistId: userId,
+          ...validBookingFilter,
           createdAt: { $gte: startOfMonth },
         }),
         TherapistBooking.find({
@@ -449,7 +458,22 @@ export class TherapistController {
     async (req: AuthedRequest, res: Response) => {
       const userId = req.user!.sub;
 
-      const bookings = await TherapistBooking.find({ therapistId: userId })
+      // Clean up old pending_payment bookings (older than 30 minutes)
+      const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+      await TherapistBooking.updateMany(
+        { status: "pending_payment", createdAt: { $lt: thirtyMinsAgo } },
+        { status: "cancelled" }
+      );
+
+      // Only return confirmed or completed bookings where payment is paid (or session is free)
+      const bookings = await TherapistBooking.find({
+        therapistId: userId,
+        status: { $in: ["confirmed", "completed"] },
+        $or: [
+          { "payment.paid": true },
+          { "payment.amount": 0 },
+        ],
+      })
         .sort({ slot: 1 })
         .populate("userId", "fullName orgId")
         .lean();
