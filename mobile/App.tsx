@@ -1,7 +1,8 @@
+import './global.css';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, LogBox, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, LogBox, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { ClerkProvider, SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -162,35 +163,35 @@ function MaintenanceScreen({ onRetry }: MaintenanceScreenProps) {
   };
 
   return (
-    <View style={styles.maintenanceContainer}>
-      <View style={styles.card}>
-        <View style={styles.iconContainer}>
+    <View className="flex-1 bg-surface justify-center items-center p-6">
+      <View className="bg-white rounded-[28px] p-8 items-center w-full max-w-[380px] shadow-xl border border-stone-100">
+        <View className="bg-orange-100 p-5 rounded-full mb-6">
           <ServerOff size={44} color="#E07A5F" />
         </View>
         
-        <Text style={styles.title}>System Offline</Text>
+        <Text className="font-sora-bold text-[22px] text-stone-900 text-center mb-3">System Offline</Text>
         
-        <Text style={styles.description}>
+        <Text className="font-jakarta text-sm text-stone-500 text-center leading-[22px] mb-6">
           MyMindTherapyFriend is currently undergoing scheduled fine-tuning to improve backend databases. We will be back online shortly.
         </Text>
 
-        <View style={styles.infoBox}>
-          <Mail size={20} color="#78716C" style={{ marginRight: 12 }} />
-          <View style={styles.infoTextContainer}>
-            <Text style={styles.infoLabel}>App is in maintenance</Text>
-            <Text style={styles.infoSubtitle}>Please contact support:</Text>
+        <View className="flex-row items-start bg-stone-100 p-4 rounded-[18px] w-full mb-5">
+          <Mail size={20} color="#78716C" className="mr-3" />
+          <View className="flex-1">
+            <Text className="font-sora-bold text-sm text-stone-900 mb-0.5">App is in maintenance</Text>
+            <Text className="font-jakarta text-[13px] text-stone-500 mb-1.5">Please contact support:</Text>
             <TouchableOpacity onPress={handleMailPress} activeOpacity={0.7}>
-              <Text style={styles.emailText}>contact@mymindtherapyfriend.com</Text>
+              <Text className="font-sora-bold text-secondary text-sm underline">contact@mymindtherapyfriend.com</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {errorMsg ? (
-          <Text style={styles.errorText}>{errorMsg}</Text>
+          <Text className="font-jakarta-medium text-red-500 text-[13px] mb-4 text-center">{errorMsg}</Text>
         ) : null}
 
         <TouchableOpacity 
-          style={styles.retryButton} 
+          className="bg-stone-900 py-[15px] rounded-2xl justify-center items-center w-full"
           onPress={handleRetry}
           disabled={retrying}
           activeOpacity={0.9}
@@ -198,9 +199,9 @@ function MaintenanceScreen({ onRetry }: MaintenanceScreenProps) {
           {retrying ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <View style={styles.retryInner}>
-              <RefreshCw size={15} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.retryText}>Retry Connection</Text>
+            <View className="flex-row items-center justify-center">
+              <RefreshCw size={15} color="#FFFFFF" className="mr-2" />
+              <Text className="font-sora-bold text-white text-sm ml-2">Retry Connection</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -245,7 +246,7 @@ export default function App() {
 
   if (!fontsLoaded || isServerDown === null) {
     return (
-      <View style={styles.splash}>
+      <View className="flex-1 bg-surface justify-center items-center">
         <LoadingSpinner message="Verifying secure connection to MyMindTherapyFriend…" />
       </View>
     );
@@ -260,7 +261,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthBridge>
           <NavigationContainer linking={linking}>
-            <View style={styles.container}>
+            <View className="flex-1 bg-surface">
               <RootNavigator />
               <StatusBar style="dark" />
             </View>
@@ -270,114 +271,3 @@ export default function App() {
     </ClerkProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAF9', // Design System warm off-white
-  },
-  splash: {
-    flex: 1,
-    backgroundColor: '#FAFAF9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  maintenanceContainer: {
-    flex: 1,
-    backgroundColor: '#FAFAF9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 28,
-    padding: 32,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 380,
-    shadowColor: '#1C1917',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: '#F5F5F4',
-  },
-  iconContainer: {
-    backgroundColor: '#FFF2E6',
-    padding: 20,
-    borderRadius: 99,
-    marginBottom: 24,
-  },
-  title: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 22,
-    color: '#1C1917',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  description: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 14,
-    color: '#78716C',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#F5F5F4',
-    padding: 16,
-    borderRadius: 18,
-    width: '100%',
-    marginBottom: 20,
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 14,
-    color: '#1C1917',
-    marginBottom: 2,
-  },
-  infoSubtitle: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 13,
-    color: '#78716C',
-    marginBottom: 6,
-  },
-  emailText: {
-    fontFamily: 'Sora_600SemiBold',
-    color: '#E07A5F',
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  },
-  errorText: {
-    fontFamily: 'PlusJakartaSans_500Medium',
-    color: '#EF4444',
-    fontSize: 13,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: '#1C1917',
-    paddingVertical: 15,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-  },
-  retryInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retryText: {
-    fontFamily: 'Sora_600SemiBold',
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-});

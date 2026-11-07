@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Search, DollarSign, Calendar, RefreshCcw, Sparkles, Building, Award, CheckCircle } from 'lucide-react-native';
+import { Search, Sparkles, Building, Award, CheckCircle } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 
 export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
@@ -79,70 +78,68 @@ export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ 
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="Super Admin"
         role="super_admin"
         navigation={navigation}
       />
 
-      <View style={styles.content}>
+      <View className="flex-1 p-4 gap-4">
         {/* Header Title */}
-        <View style={styles.headerSection}>
-          <Text style={styles.sectionHeader}>Billing & Subscriptions</Text>
-          <Text style={styles.sectionDesc}>Track subscriber enrollment, recurring revenue, and renew logs.</Text>
+        <View className="gap-1">
+          <Text className="font-sora-bold text-base text-stone-900">Billing & Subscriptions</Text>
+          <Text className="font-jakarta text-xs text-stone-500 leading-4">Track subscriber enrollment, recurring revenue, and renew logs.</Text>
         </View>
 
         {/* Dynamic Billing Overview Cards */}
-        <View style={styles.overviewGrid}>
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewVal}>₹{cumulativeMRR}</Text>
-            <Text style={styles.overviewLabel}>Active MRR</Text>
+        <View className="flex-row gap-2">
+          <View className="flex-1 bg-white rounded-xl p-3 border border-stone-200 items-center gap-0.5">
+            <Text className="font-sora-bold text-lg text-stone-900">₹{cumulativeMRR}</Text>
+            <Text className="font-jakarta text-[10.5px] text-stone-500">Active MRR</Text>
           </View>
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewVal}>{activeSubsCount}</Text>
-            <Text style={styles.overviewLabel}>Active</Text>
+          <View className="flex-1 bg-white rounded-xl p-3 border border-stone-200 items-center gap-0.5">
+            <Text className="font-sora-bold text-lg text-stone-900">{activeSubsCount}</Text>
+            <Text className="font-jakarta text-[10.5px] text-stone-500">Active</Text>
           </View>
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewVal}>{pendingSubsCount}</Text>
-            <Text style={styles.overviewLabel}>Pending</Text>
+          <View className="flex-1 bg-white rounded-xl p-3 border border-stone-200 items-center gap-0.5">
+            <Text className="font-sora-bold text-lg text-stone-900">{pendingSubsCount}</Text>
+            <Text className="font-jakarta text-[10.5px] text-stone-500">Pending</Text>
           </View>
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewVal}>{cancelledSubsCount}</Text>
-            <Text style={styles.overviewLabel}>Cancelled</Text>
+          <View className="flex-1 bg-white rounded-xl p-3 border border-stone-200 items-center gap-0.5">
+            <Text className="font-sora-bold text-lg text-stone-900">{cancelledSubsCount}</Text>
+            <Text className="font-jakarta text-[10.5px] text-stone-500">Cancelled</Text>
           </View>
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Search size={16} color={Theme.colors.outline} />
+        <View className="flex-row items-center bg-white border border-stone-200 rounded-xl px-3 h-12 gap-2">
+          <Search size={16} color="#78716C" />
           <TextInput
             placeholder="Search by subscriber, email, or tier..."
-            placeholderTextColor={Theme.colors.outline}
+            placeholderTextColor="#78716C"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={styles.searchInput}
+            className="flex-1 text-[13px] text-stone-900 font-jakarta"
           />
         </View>
 
         {/* Dynamic Filters Segmented Control */}
-        <View style={styles.filterSection}>
-          <View style={styles.filterRow}>
-            <Text style={styles.filterRowLabel}>Status:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRowScroll}>
+        <View className="gap-2 bg-white border border-stone-200 rounded-xl p-2.5">
+          <View className="flex-row items-center gap-2">
+            <Text className="font-sora-bold text-[11px] text-stone-500 w-12">Status:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-1.5 items-center">
               {(['all', 'active', 'pending', 'cancelled'] as const).map((status) => (
                 <TouchableOpacity
                   key={status}
                   onPress={() => setStatusFilter(status)}
-                  style={[
-                    styles.filterPill,
-                    statusFilter === status && styles.filterPillActive
-                  ]}
+                  className={`border rounded-full px-3 py-1 ${
+                    statusFilter === status ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+                  }`}
                 >
-                  <Text style={[
-                    styles.filterPillText,
-                    statusFilter === status && styles.filterPillTextActive
-                  ]}>
+                  <Text className={`font-jakarta-bold text-[9.5px] ${
+                    statusFilter === status ? 'text-white' : 'text-stone-500'
+                  }`}>
                     {status.toUpperCase()}
                   </Text>
                 </TouchableOpacity>
@@ -150,22 +147,20 @@ export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ 
             </ScrollView>
           </View>
 
-          <View style={styles.filterRow}>
-            <Text style={styles.filterRowLabel}>Role:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRowScroll}>
+          <View className="flex-row items-center gap-2">
+            <Text className="font-sora-bold text-[11px] text-stone-500 w-12">Role:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-1.5 items-center">
               {(['all', 'user', 'therapist', 'organization'] as const).map((aud) => (
                 <TouchableOpacity
                   key={aud}
                   onPress={() => setAudienceFilter(aud)}
-                  style={[
-                    styles.filterPill,
-                    audienceFilter === aud && styles.filterPillActive
-                  ]}
+                  className={`border rounded-full px-3 py-1 ${
+                    audienceFilter === aud ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+                  }`}
                 >
-                  <Text style={[
-                    styles.filterPillText,
-                    audienceFilter === aud && styles.filterPillTextActive
-                  ]}>
+                  <Text className={`font-jakarta-bold text-[9.5px] ${
+                    audienceFilter === aud ? 'text-white' : 'text-stone-500'
+                  }`}>
                     {aud === 'user' ? 'SEEKER' : aud.toUpperCase()}
                   </Text>
                 </TouchableOpacity>
@@ -175,12 +170,12 @@ export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ 
         </View>
 
         {isLoading ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={Theme.colors.primary} />
-            <Text style={styles.loadingText}>Structuring billing registers...</Text>
+          <View className="flex-1 justify-center items-center gap-3">
+            <ActivityIndicator size="large" color="#0D564D" />
+            <Text className="font-jakarta text-[12.5px] text-stone-500">Structuring billing registers...</Text>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.listScroll}>
+          <ScrollView contentContainerClassName="gap-4 pb-20">
             {filteredSubs.length > 0 ? (
               filteredSubs.map((s: any) => {
                 const subName = s.userId?.fullName || s.orgId?.name || 'mymindtherapyfriend User';
@@ -191,50 +186,52 @@ export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ 
                 const isTherapist = s.userId?.role === 'therapist';
 
                 return (
-                  <View key={s._id} style={styles.card}>
-                    <View style={styles.cardHeader}>
-                      <View style={[styles.avatar, isOrg && styles.avatarOrg, isTherapist && styles.avatarTherapist]}>
+                  <View key={s._id} className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-3">
+                    <View className="flex-row items-center gap-2.5">
+                      <View className={`w-10 h-10 rounded-full items-center justify-center ${
+                        isOrg ? 'bg-primary/10' : isTherapist ? 'bg-purple-100' : 'bg-blue-100'
+                      }`}>
                         {isOrg ? (
-                          <Building size={16} color={Theme.colors.primary} />
+                          <Building size={16} color="#0D564D" />
                         ) : isTherapist ? (
                           <Award size={16} color="#7B1FA2" />
                         ) : (
-                          <Sparkles size={16} color={Theme.colors.secondary} />
+                          <Sparkles size={16} color="#9D4223" />
                         )}
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.cardTitle}>{subName}</Text>
-                        <Text style={styles.cardSub}>{subEmail}</Text>
+                      <View className="flex-1">
+                        <Text className="font-sora-bold text-sm text-stone-900">{subName}</Text>
+                        <Text className="font-jakarta text-[11.5px] text-stone-500 mt-0.5">{subEmail}</Text>
                       </View>
-                      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(s.status || 'active') }]}>
-                        <Text style={[styles.statusText, { color: getStatusTextColor(s.status || 'active') }]}>
+                      <View className="px-2 py-1 rounded" style={{ backgroundColor: getStatusColor(s.status || 'active') }}>
+                        <Text className="font-jakarta-bold text-[9px]" style={{ color: getStatusTextColor(s.status || 'active') }}>
                           {(s.status || 'ACTIVE').toUpperCase()}
                         </Text>
                       </View>
                     </View>
 
                     {/* Pricing Info Boxes */}
-                    <View style={styles.detailsBox}>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Subscription Tier:</Text>
-                        <Text style={styles.detailValue}>{(s.planId?.name || s.plan || 'Mann Shanti').toUpperCase()}</Text>
+                    <View className="bg-stone-50 rounded-xl p-2.5 gap-1.5">
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta text-[11.5px] text-stone-500">Subscription Tier:</Text>
+                        <Text className="font-jakarta-medium text-xs text-stone-900">{(s.planId?.name || s.plan || 'Mann Shanti').toUpperCase()}</Text>
                       </View>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Monthly Price:</Text>
-                        <Text style={styles.detailValue}>₹{price}</Text>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta text-[11.5px] text-stone-500">Monthly Price:</Text>
+                        <Text className="font-jakarta-medium text-xs text-stone-900">₹{price}</Text>
                       </View>
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Next Renewal:</Text>
-                        <Text style={styles.detailValue}>{renewDate}</Text>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta text-[11.5px] text-stone-500">Next Renewal:</Text>
+                        <Text className="font-jakarta-medium text-xs text-stone-900">{renewDate}</Text>
                       </View>
                     </View>
                   </View>
                 );
               })
             ) : (
-              <View style={styles.emptyContainer}>
-                <CheckCircle size={36} color={Theme.colors.outline} />
-                <Text style={styles.emptyText}>No matching subscription registries found.</Text>
+              <View className="items-center justify-center py-10 bg-white rounded-2xl border border-stone-200 gap-2 mt-2">
+                <CheckCircle size={36} color="#78716C" />
+                <Text className="font-jakarta text-[13px] text-stone-500 text-center px-5">No matching subscription registries found.</Text>
               </View>
             )}
           </ScrollView>
@@ -243,222 +240,5 @@ export const SuperAdminSubscriptionsScreen: React.FC<{ navigation?: any }> = ({ 
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: Theme.spacing.margin,
-    gap: Theme.spacing.md,
-  },
-  headerSection: {
-    gap: 4
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16
-  },
-  overviewGrid: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  overviewCard: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    alignItems: 'center',
-    gap: 2,
-  },
-  overviewVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-    fontWeight: '700',
-  },
-  overviewLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10.5,
-    color: Theme.colors.textMuted,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    height: 48,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    fontFamily: Theme.fonts.body,
-  },
-  listScroll: {
-    gap: Theme.spacing.md,
-    paddingBottom: 80,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#E3F2FD',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarOrg: {
-    backgroundColor: Theme.colors.primary + '10',
-  },
-  avatarTherapist: {
-    backgroundColor: '#F3E5F5',
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  cardSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.sm,
-  },
-  statusText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-  },
-  detailsBox: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-    gap: 6,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  detailLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.outline,
-  },
-  detailValue: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.outline,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8,
-    marginTop: 10,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  filterSection: {
-    gap: 8,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  filterRowLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11,
-    color: Theme.colors.outline,
-    width: 50,
-  },
-  filterRowScroll: {
-    gap: 6,
-    alignItems: 'center',
-  },
-  filterPill: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  filterPillActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  filterPillText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9.5,
-    color: Theme.colors.outline,
-  },
-  filterPillTextActive: {
-    color: '#FFF',
-  },
-});
 
 export default SuperAdminSubscriptionsScreen;

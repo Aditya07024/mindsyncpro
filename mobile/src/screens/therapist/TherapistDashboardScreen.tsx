@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, User, Clock, Award, Sparkles, Wallet, ChevronRight, ChevronDown, Lock, CheckCircle, Briefcase, FileText, Bell, BellOff, Users, Radio, BookOpen } from 'lucide-react-native';
 import API from '../../lib/api';
@@ -92,7 +92,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
     enabled: isSubscribed,
   });
 
-  // 4. Fetch Therapist Bookings (Only if subscribed) (auto-refreshes every 5 minutes from backend)
+  // 4. Fetch Therapist Bookings (Only if subscribed)
   const { data: bookingsData, refetch: refetchBookings } = useQuery({
     queryKey: ['therapistBookings'],
     queryFn: () => API.therapist.meBookings(),
@@ -110,19 +110,16 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   });
 
   // Local state for dynamic availability calendar slots synced with database
-  // availabilityPerDay: { day: 0..6, slots: string[] }[]
   const [availabilityPerDay, setAvailabilityPerDay] = useState<{ day: number; slots: string[] }[]>(
     [0,1,2,3,4,5,6].map(d => ({ day: d, slots: d >= 1 && d <= 5 ? ['09:00','10:00','14:00'] : [] }))
   );
   const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
-  // Keep flat availability for backward compat
   const [availability, setAvailability] = useState<string[]>([]);
 
   useEffect(() => {
     if (userProfile?.therapistProfile?.availability) {
       const savedAvail = userProfile.therapistProfile.availability;
       if (Array.isArray(savedAvail) && savedAvail.length > 0 && typeof savedAvail[0] === 'object') {
-        // New day-based format: [{day, slots}]
         setAvailabilityPerDay(savedAvail.map((a: any) => ({
           day: a.day,
           slots: (a.slots || []).map(convertTo24Hour),
@@ -131,13 +128,11 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
         const todayConfig = savedAvail.find((a: any) => a.day === todayNum);
         setAvailability(todayConfig?.slots?.map(convertTo24Hour) || []);
       } else {
-        // Legacy flat format
         setAvailability((savedAvail as string[]).map(convertTo24Hour));
       }
     }
   }, [userProfile]);
 
-  // Handle slot adjustments per day
   const handleToggleSlot = async (slot: string) => {
     if (!isSubscribed) return;
     try {
@@ -168,7 +163,6 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
     }
   };
 
-  // Process invite acceptances
   const handleInviteAction = async (inviteId: string, orgName: string, action: 'accept' | 'decline') => {
     if (!isSubscribed) return;
     Alert.alert(
@@ -214,7 +208,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
 
   const activeBookings = (bookingsData?.bookings || []).filter((b: any) => {
-    if (!userProfile?.orgId) return true; // Show all if not affiliated
+    if (!userProfile?.orgId) return true;
     if (activeWorkspace === 'corporate') {
       return b.clientOrgId === userProfile.orgId;
     } else {
@@ -254,7 +248,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
   const therapistName = userProfile?.fullName || 'Therapist';
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName={therapistName.split(' ')[0]}
         role="therapist"
@@ -262,11 +256,11 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
         onUpgradePress={userProfile?.orgId ? undefined : () => navigation.navigate('Plans')}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-5 pb-20 gap-4">
         {/* Notification Toggle Card */}
-        <View style={styles.notificationCard}>
-          <View style={styles.notificationLeft}>
-            <View style={[styles.notificationIconBox, notificationsEnabled ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+        <View className="flex-row items-center justify-between bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm">
+          <View className="flex-row items-center gap-3">
+            <View className={`w-[38px] h-[38px] rounded-full justify-center items-center ${notificationsEnabled ? 'bg-primary/10' : 'bg-[#F0F2F1]'}`}>
               {notificationsEnabled ? (
                 <Bell size={18} color={Theme.colors.primary} />
               ) : (
@@ -274,8 +268,8 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
               )}
             </View>
             <View>
-              <Text style={styles.notificationTitle}>Alerts & Notifications</Text>
-              <Text style={styles.notificationDesc}>
+              <Text className="font-sora text-[14.5px] text-onSurface">Alerts & Notifications</Text>
+              <Text className="font-jakarta text-[11.5px] text-[#71787D] mt-0.5">
                 {notificationsEnabled ? 'Instant updates are turned on' : 'Notifications are paused'}
               </Text>
             </View>
@@ -290,14 +284,14 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
 
         {/* Verification Status Warning if pending */}
         {(userProfile?.therapistProfile?.verificationStatus === 'pending' || (!userProfile?.verified && userProfile?.therapistProfile?.verificationStatus !== 'verified')) && (
-          <View style={[styles.notificationCard, { backgroundColor: '#FFFDF5', borderColor: '#FDE68A' }]}>
-            <View style={styles.notificationLeft}>
-              <View style={[styles.notificationIconBox, { backgroundColor: '#FEF3C7' }]}>
+          <View className="flex-row items-center justify-between bg-[#FFFDF5] rounded-3xl p-4 border border-[#FDE68A] shadow-sm">
+            <View className="flex-row items-center gap-3">
+              <View className="w-[38px] h-[38px] rounded-full justify-center items-center bg-[#FEF3C7]">
                 <Clock size={18} color="#B45309" />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.notificationTitle, { color: '#92400E' }]}>Application Under Review</Text>
-                <Text style={[styles.notificationDesc, { color: '#B45309' }]}>
+              <View className="flex-1">
+                <Text className="font-sora text-[14.5px] text-[#92400E]">Application Under Review</Text>
+                <Text className="font-jakarta text-[11.5px] text-[#B45309] mt-0.5">
                   Your clinical counsellor credentials are being verified by MyMindSync admin.
                 </Text>
               </View>
@@ -311,65 +305,49 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
         {/* Group Audio Sessions Shortcut */}
         <TouchableOpacity 
           onPress={() => navigation.navigate('GroupSessions')}
-          style={[styles.notificationCard, { backgroundColor: Theme.colors.primary + '08', borderColor: Theme.colors.primary + '20' }]}
+          className="flex-row items-center justify-between bg-primary/5 rounded-3xl p-4 border border-primary/20 shadow-sm"
         >
-          <View style={styles.notificationLeft}>
-            <View style={[styles.notificationIconBox, { backgroundColor: Theme.colors.primary + '15' }]}>
+          <View className="flex-row items-center gap-3">
+            <View className="w-[38px] h-[38px] rounded-full justify-center items-center bg-primary/15">
               <Radio size={18} color={Theme.colors.primary} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.notificationTitle}>Group Audio Sessions</Text>
-              <Text style={styles.notificationDesc}>Host or join live peer audio support rooms</Text>
+            <View className="flex-1">
+              <Text className="font-sora text-[14.5px] text-onSurface">Group Audio Sessions</Text>
+              <Text className="font-jakarta text-[11.5px] text-[#71787D] mt-0.5">Host or join live peer audio support rooms</Text>
             </View>
           </View>
           <ChevronRight size={18} color={Theme.colors.primary} />
         </TouchableOpacity>
         
-        {/* Custom High-Fidelity Profile Header Card */}
-        {/* <View style={styles.profileHeaderCard}>
-          <View style={styles.avatarRingOuter}>
-            <View style={styles.avatarRingInner}>
-              <Text style={styles.avatarLetter}>T</Text>
-            </View>
-          </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>{therapistName}</Text>
-            <Text style={styles.headerRole}>Therapist</Text>
-            <Text style={styles.headerSubtext}>– · {totalSessionsCount} sessions</Text>
-          </View>
         {/* Dynamic Workspace Switcher (Only if affiliated with an organization) */}
         {userProfile?.orgId && (
-          <View style={styles.workspaceCard}>
-            <Text style={styles.workspaceLabel}>Practice Workspace</Text>
-            <View style={styles.switcherContainer}>
+          <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm mb-4 gap-2">
+            <Text className="font-jakarta-bold text-[12.5px] text-onSurfaceVariant">Practice Workspace</Text>
+            <View className="flex-row bg-[#F0F2F1] rounded-full p-1 gap-0.5">
               <TouchableOpacity
                 onPress={() => setActiveWorkspace('individual')}
-                style={[
-                  styles.switcherBtn,
-                  activeWorkspace === 'individual' && styles.switcherBtnActive
-                ]}
+                className={`flex-1 flex-row items-center justify-center gap-1.5 py-2 rounded-full ${
+                  activeWorkspace === 'individual' ? 'bg-primary shadow-sm' : ''
+                }`}
               >
                 <Briefcase size={14} color={activeWorkspace === 'individual' ? '#FFF' : Theme.colors.primary} />
-                <Text style={[
-                  styles.switcherBtnText,
-                  activeWorkspace === 'individual' && styles.switcherBtnTextActive
-                ]}>
+                <Text className={`font-sora text-[11.5px] ${
+                  activeWorkspace === 'individual' ? 'text-white' : 'text-primary'
+                }`}>
                   Individual Practice
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => setActiveWorkspace('corporate')}
-                style={[
-                  styles.switcherBtn,
-                  activeWorkspace === 'corporate' && styles.switcherBtnActive
-                ]}
+                className={`flex-1 flex-row items-center justify-center gap-1.5 py-2 rounded-full ${
+                  activeWorkspace === 'corporate' ? 'bg-primary shadow-sm' : ''
+                }`}
               >
                 <Award size={14} color={activeWorkspace === 'corporate' ? '#FFF' : Theme.colors.primary} />
-                <Text style={[
-                  styles.switcherBtnText,
-                  activeWorkspace === 'corporate' && styles.switcherBtnTextActive
-                ]}>
+                <Text className={`font-sora text-[11.5px] ${
+                  activeWorkspace === 'corporate' ? 'text-white' : 'text-primary'
+                }`}>
                   Corporate Affiliation
                 </Text>
               </TouchableOpacity>
@@ -378,84 +356,86 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
         )}
 
         {/* 2x2 Bento Statistics Grid */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statVal}>{todaySessionsCount}</Text>
-              <Text style={styles.statLabel}>Today's sessions</Text>
+        <View className="gap-2">
+          <View className="flex-row gap-2">
+            <View className="flex-1 bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+              <Text className="font-sora-bold text-2xl text-onSurface">{todaySessionsCount}</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Today's sessions</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statVal}>{monthSessionsCount}</Text>
-              <Text style={styles.statLabel}>This month</Text>
+            <View className="flex-1 bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+              <Text className="font-sora-bold text-2xl text-onSurface">{monthSessionsCount}</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">This month</Text>
             </View>
           </View>
 
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statVal}>₹{monthEarned}</Text>
-              <Text style={styles.statLabel}>Month earned</Text>
+          <View className="flex-row gap-2">
+            <View className="flex-1 bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+              <Text className="font-sora-bold text-2xl text-onSurface">₹{monthEarned}</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Month earned</Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statVal}>₹{netPayout}</Text>
-              <Text style={styles.statLabel}>Payout (85%)</Text>
+            <View className="flex-1 bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+              <Text className="font-sora-bold text-2xl text-onSurface">₹{netPayout}</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Payout (85%)</Text>
             </View>
           </View>
         </View>
-{/* 4. Beautiful Subscription Required Barrier Overlay */}
+
+        {/* Subscription Barrier Overlay */}
         {!isSubscribed && (
-          <View style={styles.barrierContainer}>
-            <View style={styles.lockBadge}>
+          <View className="bg-primary/5 border-[1.5px] border-primary/25 border-dashed rounded-3xl p-6 items-center mt-2 shadow-sm">
+            <View className="w-11 h-11 rounded-full bg-primary/15 justify-center items-center mb-2">
               <Lock size={22} color={Theme.colors.primary} />
             </View>
-            <Text style={styles.barrierTitle}>Subscription Required</Text>
-            <Text style={styles.barrierDesc}>
+            <Text className="font-sora-bold text-lg text-primary text-center">Subscription Required</Text>
+            <Text className="font-jakarta text-[13px] text-onSurfaceVariant text-center leading-[18px] mt-1.5 px-2">
               As an independent therapist, you need an active subscription to access your schedule, bookings, and profile.
             </Text>
 
-            <View style={styles.barrierActions}>
+            <View className="w-full gap-2 mt-4">
               <TouchableOpacity
                 onPress={() => navigation.navigate('Plans')}
-                style={styles.viewPlansBtn}
+                className="bg-primary py-3 rounded-full items-center w-full shadow-sm"
               >
-                <Text style={styles.viewPlansText}>View Subscription Plans</Text>
+                <Text className="font-sora text-[13px] text-white">View Subscription Plans</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
+
         {invitationsData && invitationsData.length > 0 && (
-          <View style={styles.invitationAlertContainer}>
+          <View className="gap-2 mt-1">
             {invitationsData.map((invite: any) => {
-              const bgStyle = { backgroundColor: blinkToggle ? '#FFFDF5' : '#FEF3C7' };
-              const borderStyle = { borderColor: blinkToggle ? '#FDE68A' : '#F59E0B' };
               return (
                 <View 
                   key={invite._id} 
-                  style={[styles.blinkingInviteCard, bgStyle, borderStyle]}
+                  className={`border-[1.5px] rounded-3xl p-4 gap-2.5 shadow-md ${
+                    blinkToggle ? 'bg-[#FFFDF5] border-[#FDE68A]' : 'bg-[#FEF3C7] border-[#F59E0B]'
+                  }`}
                 >
-                  <View style={styles.inviteHeaderRow}>
-                    <View style={styles.attentionIconBadge}>
+                  <View className="flex-row items-center gap-2.5">
+                    <View className="w-[34px] h-[34px] rounded-full bg-[#FEF3C7] justify-center items-center border border-[#FDE68A]">
                       <Award size={18} color="#B45309" />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.blinkOrgTitle}>{invite.orgName}</Text>
-                      <Text style={styles.blinkOrgSub}>Incoming Affiliation Request</Text>
+                    <View className="flex-1">
+                      <Text className="font-sora text-[14.5px] text-[#92400E]">{invite.orgName}</Text>
+                      <Text className="font-jakarta-medium text-[11px] text-[#B45309] mt-0.5">Incoming Affiliation Request</Text>
                     </View>
                   </View>
-                  <Text style={styles.blinkDesc}>
+                  <Text className="font-jakarta text-xs text-[#78350F] leading-4 pl-0.5">
                     An educational institution is requesting clinical counselor linking.
                   </Text>
-                  <View style={styles.blinkActions}>
+                  <View className="flex-row gap-2 mt-0.5">
                     <TouchableOpacity
                       onPress={() => handleInviteAction(invite._id, invite.orgName, 'decline')}
-                      style={styles.blinkDeclineBtn}
+                      className="flex-1 border border-[#D97706]/40 bg-white py-2 rounded-full items-center"
                     >
-                      <Text style={styles.blinkDeclineText}>Decline</Text>
+                      <Text className="font-jakarta-bold text-[11.5px] text-[#B45309]">Decline</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleInviteAction(invite._id, invite.orgName, 'accept')}
-                      style={styles.blinkAcceptBtn}
+                      className="flex-[1.3] bg-[#D97706] py-2 rounded-full items-center"
                     >
-                      <Text style={styles.blinkAcceptText}>Accept Affiliation</Text>
+                      <Text className="font-sora text-[11.5px] text-white">Accept Affiliation</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -465,7 +445,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
         )}
 
         {/* Action Menu Listings */}
-        <View style={styles.menuContainer}>
+        <View className="bg-white rounded-3xl border border-[#E0E2E0] overflow-hidden">
           {[
             { id: 'schedule', name: 'Consultations & Roster', icon: Calendar },
             { id: 'availability', name: 'Availability', icon: Clock },
@@ -476,17 +456,21 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
             const IconComponent = item.icon;
             const isOpen = activeTab === item.id;
             return (
-              <View key={item.id} style={styles.menuItemWrapper}>
+              <View key={item.id} className="border-b border-[#F0F2F1]">
                 <TouchableOpacity
                   onPress={() => handleMenuPress(item.id)}
-                  style={[styles.menuRow, isOpen && styles.menuRowOpen]}
+                  className={`flex-row items-center justify-between py-4 px-4 ${isOpen ? 'bg-[#F0F2F1]/40' : ''}`}
                   activeOpacity={0.8}
                 >
-                  <View style={styles.menuLeft}>
-                    <View style={[styles.menuIconBox, !isSubscribed && item.id !== 'subscription' && styles.menuIconBoxLocked]}>
+                  <View className="flex-row items-center gap-3">
+                    <View className={`w-8 h-8 rounded-xl justify-center items-center ${
+                      !isSubscribed && item.id !== 'subscription' ? 'bg-[#E0E2E0]' : 'bg-primary/10'
+                    }`}>
                       <IconComponent size={18} color={!isSubscribed && item.id !== 'subscription' ? Theme.colors.outline : Theme.colors.primary} />
                     </View>
-                    <Text style={[styles.menuLabel, !isSubscribed && item.id !== 'subscription' && styles.menuLabelLocked]}>{item.name}</Text>
+                    <Text className={`font-sora text-[14.5px] ${
+                      !isSubscribed && item.id !== 'subscription' ? 'text-outline' : 'text-onSurface'
+                    }`}>{item.name}</Text>
                   </View>
                   {isOpen ? (
                     <ChevronDown size={18} color={Theme.colors.outline} />
@@ -497,27 +481,27 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
 
                 {/* Expanded Action Panel Widgets */}
                 {isOpen && (
-                  <View style={styles.expandedPanel}>
+                  <View className="bg-surface/50 border-t border-[#F0F2F1] p-4">
                     {item.id === 'schedule' && (
-                      <View style={styles.panelContent}>
-                        <Text style={styles.panelTitle}>Consultation Bookings</Text>
+                      <View className="gap-1">
+                        <Text className="font-sora text-sm text-primary mb-1">Consultation Bookings</Text>
                         {activeBookings && activeBookings.length > 0 ? (
                           activeBookings.map((booking: any) => (
-                            <View key={booking._id || booking.id} style={styles.rosterItem}>
-                              <View style={{ flex: 1 }}>
-                                <Text style={styles.clientName}>{booking.clientName || booking.userName || 'Seeker'}</Text>
-                                <Text style={styles.clientTime}>{new Date(booking.slot).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text>
+                            <View key={booking._id || booking.id} className="flex-row justify-between items-center py-2 border-b border-[#F0F2F1]">
+                              <View className="flex-1">
+                                <Text className="font-sora text-[13px] text-onSurface">{booking.clientName || booking.userName || 'Seeker'}</Text>
+                                <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">{new Date(booking.slot).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text>
                               </View>
-                              <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                                <View style={styles.badgeWrapper}>
-                                  <Text style={styles.badgeText}>{booking.status}</Text>
+                              <View className="items-end gap-1.5">
+                                <View className="bg-primary/15 px-2 py-1 rounded-full">
+                                  <Text className="font-jakarta-bold text-[10px] text-primary uppercase">{booking.status}</Text>
                                 </View>
                                 <TouchableOpacity
                                   onPress={() => navigation.navigate('TherapistBrief', { bookingId: booking._id || booking.id })}
-                                  style={styles.sharedReportBtn}
+                                  className="flex-row items-center gap-1 bg-primary/10 border border-primary/30 px-2 py-1 rounded-full"
                                 >
                                   <FileText size={11} color={Theme.colors.primary} />
-                                  <Text style={styles.sharedReportBtnText}>Shared Report</Text>
+                                  <Text className="font-jakarta-bold text-[10.5px] text-primary">Shared Report</Text>
                                 </TouchableOpacity>
                                 {booking.journalShareState !== 'approved' && (
                                   <TouchableOpacity
@@ -529,10 +513,10 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                                         Alert.alert('Error', err.message || 'Could not send request.');
                                       }
                                     }}
-                                    style={[styles.sharedReportBtn, { backgroundColor: Theme.colors.secondaryContainer + '30', borderColor: Theme.colors.secondary + '40' }]}
+                                    className="flex-row items-center gap-1 bg-secondaryContainer/30 border border-secondary/40 px-2 py-1 rounded-full"
                                   >
                                     <BookOpen size={11} color={Theme.colors.secondary} />
-                                    <Text style={[styles.sharedReportBtnText, { color: Theme.colors.secondary }]}>
+                                    <Text className="font-jakarta-bold text-[10.5px] text-secondary">
                                       {booking.journalShareState === 'requested' ? 'Requested' : 'Request Journal'}
                                     </Text>
                                   </TouchableOpacity>
@@ -541,18 +525,18 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                             </View>
                           ))
                         ) : (
-                          <Text style={styles.emptyText}>No upcoming bookings scheduled.</Text>
+                          <Text className="font-jakarta text-[12.5px] text-[#71787D] py-2">No upcoming bookings scheduled.</Text>
                         )}
                       </View>
                     )}
 
                     {item.id === 'availability' && (
-                      <View style={styles.panelContent}>
-                        <Text style={styles.panelTitle}>Set Weekly Availability</Text>
-                        <Text style={styles.panelDesc}>Select day then tap hours to mark as available:</Text>
+                      <View className="gap-1">
+                        <Text className="font-sora text-sm text-primary mb-1">Set Weekly Availability</Text>
+                        <Text className="font-jakarta text-[11.5px] text-[#71787D] mb-1.5">Select day then tap hours to mark as available:</Text>
 
                         {/* Day Selector */}
-                        <View style={styles.dayRow}>
+                        <View className="flex-row flex-wrap gap-1.5 mb-3 mt-2">
                           {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, idx) => {
                             const daySlots = availabilityPerDay.find(a => a.day === idx)?.slots || [];
                             const isActive = selectedDay === idx;
@@ -560,11 +544,13 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                               <TouchableOpacity
                                 key={d}
                                 onPress={() => setSelectedDay(idx)}
-                                style={[styles.dayPill, isActive && styles.dayPillActive]}
+                                className={`px-2.5 py-1.5 rounded-full border items-center relative ${
+                                  isActive ? 'bg-primary border-primary' : 'bg-white border-[#E0E2E0]'
+                                }`}
                               >
-                                <Text style={[styles.dayPillText, isActive && styles.dayPillTextActive]}>{d}</Text>
+                                <Text className={`font-jakarta-bold text-[11px] ${isActive ? 'text-white' : 'text-onSurfaceVariant'}`}>{d}</Text>
                                 {daySlots.length > 0 && (
-                                  <View style={styles.dayDot} />
+                                  <View className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-gold" />
                                 )}
                               </TouchableOpacity>
                             );
@@ -572,7 +558,7 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                         </View>
 
                         {/* Slots for selected day */}
-                        <View style={styles.slotsGrid}>
+                        <View className="flex-row flex-wrap gap-2 mt-1">
                           {ALL_24H_SLOTS.map((slot) => {
                             const daySlots = availabilityPerDay.find(a => a.day === selectedDay)?.slots || [];
                             const isSelected = daySlots.includes(slot);
@@ -580,55 +566,57 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                               <TouchableOpacity
                                 key={slot}
                                 onPress={() => handleToggleSlot(slot)}
-                                style={[styles.slotPill, isSelected && styles.slotPillActive]}
+                                className={`border rounded-full px-3 py-1.5 ${
+                                  isSelected ? 'bg-primary border-primary' : 'bg-white border-[#E0E2E0]'
+                                }`}
                               >
-                                <Text style={[styles.slotText, isSelected && styles.textWhite]}>{formatSlotDisplay(slot)}</Text>
+                                <Text className={`font-jakarta-medium text-xs ${isSelected ? 'text-white' : 'text-onSurfaceVariant'}`}>{formatSlotDisplay(slot)}</Text>
                               </TouchableOpacity>
                             );
                           })}
                         </View>
 
                         {/* Save Button */}
-                        <TouchableOpacity onPress={handleSaveAvailability} style={styles.saveAvailBtn}>
-                          <Text style={styles.saveAvailBtnText}>Save All Days</Text>
+                        <TouchableOpacity onPress={handleSaveAvailability} className="bg-primary py-3 rounded-full items-center mt-3">
+                          <Text className="font-sora text-[13px] text-white">Save All Days</Text>
                         </TouchableOpacity>
                       </View>
                     )}
 
                     {item.id === 'earnings' && (
-                      <View style={styles.panelContent}>
-                        <Text style={styles.panelTitle}>Financial Statements</Text>
-                        <View style={styles.payoutCard}>
-                          <View style={styles.payoutLine}>
-                            <Text style={styles.payoutLabel}>Total Gross Earned</Text>
-                            <Text style={styles.payoutVal}>₹{monthEarned}</Text>
+                      <View className="gap-1">
+                        <Text className="font-sora text-sm text-primary mb-1">Financial Statements</Text>
+                        <View className="bg-white rounded-2xl p-4 border border-[#E0E2E0] gap-2">
+                          <View className="flex-row justify-between items-center">
+                            <Text className="font-jakarta text-xs text-[#71787D]">Total Gross Earned</Text>
+                            <Text className="font-jakarta-bold text-[12.5px] text-onSurface">₹{monthEarned}</Text>
                           </View>
-                          <View style={styles.payoutLine}>
-                            <Text style={styles.payoutLabel}>Platform Processing (30%)</Text>
-                            <Text style={styles.payoutVal}>- ₹{Math.round(monthEarned * 0.30)}</Text>
+                          <View className="flex-row justify-between items-center">
+                            <Text className="font-jakarta text-xs text-[#71787D]">Platform Processing (30%)</Text>
+                            <Text className="font-jakarta-bold text-[12.5px] text-onSurface">- ₹{Math.round(monthEarned * 0.30)}</Text>
                           </View>
-                          <View style={[styles.payoutLine, styles.payoutTotalLine]}>
-                            <Text style={styles.payoutTotalLabel}>Net Payout Amount</Text>
-                            <Text style={styles.payoutTotalVal}>₹{netPayout}</Text>
+                          <View className="flex-row justify-between items-center border-t border-[#F0F2F1] pt-2 mt-0.5">
+                            <Text className="font-sora text-[13.5px] text-primary">Net Payout Amount</Text>
+                            <Text className="font-sora-bold text-[15px] text-primary">₹{netPayout}</Text>
                           </View>
                         </View>
                       </View>
                     )}
 
                     {item.id === 'profile' && (
-                      <View style={styles.panelContent}>
-                        <Text style={styles.panelTitle}>Therapist Profile Summary</Text>
-                        <View style={styles.infoBox}>
-                          <Text style={styles.infoKey}>Qualification:</Text>
-                          <Text style={styles.infoVal}>{userProfile?.therapistProfile?.qualification || 'PhD Clinical Psychology'}</Text>
+                      <View className="gap-1">
+                        <Text className="font-sora text-sm text-primary mb-1">Therapist Profile Summary</Text>
+                        <View className="flex-row gap-2 py-0.5">
+                          <Text className="font-jakarta-bold text-xs text-onSurface w-[100px]">Qualification:</Text>
+                          <Text className="font-jakarta text-xs text-[#71787D] flex-1">{userProfile?.therapistProfile?.qualification || 'PhD Clinical Psychology'}</Text>
                         </View>
-                        <View style={styles.infoBox}>
-                          <Text style={styles.infoKey}>Clinic Name:</Text>
-                          <Text style={styles.infoVal}>{userProfile?.therapistProfile?.clinicDetails || 'MyMindTherapyFriend Executive Suite'}</Text>
+                        <View className="flex-row gap-2 py-0.5">
+                          <Text className="font-jakarta-bold text-xs text-onSurface w-[100px]">Clinic Name:</Text>
+                          <Text className="font-jakarta text-xs text-[#71787D] flex-1">{userProfile?.therapistProfile?.clinicDetails || 'MyMindTherapyFriend Executive Suite'}</Text>
                         </View>
-                        <View style={styles.infoBox}>
-                          <Text style={styles.infoKey}>Specializations:</Text>
-                          <Text style={styles.infoVal}>
+                        <View className="flex-row gap-2 py-0.5">
+                          <Text className="font-jakarta-bold text-xs text-onSurface w-[100px]">Specializations:</Text>
+                          <Text className="font-jakarta text-xs text-[#71787D] flex-1">
                             {userProfile?.therapistProfile?.specializations?.join(', ') || 'Anxiety, CBT Counseling, Burnout'}
                           </Text>
                         </View>
@@ -636,22 +624,22 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                     )}
 
                     {item.id === 'subscription' && (
-                      <View style={styles.panelContent}>
-                        <Text style={styles.panelTitle}>Subscription Details</Text>
+                      <View className="gap-1">
+                        <Text className="font-sora text-sm text-primary mb-1">Subscription Details</Text>
                         {isSubscribed ? (
-                          <View style={styles.activeSubCard}>
+                          <View className="flex-row items-center gap-2 bg-primary/5 p-4 rounded-2xl border border-primary/20">
                             <CheckCircle size={24} color={Theme.colors.primary} />
                             <View>
-                              <Text style={styles.subStatusTitle}>Active Subscription</Text>
-                              <Text style={styles.subStatusDesc}>Your calendar and profile are fully accessible.</Text>
+                              <Text className="font-sora text-[13.5px] text-primary">Active Subscription</Text>
+                              <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">Your calendar and profile are fully accessible.</Text>
                             </View>
                           </View>
                         ) : (
-                          <View style={styles.expiredSubCard}>
+                          <View className="flex-row items-center gap-2 bg-crisis/5 p-4 rounded-2xl border border-crisis/15">
                             <Lock size={20} color={Theme.colors.error} />
-                            <View style={styles.subCol}>
-                              <Text style={styles.expiredSubTitle}>No Active Subscription</Text>
-                              <Text style={styles.expiredSubDesc}>Access to booking tools is locked.</Text>
+                            <View className="flex-1">
+                              <Text className="font-sora text-[13.5px] text-crisis">No Active Subscription</Text>
+                              <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">Access to booking tools is locked.</Text>
                             </View>
                           </View>
                         )}
@@ -659,33 +647,33 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
                     )}
 
                     {item.id === 'invitations' && (
-                      <View style={styles.panelContent}>
-                        <Text style={styles.panelTitle}>Organization Linkage Invitations</Text>
+                      <View className="gap-1">
+                        <Text className="font-sora text-sm text-primary mb-1">Organization Linkage Invitations</Text>
                         {invitationsData && invitationsData.length > 0 ? (
                           invitationsData.map((invite: any) => (
-                            <View key={invite._id} style={styles.inviteItem}>
+                            <View key={invite._id} className="flex-row justify-between items-center py-2 border-b border-[#F0F2F1]">
                               <View>
-                                <Text style={styles.inviteOrg}>{invite.orgName || 'Hospital Partner'}</Text>
-                                <Text style={styles.inviteRoleText}>Affiliated Provider Request</Text>
+                                <Text className="font-sora text-[13px] text-onSurface">{invite.orgName || 'Hospital Partner'}</Text>
+                                <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">Affiliated Provider Request</Text>
                               </View>
-                              <View style={styles.inviteBtnRow}>
+                              <View className="flex-row gap-1.5">
                                 <TouchableOpacity
                                   onPress={() => handleInviteAction(invite._id, invite.orgName, 'decline')}
-                                  style={styles.inviteDecline}
+                                  className="border border-[#E0E2E0] px-2 py-1 rounded-full"
                                 >
-                                  <Text style={styles.inviteDeclineText}>Decline</Text>
+                                  <Text className="text-onSurfaceVariant font-jakarta-bold text-[10.5px]">Decline</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                   onPress={() => handleInviteAction(invite._id, invite.orgName, 'accept')}
-                                  style={styles.inviteAccept}
+                                  className="bg-primary px-2 py-1 rounded-full"
                                 >
-                                  <Text style={styles.inviteAcceptText}>Accept</Text>
+                                  <Text className="text-white font-jakarta-bold text-[10.5px]">Accept</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>
                           ))
                         ) : (
-                          <Text style={styles.emptyText}>No pending linkage invitations.</Text>
+                          <Text className="font-jakarta text-[12.5px] text-[#71787D] py-2">No pending linkage invitations.</Text>
                         )}
                       </View>
                     )}
@@ -695,782 +683,9 @@ export const TherapistDashboardScreen: React.FC<TherapistDashboardScreenProps> =
             );
           })}
         </View>
-
-        
-
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 80,
-    gap: Theme.spacing.md,
-  },
-  profileHeaderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 3,
-    gap: Theme.spacing.md,
-  },
-  avatarRingOuter: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary + '30',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarRingInner: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Theme.colors.primary + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarLetter: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-    fontWeight: '700',
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  headerRole: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    marginTop: 2,
-  },
-  headerSubtext: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 3,
-  },
-  statsGrid: {
-    gap: Theme.spacing.sm,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    height: 90,
-  },
-  statVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.onSurface,
-    fontWeight: '700',
-  },
-  statLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: Theme.spacing.xs - 4,
-    textAlign: 'center',
-  },
-  menuContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    overflow: 'hidden',
-  },
-  menuItemWrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  menuRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: Theme.spacing.md,
-  },
-  menuRowOpen: {
-    backgroundColor: Theme.colors.surfaceLow + '40',
-  },
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  menuIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: Theme.radius.md,
-    backgroundColor: Theme.colors.primary + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuIconBoxLocked: {
-    backgroundColor: Theme.colors.surfaceHigh,
-  },
-  menuLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14.5,
-    color: Theme.colors.onSurface,
-  },
-  menuLabelLocked: {
-    color: Theme.colors.outline,
-  },
-  expandedPanel: {
-    backgroundColor: Theme.colors.background + '50',
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceLow,
-    padding: Theme.spacing.md,
-  },
-  panelContent: {
-    gap: Theme.spacing.xs,
-  },
-  panelTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.primary,
-    marginBottom: 4,
-  },
-  panelDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginBottom: 6,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-    paddingVertical: 8,
-  },
-  rosterItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  clientName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  clientTime: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  badgeWrapper: {
-    backgroundColor: Theme.colors.primary + '15',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  badgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.primary,
-    textTransform: 'uppercase',
-  },
-  slotsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  slotPill: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  slotPillActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  slotText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  textWhite: {
-    color: '#FFF',
-  },
-  sharedReportBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Theme.colors.primary + '10',
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '30',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  sharedReportBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10.5,
-    color: Theme.colors.primary,
-  },
-  dayRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  dayPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    backgroundColor: '#FFF',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  dayPillActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  dayPillText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  dayPillTextActive: {
-    color: '#FFF',
-  },
-  dayDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Theme.colors.gold,
-  },
-  saveAvailBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 11,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  saveAvailBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  payoutCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8,
-  },
-  payoutLine: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  payoutLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-  },
-  payoutVal: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.onSurface,
-  },
-  payoutTotalLine: {
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceLow,
-    paddingTop: 8,
-    marginTop: 2,
-  },
-  payoutTotalLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.primary,
-  },
-  payoutTotalVal: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.primary,
-    fontWeight: '700',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 2,
-  },
-  infoKey: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-    width: 100,
-  },
-  infoVal: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    flex: 1,
-  },
-  activeSubCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-    backgroundColor: Theme.colors.primary + '08',
-    padding: Theme.spacing.md,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '20',
-  },
-  subStatusTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.primary,
-  },
-  subStatusDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  expiredSubCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-    backgroundColor: Theme.colors.error + '05',
-    padding: Theme.spacing.md,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.error + '15',
-  },
-  subCol: {
-    flex: 1,
-  },
-  expiredSubTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.error,
-  },
-  expiredSubDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  inviteItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  inviteOrg: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  inviteRoleText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  inviteBtnRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  inviteDecline: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  inviteDeclineText: {
-    color: Theme.colors.onSurfaceVariant,
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10.5,
-  },
-  inviteAccept: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  inviteAcceptText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10.5,
-  },
-  barrierContainer: {
-    backgroundColor: Theme.colors.primary + '06',
-    borderWidth: 1.5,
-    borderColor: Theme.colors.primary + '25',
-    borderStyle: 'dashed',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.lg,
-    alignItems: 'center',
-    textAlign: 'center',
-    marginTop: Theme.spacing.sm,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-  lockBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Theme.colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.sm,
-  },
-  barrierTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    fontWeight: '700',
-  },
-  barrierDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 6,
-    paddingHorizontal: 8,
-  },
-  barrierActions: {
-    width: '100%',
-    gap: 8,
-    marginTop: Theme.spacing.md,
-  },
-  viewPlansBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    width: '100%',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  viewPlansText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  demoActivateBtn: {
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '40',
-    backgroundColor: '#FFF',
-    paddingVertical: 10,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    width: '100%',
-  },
-  demoActivateText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12.5,
-    color: Theme.colors.primary,
-  },
-  dashboardBarrierCard: {
-    backgroundColor: Theme.colors.error + '05',
-    borderWidth: 1,
-    borderColor: Theme.colors.error + '20',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    gap: 12,
-    marginTop: 4,
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  barrierHeaderRow: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'flex-start',
-  },
-  barrierLockBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Theme.colors.error + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  barrierTitleText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14.5,
-    color: Theme.colors.error,
-  },
-  barrierDescText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16,
-    marginTop: 2,
-  },
-  barrierBtnRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  barrierPlansBtn: {
-    flex: 1,
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-  },
-  barrierPlansText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11.5,
-    color: '#FFF',
-  },
-  barrierDemoBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '30',
-    backgroundColor: '#FFF',
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-  },
-  barrierDemoText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11.5,
-    color: Theme.colors.primary,
-  },
-  invitationAlertContainer: {
-    gap: Theme.spacing.sm,
-    marginTop: 4,
-  },
-  blinkingInviteCard: {
-    borderWidth: 1.5,
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    gap: 10,
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  inviteHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  attentionIconBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  blinkOrgTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14.5,
-    color: '#92400E',
-  },
-  blinkOrgSub: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11,
-    color: '#B45309',
-    marginTop: 1,
-  },
-  blinkDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#78350F',
-    lineHeight: 16,
-    paddingLeft: 2,
-  },
-  blinkActions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 2,
-  },
-  blinkDeclineBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#D97706' + '40',
-    backgroundColor: '#FFF',
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-  },
-  blinkDeclineText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11.5,
-    color: '#B45309',
-  },
-  blinkAcceptBtn: {
-    flex: 1.3,
-    backgroundColor: '#D97706',
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-  },
-  blinkAcceptText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11.5,
-    color: '#FFF',
-  },
-  workspaceCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    marginHorizontal: Theme.spacing.margin,
-    marginBottom: Theme.spacing.md,
-    gap: 8,
-  },
-  workspaceLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  switcherContainer: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.full,
-    padding: 3,
-    gap: 2,
-  },
-  switcherBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  switcherBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  switcherBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11.5,
-    color: Theme.colors.primary,
-  },
-  switcherBtnTextActive: {
-    color: '#FFF',
-  },
-  notificationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  notificationLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  notificationIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationActiveIcon: {
-    backgroundColor: Theme.colors.primary + '12',
-  },
-  notificationInactiveIcon: {
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  notificationTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14.5,
-    color: Theme.colors.onSurface,
-  },
-  notificationDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-});
 
 export default TherapistDashboardScreen;

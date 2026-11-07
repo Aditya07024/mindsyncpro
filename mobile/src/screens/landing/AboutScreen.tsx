@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { ShieldCheck, MessageCircle, Heart, Star, Sparkles } from 'lucide-react-native';
-import { Theme } from '../../theme';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { ShieldCheck, Heart, Sparkles } from 'lucide-react-native';
 
 interface AboutScreenProps {
   navigation: any;
@@ -9,44 +8,44 @@ interface AboutScreenProps {
 
 export const AboutScreen: React.FC<AboutScreenProps> = ({ navigation }) => {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Our Mission</Text>
-        <Text style={styles.tagline}>
+    <ScrollView className="flex-1 bg-surface" contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+      <View className="items-center mb-4 text-center">
+        <Text className="pt-6 font-sora-bold text-3xl text-primary">Our Mission</Text>
+        <Text className="font-jakarta-medium text-sm text-[#4E615D] text-center leading-5 mt-1">
           To make premium, evidence-based mental health support culturally fluent, warm, and accessible to every Indian.
         </Text>
       </View>
 
-      <View style={styles.cardSection}>
+      <View className="gap-2.5 mb-6">
         {/* Core pillar 1 */}
-        <View style={styles.card}>
-          <View style={[styles.iconCircle, { backgroundColor: Theme.colors.primary + '10' }]}>
-            <Sparkles size={22} color={Theme.colors.primary} />
+        <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+          <View className="w-11 h-11 rounded-2xl justify-center items-center mb-2.5 bg-primary/10">
+            <Sparkles size={22} color="#0D564D" />
           </View>
-          <Text style={styles.cardTitle}>Manas: The Cultural Peer AI</Text>
-          <Text style={styles.cardText}>
+          <Text className="font-sora-semibold text-base text-[#191C1B] mb-1">Manas: The Cultural Peer AI</Text>
+          <Text className="font-jakarta text-[13px] text-[#4E615D] leading-[18px]">
             Trained to comprehend complex Indian socio-cultural structures, family dynamics, and linguistical nuances. Manas understands Hindi, English, and Hinglish natively, offering warm guidance without clinical coldness.
           </Text>
         </View>
 
         {/* Core pillar 2 */}
-        <View style={styles.card}>
-          <View style={[styles.iconCircle, { backgroundColor: Theme.colors.secondaryContainer + '20' }]}>
-            <Heart size={22} color={Theme.colors.secondary} />
+        <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+          <View className="w-11 h-11 rounded-2xl justify-center items-center mb-2.5 bg-secondary/15">
+            <Heart size={22} color="#9D4223" />
           </View>
-          <Text style={styles.cardTitle}>Evidence-Based CBT</Text>
-          <Text style={styles.cardText}>
+          <Text className="font-sora-semibold text-base text-[#191C1B] mb-1">Evidence-Based CBT</Text>
+          <Text className="font-jakarta text-[13px] text-[#4E615D] leading-[18px]">
             Our interactive breathing guides, dynamic thought journals, and cognitive reframing toolsets are rooted in rigorous clinical psychology to help you build resilient daily coping skills.
           </Text>
         </View>
 
         {/* Core pillar 3 */}
-        <View style={styles.card}>
-          <View style={[styles.iconCircle, { backgroundColor: Theme.colors.gold + '20' }]}>
-            <ShieldCheck size={22} color={Theme.colors.tertiary} />
+        <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+          <View className="w-11 h-11 rounded-2xl justify-center items-center mb-2.5 bg-amber-500/15">
+            <ShieldCheck size={22} color="#D97706" />
           </View>
-          <Text style={styles.cardTitle}>Strict Ethical Shield</Text>
-          <Text style={styles.cardText}>
+          <Text className="font-sora-semibold text-base text-[#191C1B] mb-1">Strict Ethical Shield</Text>
+          <Text className="font-jakarta text-[13px] text-[#4E615D] leading-[18px]">
             Zero-sharing policy on your sensitive journal logs or chat scripts. End-to-end anonymity on corporate dashboards, and direct active monitoring for crisis keywords with instant SOS interventions.
           </Text>
         </View>
@@ -54,89 +53,12 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ navigation }) => {
 
       <TouchableOpacity 
         onPress={() => navigation.navigate('Plans')} 
-        style={styles.ctaBtn}
+        className="bg-primary h-[52px] rounded-full justify-center items-center"
       >
-        <Text style={styles.ctaBtnText}>Explore Subscriptions</Text>
+        <Text className="text-white font-sora-semibold text-[15px]">Explore Subscriptions</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    padding: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xl,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Theme.spacing.md,
-    textAlign: 'center',
-  },
-  title: {
-    paddingTop: 25,
-    fontFamily: Theme.fonts.display,
-    fontSize: 28,
-    color: Theme.colors.primary,
-  },
-  tagline: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: Theme.spacing.xs,
-  },
-  cardSection: {
-    gap: Theme.spacing.sm,
-    marginBottom: Theme.spacing.lg,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.sm,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-    marginBottom: Theme.spacing.xs - 2,
-  },
-  cardText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 18,
-  },
-  ctaBtn: {
-    backgroundColor: Theme.colors.primary,
-    height: 52,
-    borderRadius: Theme.radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ctaBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-  },
-});
 export default AboutScreen;

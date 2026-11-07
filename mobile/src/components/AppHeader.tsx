@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image, Modal, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HeartHandshake, LogOut, X, Bell, Sparkles, Wallet, FileText } from 'lucide-react-native';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { Bell } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Theme } from '../theme';
 
@@ -16,20 +15,13 @@ interface AppHeaderProps {
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
-  userFirstName = 'Friend',
   role = 'user',
-  onUpgradePress,
-  onProfilePress,
-  userImageUrl,
   navigation,
 }) => {
   const insets = useSafeAreaInsets();
   const fallbackNavigation = useNavigation();
   const activeNavigation = navigation || fallbackNavigation;
-  const [modalVisible, setModalVisible] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { signOut } = useAuth();
-  const { user } = useUser();
 
   React.useEffect(() => {
     let active = true;
@@ -47,7 +39,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     };
 
     fetchUnread();
-    // Poll every 15 seconds to keep unread badges perfectly synced
     const interval = setInterval(fetchUnread, 15000);
 
     return () => {
@@ -56,53 +47,40 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     };
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (err) {
-      console.log("Clerk signOut note (already signed out or dev reload):", err);
-    } finally {
-      setModalVisible(false);
-      if (navigation) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Landing' }],
-        });
-      }
-    }
-  };
-
-  const finalAvatarUrl = userImageUrl || user?.imageUrl || (user as any)?.profileImageUrl;
-  const emailAddress = user?.primaryEmailAddress?.emailAddress || 'MyMindTherapyFriend Member';
-  const displayName = user?.fullName || (user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '') || userFirstName;
-
   return (
-    <View style={[styles.headerContainer, { paddingTop: insets.top + 8 }]}>
-      <View style={styles.leftSection}>
-        <View style={styles.logoCircle}>
-          <Image source={require('../../assets/logo.png')} style={{ width: 26, height: 26 }} resizeMode="contain" />
+    <View
+      className="flex-row justify-between items-center px-4 pb-2 bg-surface border-b border-surface-high"
+      style={{ paddingTop: insets.top + 8 }}
+    >
+      <View className="flex-row items-center gap-2">
+        <View className="w-9 h-9 rounded-full bg-white justify-center items-center">
+          <Image source={require('../../assets/logo.png')} className="w-[26px] h-[26px]" resizeMode="contain" />
         </View>
         <View>
-          <Text style={styles.brandTitle}>MyMindTherapyFriend</Text>
+          <Text className="font-sora-bold text-lg text-primary tracking-tight">MyMindTherapyFriend</Text>
           {role !== 'user' && (
-            <Text style={styles.roleBadge}>{role.toUpperCase().replace('_', ' ')}</Text>
+            <Text className="font-jakarta-bold text-[9px] text-secondary tracking-wider -mt-0.5">
+              {role.toUpperCase().replace('_', ' ')}
+            </Text>
           )}
         </View>
       </View>
 
-      <View style={styles.rightSection}>
+      <View className="flex-row items-center gap-4">
         <TouchableOpacity
           onPress={() => {
-            if (navigation) {
-              navigation.navigate('Notifications');
+            if (activeNavigation) {
+              activeNavigation.navigate('Notifications');
             }
           }}
-          style={styles.notificationBtn}
+          className="p-2 relative justify-center items-center"
         >
           <Bell size={22} color={Theme.colors.onSurfaceVariant} />
           {unreadCount > 0 && (
-            <View style={styles.badgeContainer}>
-              <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+            <View className="absolute top-0 right-0 bg-error rounded-full min-w-[16px] h-4 justify-center items-center px-1">
+              <Text className="text-white text-[9px] font-jakarta-bold leading-[10px]">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Text>
             </View>
           )}
         </TouchableOpacity>
@@ -110,252 +88,5 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: Theme.spacing.xs,
-    backgroundColor: Theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-  },
-  leftSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.xs,
-  },
-  logoCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: Theme.radius.full,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  brandTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-    letterSpacing: -0.5,
-  },
-  roleBadge: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.secondary,
-    letterSpacing: 0.5,
-    marginTop: -2,
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  upgradeBtn: {
-    backgroundColor: Theme.colors.secondaryContainer + '20',
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.base + 2,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.secondaryContainer + '40',
-  },
-  upgradeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.secondary,
-  },
-  avatarBorder: {
-    width: 38,
-    height: 38,
-    borderRadius: Theme.radius.full,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  avatarFallback: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.margin,
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    width: '90%',
-    maxWidth: 340,
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md + 4,
-    alignItems: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
-    position: 'relative',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: Theme.spacing.sm,
-    right: Theme.spacing.sm,
-    padding: 8,
-    borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  modalHeader: {
-    alignItems: 'center',
-    marginTop: Theme.spacing.sm,
-    marginBottom: Theme.spacing.md,
-  },
-  modalAvatarBorder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: Theme.colors.primary,
-    overflow: 'hidden',
-    marginBottom: Theme.spacing.sm,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
-  modalAvatarImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  modalAvatarFallback: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalAvatarText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 28,
-  },
-  modalName: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 20,
-    color: Theme.colors.onSurface,
-    textAlign: 'center',
-  },
-  modalEmail: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  roleTag: {
-    backgroundColor: Theme.colors.primary + '12',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-    marginTop: Theme.spacing.xs,
-  },
-  roleTagText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.primary,
-    letterSpacing: 0.5,
-  },
-  modalActions: {
-    width: '100%',
-    gap: Theme.spacing.sm,
-  },
-  logoutActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#FFF2F2',
-    height: 48,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.error + '25',
-  },
-  logoutActionText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.error,
-  },
-  upgradeActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Theme.colors.primary,
-    height: 48,
-    borderRadius: Theme.radius.lg,
-    elevation: 2,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  upgradeActionText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: '#FFF',
-  },
-  cancelActionBtn: {
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  cancelActionText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  notificationBtn: {
-    padding: Theme.spacing.xs,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeContainer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: Theme.colors.error,
-    borderRadius: Theme.radius.full,
-    minWidth: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 3,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 9,
-    fontFamily: Theme.fonts.bodyBold,
-    lineHeight: 10,
-  },
-});
 
 export default AppHeader;

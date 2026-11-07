@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Clock, Lock, CheckCircle, ChevronRight, Briefcase, Award } from 'lucide-react-native';
+import { Calendar, Clock, Lock, Briefcase, Award } from 'lucide-react-native';
 import { useWorkspaceStore } from '../../lib/workspaceStore';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
@@ -45,17 +45,16 @@ interface TherapistScheduleScreenProps {
 }
 
 export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = ({ navigation }) => {
-  const [activationLoading, setActivationLoading] = useState(false);
   const [availability, setAvailability] = useState<string[]>([]);
 
   // Fetch profiles and subscription
-  const { data: userProfile, refetch: refetchProfile } = useQuery({
+  const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
     queryFn: () => API.auth.me(),
     retry: false,
   });
 
-  const { data: subData, refetch: refetchSub } = useQuery({
+  const { data: subData } = useQuery({
     queryKey: ['subscription'],
     queryFn: () => API.subscription.get().catch(() => null),
     retry: false,
@@ -66,14 +65,7 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
     !!(userProfile?.tier && userProfile.tier !== 'free') || 
     !!(subData && subData.subscription?.status === 'active');
 
-  const { data: therapistStats, refetch: refetchStats } = useQuery({
-    queryKey: ['therapistStats'],
-    queryFn: () => API.therapist.stats(),
-    retry: false,
-    enabled: isSubscribed,
-  });
-
-  const { data: bookingsData, refetch: refetchBookings } = useQuery({
+  const { data: bookingsData } = useQuery({
     queryKey: ['therapistBookings'],
     queryFn: () => API.therapist.meBookings(),
     retry: false,
@@ -114,7 +106,7 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
 
   const activeBookings = (bookingsData?.bookings || []).filter((b: any) => {
-    if (!userProfile?.orgId) return true; // Show all if not affiliated
+    if (!userProfile?.orgId) return true;
     if (activeWorkspace === 'corporate') {
       return b.clientOrgId === userProfile.orgId;
     } else {
@@ -147,7 +139,7 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
   const therapistName = userProfile?.fullName || 'Therapist';
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName={therapistName.split(' ')[0]}
         role="therapist"
@@ -155,54 +147,50 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
         onUpgradePress={userProfile?.orgId ? undefined : () => navigation.navigate('Plans')}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-5 pb-20 gap-4">
         {/* Profile Card */}
-        <View style={styles.profileHeaderCard}>
-          <View style={styles.avatarRingOuter}>
-            <View style={styles.avatarRingInner}>
-              <Text style={styles.avatarLetter}>T</Text>
+        <View className="flex-row items-center bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm gap-4">
+          <View className="w-[66px] h-[66px] rounded-full border-2 border-primary/30 justify-center items-center">
+            <View className="w-[54px] h-[54px] rounded-full bg-primary/10 justify-center items-center">
+              <Text className="font-sora-bold text-2xl text-primary">T</Text>
             </View>
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>{therapistName}</Text>
-            <Text style={styles.headerRole}>Therapist</Text>
-            <Text style={styles.headerSubtext}>– · {totalSessionsCount} sessions</Text>
+          <View className="flex-1">
+            <Text className="font-sora text-lg text-onSurface">{therapistName}</Text>
+            <Text className="font-jakarta-medium text-[13px] text-primary mt-0.5">Therapist</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5">– · {totalSessionsCount} sessions</Text>
           </View>
         </View>
 
         {/* Dynamic Workspace Switcher (Only if affiliated with an organization) */}
         {userProfile?.orgId && (
-          <View style={styles.workspaceCard}>
-            <Text style={styles.workspaceLabel}>Practice Workspace</Text>
-            <View style={styles.switcherContainer}>
+          <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm mb-4 gap-2">
+            <Text className="font-jakarta-bold text-[12.5px] text-onSurfaceVariant">Practice Workspace</Text>
+            <View className="flex-row bg-[#F0F2F1] rounded-full p-1 gap-0.5">
               <TouchableOpacity
                 onPress={() => setActiveWorkspace('individual')}
-                style={[
-                  styles.switcherBtn,
-                  activeWorkspace === 'individual' && styles.switcherBtnActive
-                ]}
+                className={`flex-1 flex-row items-center justify-center gap-1.5 py-2 rounded-full ${
+                  activeWorkspace === 'individual' ? 'bg-primary shadow-sm' : ''
+                }`}
               >
                 <Briefcase size={14} color={activeWorkspace === 'individual' ? '#FFF' : Theme.colors.primary} />
-                <Text style={[
-                  styles.switcherBtnText,
-                  activeWorkspace === 'individual' && styles.switcherBtnTextActive
-                ]}>
+                <Text className={`font-sora text-[11.5px] ${
+                  activeWorkspace === 'individual' ? 'text-white' : 'text-primary'
+                }`}>
                   Individual Practice
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => setActiveWorkspace('corporate')}
-                style={[
-                  styles.switcherBtn,
-                  activeWorkspace === 'corporate' && styles.switcherBtnActive
-                ]}
+                className={`flex-1 flex-row items-center justify-center gap-1.5 py-2 rounded-full ${
+                  activeWorkspace === 'corporate' ? 'bg-primary shadow-sm' : ''
+                }`}
               >
                 <Award size={14} color={activeWorkspace === 'corporate' ? '#FFF' : Theme.colors.primary} />
-                <Text style={[
-                  styles.switcherBtnText,
-                  activeWorkspace === 'corporate' && styles.switcherBtnTextActive
-                ]}>
+                <Text className={`font-sora text-[11.5px] ${
+                  activeWorkspace === 'corporate' ? 'text-white' : 'text-primary'
+                }`}>
                   Corporate Affiliation
                 </Text>
               </TouchableOpacity>
@@ -211,36 +199,38 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
         )}
 
         {/* 2 Stats Cards */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{todaySessionsCount}</Text>
-            <Text style={styles.statLabel}>Today's sessions</Text>
+        <View className="flex-row gap-2">
+          <View className="flex-1 bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+            <Text className="font-sora-bold text-2xl text-onSurface">{todaySessionsCount}</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Today's sessions</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{monthSessionsCount}</Text>
-            <Text style={styles.statLabel}>This month</Text>
+          <View className="flex-1 bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+            <Text className="font-sora-bold text-2xl text-onSurface">{monthSessionsCount}</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">This month</Text>
           </View>
         </View>
 
         {isSubscribed ? (
-          <View style={styles.actionContainer}>
+          <View className="gap-4">
             {/* Set Weekly Availability */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+              <View className="flex-row items-center gap-2 mb-1">
                 <Clock size={18} color={Theme.colors.primary} />
-                <Text style={styles.cardTitle}>Availability Calendar</Text>
+                <Text className="font-sora text-[15px] text-onSurface">Availability Calendar</Text>
               </View>
-              <Text style={styles.cardDesc}>Tap slots to open/close them for seeker booking:</Text>
-              <View style={styles.slotsGrid}>
+              <Text className="font-jakarta text-xs text-[#71787D] mb-1.5">Tap slots to open/close them for seeker booking:</Text>
+              <View className="flex-row flex-wrap gap-2">
                 {ALL_24H_SLOTS.map((slot) => {
                   const isSelected = availability.includes(slot);
                   return (
                     <TouchableOpacity
                       key={slot}
                       onPress={() => handleToggleSlot(slot)}
-                      style={[styles.slotPill, isSelected && styles.slotPillActive]}
+                      className={`border rounded-full px-3 py-1.5 ${
+                        isSelected ? 'bg-primary border-primary' : 'bg-[#F0F2F1] border-[#E0E2E0]'
+                      }`}
                     >
-                      <Text style={[styles.slotText, isSelected && styles.textWhite]}>{formatSlotDisplay(slot)}</Text>
+                      <Text className={`font-jakarta-medium text-xs ${isSelected ? 'text-white' : 'text-onSurfaceVariant'}`}>{formatSlotDisplay(slot)}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -248,24 +238,24 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
             </View>
 
             {/* Bookings Schedule */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+              <View className="flex-row items-center gap-2 mb-1">
                 <Calendar size={18} color={Theme.colors.primary} />
-                <Text style={styles.cardTitle}>Upcoming Bookings</Text>
+                <Text className="font-sora text-[15px] text-onSurface">Upcoming Bookings</Text>
               </View>
               {activeBookings && activeBookings.length > 0 ? (
                 activeBookings.map((booking: any) => (
-                  <View key={booking._id || booking.id} style={styles.bookingRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.clientName}>{booking.clientName || 'Seeker'}</Text>
-                      <Text style={styles.clientTime}>{new Date(booking.slot).toLocaleString()}</Text>
+                  <View key={booking._id || booking.id} className="flex-row justify-between items-center py-2 border-b border-[#F0F2F1]">
+                    <View className="flex-1">
+                      <Text className="font-sora text-[13px] text-onSurface">{booking.clientName || 'Seeker'}</Text>
+                      <Text className="font-jakarta text-[11.5px] text-[#71787D] mt-0.5">{new Date(booking.slot).toLocaleString()}</Text>
                     </View>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <View className="flex-row gap-1.5">
                       <TouchableOpacity 
                         onPress={() => navigation.navigate('TherapistBrief', { bookingId: booking.id, clientId: booking.clientId, clientName: booking.clientName })}
-                        style={styles.briefBtn}
+                        className="bg-primaryContainer px-2.5 py-1.5 rounded-full"
                       >
-                        <Text style={styles.briefBtnText}>AI Brief</Text>
+                        <Text className="font-jakarta-bold text-[11px] text-white">AI Brief</Text>
                       </TouchableOpacity>
                       {(() => {
                         const slotTime = new Date(booking.slot).getTime();
@@ -275,8 +265,8 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
 
                         if (isExpired) {
                           return (
-                            <View style={[styles.briefBtn, { backgroundColor: Theme.colors.surfaceHigh }]}>
-                              <Text style={[styles.briefBtnText, { color: Theme.colors.textMuted }]}>Completed</Text>
+                            <View className="bg-[#E0E2E0] px-2.5 py-1.5 rounded-full">
+                              <Text className="font-jakarta-bold text-[11px] text-[#71787D]">Completed</Text>
                             </View>
                           );
                         }
@@ -285,9 +275,9 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
                           return (
                             <TouchableOpacity 
                               onPress={() => Alert.alert('Session Scheduled', `Meeting window opens at scheduled time (${new Date(booking.slot).toLocaleString()}) and stays open for 1 hour.`)}
-                              style={[styles.briefBtn, { backgroundColor: Theme.colors.secondary + '40' }]}
+                              className="bg-secondary/40 px-2.5 py-1.5 rounded-full"
                             >
-                              <Text style={[styles.briefBtnText, { color: Theme.colors.onSurface }]}>Scheduled</Text>
+                              <Text className="font-jakarta-bold text-[11px] text-onSurface">Scheduled</Text>
                             </TouchableOpacity>
                           );
                         }
@@ -295,9 +285,9 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
                         return (
                           <TouchableOpacity 
                             onPress={() => navigation.navigate('Session', { bookingId: booking.id || booking._id, role: 'therapist' })}
-                            style={[styles.briefBtn, { backgroundColor: Theme.colors.primary }]}
+                            className="bg-primary px-2.5 py-1.5 rounded-full"
                           >
-                            <Text style={styles.briefBtnText}>Join Session</Text>
+                            <Text className="font-jakarta-bold text-[11px] text-white">Join Session</Text>
                           </TouchableOpacity>
                         );
                       })()}
@@ -305,27 +295,27 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
                   </View>
                 ))
               ) : (
-                <Text style={styles.emptyText}>No bookings scheduled today.</Text>
+                <Text className="font-jakarta text-[12.5px] text-[#71787D] py-2">No bookings scheduled today.</Text>
               )}
             </View>
           </View>
         ) : (
           /* Subscription Required Barrier Overlay */
-          <View style={styles.barrierContainer}>
-            <View style={styles.lockBadge}>
+          <View className="bg-primary/5 border-[1.5px] border-primary/25 border-dashed rounded-3xl p-6 items-center shadow-sm">
+            <View className="w-11 h-11 rounded-full bg-primary/15 justify-center items-center mb-2">
               <Lock size={22} color={Theme.colors.primary} />
             </View>
-            <Text style={styles.barrierTitle}>Subscription Required</Text>
-            <Text style={styles.barrierDesc}>
+            <Text className="font-sora-bold text-lg text-primary text-center">Subscription Required</Text>
+            <Text className="font-jakarta text-[13px] text-onSurfaceVariant text-center leading-[18px] mt-1.5 px-2">
               As an independent therapist, you need an active subscription to access your schedule, bookings, and profile.
             </Text>
 
-            <View style={styles.barrierActions}>
+            <View className="w-full gap-2 mt-4">
               <TouchableOpacity
                 onPress={() => navigation.navigate('Plans')}
-                style={styles.viewPlansBtn}
+                className="bg-primary py-3 rounded-full items-center w-full"
               >
-                <Text style={styles.viewPlansText}>View Subscription Plans</Text>
+                <Text className="font-sora text-[13px] text-white">View Subscription Plans</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -334,311 +324,5 @@ export const TherapistScheduleScreen: React.FC<TherapistScheduleScreenProps> = (
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 80,
-    gap: Theme.spacing.md,
-  },
-  profileHeaderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 3,
-    gap: Theme.spacing.md,
-  },
-  avatarRingOuter: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary + '30',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarRingInner: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Theme.colors.primary + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarLetter: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-    fontWeight: '700',
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  headerRole: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    marginTop: 2,
-  },
-  headerSubtext: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 3,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    height: 90,
-  },
-  statVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.onSurface,
-    fontWeight: '700',
-  },
-  statLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: Theme.spacing.xs - 4,
-    textAlign: 'center',
-  },
-  actionContainer: {
-    gap: Theme.spacing.md,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: Theme.spacing.xs,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  cardDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginBottom: 6,
-  },
-  slotsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  slotPill: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  slotPillActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  slotText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  textWhite: {
-    color: '#FFF',
-  },
-  bookingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  clientName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  clientTime: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  briefBtn: {
-    backgroundColor: Theme.colors.primaryContainer,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: Theme.radius.full,
-  },
-  briefBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: '#FFF',
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-    paddingVertical: 8,
-  },
-  barrierContainer: {
-    backgroundColor: Theme.colors.primary + '06',
-    borderWidth: 1.5,
-    borderColor: Theme.colors.primary + '25',
-    borderStyle: 'dashed',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.lg,
-    alignItems: 'center',
-    textAlign: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-  lockBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Theme.colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.sm,
-  },
-  barrierTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    fontWeight: '700',
-  },
-  barrierDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 6,
-    paddingHorizontal: 8,
-  },
-  barrierActions: {
-    width: '100%',
-    gap: 8,
-    marginTop: Theme.spacing.md,
-  },
-  workspaceCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    marginHorizontal: Theme.spacing.margin,
-    marginBottom: Theme.spacing.md,
-    gap: 8,
-  },
-  workspaceLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  switcherContainer: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.full,
-    padding: 3,
-    gap: 2,
-  },
-  switcherBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  switcherBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  switcherBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11.5,
-    color: Theme.colors.primary,
-  },
-  switcherBtnTextActive: {
-    color: '#FFF',
-  },
-  viewPlansBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    width: '100%',
-  },
-  viewPlansText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-});
 
 export default TherapistScheduleScreen;

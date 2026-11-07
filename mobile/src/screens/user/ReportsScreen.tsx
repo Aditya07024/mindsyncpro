@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Dimensions, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput, Dimensions, Modal } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Svg, { Line, Path, Circle, Text as SvgText, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import { ArrowLeft, Calendar, AlertCircle, Sparkles, Clock, Heart, Smile, CheckCircle2, Wallet, Plus, Share2, FileText, Download, ChevronRight } from 'lucide-react-native';
@@ -635,35 +635,34 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
   });
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView className="flex-1 bg-surface" contentContainerClassName="p-5 pb-8 gap-4">
       {/* Header back button */}
-      <View style={styles.backRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <View className="flex-row items-center pt-12 gap-2">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="w-[38px] h-[38px] rounded-full bg-white justify-center items-center border border-[#E0E2E0]">
           <ArrowLeft size={20} color={Theme.colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Wellness Reports</Text>
+        <Text className="font-sora text-lg text-onSurface">Wellness Reports</Text>
       </View>
 
       {/* Target Ad Banners */}
       <AdBannerCarousel target="user" navigation={navigation} />
 
       {/* Period Selection */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1">
+        <View className="flex-row items-center gap-2">
           <Calendar size={18} color={Theme.colors.secondary} />
-          <Text style={styles.cardTitle}>Choose Timeframe</Text>
+          <Text className="font-sora text-[15px] text-onSurface">Choose Timeframe</Text>
         </View>
-        <View style={styles.btnRow}>
+        <View className="flex-row gap-2 mt-2">
           {(currentTier === 'free' ? (['day', 'fortnight', 'month'] as const) : (['day', 'week', 'month'] as const)).map((p) => (
             <TouchableOpacity
               key={p}
               onPress={() => setPeriod(p)}
-              style={[
-                styles.periodBtn,
-                period === p && styles.periodBtnActive
-              ]}
+              className={`flex-1 h-10 rounded-2xl justify-center items-center ${
+                period === p ? 'bg-primary' : 'bg-[#F0F2F1]'
+              }`}
             >
-              <Text style={[styles.periodBtnText, period === p && styles.periodBtnTextActive]}>
+              <Text className={`font-jakarta-bold text-[11px] ${period === p ? 'text-white' : 'text-[#71787D]'}`}>
                 {p === 'fortnight' ? '15 Days' : p.toUpperCase()}
               </Text>
             </TouchableOpacity>
@@ -672,27 +671,29 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
       </View>
 
       {/* Select Doctor Card */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1">
+        <View className="flex-row items-center gap-2">
           <Sparkles size={18} color={Theme.colors.primary} />
-          <Text style={styles.cardTitle}>Select Doctor Reviewer</Text>
+          <Text className="font-sora text-[15px] text-onSurface">Select Doctor Reviewer</Text>
         </View>
-        <Text style={styles.cardSub}>Choose who signs the clinical analysis.</Text>
+        <Text className="font-jakarta text-xs text-[#71787D]">Choose who signs the clinical analysis.</Text>
         
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.docScroll}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-3 py-1.5">
           {AI_DOCTORS.map((doc) => {
             const active = selectedAIDoctor === doc.name;
             return (
               <TouchableOpacity
                 key={doc.name}
                 onPress={() => setSelectedAIDoctor(doc.name)}
-                style={[styles.docCard, active && styles.docCardActive]}
+                className={`w-[120px] border rounded-2xl p-2.5 items-center bg-[#F0F2F1] gap-1 ${
+                  active ? 'border-primary border-[1.5px] bg-primary/5' : 'border-[#E0E2E0]'
+                }`}
               >
-                <View style={[styles.docAvatar, { backgroundColor: doc.avatarBg }]}>
-                  <Text style={styles.docInitials}>{doc.initials}</Text>
+                <View className="w-11 h-11 rounded-full justify-center items-center" style={{ backgroundColor: doc.avatarBg }}>
+                  <Text className="text-white font-sora text-sm">{doc.initials}</Text>
                 </View>
-                <Text style={styles.docName}>{doc.name}</Text>
-                <Text style={styles.docRole}>{doc.role}</Text>
+                <Text className="font-jakarta-bold text-xs text-onSurface text-center">{doc.name}</Text>
+                <Text className="font-jakarta text-[9px] text-[#71787D] text-center">{doc.role}</Text>
               </TouchableOpacity>
             );
           })}
@@ -701,82 +702,82 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
 
       {/* Clinical Summary & Unlocking Card */}
       {(period === 'week' || period === 'fortnight') && reportData && (
-        <View style={styles.card}>
-          <View style={styles.clinicalHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1">
+          <View className="flex-row justify-between items-center border-b border-[#F0F2F1] pb-2">
+            <View className="flex-row items-center gap-1.5">
               <Sparkles size={18} color={Theme.colors.secondary} />
-              <Text style={styles.cardTitle}>
+              <Text className="font-sora text-[15px] text-onSurface">
                 {period === 'week' ? 'Weekly' : '15-Day'} Clinical Evaluation
               </Text>
             </View>
             {reportData.aiReport?.paid && (
-              <View style={styles.unlockedBadge}>
+              <View className="flex-row items-center bg-[#E8F5E9] px-2 py-0.5 rounded-full gap-1">
                 <CheckCircle2 size={12} color="#2E7D32" />
-                <Text style={styles.unlockedText}>UNLOCKED</Text>
+                <Text className="font-jakarta-bold text-[8px] text-[#2E7D32]">UNLOCKED</Text>
               </View>
             )}
           </View>
 
           {reportData.aiReport?.paid ? (
-            <View style={styles.reportUnlockContent}>
-              <View style={styles.docSignatureRow}>
-                <View style={[styles.miniDocAvatar, { backgroundColor: AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.avatarBg || Theme.colors.secondaryContainer }]}>
-                  <Text style={styles.miniDocInitials}>{AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.initials || 'DM'}</Text>
+            <View className="mt-1 gap-3">
+              <View className="flex-row items-center gap-2.5">
+                <View className="w-8 h-8 rounded-full justify-center items-center" style={{ backgroundColor: AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.avatarBg || Theme.colors.secondaryContainer }}>
+                  <Text className="text-white font-sora text-[11px]">{AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.initials || 'DM'}</Text>
                 </View>
                 <View>
-                  <Text style={styles.signatureTitle}>Clinical evaluation signed by:</Text>
-                  <Text style={styles.signatureName}>{selectedAIDoctor} ({AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.role})</Text>
+                  <Text className="font-jakarta text-[10px] text-[#71787D]">Clinical evaluation signed by:</Text>
+                  <Text className="font-jakarta-bold text-[11px] text-onSurface">{selectedAIDoctor} ({AI_DOCTORS.find(d => d.name === selectedAIDoctor)?.role})</Text>
                 </View>
               </View>
-              <Text style={styles.clinicalBody}>
+              <Text className="font-jakarta text-[13px] text-onSurfaceVariant leading-5 italic border-l-[3px] border-secondaryContainer pl-2.5">
                 {reportData.aiReport.aiAnalysis.replaceAll('Dr. Manas', selectedAIDoctor)}
               </Text>
             </View>
           ) : (
-            <View style={styles.lockedSection}>
+            <View className="mt-2 gap-3">
               {/* Normal Summary */}
-              <View style={styles.normalSummaryBox}>
-                <Text style={styles.summaryLabel}>Free Summary</Text>
-                <Text style={styles.summaryBody}>{reportData.normalSummary}</Text>
+              <View className="p-3 bg-[#F0F2F1] rounded-2xl border border-[#E0E2E0] gap-1">
+                <Text className="font-jakarta-bold text-[9px] text-[#71787D] tracking-wider">Free Summary</Text>
+                <Text className="font-jakarta text-[13px] text-onSurface leading-[18px]">{reportData.normalSummary}</Text>
               </View>
 
               {/* Unlock Banner */}
-              <View style={styles.unlockCard}>
-                <Sparkles size={24} color="#FFF" style={styles.unlockIcon} />
-                <Text style={styles.unlockTitle}>Unlock Expert Clinical Evaluation</Text>
-                <Text style={styles.unlockDesc}>
+              <View className="bg-primary rounded-2xl p-4 gap-2">
+                <Sparkles size={24} color="#FFF" className="self-start" />
+                <Text className="font-sora-bold text-base text-white">Unlock Expert Clinical Evaluation</Text>
+                <Text className="font-jakarta text-xs text-white/80 leading-4">
                   Receive a deep psychological analysis of your journal entries, chats, and mood logs reviewed by our AI counselor.
                 </Text>
-                <View style={styles.divider} />
-                <View style={styles.unlockFooter}>
+                <View className="h-[1px] bg-white/15 my-1" />
+                <View className="flex-row justify-between items-center">
                   <View>
-                    <Text style={styles.feeLabel}>Report Fee</Text>
-                    <Text style={styles.feeAmount}>₹29.00</Text>
+                    <Text className="font-jakarta text-[9px] text-white/70">Report Fee</Text>
+                    <Text className="font-sora-bold text-xl text-white">₹29.00</Text>
                   </View>
                   {walletBalance >= 29 ? (
                     <TouchableOpacity
                       disabled={unlocking}
                       onPress={handleUnlockAIReport}
-                      style={styles.unlockBtn}
+                      className="flex-row items-center bg-white px-4 h-10 rounded-2xl gap-1.5"
                     >
                       {unlocking ? (
                         <ActivityIndicator color={Theme.colors.primary} />
                       ) : (
                         <>
                           <Wallet size={14} color={Theme.colors.primary} />
-                          <Text style={styles.unlockBtnText}>Pay from Wallet</Text>
+                          <Text className="font-sora text-xs text-primary">Pay from Wallet</Text>
                         </>
                       )}
                     </TouchableOpacity>
                   ) : (
-                    <View style={{ alignItems: 'flex-end', gap: 4 }}>
-                      <Text style={styles.balText}>Wallet Balance: ₹{walletBalance.toFixed(2)}</Text>
+                    <View className="items-end gap-1">
+                      <Text className="font-jakarta text-[10px] text-white/80">Wallet Balance: ₹{walletBalance.toFixed(2)}</Text>
                       <TouchableOpacity
                         onPress={() => navigation.navigate('Wallet')}
-                        style={styles.addFundsBtn}
+                        className="flex-row items-center bg-secondaryContainer px-3 h-[30px] rounded-lg gap-1"
                       >
                         <Plus size={12} color="#FFF" />
-                        <Text style={styles.addFundsBtnText}>Add Funds</Text>
+                        <Text className="font-sora text-[11px] text-white">Add Funds</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -788,37 +789,37 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
       )}
 
       {/* Share Report with Therapist */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1">
+        <View className="flex-row items-center gap-2">
           <Share2 size={18} color={Theme.colors.primary} />
-          <Text style={styles.cardTitle}>Share with Therapist</Text>
+          <Text className="font-sora text-[15px] text-onSurface">Share with Therapist</Text>
         </View>
 
         {uniqueTherapists.length === 0 ? (
-          <View style={styles.emptyContainer}>
+          <View className="items-center py-4 gap-1.5">
             <AlertCircle size={28} color={Theme.colors.textMuted} />
-            <Text style={styles.emptyText}>You haven't booked any sessions yet.</Text>
+            <Text className="font-jakarta text-xs text-[#71787D]">You haven't booked any sessions yet.</Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Therapists')}
-              style={styles.findBtn}
+              className="bg-primary px-4 h-9 rounded-2xl justify-center mt-1"
             >
-              <Text style={styles.findBtnText}>Find a Therapist</Text>
+              <Text className="font-sora text-xs text-white">Find a Therapist</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.shareForm}>
-            <Text style={styles.inputLabel}>1. Select Therapist</Text>
+          <View className="gap-1 mt-1.5">
+            <Text className="font-jakarta-bold text-[11px] text-[#71787D]">1. Select Therapist</Text>
             <TouchableOpacity 
               onPress={() => setTherapistModalVisible(true)} 
-              style={styles.pickerTrigger}
+              className="flex-row justify-between items-center h-12 border border-[#E0E2E0] rounded-2xl bg-[#F0F2F1] px-3"
             >
-              <Text style={styles.pickerText}>
+              <Text className="font-jakarta text-[13px] text-onSurface">
                 {selectedTherapist ? selectedTherapist.name : 'Select a therapist'}
               </Text>
               <ChevronRight size={18} color={Theme.colors.outline} />
             </TouchableOpacity>
 
-            <Text style={styles.inputLabel}>2. Message / Notes (Optional)</Text>
+            <Text className="font-jakarta-bold text-[11px] text-[#71787D]">2. Message / Notes (Optional)</Text>
             <TextInput
               multiline
               numberOfLines={3}
@@ -826,20 +827,21 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
               onChangeText={setNotes}
               placeholder="Hi Doctor, sharing my wellness logs for our next session..."
               placeholderTextColor={Theme.colors.outline}
-              style={styles.noteInput}
+              className="border border-[#E0E2E0] rounded-2xl bg-[#F0F2F1] p-3 text-[13px] font-jakarta text-onSurface h-[70px]"
+              textAlignVertical="top"
             />
 
             <TouchableOpacity
               disabled={shareMutation.isPending}
               onPress={handleShare}
-              style={styles.shareSubmitBtn}
+              className="flex-row items-center justify-center bg-secondary h-[46px] rounded-2xl gap-2 mt-1.5"
             >
               {shareMutation.isPending ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
                 <>
                   <Share2 size={16} color="#FFF" />
-                  <Text style={styles.shareSubmitBtnText}>Share Report</Text>
+                  <Text className="font-sora text-[13px] text-white">Share Report</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -848,24 +850,24 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
       </View>
 
       {/* Share History */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1">
+        <View className="flex-row items-center gap-2">
           <Clock size={18} color={Theme.colors.secondary} />
-          <Text style={styles.cardTitle}>Sharing History</Text>
+          <Text className="font-sora text-[15px] text-onSurface">Sharing History</Text>
         </View>
         {sharesLoading ? (
           <ActivityIndicator color={Theme.colors.primary} />
         ) : shares.length === 0 ? (
-          <Text style={styles.noHistory}>No reports shared yet.</Text>
+          <Text className="font-jakarta text-xs text-[#71787D] text-center py-3">No reports shared yet.</Text>
         ) : (
-          <View style={styles.historyList}>
+          <View className="gap-2 mt-1.5">
             {shares.map((s: any) => (
-              <View key={s.id || s._id} style={styles.historyItem}>
-                <View style={styles.historyRow}>
-                  <Text style={styles.historyName}>Shared with {s.therapistName}</Text>
-                  <Text style={styles.historyPeriod}>{s.period.toUpperCase()}</Text>
+              <View key={s.id || s._id} className="bg-[#F0F2F1] rounded-2xl p-3 border border-[#E0E2E0] gap-1">
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-jakarta-bold text-xs text-onSurface">Shared with {s.therapistName}</Text>
+                  <Text className="font-jakarta-bold text-[9px] text-secondary">{s.period.toUpperCase()}</Text>
                 </View>
-                <Text style={styles.historyDate}>
+                <Text className="font-jakarta text-[10px] text-[#71787D]">
                   {new Date(s.sharedAt).toLocaleDateString('en-IN', {
                     day: 'numeric',
                     month: 'short',
@@ -873,7 +875,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
                   })}
                 </Text>
                 {s.notes && (
-                  <Text style={styles.historyNote}>"{s.notes}"</Text>
+                  <Text className="font-jakarta text-[11px] italic text-onSurfaceVariant mt-1 border-l-2 border-primary/30 pl-1.5">"{s.notes}"</Text>
                 )}
               </View>
             ))}
@@ -882,110 +884,110 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
       </View>
 
       {/* Download Action Widget */}
-      <View style={styles.downloadCard}>
-        <View style={styles.downloadLeft}>
-          <View style={styles.downloadIconBox}>
+      <View className="flex-row items-center justify-between bg-[#EEF6F5] rounded-3xl p-4 border border-[#2E6E6530] gap-1">
+        <View className="flex-row items-center gap-3 flex-1">
+          <View className="w-11 h-11 rounded-2xl bg-[#0D564D10] justify-center items-center">
             <FileText size={22} color={Theme.colors.primary} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.downloadTitle}>Download PDF Report</Text>
-            <Text style={styles.downloadDesc}>Get a physical copy of your emotional logs.</Text>
+          <View className="flex-1">
+            <Text className="font-sora text-[15px] text-primary">Download PDF Report</Text>
+            <Text className="font-jakarta text-[11px] text-[#71787D]">Get a physical copy of your emotional logs.</Text>
           </View>
         </View>
         <TouchableOpacity
           disabled={downloading || reportLoading}
           onPress={handleDownload}
-          style={styles.downloadBtn}
+          className="flex-row items-center bg-primary h-10 rounded-2xl px-4 gap-1.5"
         >
           {downloading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
               <Download size={16} color="#FFF" />
-              <Text style={styles.downloadBtnText}>Download</Text>
+              <Text className="font-sora text-xs text-white">Download</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
       {/* Report Preview Document */}
-      <View style={styles.previewCard}>
-        <View style={styles.previewHeader}>
+      <View className="bg-[#FCFAF7] rounded-3xl border border-[#E0E2E0] p-4 gap-4">
+        <View className="flex-row justify-between items-start border-b border-primary/30 pb-2">
           <View>
-            <Text style={styles.previewSubtitle}>Previewing Wellness Report</Text>
-            <Text style={styles.previewBrand}>MyMindTherapyFriend</Text>
+            <Text className="font-jakarta-bold text-[9px] text-secondary tracking-widest">Previewing Wellness Report</Text>
+            <Text className="font-sora-bold text-lg text-primary">MyMindTherapyFriend</Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.previewDate}>
+          <View className="items-end">
+            <Text className="font-jakarta-bold text-[10px] text-onSurface">
               {reportData ? new Date(reportData.endDate).toLocaleDateString('en-IN') : ''}
             </Text>
-            <Text style={styles.previewPeriod}>Coverage: {period.toUpperCase()}</Text>
+            <Text className="font-jakarta text-[9px] text-[#71787D]">Coverage: {period.toUpperCase()}</Text>
           </View>
         </View>
 
         {reportLoading ? (
-          <View style={{ paddingVertical: 40 }}>
+          <View className="py-10">
             <ActivityIndicator color={Theme.colors.primary} />
           </View>
         ) : reportData ? (
-          <View style={styles.previewContent}>
+          <View className="gap-4">
             {/* Patient overview grid */}
-            <View style={styles.overviewGrid}>
-              <View style={styles.overviewCell}>
-                <Text style={styles.cellLabel}>PATIENT</Text>
-                <Text style={styles.cellVal}>{reportData.user?.fullName || 'Anonymous'}</Text>
+            <View className="flex-row bg-white/60 rounded-2xl p-2.5 border border-black/5">
+              <View className="flex-1 items-center gap-0.5">
+                <Text className="font-jakarta-bold text-[8px] text-[#71787D]">PATIENT</Text>
+                <Text className="font-sora text-xs text-primary">{reportData.user?.fullName || 'Anonymous'}</Text>
               </View>
-              <View style={styles.overviewCell}>
-                <Text style={styles.cellLabel}>STREAK</Text>
-                <Text style={styles.cellVal}>{reportData.user?.streak ?? 0} Days</Text>
+              <View className="flex-1 items-center gap-0.5">
+                <Text className="font-jakarta-bold text-[8px] text-[#71787D]">STREAK</Text>
+                <Text className="font-sora text-xs text-primary">{reportData.user?.streak ?? 0} Days</Text>
               </View>
-              <View style={styles.overviewCell}>
-                <Text style={styles.cellLabel}>AVG MOOD</Text>
-                <Text style={styles.cellVal}>
+              <View className="flex-1 items-center gap-0.5">
+                <Text className="font-jakarta-bold text-[8px] text-[#71787D]">AVG MOOD</Text>
+                <Text className="font-sora text-xs text-primary">
                   {reportData.avgMood !== null ? `${reportData.avgMood}/10` : 'None'}
                 </Text>
               </View>
             </View>
 
             {/* Therapy Urgency Gauge */}
-            <View style={styles.urgencySection}>
-              <View style={styles.urgencyHeaderRow}>
-                <Text style={styles.urgencyLabel}>Therapy Urgency Index</Text>
-                <View style={[styles.urgencyBadge, { backgroundColor: urgency.color + '15' }]}>
-                  <Text style={[styles.urgencyBadgeText, { color: urgency.color }]}>{urgency.label} ({urgency.score}/10)</Text>
+            <View className="bg-white p-3.5 rounded-2xl border border-black/5 gap-2">
+              <View className="flex-row justify-between items-center">
+                <Text className="font-sora text-[13px] text-onSurface">Therapy Urgency Index</Text>
+                <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: urgency.color + '15' }}>
+                  <Text className="font-jakarta-bold text-[10px]" style={{ color: urgency.color }}>{urgency.label} ({urgency.score}/10)</Text>
                 </View>
               </View>
-              <View style={styles.urgencyBarContainer}>
-                <View style={styles.urgencyBarBackground} />
-                <View style={[styles.urgencyBarFill, { width: `${urgency.score * 10}%`, backgroundColor: urgency.color }]} />
-                <View style={[styles.urgencyBarCursor, { left: `${urgency.score * 10}%`, borderColor: urgency.color }]} />
+              <View className="h-2 rounded-full bg-[#ECEFF1] relative my-1.5">
+                <View className="absolute inset-0 bg-[#ECEFF1] rounded-full" />
+                <View className="h-full rounded-full" style={{ width: `${urgency.score * 10}%`, backgroundColor: urgency.color }} />
+                <View className="absolute w-3 h-3 rounded-full bg-white border-2 -top-0.5 -ml-1.5" style={{ left: `${urgency.score * 10}%`, borderColor: urgency.color }} />
               </View>
-              <Text style={styles.urgencyDescText}>
+              <Text className="font-jakarta text-[10px] text-[#71787D]">
                 Computed from your average mood of {reportData.avgMood !== null ? `${reportData.avgMood}/10` : 'None'}, {reportData.journals?.length || 0} journal entries, and chat safety levels.
               </Text>
             </View>
 
             {/* Doctor Endorsement & Referral Recommendation */}
-            <View style={styles.doctorRecCard}>
-              <View style={styles.doctorRecHeader}>
+            <View className="bg-white rounded-2xl p-3.5 border border-black/5 border-l-4 border-l-primary gap-1">
+              <View className="flex-row items-center gap-1.5">
                 <Sparkles size={16} color={Theme.colors.primary} />
-                <Text style={styles.doctorRecTitle}>Doctor Recommendation & Referral</Text>
+                <Text className="font-sora text-[13px] text-onSurface">Doctor Recommendation & Referral</Text>
               </View>
-              <Text style={styles.doctorRecSub}>Endorsed & Signed by: {selectedAIDoctor}</Text>
-              <View style={styles.doctorRecDivider} />
-              <Text style={styles.doctorRecText}>
+              <Text className="font-jakarta text-[10px] text-[#71787D]">Endorsed & Signed by: {selectedAIDoctor}</Text>
+              <View className="h-[1px] bg-[#ECEFF1] my-1" />
+              <Text className="font-jakarta text-[11px] text-onSurfaceVariant leading-4">
                 {doctorRec.endorsement}
               </Text>
-              <Text style={[styles.doctorRecText, { marginTop: 8, fontFamily: Theme.fonts.bodyBold, color: Theme.colors.primary }]}>
+              <Text className="font-jakarta-bold text-[11px] text-primary mt-2">
                 {doctorRec.therapyNeed}
               </Text>
             </View>
 
             {/* SVG Trend Chart */}
             {sortedMoods.length > 0 && (
-              <View style={styles.chartSection}>
-                <Text style={styles.sectionHeader}>Mood Trend Graph</Text>
-                <View style={styles.chartWrapper}>
+              <View className="bg-white p-3 rounded-2xl border border-black/5 gap-2">
+                <Text className="font-sora text-[13px] text-onSurface border-b border-[#F0F2F1] pb-1">Mood Trend Graph</Text>
+                <View className="items-center">
                   <Svg width={chartWidth} height={chartHeight}>
                     <Defs>
                       <LinearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1054,28 +1056,28 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
             )}
 
             {/* Mood Logs List */}
-            <View style={styles.logSection}>
-              <Text style={styles.sectionHeader}>Mood Logs ({reportData.moods?.length || 0})</Text>
+            <View className="gap-2">
+              <Text className="font-sora text-[13px] text-onSurface border-b border-[#F0F2F1] pb-1">Mood Logs ({reportData.moods?.length || 0})</Text>
               {reportData.moods?.length === 0 ? (
-                <Text style={styles.italicText}>No mood check-ins recorded.</Text>
+                <Text className="font-jakarta text-[11px] italic text-[#71787D]">No mood check-ins recorded.</Text>
               ) : (
-                <View style={styles.moodGrid}>
+                <View className="flex-row flex-wrap gap-2">
                   {reportData.moods.map((m: any) => (
-                    <View key={m.id || m._id} style={styles.moodLogCard}>
-                      <View style={styles.moodCardHeader}>
-                        <Text style={styles.moodCardDate}>
+                    <View key={m.id || m._id} className="bg-white rounded-xl p-2.5 border border-black/5 gap-1" style={{ width: (screenWidth - paddingX - 40) / 2 }}>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta text-[9px] text-[#71787D]">
                           {new Date(m.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </Text>
-                        <View style={[styles.moodScoreCircle, { backgroundColor: moodColor(m.score) }]}>
-                          <Text style={styles.moodScoreText}>{m.score}</Text>
+                        <View className="w-5 h-5 rounded-full justify-center items-center" style={{ backgroundColor: moodColor(m.score) }}>
+                          <Text className="text-white font-jakarta-bold text-[9px]">{m.score}</Text>
                         </View>
                       </View>
-                      {m.note ? <Text style={styles.moodCardNote}>"{m.note}"</Text> : null}
+                      {m.note ? <Text className="font-jakarta text-[10px] text-onSurfaceVariant italic">"{m.note}"</Text> : null}
                       {m.tags && m.tags.length > 0 ? (
-                        <View style={styles.moodTagsContainer}>
+                        <View className="flex-row flex-wrap gap-1 mt-1">
                           {m.tags.slice(0, 3).map((t: string, idx: number) => (
-                            <View key={idx} style={styles.moodTagBadge}>
-                              <Text style={styles.moodTagText}>{t}</Text>
+                            <View key={idx} className="bg-primary/10 px-1.5 py-0.5 rounded">
+                              <Text className="font-jakarta-bold text-[8px] text-primary">{t}</Text>
                             </View>
                           ))}
                         </View>
@@ -1087,46 +1089,46 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
             </View>
 
             {/* CBT Journal Logs List */}
-            <View style={styles.logSection}>
-              <Text style={styles.sectionHeader}>CBT Journal Reflections ({reportData.journals?.length || 0})</Text>
+            <View className="gap-2">
+              <Text className="font-sora text-[13px] text-onSurface border-b border-[#F0F2F1] pb-1">CBT Journal Reflections ({reportData.journals?.length || 0})</Text>
               {reportData.journals?.length === 0 ? (
-                <Text style={styles.italicText}>No CBT journal sheets logged.</Text>
+                <Text className="font-jakarta text-[11px] italic text-[#71787D]">No CBT journal sheets logged.</Text>
               ) : (
-                <View style={styles.journalList}>
+                <View className="gap-2">
                   {reportData.journals.map((j: any) => (
-                    <View key={j.id || j._id} style={styles.journalCard}>
-                      <View style={styles.journalCardHeader}>
-                        <Text style={styles.journalPrompt} numberOfLines={2}>{j.prompt}</Text>
-                        <Text style={styles.journalDate}>
+                    <View key={j.id || j._id} className="bg-white rounded-2xl p-3 border border-black/5 gap-2">
+                      <View className="flex-row justify-between items-start gap-1">
+                        <Text className="font-jakarta-bold text-xs text-onSurface flex-1" numberOfLines={2}>{j.prompt}</Text>
+                        <Text className="font-jakarta text-[9px] text-[#71787D]">
                           {new Date(j.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </Text>
                       </View>
                       
-                      <View style={styles.journalGrid}>
-                        <View style={styles.journalGridItem}>
-                          <Text style={styles.jColTitle}>SITUATION</Text>
-                          <Text style={styles.jColBody}>{j.situation || 'N/A'}</Text>
+                      <View className="flex-row flex-wrap gap-2 mt-1">
+                        <View className="gap-0.5" style={{ width: (screenWidth - paddingX - 48) / 2 }}>
+                          <Text className="font-jakarta-bold text-[7px] text-[#71787D]">SITUATION</Text>
+                          <Text className="font-jakarta text-[10px] text-onSurfaceVariant leading-3.5">{j.situation || 'N/A'}</Text>
                         </View>
-                        <View style={styles.journalGridItem}>
-                          <Text style={styles.jColTitle}>AUTOMATIC THOUGHT</Text>
-                          <Text style={styles.jColBody}>{j.thought || 'N/A'}</Text>
+                        <View className="gap-0.5" style={{ width: (screenWidth - paddingX - 48) / 2 }}>
+                          <Text className="font-jakarta-bold text-[7px] text-[#71787D]">AUTOMATIC THOUGHT</Text>
+                          <Text className="font-jakarta text-[10px] text-onSurfaceVariant leading-3.5">{j.thought || 'N/A'}</Text>
                         </View>
-                        <View style={styles.journalGridItem}>
-                          <Text style={styles.jColTitle}>EMOTIONAL FEELING</Text>
-                          <Text style={styles.jColBody}>{j.feeling || 'N/A'}</Text>
+                        <View className="gap-0.5" style={{ width: (screenWidth - paddingX - 48) / 2 }}>
+                          <Text className="font-jakarta-bold text-[7px] text-[#71787D]">EMOTIONAL FEELING</Text>
+                          <Text className="font-jakarta text-[10px] text-onSurfaceVariant leading-3.5">{j.feeling || 'N/A'}</Text>
                         </View>
-                        <View style={styles.journalGridItem}>
-                          <Text style={styles.jColTitle}>REFRAMED TRUTH</Text>
-                          <Text style={[styles.jColBody, { color: Theme.colors.primary, fontWeight: 'bold' }]}>
+                        <View className="gap-0.5" style={{ width: (screenWidth - paddingX - 48) / 2 }}>
+                          <Text className="font-jakarta-bold text-[7px] text-[#71787D]">REFRAMED TRUTH</Text>
+                          <Text className="font-jakarta-bold text-[10px] text-primary leading-3.5">
                             {j.reframe || 'N/A'}
                           </Text>
                         </View>
                       </View>
 
                       {j.aiResponse ? (
-                        <View style={styles.journalAiResponse}>
-                          <Text style={styles.jAiTitle}>Manas AI Reflection</Text>
-                          <Text style={styles.jAiBody}>"{j.aiResponse}"</Text>
+                        <View className="mt-2 p-2 bg-[#F0F2F1] rounded-lg border border-[#E0E2E0]">
+                          <Text className="font-jakarta-bold text-[9px] text-secondary mb-0.5">Manas AI Reflection</Text>
+                          <Text className="font-jakarta text-[10px] text-onSurfaceVariant italic">"{j.aiResponse}"</Text>
                         </View>
                       ) : null}
                     </View>
@@ -1136,33 +1138,27 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
             </View>
 
             {/* AI Chats Sessions List */}
-            <View style={styles.logSection}>
-              <Text style={styles.sectionHeader}>Manas AI Chat Activity ({reportData.chats?.length || 0})</Text>
+            <View className="gap-2">
+              <Text className="font-sora text-[13px] text-onSurface border-b border-[#F0F2F1] pb-1">Manas AI Chat Activity ({reportData.chats?.length || 0})</Text>
               {reportData.chats?.length === 0 ? (
-                <Text style={styles.italicText}>No AI chat logs recorded.</Text>
+                <Text className="font-jakarta text-[11px] italic text-[#71787D]">No AI chat logs recorded.</Text>
               ) : (
-                <View style={styles.chatList}>
+                <View className="gap-2">
                   {reportData.chats.map((c: any, index: number) => (
-                    <View key={c.sessionId || index} style={styles.chatCard}>
-                      <View style={styles.chatCardHeader}>
-                        <Text style={styles.chatSessionId}>Session ID: #{c.sessionId?.slice(-6) || 'N/A'}</Text>
-                        <View style={[
-                          styles.riskBadge,
-                          {
-                            backgroundColor: c.riskLevel === 'high' ? '#FFEBEE' : c.riskLevel === 'medium' ? '#FFF8E1' : '#E8F5E9'
-                          }
-                        ]}>
-                          <Text style={[
-                            styles.riskText,
-                            {
-                              color: c.riskLevel === 'high' ? '#C62828' : c.riskLevel === 'medium' ? '#F57F17' : '#2E7D32'
-                            }
-                          ]}>
+                    <View key={c.sessionId || index} className="bg-white rounded-2xl p-3 border border-black/5 gap-1.5">
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta-bold text-[10px] text-[#71787D]">Session ID: #{c.sessionId?.slice(-6) || 'N/A'}</Text>
+                        <View className={`px-2 py-0.5 rounded-full ${
+                          c.riskLevel === 'high' ? 'bg-[#FFEBEE]' : c.riskLevel === 'medium' ? 'bg-[#FFF8E1]' : 'bg-[#E8F5E9]'
+                        }`}>
+                          <Text className={`font-jakarta-bold text-[8px] ${
+                            c.riskLevel === 'high' ? 'text-[#C62828]' : c.riskLevel === 'medium' ? 'text-[#F57F17]' : 'text-[#2E7D32]'
+                          }`}>
                             Risk: {c.riskLevel.toUpperCase()}
                           </Text>
                         </View>
                       </View>
-                      <Text style={styles.chatSummary}>{c.summary}</Text>
+                      <Text className="font-jakarta text-[11px] text-onSurface leading-[15px]">{c.summary}</Text>
                     </View>
                   ))}
                 </View>
@@ -1170,7 +1166,7 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
             </View>
           </View>
         ) : (
-          <Text style={styles.noData}>No data available for this timeframe.</Text>
+          <Text className="font-jakarta text-xs text-[#71787D] text-center py-5">No data available for this timeframe.</Text>
         )}
       </View>
 
@@ -1182,12 +1178,12 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
         onRequestClose={() => setTherapistModalVisible(false)}
       >
         <TouchableOpacity 
-          style={styles.modalOverlay}
+          className="flex-1 bg-black/50 justify-center items-center"
           activeOpacity={1}
           onPress={() => setTherapistModalVisible(false)}
         >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Choose Therapist</Text>
+          <View className="bg-white rounded-3xl p-4 w-[80%] max-h-[60%] gap-3 shadow-lg">
+            <Text className="font-sora text-base text-onSurface border-b border-[#E0E2E0] pb-1.5">Choose Therapist</Text>
             {uniqueTherapists.map((t: any) => (
               <TouchableOpacity
                 key={t.id}
@@ -1195,16 +1191,16 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
                   setSelectedTherapist(t);
                   setTherapistModalVisible(false);
                 }}
-                style={styles.modalItem}
+                className="py-2.5 border-b border-[#F0F2F1]"
               >
-                <Text style={styles.modalItemText}>{t.name}</Text>
+                <Text className="font-jakarta text-sm text-onSurface">{t.name}</Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity 
               onPress={() => setTherapistModalVisible(false)}
-              style={styles.modalCloseBtn}
+              className="mt-1 h-10 bg-[#F0F2F1] rounded-2xl justify-center items-center"
             >
-              <Text style={styles.modalCloseBtnText}>Cancel</Text>
+              <Text className="font-jakarta-bold text-[13px] text-onSurfaceVariant">Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -1212,867 +1208,5 @@ export const ReportsScreen: React.FC<ReportsScreenProps> = ({ navigation }) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    padding: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xl,
-    gap: Theme.spacing.md,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    gap: Theme.spacing.sm,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: Theme.spacing.xs,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  cardSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-  },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 8,
-  },
-  periodBtn: {
-    flex: 1,
-    height: 40,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  periodBtnActive: {
-    backgroundColor: Theme.colors.primary,
-  },
-  periodBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  periodBtnTextActive: {
-    color: '#FFF',
-  },
-  docScroll: {
-    gap: 12,
-    paddingVertical: 6,
-  },
-  docCard: {
-    width: 120,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-    gap: 4,
-  },
-  docCardActive: {
-    borderColor: Theme.colors.primary,
-    borderWidth: 1.5,
-    backgroundColor: Theme.colors.primary + '08',
-  },
-  docAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  docInitials: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-  },
-  docName: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-    textAlign: 'center',
-  },
-  docRole: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-  },
-  clinicalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-    paddingBottom: 8,
-  },
-  unlockedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Theme.radius.full,
-    gap: 4,
-  },
-  unlockedText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 8,
-    color: '#2E7D32',
-  },
-  reportUnlockContent: {
-    marginTop: Theme.spacing.xs,
-    gap: 12,
-  },
-  docSignatureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  miniDocAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  miniDocInitials: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11,
-  },
-  signatureTitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-  signatureName: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.onSurface,
-  },
-  clinicalBody: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 20,
-    fontStyle: 'italic',
-    borderLeftWidth: 3,
-    borderLeftColor: Theme.colors.secondaryContainer,
-    paddingLeft: 10,
-  },
-  lockedSection: {
-    marginTop: 8,
-    gap: Theme.spacing.sm,
-  },
-  normalSummaryBox: {
-    padding: 12,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 4,
-  },
-  summaryLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-    letterSpacing: 0.5,
-  },
-  summaryBody: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    lineHeight: 18,
-  },
-  unlockCard: {
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.md,
-    gap: 8,
-  },
-  unlockIcon: {
-    alignSelf: 'flex-start',
-  },
-  unlockTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: '#FFF',
-  },
-  unlockDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    lineHeight: 16,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginVertical: 4,
-  },
-  unlockFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  feeLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 9,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  feeAmount: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 20,
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  unlockBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 16,
-    height: 40,
-    borderRadius: Theme.radius.lg,
-    gap: 6,
-  },
-  unlockBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  balText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  addFundsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.secondaryContainer,
-    paddingHorizontal: 12,
-    height: 30,
-    borderRadius: Theme.radius.md,
-    gap: 4,
-  },
-  addFundsBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11,
-    color: '#FFF',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.md,
-    gap: 6,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-  },
-  findBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 16,
-    height: 36,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-  },
-  findBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: '#FFF',
-  },
-  shareForm: {
-    gap: Theme.spacing.xs,
-    marginTop: 6,
-  },
-  inputLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  pickerTrigger: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: 48,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-    paddingHorizontal: 12,
-  },
-  pickerText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  noteInput: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-    padding: 12,
-    fontSize: 13,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    textAlignVertical: 'top',
-    height: 70,
-  },
-  shareSubmitBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Theme.colors.secondary,
-    height: 46,
-    borderRadius: Theme.radius.lg,
-    gap: 8,
-    marginTop: 6,
-  },
-  shareSubmitBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  noHistory: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: 12,
-  },
-  historyList: {
-    gap: 8,
-    marginTop: 6,
-  },
-  historyItem: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 4,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  historyName: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-  },
-  historyPeriod: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.secondary,
-  },
-  historyDate: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-  historyNote: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    fontStyle: 'italic',
-    color: Theme.colors.onSurfaceVariant,
-    marginTop: 4,
-    borderLeftWidth: 2,
-    borderLeftColor: Theme.colors.primary + '30',
-    paddingLeft: 6,
-  },
-  previewCard: {
-    backgroundColor: '#FCFAF7',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    padding: Theme.spacing.md,
-    gap: Theme.spacing.md,
-  },
-  previewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.primary + '30',
-    paddingBottom: Theme.spacing.sm,
-  },
-  previewSubtitle: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.secondary,
-    letterSpacing: 1,
-  },
-  previewBrand: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-  },
-  previewDate: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.onSurface,
-  },
-  previewPeriod: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-  },
-  previewContent: {
-    gap: Theme.spacing.md,
-  },
-  urgencySection: {
-    backgroundColor: '#FFF',
-    padding: 14,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    gap: 8,
-  },
-  urgencyHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  urgencyLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  urgencyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Theme.radius.full,
-  },
-  urgencyBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-  },
-  urgencyBarContainer: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ECEFF1',
-    position: 'relative',
-    marginVertical: 6,
-  },
-  urgencyBarBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#ECEFF1',
-    borderRadius: 4,
-  },
-  urgencyBarFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  urgencyBarCursor: {
-    position: 'absolute',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#FFF',
-    borderWidth: 2,
-    top: -2,
-    marginLeft: -6,
-  },
-  urgencyDescText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-  doctorRecCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.lg,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    borderLeftWidth: 4,
-    borderLeftColor: Theme.colors.primary,
-    gap: 4,
-  },
-  doctorRecHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  doctorRecTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  doctorRecSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-  doctorRecDivider: {
-    height: 1,
-    backgroundColor: '#ECEFF1',
-    marginVertical: 4,
-  },
-  doctorRecText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 16,
-  },
-  overviewGrid: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  overviewCell: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  cellLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 8,
-    color: Theme.colors.textMuted,
-  },
-  cellVal: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  chartSection: {
-    backgroundColor: '#FFF',
-    padding: 12,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    gap: 8,
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-    paddingBottom: 4,
-  },
-  chartWrapper: {
-    alignItems: 'center',
-  },
-  logSection: {
-    gap: 8,
-  },
-  italicText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    fontStyle: 'italic',
-    color: Theme.colors.textMuted,
-  },
-  moodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  moodLogCard: {
-    width: (screenWidth - paddingX - 40) / 2,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.md,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    gap: 4,
-  },
-  moodCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  moodCardDate: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-  },
-  moodScoreCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  moodScoreText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-  },
-  moodCardNote: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.onSurfaceVariant,
-    fontStyle: 'italic',
-  },
-  moodTagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 4,
-  },
-  moodTagBadge: {
-    backgroundColor: '#0D564D15',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Theme.radius.sm,
-  },
-  moodTagText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 8,
-    color: Theme.colors.primary,
-  },
-  journalList: {
-    gap: 8,
-  },
-  journalCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    gap: 8,
-  },
-  journalCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: Theme.spacing.xs,
-  },
-  journalPrompt: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-    flex: 1,
-  },
-  journalDate: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-  },
-  journalGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  journalGridItem: {
-    width: (screenWidth - paddingX - 48) / 2,
-    gap: 2,
-  },
-  journalAiResponse: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.default,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  jAiTitle: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.secondary,
-    marginBottom: 2,
-  },
-  jAiBody: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.onSurfaceVariant,
-    fontStyle: 'italic',
-  },
-  jColTitle: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 7,
-    color: Theme.colors.textMuted,
-  },
-  jColBody: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-  },
-  chatList: {
-    gap: 8,
-  },
-  chatCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    gap: 6,
-  },
-  chatCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  chatSessionId: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-  riskBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: Theme.radius.full,
-  },
-  riskText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 8,
-  },
-  chatSummary: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.onSurface,
-    lineHeight: 15,
-  },
-  noData: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-  downloadCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#EEF6F5', // Soft primary container color
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: '#2E6E6530',
-    gap: Theme.spacing.xs,
-  },
-  downloadLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  downloadIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: '#0D564D10',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  downloadTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.primary,
-  },
-  downloadDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  downloadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.primary,
-    height: 40,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 16,
-    gap: 6,
-  },
-  downloadBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: '#FFF',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    width: '80%',
-    maxHeight: '60%',
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-    paddingBottom: 6,
-  },
-  modalItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  modalItemText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  modalCloseBtn: {
-    marginTop: 4,
-    height: 40,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCloseBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-  },
-});
 
 export default ReportsScreen;

@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ShieldCheck, UserCheck, CheckCircle2, Building, ShieldAlert, Award, FileText, Search } from 'lucide-react-native';
+import { ShieldCheck, CheckCircle2, Building, Award, Search } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 
 export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
@@ -117,121 +116,121 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
   const isListLoading = activeSegment === 'therapist' ? isTherapistsLoading : isOrgsLoading;
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="Super Admin"
         role="super_admin"
         navigation={navigation}
       />
 
-      <View style={styles.content}>
+      <View className="flex-1 p-4 gap-4">
         {/* Header Section */}
-        <View style={styles.headerSection}>
-          <Text style={styles.sectionHeader}>Verification & Approvals</Text>
-          <Text style={styles.sectionDesc}>Review medical license credentials and sponsor partnership requests.</Text>
+        <View className="gap-1">
+          <Text className="font-sora-bold text-base text-stone-900">Verification & Approvals</Text>
+          <Text className="font-jakarta text-xs text-stone-500 leading-4">Review medical license credentials and sponsor partnership requests.</Text>
         </View>
 
         {/* Dynamic Segment Switcher */}
-        <View style={styles.segmentContainer}>
+        <View className="flex-row bg-white border border-stone-200 rounded-xl p-1 gap-1">
           <TouchableOpacity
             onPress={() => { setActiveSegment('therapist'); setSearchQuery(''); }}
-            style={[styles.segmentBtn, activeSegment === 'therapist' && styles.segmentBtnActive]}
+            className={`flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-lg ${activeSegment === 'therapist' ? 'bg-primary' : ''}`}
           >
-            <Award size={14} color={activeSegment === 'therapist' ? '#FFF' : Theme.colors.primary} />
-            <Text style={[styles.segmentText, activeSegment === 'therapist' && styles.segmentTextActive]}>
+            <Award size={14} color={activeSegment === 'therapist' ? '#FFF' : '#0D564D'} />
+            <Text className={`font-jakarta-bold text-xs ${activeSegment === 'therapist' ? 'text-white' : 'text-primary'}`}>
               Therapists ({filteredTherapists.length})
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => { setActiveSegment('org'); setSearchQuery(''); }}
-            style={[styles.segmentBtn, activeSegment === 'org' && styles.segmentBtnActive]}
+            className={`flex-1 flex-row items-center justify-center gap-1.5 py-2.5 rounded-lg ${activeSegment === 'org' ? 'bg-primary' : ''}`}
           >
-            <Building size={14} color={activeSegment === 'org' ? '#FFF' : Theme.colors.primary} />
-            <Text style={[styles.segmentText, activeSegment === 'org' && styles.segmentTextActive]}>
+            <Building size={14} color={activeSegment === 'org' ? '#FFF' : '#0D564D'} />
+            <Text className={`font-jakarta-bold text-xs ${activeSegment === 'org' ? 'text-white' : 'text-primary'}`}>
               Organizations ({filteredOrgs.length})
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Search size={16} color={Theme.colors.outline} />
+        <View className="flex-row items-center bg-white border border-stone-200 rounded-xl px-3 h-12 gap-2">
+          <Search size={16} color="#78716C" />
           <TextInput
             placeholder={`Search by name or registration domain...`}
-            placeholderTextColor={Theme.colors.outline}
+            placeholderTextColor="#78716C"
             value={searchQuery}
             onChangeText={setSearchQuery}
-            style={styles.searchInput}
+            className="flex-1 text-[13px] text-stone-900 font-jakarta"
           />
         </View>
 
         {/* Scrollable list */}
         {isListLoading ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={Theme.colors.primary} />
-            <Text style={styles.loadingText}>Fetching verification queue...</Text>
+          <View className="flex-1 justify-center items-center gap-3">
+            <ActivityIndicator size="large" color="#0D564D" />
+            <Text className="font-jakarta text-[12.5px] text-stone-500">Fetching verification queue...</Text>
           </View>
         ) : activeSegment === 'therapist' ? (
-          <ScrollView contentContainerStyle={styles.listScroll}>
+          <ScrollView contentContainerClassName="gap-4 pb-20">
             {filteredTherapists.length > 0 ? (
               filteredTherapists.map((t: any) => (
-                <View key={t._id} style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>
+                <View key={t._id} className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-3">
+                  <View className="flex-row items-center gap-2.5">
+                    <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+                      <Text className="font-sora-bold text-sm text-primary">
                         {(t.fullName || t.name || 'T').charAt(0).toUpperCase()}
                       </Text>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.cardTitle}>{t.fullName || t.name || 'Clinical Practitioner'}</Text>
-                      <Text style={styles.cardSub}>
+                    <View className="flex-1">
+                      <Text className="font-sora-bold text-sm text-stone-900">{t.fullName || t.name || 'Clinical Practitioner'}</Text>
+                      <Text className="font-jakarta text-[11.5px] text-stone-500 mt-0.5">
                         {t.therapistProfile?.qualification || 'Licensed Counselor'}
                       </Text>
                     </View>
-                    <View style={styles.roleBadge}>
-                      <Text style={styles.roleBadgeText}>Therapist</Text>
+                    <View className="bg-primary/10 px-2 py-1 rounded">
+                      <Text className="font-jakarta-bold text-[10px] text-primary">Therapist</Text>
                     </View>
                   </View>
 
                   {/* Details list */}
-                  <View style={styles.detailsBox}>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Tier (Exp):</Text>
-                      <Text style={styles.detailValue}>{t.experienceCategory || 'N/A'}</Text>
+                  <View className="bg-stone-50 rounded-xl p-2.5 gap-1.5">
+                    <View className="flex-row justify-between items-center">
+                      <Text className="font-jakarta text-[11.5px] text-stone-500">Tier (Exp):</Text>
+                      <Text className="font-jakarta-medium text-xs text-stone-900">{t.experienceCategory || 'N/A'}</Text>
                     </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Fixed Fee:</Text>
-                      <Text style={styles.detailValue}>₹{t.sessionFee || 0}</Text>
+                    <View className="flex-row justify-between items-center">
+                      <Text className="font-jakarta text-[11.5px] text-stone-500">Fixed Fee:</Text>
+                      <Text className="font-jakarta-medium text-xs text-stone-900">₹{t.sessionFee || 0}</Text>
                     </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Sessions Given:</Text>
-                      <Text style={styles.detailValue}>{t.sessionsGiven || 0} completed</Text>
+                    <View className="flex-row justify-between items-center">
+                      <Text className="font-jakarta text-[11.5px] text-stone-500">Sessions Given:</Text>
+                      <Text className="font-jakarta-medium text-xs text-stone-900">{t.sessionsGiven || 0} completed</Text>
                     </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Payout Due (70%):</Text>
-                      <Text style={[styles.detailValue, { color: Theme.colors.primary, fontFamily: Theme.fonts.bodyBold }]}>
+                    <View className="flex-row justify-between items-center">
+                      <Text className="font-jakarta text-[11.5px] text-stone-500">Payout Due (70%):</Text>
+                      <Text className="font-jakarta-bold text-xs text-primary">
                         ₹{t.totalPayout?.toLocaleString('en-IN') || 0}
                       </Text>
                     </View>
                     {t.paymentDetails?.upiId ? (
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>UPI ID:</Text>
-                        <Text style={[styles.detailValue, { fontFamily: Theme.fonts.bodyBold }]}>{t.paymentDetails.upiId}</Text>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta text-[11.5px] text-stone-500">UPI ID:</Text>
+                        <Text className="font-jakarta-bold text-xs text-stone-900">{t.paymentDetails.upiId}</Text>
                       </View>
                     ) : null}
                     {t.paymentDetails?.bankDetails ? (
-                      <View style={[styles.detailRow, { flexDirection: 'column', alignItems: 'flex-start', gap: 2 }]}>
-                        <Text style={styles.detailLabel}>Bank Details:</Text>
-                        <Text style={[styles.detailValue, { fontSize: 11, fontFamily: Theme.fonts.body, color: Theme.colors.outline }]}>
+                      <View className="flex-col items-start gap-0.5">
+                        <Text className="font-jakarta text-[11.5px] text-stone-500">Bank Details:</Text>
+                        <Text className="font-jakarta text-[11px] text-stone-500">
                           {t.paymentDetails.bankDetails}
                         </Text>
                       </View>
                     ) : null}
                     {!t.paymentDetails?.upiId && !t.paymentDetails?.bankDetails ? (
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Payment Details:</Text>
-                        <Text style={[styles.detailValue, { fontStyle: 'italic', color: Theme.colors.outline }]}>Not Provided</Text>
+                      <View className="flex-row justify-between items-center">
+                        <Text className="font-jakarta text-[11.5px] text-stone-500">Payment Details:</Text>
+                        <Text className="font-jakarta italic text-xs text-stone-400">Not Provided</Text>
                       </View>
                     ) : null}
                   </View>
@@ -240,60 +239,60 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
                   <TouchableOpacity
                     onPress={() => handleVerifyTherapist(t._id, t.fullName || t.name)}
                     disabled={approvalLoading === t._id}
-                    style={styles.actionBtn}
+                    className="flex-row items-center justify-center gap-1.5 bg-primary py-3 rounded-xl"
                   >
                     {approvalLoading === t._id ? (
                       <ActivityIndicator color="#FFF" size="small" />
                     ) : (
                       <>
                         <CheckCircle2 size={15} color="#FFF" />
-                        <Text style={styles.actionBtnText}>Approve License Registration</Text>
+                        <Text className="font-jakarta-bold text-[12.5px] text-white">Approve License Registration</Text>
                       </>
                     )}
                   </TouchableOpacity>
                 </View>
               ))
             ) : (
-              <View style={styles.emptyContainer}>
-                <ShieldCheck size={36} color={Theme.colors.outline} />
-                <Text style={styles.emptyText}>No therapists awaiting license approval.</Text>
+              <View className="items-center justify-center py-10 bg-white rounded-2xl border border-stone-200 gap-2 mt-2">
+                <ShieldCheck size={36} color="#78716C" />
+                <Text className="font-jakarta text-[13px] text-stone-500 text-center px-5">No therapists awaiting license approval.</Text>
               </View>
             )}
           </ScrollView>
         ) : (
-          <ScrollView contentContainerStyle={styles.listScroll}>
+          <ScrollView contentContainerClassName="gap-4 pb-20">
             {filteredOrgs.length > 0 ? (
               filteredOrgs.map((o: any) => (
-                <View key={o._id} style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <View style={[styles.avatar, styles.orgAvatar]}>
-                      <Building size={16} color={Theme.colors.primary} />
+                <View key={o._id} className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-3">
+                  <View className="flex-row items-center gap-2.5">
+                    <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+                      <Building size={16} color="#0D564D" />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.cardTitle}>{o.name || 'Corporate Partner'}</Text>
-                      <Text style={styles.cardSub}>{o.domain || 'No domain whitelisted'}</Text>
+                    <View className="flex-1">
+                      <Text className="font-sora-bold text-sm text-stone-900">{o.name || 'Corporate Partner'}</Text>
+                      <Text className="font-jakarta text-[11.5px] text-stone-500 mt-0.5">{o.domain || 'No domain whitelisted'}</Text>
                     </View>
-                    <View style={[styles.roleBadge, styles.orgBadge]}>
-                      <Text style={[styles.roleBadgeText, styles.orgBadgeText]}>Organization</Text>
+                    <View className="bg-emerald-50 px-2 py-1 rounded">
+                      <Text className="font-jakarta-bold text-[10px] text-emerald-800">Organization</Text>
                     </View>
                   </View>
 
-                  <View style={styles.detailsBox}>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Roster Capacity Limit:</Text>
-                      <Text style={styles.detailValue}>{o.seats || 0} active seats</Text>
+                  <View className="bg-stone-50 rounded-xl p-2.5 gap-1.5">
+                    <View className="flex-row justify-between items-center">
+                      <Text className="font-jakarta text-[11.5px] text-stone-500">Roster Capacity Limit:</Text>
+                      <Text className="font-jakarta-medium text-xs text-stone-900">{o.seats || 0} active seats</Text>
                     </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Verification Status:</Text>
-                      <Text style={[styles.detailValue, { color: Theme.colors.error, fontFamily: Theme.fonts.bodyBold }]}>
+                    <View className="flex-row justify-between items-center">
+                      <Text className="font-jakarta text-[11.5px] text-stone-500">Verification Status:</Text>
+                      <Text className="font-jakarta-bold text-xs text-crisis">
                         {o.verificationStatus || 'pending'}
                       </Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => handleToggleCoverFees(o._id || o.id, o.name, !!o.coverMemberTherapyFees)}
-                      style={{ marginTop: 8, padding: 8, backgroundColor: o.coverMemberTherapyFees ? '#E8F5E9' : '#F5F5F5', borderRadius: Theme.radius.sm, alignItems: 'center' }}
+                      className={`mt-2 p-2 rounded items-center ${o.coverMemberTherapyFees ? 'bg-green-100' : 'bg-stone-100'}`}
                     >
-                      <Text style={{ fontSize: 11, fontFamily: Theme.fonts.bodyBold, color: o.coverMemberTherapyFees ? '#2E7D32' : '#616161' }}>
+                      <Text className={`text-[11px] font-jakarta-bold ${o.coverMemberTherapyFees ? 'text-green-800' : 'text-stone-600'}`}>
                         {o.coverMemberTherapyFees ? 'Member Therapy Fee: COVERED (Free)' : 'Member Therapy Fee: CHARGED'}
                       </Text>
                     </TouchableOpacity>
@@ -303,23 +302,23 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
                   <TouchableOpacity
                     onPress={() => handleVerifyOrg(o._id, o.name)}
                     disabled={approvalLoading === o._id}
-                    style={styles.actionBtn}
+                    className="flex-row items-center justify-center gap-1.5 bg-primary py-3 rounded-xl"
                   >
                     {approvalLoading === o._id ? (
                       <ActivityIndicator color="#FFF" size="small" />
                     ) : (
                       <>
                         <ShieldCheck size={15} color="#FFF" />
-                        <Text style={styles.actionBtnText}>Verify Partnership</Text>
+                        <Text className="font-jakarta-bold text-[12.5px] text-white">Verify Partnership</Text>
                       </>
                     )}
                   </TouchableOpacity>
                 </View>
               ))
             ) : (
-              <View style={styles.emptyContainer}>
-                <ShieldCheck size={36} color={Theme.colors.outline} />
-                <Text style={styles.emptyText}>No pending organization sponsorships awaiting review.</Text>
+              <View className="items-center justify-center py-10 bg-white rounded-2xl border border-stone-200 gap-2 mt-2">
+                <ShieldCheck size={36} color="#78716C" />
+                <Text className="font-jakarta text-[13px] text-stone-500 text-center px-5">No pending organization sponsorships awaiting review.</Text>
               </View>
             )}
           </ScrollView>
@@ -328,207 +327,5 @@ export const SuperAdminApprovalsScreen: React.FC<{ navigation?: any }> = ({ navi
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: Theme.spacing.margin,
-    gap: Theme.spacing.md,
-  },
-  headerSection: {
-    gap: 4
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16
-  },
-  segmentContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: 4,
-    gap: 4,
-  },
-  segmentBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: Theme.radius.md,
-  },
-  segmentBtnActive: {
-    backgroundColor: Theme.colors.primary,
-  },
-  segmentText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  segmentTextActive: {
-    color: '#FFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    height: 48,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    fontFamily: Theme.fonts.body,
-  },
-  listScroll: {
-    gap: Theme.spacing.md,
-    paddingBottom: 80,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#E6F4F1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.primary,
-  },
-  orgAvatar: {
-    backgroundColor: Theme.colors.primary + '10',
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  cardSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  roleBadge: {
-    backgroundColor: '#E6F4F1',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.sm,
-  },
-  roleBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.primary,
-  },
-  orgBadge: {
-    backgroundColor: '#E8F5E9',
-  },
-  orgBadgeText: {
-    color: '#2E7D32',
-  },
-  detailsBox: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-    gap: 6,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  detailLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.outline,
-  },
-  detailValue: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.lg,
-  },
-  actionBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: '#FFF',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.outline,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8,
-    marginTop: 10,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-});
 
 export default SuperAdminApprovalsScreen;

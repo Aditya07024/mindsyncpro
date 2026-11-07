@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldCheck, UserCheck, ShieldAlert, Award, Star, DollarSign, Users, Bell, BellOff } from 'lucide-react-native';
+import { ShieldCheck, UserCheck, ShieldAlert, Award, DollarSign, Users, Bell, BellOff } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
@@ -104,27 +104,27 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="Super Admin"
         role="super_admin"
         navigation={navigation}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-4 pb-16 gap-3">
         {/* Notification Toggle Card */}
-        <View style={styles.notificationCard}>
-          <View style={styles.notificationLeft}>
-            <View style={[styles.notificationIconBox, notificationsEnabled ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+        <View className="flex-row items-center justify-between bg-white rounded-2xl p-4 border border-stone-200 shadow-sm mb-1">
+          <View className="flex-row items-center gap-3 flex-1 mr-2">
+            <View className={`w-10 h-10 rounded-full items-center justify-center ${notificationsEnabled ? 'bg-primary/10' : 'bg-stone-100'}`}>
               {notificationsEnabled ? (
-                <Bell size={18} color={Theme.colors.primary} />
+                <Bell size={18} color="#0D564D" />
               ) : (
-                <BellOff size={18} color={Theme.colors.outline} />
+                <BellOff size={18} color="#78716C" />
               )}
             </View>
-            <View>
-              <Text style={styles.notificationTitle}>Alerts & Notifications</Text>
-              <Text style={styles.notificationDesc}>
+            <View className="flex-1">
+              <Text className="font-sora-bold text-[14.5px] text-stone-900">Alerts & Notifications</Text>
+              <Text className="font-jakarta text-[11.5px] text-stone-500 mt-0.5">
                 {notificationsEnabled ? 'Instant updates are turned on' : 'Notifications are paused'}
               </Text>
             </View>
@@ -132,132 +132,133 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
           <Switch
             value={notificationsEnabled}
             onValueChange={(val) => handleNotificationToggle(val, setNotificationsEnabled)}
-            trackColor={{ false: '#E0E0E0', true: Theme.colors.primary + '50' }}
-            thumbColor={notificationsEnabled ? Theme.colors.primary : '#F5F5F5'}
+            trackColor={{ false: '#E0E0E0', true: '#0D564D50' }}
+            thumbColor={notificationsEnabled ? '#0D564D' : '#F5F5F5'}
           />
         </View>
+
         {/* MRR & Stats Bento */}
-        <View style={styles.statsGrid}>
+        <View className="gap-2">
           <StatCard
             title="Monthly Recurring Revenue"
             value={`₹${mrr}`}
             trend={14}
             trendLabel="vs last month"
-            icon={<DollarSign size={18} color={Theme.colors.primary} />}
-            color={Theme.colors.primary}
+            icon={<DollarSign size={18} color="#0D564D" />}
+            color="#0D564D"
           />
           <StatCard
             title="Total Platform Users"
             value={userCount}
             trend={8}
             trendLabel="active seekers"
-            icon={<Users size={18} color={Theme.colors.secondary} />}
-            color={Theme.colors.secondary}
+            icon={<Users size={18} color="#9D4223" />}
+            color="#9D4223"
           />
           <StatCard
             title="Therapists"
             value={therapistCount}
-            icon={<Award size={18} color={Theme.colors.primary} />}
-            color={Theme.colors.primary}
+            icon={<Award size={18} color="#0D564D" />}
+            color="#0D564D"
           />
           <StatCard
             title="Organizations"
             value={organizationCount}
-            icon={<ShieldCheck size={18} color={Theme.colors.secondary} />}
-            color={Theme.colors.secondary}
+            icon={<ShieldCheck size={18} color="#9D4223" />}
+            color="#9D4223"
           />
           <StatCard
             title="Linked Therapists"
             value={linkedTherapists}
-            icon={<Users size={18} color={Theme.colors.primary} />}
-            color={Theme.colors.primary}
+            icon={<Users size={18} color="#0D564D" />}
+            color="#0D564D"
           />
           <StatCard
             title="Linked Users"
             value={linkedUsers}
-            icon={<Users size={18} color={Theme.colors.secondary} />}
-            color={Theme.colors.secondary}
+            icon={<Users size={18} color="#9D4223" />}
+            color="#9D4223"
           />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Platform Network Overview</Text>
-          <Text style={styles.sectionDesc}>Relationship visibility across users, therapists and organizations.</Text>
+        <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+          <Text className="font-sora-bold text-base text-stone-900">Platform Network Overview</Text>
+          <Text className="font-jakarta text-xs text-stone-500 mt-0.5 leading-4 mb-2">Relationship visibility across users, therapists and organizations.</Text>
 
-          <Text style={styles.itemName}>Users: {userCount}</Text>
-          <Text style={styles.itemName}>Therapists: {therapistCount}</Text>
-          <Text style={styles.itemName}>Organizations: {organizationCount}</Text>
-          <Text style={styles.itemName}>Therapists Linked To Organizations: {linkedTherapists}</Text>
-          <Text style={styles.itemName}>Users Linked Through Organizations: {linkedUsers}</Text>
+          <Text className="font-sora-bold text-sm text-stone-800">Users: {userCount}</Text>
+          <Text className="font-sora-bold text-sm text-stone-800">Therapists: {therapistCount}</Text>
+          <Text className="font-sora-bold text-sm text-stone-800">Organizations: {organizationCount}</Text>
+          <Text className="font-sora-bold text-sm text-stone-800">Therapists Linked To Organizations: {linkedTherapists}</Text>
+          <Text className="font-sora-bold text-sm text-stone-800">Users Linked Through Organizations: {linkedUsers}</Text>
         </View>
 
         {/* Verification Approval Queue */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>Verification Approval Queue</Text>
-          <Text style={styles.sectionDesc}>Verify licenses and credentials of therapists/orgs:</Text>
+        <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+          <Text className="font-sora-bold text-base text-stone-900">Verification Approval Queue</Text>
+          <Text className="font-jakarta text-xs text-stone-500 mt-0.5 leading-4 mb-2">Verify licenses and credentials of therapists/orgs:</Text>
 
-          <View style={styles.list}>
+          <View className="gap-2 mt-1">
             {verifications.map(item => (
-              <View key={item._id} style={styles.itemRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <Text style={styles.itemMeta}>
+              <View key={item._id} className="flex-row justify-between items-center pb-2.5 border-b border-stone-100">
+                <View className="flex-1 mr-2">
+                  <Text className="font-sora-bold text-sm text-stone-900">{item.name}</Text>
+                  <Text className="font-jakarta-bold text-[10px] text-stone-500 mt-0.5">
                     {item.type.toUpperCase()} {item.licenseNum ? `· Lic: ${item.licenseNum}` : ''}
                   </Text>
                 </View>
                 {item.status === 'verified' ? (
-                  <View style={[styles.verifyBtn, { backgroundColor: '#16a34a' }]}>
-                    <Text style={styles.verifyBtnText}>Approved</Text>
+                  <View className="flex-row items-center gap-1 bg-green-600 px-3 py-2 rounded-full">
+                    <Text className="text-white font-jakarta-bold text-[11px]">Approved</Text>
                   </View>
                 ) : (
                   <TouchableOpacity
                     onPress={() => handleVerify(item._id, item.name)}
-                    style={styles.verifyBtn}
+                    className="flex-row items-center gap-1 bg-primary px-3 py-2 rounded-full"
                   >
                     <UserCheck size={14} color="#FFF" />
-                    <Text style={styles.verifyBtnText}>Approve</Text>
+                    <Text className="text-white font-jakarta-bold text-[11px]">Approve</Text>
                   </TouchableOpacity>
                 )}
               </View>
             ))}
             {verifications.length === 0 && (
-              <Text style={styles.emptyText}>Verification queue is completely clear.</Text>
+              <Text className="font-jakarta text-[13px] text-stone-400 text-center py-2">Verification queue is completely clear.</Text>
             )}
           </View>
         </View>
 
         {/* Active Crisis Alerts Flags */}
-        <View style={[styles.card, styles.crisisCard]}>
-          <View style={styles.crisisHead}>
-            <ShieldAlert size={18} color={Theme.colors.error} />
-            <Text style={[styles.sectionHeader, styles.crisisText]}>Active Crisis Alert Flags</Text>
+        <View className="bg-white rounded-2xl p-4 border-2 border-red-200 shadow-sm gap-2">
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <ShieldAlert size={18} color="#D32F2F" />
+            <Text className="font-sora-bold text-base text-crisis">Active Crisis Alert Flags</Text>
           </View>
-          <Text style={styles.sectionDesc}>
+          <Text className="font-jakarta text-xs text-stone-500 mt-0.5 leading-4 mb-2">
             These journal keyword triggers require immediate attention or verification:
           </Text>
 
-          <View style={styles.list}>
+          <View className="gap-2 mt-1">
             {crisisFlags.map(flag => (
-              <View key={flag._id} style={styles.crisisItem}>
-                <View style={styles.crisisMetaRow}>
-                  <Text style={styles.crisisUser}>{flag.userId.name}</Text>
-                  <View style={styles.keywordBadge}>
-                    <Text style={styles.keywordText}>TRIGGER: {flag.keyword.toUpperCase()}</Text>
+              <View key={flag._id} className="bg-red-50/50 border border-red-200 rounded-xl p-3 gap-2">
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-sora-bold text-sm text-stone-900">{flag.userId.name}</Text>
+                  <View className="bg-crisis px-1.5 py-0.5 rounded">
+                    <Text className="font-jakarta-bold text-[9px] text-white">TRIGGER: {flag.keyword.toUpperCase()}</Text>
                   </View>
                 </View>
-                <Text style={styles.contextText}>"{flag.context}"</Text>
+                <Text className="font-jakarta text-xs text-stone-600 leading-4 italic">"{flag.context}"</Text>
                 
                 <TouchableOpacity 
                   onPress={() => handleResolveFlag(flag._id, flag.userId.name)}
-                  style={styles.resolveBtn}
+                  className="flex-row items-center justify-center gap-1 bg-crisis py-2 rounded-full"
                 >
                   <ShieldCheck size={14} color="#FFF" />
-                  <Text style={styles.resolveBtnText}>Mark Outreach Resolved</Text>
+                  <Text className="text-white font-jakarta-bold text-[11px]">Mark Outreach Resolved</Text>
                 </TouchableOpacity>
               </View>
             ))}
             {crisisFlags.length === 0 && (
-              <Text style={styles.emptyText}>Zero active crisis flags. Healthy environment.</Text>
+              <Text className="font-jakarta text-[13px] text-stone-400 text-center py-2">Zero active crisis flags. Healthy environment.</Text>
             )}
           </View>
         </View>
@@ -266,196 +267,4 @@ export const SuperAdminDashboardScreen: React.FC<{ navigation?: any }> = ({ navi
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 60,
-    gap: Theme.spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  crisisCard: {
-    borderColor: Theme.colors.errorContainer,
-    borderWidth: 1.5,
-  },
-  crisisHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  crisisText: {
-    color: Theme.colors.error,
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-    lineHeight: 16,
-    marginBottom: Theme.spacing.sm,
-  },
-  list: {
-    gap: Theme.spacing.sm,
-    marginTop: Theme.spacing.xs,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: Theme.spacing.sm - 2,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  itemName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  itemMeta: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-  },
-  verifyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  verifyBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-  },
-  crisisItem: {
-    backgroundColor: Theme.colors.errorContainer + '10',
-    borderWidth: 1,
-    borderColor: Theme.colors.errorContainer + '30',
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.sm,
-    gap: 8,
-  },
-  crisisMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  crisisUser: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  keywordBadge: {
-    backgroundColor: Theme.colors.error,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Theme.radius.sm,
-  },
-  keywordText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#FFF',
-  },
-  contextText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 16,
-    fontStyle: 'italic',
-  },
-  resolveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    backgroundColor: Theme.colors.error,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  resolveBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: Theme.spacing.xs,
-  },
-  notificationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    marginBottom: Theme.spacing.xs,
-  },
-  notificationLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  notificationIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationActiveIcon: {
-    backgroundColor: Theme.colors.primary + '12',
-  },
-  notificationInactiveIcon: {
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  notificationTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14.5,
-    color: Theme.colors.onSurface,
-  },
-  notificationDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-});
 export default SuperAdminDashboardScreen;

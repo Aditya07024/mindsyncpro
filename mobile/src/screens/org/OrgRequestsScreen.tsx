@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -112,7 +111,6 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
 
     setUploading(true);
     try {
-      // 1. Upload dynamic spreadsheet binary to backend database upload Emails endpoint
       const res = await API.org.uploadEmails(selectedFile.uri, selectedFile.name);
       
       Alert.alert(
@@ -121,7 +119,6 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
         [{ 
           text: 'Excellent', 
           onPress: () => {
-            // Trigger visual background sync console logs using actual filename
             startSync(selectedFile.name, () => {
               refetch();
             });
@@ -159,7 +156,7 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="BITS Wellness"
         role="org_admin"
@@ -167,41 +164,19 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
       />
 
       {isSubLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={Theme.colors.primary} />
         </View>
       ) : !isSubscribed || !hasRosterFeature ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Theme.spacing.margin }}>
-          <View style={{
-            backgroundColor: '#FFF',
-            borderRadius: Theme.radius.xl,
-            padding: Theme.spacing.lg,
-            borderWidth: 1,
-            borderColor: Theme.colors.surfaceHigh,
-            alignItems: 'center',
-            shadowColor: '#2E6E65',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.03,
-            shadowRadius: 10,
-            elevation: 2,
-          }}>
-            <View style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: '#FFF2F2',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 16,
-              borderWidth: 1,
-              borderColor: '#FFCDD2',
-            }}>
+        <View className="flex-1 justify-center items-center p-5">
+          <View className="bg-white rounded-3xl p-6 border border-[#E0E2E0] items-center shadow-sm">
+            <View className="w-12 h-12 rounded-full bg-[#FFF2F2] justify-center items-center mb-4 border border-[#FFCDD2]">
               <ArrowUpFromLine size={24} color={Theme.colors.primary} />
             </View>
-            <Text style={{ fontFamily: Theme.fonts.headline, fontSize: 18, color: Theme.colors.onSurface, textAlign: 'center', marginBottom: 8 }}>
+            <Text className="font-sora text-lg text-onSurface text-center mb-2">
               {!isSubscribed ? 'Corporate Plan Required' : 'Roster Management Locked'}
             </Text>
-            <Text style={{ fontFamily: Theme.fonts.body, fontSize: 13, color: Theme.colors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 16, marginBottom: 20 }}>
+            <Text className="font-jakarta text-[13px] text-[#71787D] text-center leading-[18px] px-4 mb-5">
               {!isSubscribed 
                 ? 'As an organization or wellness sponsor, you need an active subscription plan to activate employee wellness seats and link network practitioners.'
                 : 'Your current subscription plan tier does not include the employee roster management or whitelisting features. Upgrade to invite employees in bulk.'}
@@ -209,80 +184,75 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
 
             <TouchableOpacity
               onPress={() => navigation.navigate('Plans', { role: 'org_admin' })}
-              style={{
-                backgroundColor: Theme.colors.primary,
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: Theme.radius.lg,
-              }}
+              className="bg-primary px-5 py-3 rounded-2xl"
             >
-              <Text style={{ fontFamily: Theme.fonts.bodyBold, fontSize: 13, color: '#FFF' }}>
+              <Text className="font-jakarta-bold text-[13px] text-white">
                 {!isSubscribed ? 'View Subscription Plans' : 'Upgrade Plan'}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerClassName="p-5 pb-16 gap-4">
           {/* Whitelist control board */}
-          <View style={styles.card}>
-            <Text style={styles.sectionHeader}>Corporate Whitelist Manager</Text>
-            <Text style={styles.sectionDesc}>
+          <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm">
+            <Text className="font-sora text-base text-onSurface">Corporate Whitelist Manager</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 leading-4 mb-3">
               Synchronize corporate directories to authorize users. Standard registrations matching whitelisted emails bypass admin screening automatically.
             </Text>
 
             {/* Sync status active view */}
             {(isSyncing || progress > 0) ? (
-              <View style={styles.statusPanel}>
-                <View style={styles.statusHeaderRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.syncStatusTitle}>Background Whitelist Syncing</Text>
-                    <Text style={styles.syncStatusFile} numberOfLines={1}>{activeFileName}</Text>
+              <View className="bg-[#FAFDFD] border border-[#C3E5DE] rounded-3xl p-4 gap-2">
+                <View className="flex-row justify-between items-start">
+                  <View className="flex-1">
+                    <Text className="font-sora text-sm text-onSurface">Background Whitelist Syncing</Text>
+                    <Text className="font-jakarta text-[11px] text-outline mt-0.5" numberOfLines={1}>{activeFileName}</Text>
                   </View>
-                  <View style={[styles.badge, progress === 100 ? styles.badgeApproved : styles.badgePending]}>
-                    <Text style={[styles.badgeText, progress === 100 ? styles.badgeApprovedText : styles.badgePendingText]}>
+                  <View className={`px-2 py-1 rounded ${progress === 100 ? 'bg-[#D4EDDA]' : 'bg-[#FFF3CD]'}`}>
+                    <Text className={`font-jakarta-bold text-[10px] ${progress === 100 ? 'text-[#155724]' : 'text-[#856404]'}`}>
                       {progress === 100 ? 'COMPLETE' : 'ACTIVE'}
                     </Text>
                   </View>
                 </View>
 
                 {/* Progress bar */}
-                <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+                <View className="h-1.5 bg-[#F0F2F1] rounded-full overflow-hidden mt-0.5">
+                  <View className="h-full bg-primary" style={{ width: `${progress}%` }} />
                 </View>
 
-                <View style={styles.progressLabelRow}>
-                  <Text style={styles.progressText}>{currentStep}</Text>
-                  <Text style={styles.percentageText}>{progress}%</Text>
+                <View className="flex-row justify-between mt-0.5">
+                  <Text className="font-jakarta-bold text-[11px] text-primary">{currentStep}</Text>
+                  <Text className="font-sora text-xs text-primary">{progress}%</Text>
                 </View>
 
                 {/* Real-time details counters */}
-                <View style={styles.statsSummaryRow}>
-                  <View style={styles.statMiniCard}>
-                    <Text style={styles.statMiniVal}>{matchedCount}</Text>
-                    <Text style={styles.statMiniLabel}>Users Auto-Approved</Text>
+                <View className="flex-row gap-2 mt-1">
+                  <View className="flex-1 bg-white border border-[#E6F4F1] rounded-2xl p-2 items-center">
+                    <Text className="font-sora-bold text-base text-primary">{matchedCount}</Text>
+                    <Text className="font-jakarta text-[9px] text-[#71787D] mt-0.5">Users Auto-Approved</Text>
                   </View>
-                  <View style={styles.statMiniCard}>
-                    <Text style={styles.statMiniVal}>{progress >= 75 ? 'Yes' : 'Pending'}</Text>
-                    <Text style={styles.statMiniLabel}>Database Sync</Text>
+                  <View className="flex-1 bg-white border border-[#E6F4F1] rounded-2xl p-2 items-center">
+                    <Text className="font-sora-bold text-base text-primary">{progress >= 75 ? 'Yes' : 'Pending'}</Text>
+                    <Text className="font-jakarta text-[9px] text-[#71787D] mt-0.5">Database Sync</Text>
                   </View>
                 </View>
 
                 {/* Monospace System Logs terminal */}
-                <Text style={styles.terminalLabel}>
+                <Text className="font-jakarta-bold text-[11px] text-onSurface mt-1.5 flex-row items-center gap-1">
                   <Terminal size={12} color={Theme.colors.outline} /> Real-time System Logs
                 </Text>
-                <View style={styles.terminalContainer}>
+                <View className="bg-[#1E1E1E] rounded-2xl p-2">
                   <ScrollView nestedScrollEnabled style={{ height: 110 }}>
                     {logs.map((log, index) => (
-                      <Text key={index} style={styles.terminalText}>
+                      <Text key={index} className="font-mono text-[10px] text-[#00FF66] leading-3.5">
                         {log}
                       </Text>
                     ))}
                     {isSyncing && (
-                      <View style={styles.terminalCursorRow}>
+                      <View className="flex-row items-center gap-1.5 mt-0.5">
                         <ActivityIndicator size="small" color={Theme.colors.primary} style={{ transform: [{ scale: 0.7 }] }} />
-                        <Text style={styles.terminalCursor}>Background sync streaming...</Text>
+                        <Text className="font-mono text-[10px] text-[#E0E0E0]">Background sync streaming...</Text>
                       </View>
                     )}
                   </ScrollView>
@@ -290,62 +260,64 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
 
                 {/* Actions */}
                 {progress === 100 && (
-                  <TouchableOpacity onPress={resetSync} style={styles.btnReset}>
+                  <TouchableOpacity onPress={resetSync} className="h-[38px] border border-primary rounded-2xl flex-row justify-center items-center gap-1.5 mt-1">
                     <RotateCcw size={14} color={Theme.colors.primary} />
-                    <Text style={styles.btnResetText}>Reset Sync Worker</Text>
+                    <Text className="font-sora text-xs text-primary">Reset Sync Worker</Text>
                   </TouchableOpacity>
                 )}
               </View>
             ) : (
-              <View style={styles.selectorContainer}>
-                <Text style={styles.inputLabel}>Select Whitelist Directory Spreadsheet</Text>
+              <View className="mt-1 gap-2">
+                <Text className="font-jakarta-medium text-[13px] text-onSurface mb-1">Select Whitelist Directory Spreadsheet</Text>
                 
                 {!selectedFile ? (
                   <TouchableOpacity
                     onPress={handleSelectSpreadsheet}
-                    style={styles.uploadDropzone}
+                    className="h-[110px] border-2 border-dashed border-primary rounded-3xl bg-[#E6F4F1] justify-center items-center px-4 gap-1"
                   >
-                    <ArrowUpFromLine size={28} color={Theme.colors.primary} style={{ marginBottom: 4 }} />
-                    <Text style={styles.uploadDropzoneTitle}>Pick Corporate Roster Spreadsheet</Text>
-                    <Text style={styles.uploadDropzoneSubtitle}>Supports Excel (.xlsx, .xls) and CSV formulas</Text>
+                    <ArrowUpFromLine size={28} color={Theme.colors.primary} className="mb-1" />
+                    <Text className="font-sora text-[13px] text-primary">Pick Corporate Roster Spreadsheet</Text>
+                    <Text className="font-jakarta text-[11px] text-outline">Supports Excel (.xlsx, .xls) and CSV formulas</Text>
                   </TouchableOpacity>
                 ) : (
-                  <View style={styles.selectedFileContainer}>
-                    <View style={styles.selectedFileHeader}>
+                  <View className="border border-[#E0E2E0] rounded-3xl p-3 bg-[#F0F2F1] gap-3">
+                    <View className="flex-row items-center gap-2.5">
                       <FileSpreadsheet size={22} color={Theme.colors.primary} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.selectedFileName} numberOfLines={1}>
+                      <View className="flex-1">
+                        <Text className="font-sora text-[13px] text-onSurface" numberOfLines={1}>
                           {selectedFile.name}
                         </Text>
                         {selectedFile.size && (
-                          <Text style={styles.selectedFileSize}>
+                          <Text className="font-jakarta text-[11px] text-outline mt-0.5">
                             {(selectedFile.size / 1024).toFixed(1)} KB
                           </Text>
                         )}
                       </View>
                     </View>
 
-                    <View style={styles.uploadActionRow}>
+                    <View className="flex-row gap-2">
                       <TouchableOpacity
                         onPress={handleUploadSpreadsheet}
                         disabled={uploading}
-                        style={[styles.btnUpload, uploading && styles.btnDisabled]}
+                        className={`flex-1 h-10 bg-primary rounded-2xl flex-row justify-center items-center gap-1.5 ${
+                          uploading ? 'opacity-70' : ''
+                        }`}
                       >
                         {uploading ? (
                           <ActivityIndicator color="#FFF" />
                         ) : (
                           <>
                             <Play size={13} color="#FFF" />
-                            <Text style={styles.btnUploadText}>Upload & Sync Roster</Text>
+                            <Text className="font-sora text-xs text-white">Upload & Sync Roster</Text>
                           </>
                         )}
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={() => setSelectedFile(null)}
                         disabled={uploading}
-                        style={styles.btnClear}
+                        className="w-[65px] h-10 border border-outline rounded-2xl justify-center items-center"
                       >
-                        <Text style={styles.btnClearText}>Cancel</Text>
+                        <Text className="font-jakarta-bold text-xs text-outline">Cancel</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -353,11 +325,11 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
               </View>
             )}
 
-            <View style={styles.divider} />
+            <View className="h-[1px] bg-[#E0E2E0] my-4" />
 
             {/* Manual Entry */}
-            <Text style={styles.inputLabel}>Add Single Email to Whitelist</Text>
-            <View style={styles.inputRow}>
+            <Text className="font-jakarta-medium text-[13px] text-onSurface mb-1">Add Single Email to Whitelist</Text>
+            <View className="flex-row gap-2 mt-1">
               <TextInput
                 placeholder="e.g. employee@company.com"
                 placeholderTextColor={Theme.colors.outline}
@@ -365,27 +337,27 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
                 onChangeText={setManualEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                style={styles.input}
+                className="flex-1 h-12 border border-[#E0E2E0] rounded-2xl px-3 text-sm font-jakarta text-onSurface bg-[#F0F2F1]"
               />
-              <TouchableOpacity onPress={handleManualWhitelist} style={styles.btnAdd}>
+              <TouchableOpacity onPress={handleManualWhitelist} className="w-12 h-12 rounded-2xl bg-primary justify-center items-center">
                 <UserPlus size={16} color="#FFF" />
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Requests Logs */}
-          <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Employee Join Requests</Text>
-            <Text style={styles.sectionDesc}>
+          <View className="gap-2">
+            <Text className="font-sora text-base text-onSurface">Employee Join Requests</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 leading-4 mb-3">
               Approve or deny employees and students requesting association with your workspace.
             </Text>
 
             {isLoading ? (
-              <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 24 }} />
+              <ActivityIndicator color={Theme.colors.primary} className="mt-6" />
             ) : !reqData?.joinRequests || reqData.joinRequests.length === 0 ? (
-              <View style={styles.emptyContainer}>
+              <View className="items-center justify-center py-10 bg-white rounded-3xl border border-[#E0E2E0] gap-2">
                 <Clock size={40} color={Theme.colors.outline} />
-                <Text style={styles.emptyText}>No pending join requests.</Text>
+                <Text className="font-jakarta text-[13px] text-outline">No pending join requests.</Text>
               </View>
             ) : (
               reqData.joinRequests.map((req: any) => {
@@ -394,28 +366,26 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
                 const emailText = req.email || req.phoneMasked || 'No Contact Info';
 
                 return (
-                  <View key={req.userId} style={styles.requestCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={{ flex: 1, paddingRight: 8 }}>
-                        <Text style={styles.employeeName}>{name}</Text>
-                        <Text style={styles.employeeEmail}>{emailText}</Text>
-                        <Text style={styles.dateLabel}>
+                  <View key={req.userId} className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm mb-2 gap-2">
+                    <View className="flex-row justify-between items-start">
+                      <View className="flex-1 pr-2">
+                        <Text className="font-sora text-[15px] text-onSurface">{name}</Text>
+                        <Text className="font-jakarta text-xs text-outline mt-0.5">{emailText}</Text>
+                        <Text className="font-jakarta text-[11px] text-[#71787D] mt-1">
                           Requested: {new Date(req.requestedAt || Date.now()).toLocaleDateString()}
                         </Text>
                       </View>
                       <View
-                        style={[
-                          styles.badge,
-                          status === 'approved' ? styles.badgeApproved :
-                          status === 'rejected' ? styles.badgeRejected : styles.badgePending
-                        ]}
+                        className={`px-2 py-1 rounded ${
+                          status === 'approved' ? 'bg-[#D4EDDA]' :
+                          status === 'rejected' ? 'bg-[#F8D7DA]' : 'bg-[#FFF3CD]'
+                        }`}
                       >
                         <Text
-                          style={[
-                            styles.badgeText,
-                            status === 'approved' ? styles.badgeApprovedText :
-                            status === 'rejected' ? styles.badgeRejectedText : styles.badgePendingText
-                          ]}
+                          className={`font-jakarta-bold text-[10px] ${
+                            status === 'approved' ? 'text-[#155724]' :
+                            status === 'rejected' ? 'text-[#721C24]' : 'text-[#856404]'
+                          }`}
                         >
                           {status.toUpperCase()}
                         </Text>
@@ -423,35 +393,39 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
                     </View>
 
                     {req.autoApproved && (
-                      <View style={styles.autoApprovedBanner}>
+                      <View className="flex-row items-center bg-[#E8F5E9] px-2 py-1.5 rounded-md gap-1.5">
                         <CheckCircle size={12} color="#155724" />
-                        <Text style={styles.autoApprovedText}>Auto-approved via whitelisted domain</Text>
+                        <Text className="font-jakarta-bold text-[11px] text-[#155724]">Auto-approved via whitelisted domain</Text>
                       </View>
                     )}
 
                     {status === 'pending' && (
-                      <View style={styles.actionRow}>
+                      <View className="flex-row gap-2 border-t border-[#E0E2E0] pt-2 mt-0.5">
                         <TouchableOpacity
                           disabled={actionLoading !== null}
                           onPress={() => handleJoinAction(req.userId, true)}
-                          style={[styles.btnApprove, actionLoading === req.userId && styles.btnDisabled]}
+                          className={`flex-[2] h-[38px] bg-primary rounded-2xl flex-row justify-center items-center gap-1.5 ${
+                            actionLoading === req.userId ? 'opacity-70' : ''
+                          }`}
                         >
                           {actionLoading === req.userId ? (
                             <ActivityIndicator size="small" color="#FFF" />
                           ) : (
                             <>
                               <UserCheck size={14} color="#FFF" />
-                              <Text style={styles.btnApproveText}>Approve</Text>
+                              <Text className="font-sora text-xs text-white">Approve</Text>
                             </>
                           )}
                         </TouchableOpacity>
                         <TouchableOpacity
                           disabled={actionLoading !== null}
                           onPress={() => handleJoinAction(req.userId, false)}
-                          style={[styles.btnReject, actionLoading === req.userId && styles.btnDisabled]}
+                          className={`flex-1 h-[38px] bg-[#FFF5F5] rounded-2xl border border-[#FFE3E3] flex-row justify-center items-center gap-1.5 ${
+                            actionLoading === req.userId ? 'opacity-70' : ''
+                          }`}
                         >
                           <UserX size={14} color="#FF6B6B" />
-                          <Text style={styles.btnRejectText}>Deny</Text>
+                          <Text className="font-sora text-xs text-[#FF6B6B]">Deny</Text>
                         </TouchableOpacity>
                       </View>
                     )}
@@ -465,421 +439,5 @@ export const OrgRequestsScreen: React.FC<{ navigation?: any }> = ({ navigation }
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 60,
-    gap: Theme.spacing.md,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  section: {
-    gap: Theme.spacing.sm,
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-    lineHeight: 16,
-    marginBottom: Theme.spacing.sm,
-  },
-  selectorContainer: {
-    marginTop: Theme.spacing.xs,
-    gap: Theme.spacing.sm,
-  },
-  inputLabel: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    marginBottom: 4,
-  },
-  uploadDropzone: {
-    height: 110,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: Theme.colors.primary,
-    borderRadius: Theme.radius.xl,
-    backgroundColor: '#E6F4F1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    gap: 4
-  },
-  uploadDropzoneTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.primary
-  },
-  uploadDropzoneSubtitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.outline
-  },
-  selectedFileContainer: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.xl,
-    padding: 12,
-    backgroundColor: Theme.colors.surfaceLow,
-    gap: 12
-  },
-  selectedFileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
-  },
-  selectedFileName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface
-  },
-  selectedFileSize: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.outline,
-    marginTop: 2
-  },
-  uploadActionRow: {
-    flexDirection: 'row',
-    gap: 8
-  },
-  btnUpload: {
-    flex: 1,
-    height: 40,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6
-  },
-  btnUploadText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: '#FFF'
-  },
-  btnClear: {
-    width: 65,
-    height: 40,
-    borderWidth: 1,
-    borderColor: Theme.colors.outline,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  btnClearText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.outline
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  btnAdd: {
-    width: 48,
-    height: 48,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Theme.colors.surfaceHigh,
-    marginVertical: Theme.spacing.md,
-  },
-  statusPanel: {
-    backgroundColor: '#FAFDFD',
-    borderWidth: 1,
-    borderColor: '#C3E5DE',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    gap: 8,
-  },
-  statusHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  syncStatusTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  syncStatusFile: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.outline,
-    marginTop: 1,
-  },
-  progressLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 2,
-  },
-  progressText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.primary,
-  },
-  percentageText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginTop: 2,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: Theme.colors.primary,
-  },
-  statsSummaryRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  statMiniCard: {
-    flex: 1,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E6F4F1',
-    borderRadius: Theme.radius.lg,
-    padding: 8,
-    alignItems: 'center',
-  },
-  statMiniVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: Theme.colors.primary,
-  },
-  statMiniLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  terminalLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.onSurface,
-    marginTop: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  terminalContainer: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: Theme.radius.lg,
-    padding: 8,
-  },
-  terminalText: {
-    fontFamily: 'Courier',
-    fontSize: 10,
-    color: '#00FF66',
-    lineHeight: 14,
-  },
-  terminalCursorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 2,
-  },
-  terminalCursor: {
-    fontFamily: 'Courier',
-    fontSize: 10,
-    color: '#E0E0E0',
-  },
-  btnReset: {
-    height: 38,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary,
-    borderRadius: Theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  btnResetText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline
-  },
-  requestCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 2,
-    marginBottom: Theme.spacing.sm,
-    gap: Theme.spacing.sm
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start'
-  },
-  employeeName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface
-  },
-  employeeEmail: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.outline,
-    marginTop: 1
-  },
-  dateLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 4
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4
-  },
-  badgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10
-  },
-  badgePending: {
-    backgroundColor: '#FFF3CD'
-  },
-  badgePendingText: {
-    color: '#856404'
-  },
-  badgeApproved: {
-    backgroundColor: '#D4EDDA'
-  },
-  badgeApprovedText: {
-    color: '#155724'
-  },
-  badgeRejected: {
-    backgroundColor: '#F8D7DA'
-  },
-  badgeRejectedText: {
-    color: '#721C24'
-  },
-  autoApprovedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    gap: 6
-  },
-  autoApprovedText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: '#155724'
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
-    paddingTop: Theme.spacing.sm,
-    marginTop: 2
-  },
-  btnApprove: {
-    flex: 2,
-    height: 38,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6
-  },
-  btnApproveText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: '#FFF'
-  },
-  btnReject: {
-    flex: 1,
-    height: 38,
-    backgroundColor: '#FFF5F5',
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: '#FFE3E3',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6
-  },
-  btnRejectText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: '#FF6B6B'
-  },
-  btnDisabled: {
-    opacity: 0.7
-  }
-});
 
 export default OrgRequestsScreen;

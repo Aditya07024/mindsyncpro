@@ -2,19 +2,16 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   TextInput,
   Modal,
   Alert,
   ActivityIndicator,
-  FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Theme } from '../../theme';
-import { Mic, Plus, Users, ShieldAlert, CheckCircle, Trash2, UserX, ArrowLeft } from 'lucide-react-native';
+import { Mic, Plus, Users, Trash2, UserX, ArrowLeft } from 'lucide-react-native';
 import API from '../../lib/api';
 
 interface GroupSessionsScreenProps {
@@ -36,7 +33,7 @@ export const GroupSessionsScreen: React.FC<GroupSessionsScreenProps> = ({ naviga
     queryFn: () => API.auth.me(),
   });
 
-  const { data: sessionsData, isLoading, refetch } = useQuery({
+  const { data: sessionsData, isLoading } = useQuery({
     queryKey: ['group-sessions'],
     queryFn: () => API.groupSessions.list(),
     refetchInterval: 10000,
@@ -119,31 +116,31 @@ export const GroupSessionsScreen: React.FC<GroupSessionsScreenProps> = ({ naviga
   });
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View className="flex-1 bg-surface" style={{ paddingTop: Math.max(insets.top, 16) }}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <View className="flex-row items-center px-5 py-3.5 border-b border-stone-200 bg-white">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="p-1.5 mr-2">
           <ArrowLeft size={20} color="#1A1C1C" />
         </TouchableOpacity>
-        <View style={styles.headerTitleBox}>
-          <Text style={styles.headerTitle}>🎙️ Group Audio Sessions</Text>
-          <Text style={styles.headerSubtitle}>Live Group Therapy (Max 11 Participants)</Text>
+        <View className="flex-1">
+          <Text className="font-sora-bold text-lg text-stone-900">🎙️ Group Audio Sessions</Text>
+          <Text className="font-jakarta-medium text-[11px] text-stone-500">Live Group Therapy (Max 11 Participants)</Text>
         </View>
         {isCounselor ? (
-          <TouchableOpacity onPress={() => setCreateModalVisible(true)} style={styles.addBtn}>
+          <TouchableOpacity onPress={() => setCreateModalVisible(true)} className="w-9 h-9 rounded-full bg-primary justify-center items-center">
             <Plus size={20} color="#FFF" />
           </TouchableOpacity>
         ) : null}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-5 gap-4">
         {isLoading ? (
-          <ActivityIndicator color="#0D564D" style={{ marginVertical: 30 }} />
+          <ActivityIndicator color="#0D564D" className="my-7" />
         ) : sessions.length === 0 ? (
-          <View style={styles.emptyCard}>
+          <View className="bg-white rounded-3xl p-8 items-center border border-stone-200 mt-5">
             <Mic size={36} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No Live Audio Sessions</Text>
-            <Text style={styles.emptyDesc}>
+            <Text className="font-sora-bold text-base text-stone-900 mt-3">No Live Audio Sessions</Text>
+            <Text className="font-jakarta text-xs text-stone-500 text-center mt-1.5 leading-[18px]">
               {isCounselor
                 ? 'Tap the + button to host a new group audio session.'
                 : 'There are no active group audio sessions available right now. Check back soon!'}
@@ -158,81 +155,81 @@ export const GroupSessionsScreen: React.FC<GroupSessionsScreenProps> = ({ naviga
             const admittedCount = s.admittedUsers?.length || 0;
 
             return (
-              <View key={s._id || s.id} style={styles.sessionCard}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.titleWrap}>
-                    <Text style={styles.cardTitle}>{s.title}</Text>
-                    <View style={styles.badgeRow}>
-                      <View style={[styles.statusBadge, isAssigned ? styles.badgeRed : styles.badgeGreen]}>
-                        <Text style={[styles.badgeText, isAssigned ? styles.textRed : styles.textGreen]}>
+              <View key={s._id || s.id} className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm">
+                <View className="flex-row justify-between items-start">
+                  <View className="flex-1">
+                    <Text className="font-sora-bold text-base text-stone-900 mb-1.5">{s.title}</Text>
+                    <View className="flex-row items-center gap-2">
+                      <View className={`px-2 py-0.5 rounded-md ${isAssigned ? 'bg-red-100' : 'bg-emerald-100'}`}>
+                        <Text className={`font-sora-bold text-[10px] ${isAssigned ? 'text-red-800' : 'text-emerald-800'}`}>
                           {isAssigned ? '🔴 Host Occupied' : '🟢 Open for Counselor'}
                         </Text>
                       </View>
-                      <View style={styles.capacityBadge}>
-                        <Users size={12} color="#6F7977" style={{ marginRight: 4 }} />
-                        <Text style={styles.capacityText}>{admittedCount} / 11 Max</Text>
+                      <View className="flex-row items-center bg-slate-100 px-2 py-0.5 rounded-md">
+                        <Users size={12} color="#6F7977" className="mr-1" />
+                        <Text className="font-jakarta-bold text-[10px] text-slate-600">{admittedCount} / 11 Max</Text>
                       </View>
                     </View>
                   </View>
                 </View>
 
-                <View style={styles.hostRow}>
-                  <Text style={styles.hostLabel}>
-                    Host: <Text style={styles.hostValue}>{s.counselorName || 'Unassigned'}</Text>
+                <View className="flex-row justify-between my-3 pt-2.5 border-t border-slate-100">
+                  <Text className="font-jakarta text-xs text-slate-500">
+                    Host: <Text className="font-sora-bold text-slate-800">{s.counselorName || 'Unassigned'}</Text>
                   </Text>
-                  <Text style={styles.feeLabel}>
-                    Fee: <Text style={styles.feeValue}>{price > 0 ? `₹${price}` : 'FREE'}</Text>
+                  <Text className="font-jakarta text-xs text-slate-500">
+                    Fee: <Text className="font-sora-bold text-primary">{price > 0 ? `₹${price}` : 'FREE'}</Text>
                   </Text>
                 </View>
 
                 {/* Counselor Controls */}
                 {isCounselor ? (
-                  <View style={styles.counselorControls}>
+                  <View className="mt-1.5">
                     {!isAssigned ? (
                       <TouchableOpacity
                         onPress={() => claimMutation.mutate(s._id || s.id)}
                         disabled={claimMutation.isPending}
-                        style={styles.claimBtn}
+                        className="bg-primary rounded-xl py-2.5 items-center"
                       >
-                        <Text style={styles.claimBtnText}>Claim as Host</Text>
+                        <Text className="font-sora-bold text-[13px] text-white">Claim as Host</Text>
                       </TouchableOpacity>
                     ) : isMySession ? (
-                      <View style={{ gap: 8 }}>
-                        <View style={styles.mySessionBox}>
-                          <Text style={styles.myHostText}>You are hosting this session ✓</Text>
+                      <View className="gap-2">
+                        <View className="flex-row justify-between items-center bg-primary/10 p-2.5 rounded-xl">
+                          <Text className="font-sora-bold text-xs text-primary">You are hosting this session ✓</Text>
                           <TouchableOpacity
                             onPress={() => deleteMutation.mutate(s._id || s.id)}
-                            style={styles.deleteBtn}
+                            className="p-1.5"
                           >
                             <Trash2 size={16} color="#DC2626" />
                           </TouchableOpacity>
                         </View>
                         <TouchableOpacity
                           onPress={() => navigation.navigate('GroupAudioRoom', { sessionId: s._id || s.id })}
-                          style={styles.joinBtn}
+                          className="bg-primary rounded-xl py-3 items-center"
                         >
-                          <Text style={styles.joinBtnText}>Enter Audio Room 🎙️</Text>
+                          <Text className="font-sora-bold text-sm text-white">Enter Audio Room 🎙️</Text>
                         </TouchableOpacity>
                       </View>
                     ) : null}
 
                     {/* Waiting Room Queue for Host */}
                     {isMySession && s.waitingQueue?.length > 0 ? (
-                      <View style={styles.queueBox}>
-                        <Text style={styles.queueTitle}>Waiting Queue ({s.waitingQueue.length})</Text>
+                      <View className="mt-2.5 bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+                        <Text className="font-sora-bold text-[11px] text-slate-600 mb-1.5">Waiting Queue ({s.waitingQueue.length})</Text>
                         {s.waitingQueue.map((item: any, i: number) => (
-                          <View key={item.userId || i} style={styles.queueRow}>
-                            <Text style={styles.anonName}>{item.anonymousName || `User ${i + 1}`}</Text>
-                            <View style={styles.queueActionRow}>
+                          <View key={item.userId || i} className="flex-row justify-between items-center py-1.5 border-b border-slate-200">
+                            <Text className="font-jakarta-bold text-xs text-slate-900">{item.anonymousName || `User ${i + 1}`}</Text>
+                            <View className="flex-row gap-1.5">
                               <TouchableOpacity
                                 onPress={() => approveUserMutation.mutate({ sessionId: s._id || s.id, targetUserId: item.userId, action: 'approve' })}
-                                style={styles.approveBtn}
+                                className="bg-emerald-600 px-2.5 py-1 rounded-lg"
                               >
-                                <Text style={styles.approveBtnText}>Admit ✓</Text>
+                                <Text className="font-sora-bold text-[11px] text-white">Admit ✓</Text>
                               </TouchableOpacity>
                               <TouchableOpacity
                                 onPress={() => blockUserMutation.mutate({ sessionId: s._id || s.id, targetUserId: item.userId })}
-                                style={styles.blockBtn}
+                                className="bg-red-100 px-2 py-1 rounded-lg"
                               >
                                 <UserX size={14} color="#DC2626" />
                               </TouchableOpacity>
@@ -247,9 +244,9 @@ export const GroupSessionsScreen: React.FC<GroupSessionsScreenProps> = ({ naviga
                   <TouchableOpacity
                     onPress={() => handleJoinOrEnter(s)}
                     disabled={joinMutation.isPending}
-                    style={styles.joinBtn}
+                    className="bg-primary rounded-xl py-3 items-center"
                   >
-                    <Text style={styles.joinBtnText}>
+                    <Text className="font-sora-bold text-sm text-white">
                       {isAdmitted
                         ? 'Enter Audio Room 🎙️'
                         : price > 0
@@ -266,43 +263,43 @@ export const GroupSessionsScreen: React.FC<GroupSessionsScreenProps> = ({ naviga
 
       {/* Create Session Modal for Counselors */}
       <Modal visible={createModalVisible} animationType="slide" transparent>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Create Audio Session</Text>
-            <Text style={styles.modalSub}>Host a live group audio therapy session (Max capacity fixed at 11 users).</Text>
+        <View className="flex-1 bg-black/50 justify-center px-5">
+          <View className="bg-white rounded-3xl p-6">
+            <Text className="font-sora-bold text-lg text-stone-900">Create Audio Session</Text>
+            <Text className="font-jakarta text-xs text-stone-500 mt-1 mb-4">Host a live group audio therapy session (Max capacity fixed at 11 users).</Text>
 
-            <Text style={styles.label}>Session Title *</Text>
+            <Text className="font-sora-bold text-[11px] text-stone-500 uppercase mb-1.5 mt-2.5">Session Title *</Text>
             <TextInput
               value={sessionTitle}
               onChangeText={setSessionTitle}
               placeholder="e.g. Evening Stress & Anxiety Group Support"
-              style={styles.input}
+              className="bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 font-jakarta text-[13px] text-stone-900"
               placeholderTextColor="#A1A1AA"
             />
 
-            <Text style={styles.label}>Scheduled Window (Minutes)</Text>
+            <Text className="font-sora-bold text-[11px] text-stone-500 uppercase mb-1.5 mt-2.5">Scheduled Window (Minutes)</Text>
             <TextInput
               value={scheduledWindowMinutes}
               onChangeText={setScheduledWindowMinutes}
               placeholder="60"
               keyboardType="number-pad"
-              style={styles.input}
+              className="bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5 font-jakarta text-[13px] text-stone-900"
               placeholderTextColor="#A1A1AA"
             />
 
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity onPress={() => setCreateModalVisible(false)} style={styles.modalCancelBtn}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
+            <View className="flex-row gap-2.5 mt-5">
+              <TouchableOpacity onPress={() => setCreateModalVisible(false)} className="flex-1 bg-stone-50 rounded-xl py-3 items-center border border-stone-200">
+                <Text className="font-sora-bold text-[13px] text-stone-900">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 disabled={!sessionTitle.trim() || createMutation.isPending}
                 onPress={() => createMutation.mutate()}
-                style={[styles.modalSubmitBtn, !sessionTitle.trim() && styles.btnDisabled]}
+                className={`flex-1 bg-primary rounded-xl py-3 items-center ${!sessionTitle.trim() ? 'opacity-50' : ''}`}
               >
                 {createMutation.isPending ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.modalSubmitText}>Create Session</Text>
+                  <Text className="font-sora-bold text-[13px] text-white">Create Session</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -312,329 +309,5 @@ export const GroupSessionsScreen: React.FC<GroupSessionsScreenProps> = ({ naviga
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAF9',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E7',
-    backgroundColor: '#FFFFFF',
-  },
-  backBtn: {
-    padding: 6,
-    marginRight: 8,
-  },
-  headerTitleBox: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 18,
-    color: '#1A1C1C',
-  },
-  headerSubtitle: {
-    fontFamily: 'PlusJakartaSans_500Medium',
-    fontSize: 11,
-    color: '#6F7977',
-  },
-  addBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#0D564D',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContent: {
-    padding: 20,
-    gap: 16,
-  },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 16,
-    color: '#1A1C1C',
-    marginTop: 12,
-  },
-  emptyDesc: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 12,
-    color: '#6F7977',
-    textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 18,
-  },
-  sessionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  titleWrap: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 16,
-    color: '#1A1C1C',
-    marginBottom: 6,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  badgeGreen: {
-    backgroundColor: '#D1FAE5',
-  },
-  badgeRed: {
-    backgroundColor: '#FEE2E2',
-  },
-  badgeText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 10,
-  },
-  textGreen: {
-    color: '#065F46',
-  },
-  textRed: {
-    color: '#991B1B',
-  },
-  capacityBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  capacityText: {
-    fontFamily: 'PlusJakartaSans_600SemiBold',
-    fontSize: 10,
-    color: '#475569',
-  },
-  hostRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  hostLabel: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 12,
-    color: '#64748B',
-  },
-  hostValue: {
-    fontFamily: 'Sora_600SemiBold',
-    color: '#1E293B',
-  },
-  feeLabel: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 12,
-    color: '#64748B',
-  },
-  feeValue: {
-    fontFamily: 'Sora_700Bold',
-    color: '#0D564D',
-  },
-  counselorControls: {
-    marginTop: 6,
-  },
-  claimBtn: {
-    backgroundColor: '#0D564D',
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  claimBtnText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 13,
-    color: '#FFFFFF',
-  },
-  mySessionBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#E6F4F1',
-    padding: 10,
-    borderRadius: 12,
-  },
-  myHostText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 12,
-    color: '#0D564D',
-  },
-  deleteBtn: {
-    padding: 6,
-  },
-  queueBox: {
-    marginTop: 10,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  queueTitle: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 11,
-    color: '#475569',
-    marginBottom: 6,
-  },
-  queueRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  anonName: {
-    fontFamily: 'PlusJakartaSans_600SemiBold',
-    fontSize: 12,
-    color: '#0F172A',
-  },
-  queueActionRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  approveBtn: {
-    backgroundColor: '#059669',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  approveBtnText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 11,
-    color: '#FFFFFF',
-  },
-  blockBtn: {
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  joinBtn: {
-    backgroundColor: '#0D564D',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  joinBtnText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 14,
-    color: '#FFFFFF',
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-  },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-  },
-  modalTitle: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 18,
-    color: '#1A1C1C',
-  },
-  modalSub: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 12,
-    color: '#6F7977',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  label: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 11,
-    color: '#6F7977',
-    textTransform: 'uppercase',
-    marginBottom: 6,
-    marginTop: 10,
-  },
-  input: {
-    backgroundColor: '#F9F9F8',
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 13,
-    color: '#1A1C1C',
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  modalBtnRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 20,
-  },
-  modalCancelBtn: {
-    flex: 1,
-    backgroundColor: '#F9F9F8',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-  },
-  modalCancelText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 13,
-    color: '#1A1C1C',
-  },
-  modalSubmitBtn: {
-    flex: 1,
-    backgroundColor: '#0D564D',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalSubmitText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 13,
-    color: '#FFFFFF',
-  },
-});
 
 export default GroupSessionsScreen;

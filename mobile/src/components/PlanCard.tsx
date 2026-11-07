@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Check } from 'lucide-react-native';
 import { Theme } from '../theme';
 
@@ -31,39 +31,43 @@ export const PlanCard: React.FC<PlanCardProps> = ({
   const isHighlighted = plan.highlighted || plan.name.toLowerCase().includes('shanti');
 
   return (
-    <View style={[
-      styles.card,
-      isHighlighted && styles.cardHighlighted,
-      isActive && styles.cardActive
-    ]}>
+    <View
+      className={`rounded-3xl p-6 mb-6 relative border shadow-sm ${
+        isHighlighted
+          ? 'bg-primary border-primary shadow-primary/20'
+          : isActive
+          ? 'bg-white border-primary/50'
+          : 'bg-white border-surface-high'
+      }`}
+    >
       {isHighlighted && (
-        <View style={styles.popularBadge}>
-          <Text style={styles.popularText}>MOST POPULAR</Text>
+        <View className="absolute -top-3.5 right-5 bg-gold px-3 py-1 rounded-full shadow-sm">
+          <Text className="font-sora-bold text-[10px] text-primary tracking-wider">MOST POPULAR</Text>
         </View>
       )}
 
       {isActive && (
-        <View style={styles.activeBadge}>
-          <Text style={styles.activeBadgeText}>✓ ACTIVE</Text>
+        <View className="absolute -top-3.5 left-5 bg-emerald-600 px-3 py-1 rounded-full shadow-sm">
+          <Text className="font-sora-bold text-[10px] text-white tracking-wider">✓ ACTIVE</Text>
         </View>
       )}
 
       {btnLabel === 'Payment Pending' && (
-        <View style={styles.pendingBadge}>
-          <Text style={styles.pendingBadgeText}>PAYMENT PENDING</Text>
+        <View className="absolute -top-3.5 right-5 bg-amber-500 px-3 py-1 rounded-full shadow-sm">
+          <Text className="font-sora-bold text-[10px] text-white tracking-wider">PAYMENT PENDING</Text>
         </View>
       )}
 
-      <Text style={[styles.name, isHighlighted && styles.textWhite]}>
+      <Text className={`font-sora-bold text-xl mb-2 ${isHighlighted ? 'text-white' : 'text-on-surface'}`}>
         {plan.name}
       </Text>
 
-      <View style={styles.priceRow}>
-        <Text style={[styles.currency, isHighlighted && styles.textWhite]}>₹</Text>
-        <Text style={[styles.price, isHighlighted && styles.textWhite]}>
+      <View className="flex-row items-baseline mb-4">
+        <Text className={`font-sora-bold text-lg mr-1 ${isHighlighted ? 'text-white' : 'text-on-surface'}`}>₹</Text>
+        <Text className={`font-sora-bold text-3xl ${isHighlighted ? 'text-white' : 'text-on-surface'}`}>
           {plan.price}
         </Text>
-        <Text style={[styles.interval, isHighlighted && styles.textWhiteMuted]}>
+        <Text className={`font-jakarta text-xs ml-1 ${isHighlighted ? 'text-white/80' : 'text-text-muted'}`}>
           /{plan.durationMonths && plan.durationMonths > 1
             ? `${plan.durationMonths} mo`
             : plan.interval === 'one-time'
@@ -74,20 +78,16 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         </Text>
       </View>
 
-      <View style={styles.divider} />
+      <View className={`h-[1px] my-3 ${isHighlighted ? 'bg-white/20' : 'bg-surface-high'}`} />
 
-      <View style={styles.featuresList}>
+      <View className="gap-2.5 mb-6">
         {plan.features.map((feature, idx) => (
-          <View key={idx} style={styles.featureItem}>
+          <View key={idx} className="flex-row items-center gap-2.5">
             <Check 
               size={16} 
               color={isHighlighted ? Theme.colors.gold : Theme.colors.primary} 
             />
-            <Text style={[
-              styles.featureText, 
-              isHighlighted && styles.textWhite,
-              { flex: 1 }
-            ]}>
+            <Text className={`font-jakarta text-xs flex-1 ${isHighlighted ? 'text-white' : 'text-on-surface-variant'}`}>
               {feature}
             </Text>
           </View>
@@ -97,19 +97,27 @@ export const PlanCard: React.FC<PlanCardProps> = ({
       <TouchableOpacity
         onPress={onPress}
         disabled={isActive || btnLabel === 'Payment Pending'}
-        style={[
-          styles.actionBtn,
-          isHighlighted ? styles.actionBtnHighlighted : styles.actionBtnNormal,
-          isActive && styles.actionBtnActive,
-          btnLabel === 'Payment Pending' && styles.actionBtnPending
-        ]}
+        className={`h-12 rounded-full justify-center items-center ${
+          isHighlighted
+            ? 'bg-gold'
+            : isActive
+            ? 'bg-primary/20'
+            : btnLabel === 'Payment Pending'
+            ? 'bg-amber-100 border border-amber-300'
+            : 'bg-primary'
+        }`}
       >
-        <Text style={[
-          styles.actionBtnText,
-          isHighlighted && styles.textPrimaryColor,
-          isActive && styles.textWhite,
-          btnLabel === 'Payment Pending' && styles.textPending
-        ]}>
+        <Text
+          className={`font-sora-bold text-sm ${
+            isHighlighted
+              ? 'text-primary'
+              : isActive
+              ? 'text-primary'
+              : btnLabel === 'Payment Pending'
+              ? 'text-amber-800'
+              : 'text-white'
+          }`}
+        >
           {isActive ? 'Current Plan' : btnLabel || (plan.price === 0 ? 'Start Free' : 'Upgrade Now')}
         </Text>
       </TouchableOpacity>
@@ -117,165 +125,4 @@ export const PlanCard: React.FC<PlanCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    marginBottom: Theme.spacing.md,
-    position: 'relative',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 3,
-  },
-  cardHighlighted: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-    shadowColor: Theme.colors.primary,
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  cardActive: {
-    borderColor: Theme.colors.gold,
-    borderWidth: 2.5,
-  },
-  popularBadge: {
-    position: 'absolute',
-    top: -12,
-    alignSelf: 'center',
-    backgroundColor: Theme.colors.gold,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  popularText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.onTertiaryContainer || '#271900',
-    letterSpacing: 1,
-  },
-  name: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 20,
-    color: Theme.colors.onSurface,
-    textAlign: 'center',
-    marginTop: Theme.spacing.xs,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'baseline',
-    marginTop: Theme.spacing.xs,
-  },
-  currency: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 20,
-    color: Theme.colors.primary,
-    marginRight: 2,
-  },
-  price: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 36,
-    color: Theme.colors.onSurface,
-  },
-  interval: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.textMuted,
-    marginLeft: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Theme.colors.surfaceHigh,
-    marginVertical: Theme.spacing.sm,
-    opacity: 0.5,
-  },
-  featuresList: {
-    gap: Theme.spacing.xs + 2,
-    marginBottom: Theme.spacing.md,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.xs,
-  },
-  featureText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  actionBtn: {
-    paddingVertical: 12,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionBtnNormal: {
-    backgroundColor: Theme.colors.primaryContainer,
-  },
-  actionBtnHighlighted: {
-    backgroundColor: Theme.colors.gold,
-  },
-  actionBtnActive: {
-    backgroundColor: Theme.colors.surfaceDim,
-  },
-  actionBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: '#FFF',
-  },
-  textWhite: {
-    color: '#FFF',
-  },
-  textWhiteMuted: {
-    color: 'rgba(255, 255, 255, 0.7)',
-  },
-  textPrimaryColor: {
-    color: Theme.colors.primary,
-  },
-  textOutlineColor: {
-    color: Theme.colors.primary,
-  },
-  activeBadge: {
-    position: 'absolute',
-    top: -12,
-    right: 16,
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  activeBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#FFF',
-    letterSpacing: 0.5,
-  },
-  pendingBadge: {
-    position: 'absolute',
-    top: -12,
-    right: 16,
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  pendingBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#FFF',
-    letterSpacing: 0.5,
-  },
-  actionBtnPending: {
-    backgroundColor: '#FFE0B2',
-  },
-  textPending: {
-    color: '#B66000',
-  },
-});
 export default PlanCard;

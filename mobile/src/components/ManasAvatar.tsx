@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles } from 'lucide-react-native';
@@ -33,11 +33,14 @@ export const ManasAvatar: React.FC<ManasAvatarProps> = ({ size = 60 }) => {
   const innerSize = size * 0.7;
 
   return (
-    <View style={[styles.outerContainer, { width: size + 16, height: size + 16 }]}>
+    <View
+      className="justify-center items-center relative"
+      style={{ width: size + 16, height: size + 16 }}
+    >
       {/* Halo pulse container */}
       <Animated.View
+        className="absolute bg-primary/10"
         style={[
-          styles.halo,
           {
             width: size + 8,
             height: size + 8,
@@ -52,14 +55,17 @@ export const ManasAvatar: React.FC<ManasAvatarProps> = ({ size = 60 }) => {
         colors={[Theme.colors.primaryContainer, Theme.colors.primary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[
-          styles.avatarMain,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-          },
-        ]}
+        className="justify-center items-center shadow-md"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          shadowColor: Theme.colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 10,
+          elevation: 4,
+        }}
       >
         <Sparkles size={innerSize / 2} color="#FFF" />
       </LinearGradient>
@@ -67,24 +73,4 @@ export const ManasAvatar: React.FC<ManasAvatarProps> = ({ size = 60 }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  outerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  halo: {
-    position: 'absolute',
-    backgroundColor: Theme.colors.primary + '18', // very soft primary aura
-  },
-  avatarMain: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-});
 export default ManasAvatar;

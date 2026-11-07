@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useSignIn, useSignUp, useOAuth, useAuth } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -10,16 +10,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 WebBrowser.maybeCompleteAuthSession();
 
 const useWarmUpBrowser = () => {
-  React.useEffect(() => {
+  useEffect(() => {
     void WebBrowser.warmUpAsync();
     return () => {
       void WebBrowser.coolDownAsync();
     };
   }, []);
 };
-import { Theme } from '../../theme';
-import { routeSignedInUser } from '../../lib/roleRouter';
 
+import { routeSignedInUser } from '../../lib/roleRouter';
 import API, { setTokenGetter } from '../../lib/api';
 
 interface ClerkAuthScreenProps {
@@ -46,11 +45,11 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [isSignUpFlow, setIsSignUpFlow] = useState(false);
-  const redirectingRef = React.useRef(false);
-  const verifyingRef = React.useRef(false);
+  const redirectingRef = useRef(false);
+  const verifyingRef = useRef(false);
 
   // Monitor Clerk global authentication state to catch deep-linked browser return successes!
-  React.useEffect(() => {
+  useEffect(() => {
     if (authLoaded && isSignedIn && !redirectingRef.current) {
       completeAuthProcess("");
     }
@@ -67,7 +66,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     console.log("[AuthRedirect] Starting completeAuthProcess with Clerk session.");
 
     try {
-      // Instantly bootstrap our API token layer to prevent parent component race conditions!
       if (isSignedIn && getToken) {
         console.log("[AuthRedirect] Injecting active Clerk token getter into API client.");
         setTokenGetter(async () => {
@@ -95,7 +93,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
       }
 
       console.log("[AuthRedirect] Calling backend setRole with role:", recoveredRole);
-      // First update their role in the database to lock/set their intended portal role!
       const res = await API.auth.setRole(recoveredRole);
       const confirmedRole = res.user?.role || recoveredRole;
       console.log("[AuthRedirect] Role confirmed by backend:", confirmedRole);
@@ -107,7 +104,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     } catch (err) {
       console.error("[AuthRedirect] Failed to set user role in backend:", err);
       
-      // Fallback redirect in case of network issue - using recovered values
       await AsyncStorage.removeItem('intended_role');
       await AsyncStorage.removeItem('upgrade_plan');
 
@@ -116,7 +112,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     }
   };
 
-  const handleGoogleOAuth = React.useCallback(async () => {
+  const handleGoogleOAuth = useCallback(async () => {
     try {
       await AsyncStorage.setItem('intended_role', role);
       if (upgradePlan) {
@@ -144,7 +140,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         if (signUp?.status === 'missing_requirements') {
           const missing = signUp.missingFields || [];
           
-          // Auto-resolve required username field dynamically!
           if (missing.includes('username') && missing.length === 1) {
             try {
               console.log("[OAuthFlow] Username is required but missing. Automatically generating and resolving username...");
@@ -181,7 +176,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     }
   }, [startGoogleFlow, role, upgradePlan]);
 
-  const handleAppleOAuth = React.useCallback(async () => {
+  const handleAppleOAuth = useCallback(async () => {
     try {
       await AsyncStorage.setItem('intended_role', role);
       if (upgradePlan) {
@@ -209,7 +204,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         if (signUp?.status === 'missing_requirements') {
           const missing = signUp.missingFields || [];
 
-          // Auto-resolve required username field dynamically!
           if (missing.includes('username') && missing.length === 1) {
             try {
               console.log("[OAuthFlow] Username is required but missing. Automatically generating and resolving username...");
@@ -258,14 +252,12 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     setLoading(true);
     try {
       if (!signInLoaded || !signUpLoaded || !signIn) {
-        // Fallback for development without active Clerk API keys in simulator
         console.log("Clerk hooks not fully loaded. Simulating code sent.");
         setPendingVerification(true);
         setLoading(false);
         return;
       }
 
-      // If user explicitly chose SignUp flow, jump directly to signUp.create
       if (isSignUpFlow) {
         try {
           if (!signUp) return;
@@ -286,7 +278,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         return;
       }
 
-      // Start signIn flow with email OTP
       const signInAttempt = await signIn.create({
         identifier: email,
       });
@@ -319,7 +310,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
             { 
               text: 'OK', 
               onPress: () => {
-                // Automatically switch UI to sign up mode
                 setIsSignUpFlow(true);
               } 
             }
@@ -347,7 +337,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     setLoading(true);
     try {
       if (!signInLoaded || !signUpLoaded || !signIn || !signUp) {
-        // Mock success bypass for local simulator
         completeAuthProcess('user_mock_123');
         setLoading(false);
         verifyingRef.current = false;
@@ -362,7 +351,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         if (result.status === 'complete') {
           console.log("[Verification] SignIn successful. Activating session...");
           await setActive({ session: result.createdSessionId });
-          // Redirection will be handled automatically by the React.useEffect on isSignedIn
         }
       } else {
         const result = await signUp.attemptEmailAddressVerification({
@@ -458,7 +446,6 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
               }
             }
           } else if (isSignedIn) {
-            // Already signed in, let useEffect handle redirect
             return;
           }
         } catch (activeErr) {
@@ -473,34 +460,32 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     }
   };
 
-  // Note: Demo bypass has been removed in this version.
-
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-[#FAF9F6] justify-center p-4">
       {/* Absolute Header with Back Navigation */}
-      <View style={styles.topBar}>
+      <View className="absolute top-12 left-4 right-4 flex-row justify-between items-center z-10">
         <TouchableOpacity 
-          style={styles.backBtn} 
+          className="flex-row items-center gap-1 py-1.5 px-3 rounded-full bg-white border border-[#E7E5E4] shadow-sm"
           onPress={() => navigation.goBack()}
         >
-          <ArrowLeft size={18} color={Theme.colors.onSurface} />
-          <Text style={styles.backBtnText}>Back</Text>
+          <ArrowLeft size={18} color="#191C1B" />
+          <Text className="font-jakarta-bold text-[13px] text-[#191C1B]">Back</Text>
         </TouchableOpacity>
         
-        <View style={styles.secureBadge}>
-          <Lock size={10} color={Theme.colors.primary} />
-          <Text style={styles.secureText}>secured by clerk</Text>
+        <View className="flex-row items-center gap-1 py-1 px-2 bg-primary/5 border border-primary/20 rounded-lg">
+          <Lock size={10} color="#0D564D" />
+          <Text className="font-jakarta-bold text-[10px] text-primary uppercase tracking-wider">secured by clerk</Text>
         </View>
       </View>
 
       {/* Main Premium Widget Card */}
-      <View style={styles.authCard}>
-        <View style={styles.header}>
-          <Text style={styles.brandTitle}>MyMindTherapyFriend</Text>
-          <Text style={styles.title}>
+      <View className="bg-white rounded-[20px] border border-[#E7E5E4] p-6 shadow-sm w-full">
+        <View className="items-start mb-6">
+          <Text className="font-sora-bold text-[22px] text-primary mb-3">MyMindTherapyFriend</Text>
+          <Text className="font-sora-semibold text-xl text-[#1C1917] mb-1">
             {pendingVerification ? 'Enter OTP' : (isSignUpFlow ? 'Sign up' : 'Sign in')}
           </Text>
-          <Text style={styles.subtitle}>
+          <Text className="font-jakarta-medium text-[13px] text-[#78716C] leading-[18px]">
             {pendingVerification 
               ? `We sent a code to ${email}`
               : `to continue to MyMindTherapyFriend ${role.toUpperCase().replace('_', ' ')} portal`
@@ -509,110 +494,109 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         </View>
 
         {!pendingVerification ? (
-          <View style={styles.form}>
+          <View className="w-full gap-3">
             {/* Google & Apple OAuth stacked premium buttons */}
-            <View style={styles.oauthRow}>
+            <View className="flex-row items-center gap-3 w-full justify-between">
               <TouchableOpacity 
                 onPress={handleGoogleOAuth} 
                 disabled={loading}
-                style={styles.googleBtn}
+                className="flex-1 flex-row h-12 bg-white border border-[#E7E5E4] rounded-2xl justify-center items-center gap-2.5 shadow-sm"
               >
-                <View style={styles.googleBadgeIcon}>
-                  <View style={[styles.googleColorBar, { backgroundColor: '#4285F4' }]} />
-                  <View style={[styles.googleColorBar, { backgroundColor: '#34A853' }]} />
-                  <View style={[styles.googleColorBar, { backgroundColor: '#FBBC05' }]} />
-                  <View style={[styles.googleColorBar, { backgroundColor: '#EA4335' }]} />
+                <View className="flex-row items-center gap-0.5 p-0.5 border border-[#E7E5E4] rounded">
+                  <View className="w-[3px] h-2.5 rounded-sm bg-[#4285F4]" />
+                  <View className="w-[3px] h-2.5 rounded-sm bg-[#34A853]" />
+                  <View className="w-[3px] h-2.5 rounded-sm bg-[#FBBC05]" />
+                  <View className="w-[3px] h-2.5 rounded-sm bg-[#EA4335]" />
                 </View>
-                <Text style={styles.googleBtnText}>Google</Text>
+                <Text className="text-[#1C1917] font-jakarta-bold text-sm">Google</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 onPress={handleAppleOAuth} 
                 disabled={loading}
-                style={styles.appleBtn}
+                className="flex-1 flex-row h-12 bg-[#1C1917] rounded-2xl justify-center items-center gap-2.5 shadow-sm"
               >
-                <View style={styles.appleBadgeIcon}>
+                <View className="justify-center items-center">
                   <Apple size={16} color="#FFF" />
                 </View>
-                <Text style={styles.appleBtnText}>Apple</Text>
+                <Text className="text-white font-jakarta-bold text-sm">Apple</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>
+            <View className="flex-row items-center my-3">
+              <View className="flex-1 h-[1px] bg-[#E7E5E4]" />
+              <Text className="text-[#78716C] px-3 font-jakarta-medium text-xs">
                 {isSignUpFlow ? 'or sign up with email' : 'or sign in with email'}
               </Text>
-              <View style={styles.dividerLine} />
+              <View className="flex-1 h-[1px] bg-[#E7E5E4]" />
             </View>
 
             {/* Email Field */}
-            <View style={styles.inputContainer}>
-              <Mail size={18} color={Theme.colors.primary} style={styles.fieldIcon} />
+            <View className="flex-row items-center gap-2.5 border border-[#D6D3D1] rounded-2xl px-3.5 h-12 bg-[#FCFBFA]">
+              <Mail size={18} color="#0D564D" className="opacity-80" />
               <TextInput
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
-                style={styles.input}
+                className="flex-1 text-sm font-jakarta text-[#1C1917]"
                 placeholder="Email address"
-                placeholderTextColor={Theme.colors.outline}
+                placeholderTextColor="#A8A29E"
               />
             </View>
-
 
             <TouchableOpacity 
               onPress={handleSendCode} 
               disabled={loading}
-              style={styles.submitBtn}
+              className="flex-row h-12 bg-primary rounded-2xl justify-center items-center gap-2 mt-2 shadow-sm"
             >
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
                 <>
-                  <Text style={styles.submitBtnText}>Continue</Text>
+                  <Text className="text-white font-jakarta-bold text-sm">Continue</Text>
                   <ArrowRight size={16} color="#FFF" />
                 </>
               )}
             </TouchableOpacity>
 
-            <View style={styles.toggleContainer}>
-              <Text style={styles.toggleText}>
+            <View className="flex-row justify-center items-center mt-4">
+              <Text className="font-jakarta-medium text-[13px] text-[#78716C]">
                 {isSignUpFlow ? "Already have an account?" : "Don't have an account?"}
               </Text>
               <TouchableOpacity onPress={() => setIsSignUpFlow(!isSignUpFlow)}>
-                <Text style={styles.toggleLink}>
+                <Text className="font-jakarta-bold text-[13px] text-primary ml-1">
                   {isSignUpFlow ? "Sign in" : "Sign up"}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
-          <View style={styles.form}>
+          <View className="w-full gap-3">
             {/* OTP Verification Field */}
-            <View style={styles.inputContainer}>
-              <ShieldCheck size={18} color={Theme.colors.primary} style={styles.fieldIcon} />
+            <View className="flex-row items-center gap-2.5 border border-[#D6D3D1] rounded-2xl px-3.5 h-12 bg-[#FCFBFA]">
+              <ShieldCheck size={18} color="#0D564D" className="opacity-80" />
               <TextInput
                 keyboardType="number-pad"
                 maxLength={6}
                 value={code}
                 onChangeText={setCode}
-                style={styles.input}
+                className="flex-1 text-sm font-jakarta text-[#1C1917]"
                 placeholder="6-digit verification code"
-                placeholderTextColor={Theme.colors.outline}
+                placeholderTextColor="#A8A29E"
               />
             </View>
 
             <TouchableOpacity 
               onPress={handleVerifyCode} 
               disabled={loading}
-              style={styles.submitBtn}
+              className="flex-row h-12 bg-primary rounded-2xl justify-center items-center gap-2 mt-2 shadow-sm"
             >
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
                 <>
-                  <Text style={styles.submitBtnText}>Verify code</Text>
+                  <Text className="text-white font-jakarta-bold text-sm">Verify code</Text>
                   <ShieldCheck size={16} color="#FFF" />
                 </>
               )}
@@ -621,256 +605,14 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
         )}
       </View>
 
-      <Text style={[styles.gdprFootnote, { bottom: Math.max(insets.bottom, 16) + 16 }]}>
+      <Text 
+        className="absolute self-center font-jakarta-medium text-[11px] text-[#A8A29E] text-center"
+        style={{ bottom: Math.max(insets.bottom, 16) + 16 }}
+      >
         🔒 GDPR Compliant • HIPAA Secure • End-to-end encrypted session
       </Text>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAF9F6', // Beautiful soft warm ivory/beige
-    justifyContent: 'center',
-    padding: Theme.spacing.margin,
-  },
-  topBar: {
-    position: 'absolute',
-    top: 50,
-    left: Theme.spacing.margin,
-    right: Theme.spacing.margin,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: Theme.radius.full,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  backBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  secureBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: Theme.colors.primary + '0A',
-    borderColor: Theme.colors.primary + '20',
-    borderWidth: 1,
-    borderRadius: Theme.radius.default,
-  },
-  secureText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  authCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.04,
-    shadowRadius: 20,
-    elevation: 4,
-    width: '100%',
-  },
-  header: {
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
-  brandTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 22,
-    color: Theme.colors.primary,
-    marginBottom: 12,
-  },
-  title: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 20,
-    color: '#1C1917',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: '#78716C',
-    lineHeight: 18,
-  },
-  form: {
-    width: '100%',
-    gap: 12,
-  },
-  oauthRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    width: '100%',
-    justifyContent: 'space-between',
-  },
-  googleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 48,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  googleBadgeIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    padding: 2,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-    borderRadius: 4,
-  },
-  googleColorBar: {
-    width: 3,
-    height: 10,
-    borderRadius: 1,
-  },
-  googleBtnText: {
-    color: '#1C1917',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-  },
-  appleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    height: 48,
-    backgroundColor: '#1C1917',
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  appleBadgeIcon: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  appleBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E7E5E4',
-  },
-  dividerText: {
-    color: '#78716C',
-    paddingHorizontal: 12,
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#D6D3D1',
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 14,
-    height: 48,
-    backgroundColor: '#FCFBFA',
-  },
-  fieldIcon: {
-    opacity: 0.8,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: '#1C1917',
-  },
-  submitBtn: {
-    flexDirection: 'row',
-    height: 48,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  submitBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-  },
-  gdprFootnote: {
-    position: 'absolute',
-    bottom: 30,
-    alignSelf: 'center',
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11,
-    color: '#A8A29E',
-    textAlign: 'center',
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  toggleText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: '#78716C',
-  },
-  toggleLink: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    marginLeft: 4,
-  },
-});
 export default ClerkAuthScreen;

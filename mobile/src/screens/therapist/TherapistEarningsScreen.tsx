@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
   Dimensions,
   Switch
 } from 'react-native';
@@ -31,13 +28,13 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   const [selectedPoint, setSelectedPoint] = useState<{ month: string; value: number } | null>(null);
 
   // Fetch profiles and subscription
-  const { data: userProfile, refetch: refetchProfile } = useQuery({
+  const { data: userProfile } = useQuery({
     queryKey: ['userProfile'],
     queryFn: () => API.auth.me(),
     retry: false,
   });
 
-  const { data: subData, refetch: refetchSub } = useQuery({
+  const { data: subData } = useQuery({
     queryKey: ['subscription'],
     queryFn: () => API.subscription.get().catch(() => null),
     retry: false,
@@ -48,7 +45,7 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
     !!(userProfile?.tier && userProfile.tier !== 'free') ||
     !!(subData && subData.subscription?.status === 'active');
 
-  const { data: therapistStats, refetch: refetchStats } = useQuery({
+  const { data: therapistStats } = useQuery({
     queryKey: ['therapistStats'],
     queryFn: () => API.therapist.stats(),
     retry: false,
@@ -69,7 +66,7 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   const totalSessionsCount = isSubscribed ? (therapistStats?.stats?.completedSessions ?? 0) : 0;
   const therapistName = userProfile?.fullName || 'Therapist';
 
-  // 1. Build revenue chart dataset (merge mock data with actual database records)
+  // 1. Build revenue chart dataset
   const mockRevenue: Record<string, number> = {
     '2025-11': 16500,
     '2025-12': 18000,
@@ -83,7 +80,6 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   const dbRevenue = bookingsData?.revenueByMonth || {};
   const mergedRevenue = { ...mockRevenue, ...dbRevenue };
 
-  // Sort and filter dataset based on selected time limit (3, 6, or 12 months)
   const sortedMonths = Object.keys(mergedRevenue).sort();
   const filteredMonths = sortedMonths.slice(-timeLimit);
   
@@ -91,7 +87,6 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
     const rawVal = mergedRevenue[month];
     const value = metric === 'net' ? Math.round(rawVal * 0.70) : rawVal;
     
-    // Format month label (e.g. 2026-05 -> May)
     const [year, m] = month.split('-');
     const date = new Date(Number(year), Number(m) - 1, 1);
     const label = date.toLocaleString('default', { month: 'short' });
@@ -99,7 +94,6 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
     return { month, label, value };
   });
 
-  // Color Mapping Configurations
   const colorMap = {
     teal: { hex: '#0F766E', grad1: '#0F766E', grad2: '#2DD4BF' },
     emerald: { hex: '#047857', grad1: '#047857', grad2: '#34D399' },
@@ -110,12 +104,11 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
 
   const selectedColors = colorMap[themeColor] || colorMap.teal;
 
-  // Render SVG Chart components dynamically
   const renderSVGChart = () => {
     if (chartData.length === 0) return null;
 
     const screenWidth = Dimensions.get('window').width;
-    const chartWidth = screenWidth - 64; // Margin padding
+    const chartWidth = screenWidth - 64;
     const chartHeight = 180;
     const padLeft = 45;
     const padRight = 15;
@@ -125,19 +118,16 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
     const drawWidth = chartWidth - padLeft - padRight;
     const drawHeight = chartHeight - padTop - padBottom;
 
-    // Calculate Y Scale limit
     const values = chartData.map(d => d.value);
     const maxVal = Math.max(...values);
     const yMax = maxVal > 0 ? Math.ceil(maxVal * 1.15 / 5000) * 5000 : 10000;
 
-    // Generate drawing coordinates
     const points = chartData.map((d, index) => {
       const x = padLeft + (index * (drawWidth / (chartData.length - 1 || 1)));
       const y = padTop + drawHeight - ((d.value / yMax) * drawHeight);
       return { x, y, data: d };
     });
 
-    // Build Line SVG path
     let linePathStr = '';
     if (points.length > 0) {
       linePathStr = `M ${points[0].x} ${points[0].y}`;
@@ -146,16 +136,14 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
       }
     }
 
-    // Build Area SVG path (closed path)
     const areaPathStr = linePathStr 
       ? `${linePathStr} L ${points[points.length - 1].x} ${padTop + drawHeight} L ${points[0].x} ${padTop + drawHeight} Z`
       : '';
 
-    // Y Axis horizontal Grid Lines
     const gridTicks = [0, yMax / 2, yMax];
 
     return (
-      <View style={styles.chartCanvasContainer}>
+      <View className="items-center my-2.5 bg-[#F0F2F1]/40 rounded-2xl py-2.5 border border-[#E0E2E0]">
         <Svg width={chartWidth} height={chartHeight}>
           <Defs>
             <LinearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -258,7 +246,7 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName={therapistName.split(' ')[0]}
         role="therapist"
@@ -266,81 +254,85 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
         onUpgradePress={userProfile?.orgId ? undefined : () => navigation.navigate('Plans')}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-5 pb-20 gap-4">
         {/* Profile Card */}
-        <View style={styles.profileHeaderCard}>
-          <View style={styles.avatarRingOuter}>
-            <View style={styles.avatarRingInner}>
-              <Text style={styles.avatarLetter}>T</Text>
+        <View className="flex-row items-center bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm gap-4">
+          <View className="w-[66px] h-[66px] rounded-full border-2 border-primary/30 justify-center items-center">
+            <View className="w-[54px] h-[54px] rounded-full bg-primary/10 justify-center items-center">
+              <Text className="font-sora-bold text-2xl text-primary">T</Text>
             </View>
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>{therapistName}</Text>
-            <Text style={styles.headerRole}>Therapist</Text>
-            <Text style={styles.headerSubtext}>– · {totalSessionsCount} sessions</Text>
+          <View className="flex-1">
+            <Text className="font-sora text-lg text-onSurface">{therapistName}</Text>
+            <Text className="font-jakarta-medium text-[13px] text-primary mt-0.5">Therapist</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5">– · {totalSessionsCount} sessions</Text>
           </View>
         </View>
 
-        {/* 2 Stats Cards */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>₹{totalEarned.toLocaleString('en-IN')}</Text>
-            <Text style={styles.statLabel}>Total earned</Text>
+        {/* 4 Stats Cards */}
+        <View className="flex-row flex-wrap gap-2">
+          <View className="flex-1 min-w-[45%] bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+            <Text className="font-sora-bold text-2xl text-onSurface">₹{totalEarned.toLocaleString('en-IN')}</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Total earned</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>₹{monthEarned.toLocaleString('en-IN')}</Text>
-            <Text style={styles.statLabel}>This month</Text>
+          <View className="flex-1 min-w-[45%] bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+            <Text className="font-sora-bold text-2xl text-onSurface">₹{monthEarned.toLocaleString('en-IN')}</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">This month</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>₹{netPayout.toLocaleString('en-IN')}</Text>
-            <Text style={styles.statLabel}>Payout (70%)</Text>
+          <View className="flex-1 min-w-[45%] bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+            <Text className="font-sora-bold text-2xl text-onSurface">₹{netPayout.toLocaleString('en-IN')}</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Payout (70%)</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{totalSessionsCount}</Text>
-            <Text style={styles.statLabel}>Sessions</Text>
+          <View className="flex-1 min-w-[45%] bg-white rounded-3xl p-4 border border-[#E0E2E0] items-center justify-center shadow-sm h-[90px]">
+            <Text className="font-sora-bold text-2xl text-onSurface">{totalSessionsCount}</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 text-center">Sessions</Text>
           </View>
         </View>
 
         {isSubscribed ? (
-          <View style={styles.actionContainer}>
+          <View className="gap-4">
             {/* 1. Customizable interactive revenue analytics chart */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+              <View className="flex-row items-center gap-2 mb-1">
                 <TrendingUp size={18} color={Theme.colors.primary} />
-                <Text style={styles.cardTitle}>Revenue Analytics & Statistics</Text>
+                <Text className="font-sora text-[15px] text-onSurface">Revenue Analytics & Statistics</Text>
               </View>
-              <Text style={styles.cardDesc}>Tweak parameters to trace payout variations:</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mb-1.5">Tweak parameters to trace payout variations:</Text>
 
               {/* Render dynamic Svg chart */}
               {renderSVGChart()}
 
               {/* Dynamic Interactive Tooltip Panel */}
               {selectedPoint && (
-                <View style={styles.tooltipPanel}>
-                  <Text style={styles.tooltipTitle}>{selectedPoint.month} Summary</Text>
-                  <Text style={styles.tooltipVal}>
+                <View className="bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl p-2.5 my-1">
+                  <Text className="font-sora text-[11.5px] text-onSurfaceVariant uppercase">{selectedPoint.month} Summary</Text>
+                  <Text className="font-jakarta text-[13px] text-onSurface mt-0.5">
                     {metric === 'net' ? 'Net Payout (85%):' : 'Gross Revenue:'} 
-                    <Text style={{ color: selectedColors.hex, fontFamily: Theme.fonts.headline }}> ₹{selectedPoint.value.toLocaleString()}</Text>
+                    <Text style={{ color: selectedColors.hex }} className="font-sora"> ₹{selectedPoint.value.toLocaleString()}</Text>
                   </Text>
                 </View>
               )}
 
               {/* Chart Controls Toggles */}
-              <View style={styles.controlHeaderRow}>
+              <View className="flex-row items-center gap-1.5 mt-3 border-t border-[#E0E2E0] pt-3">
                 <Settings2 size={14} color={Theme.colors.outline} />
-                <Text style={styles.controlSectionTitle}>Customize Report Graph</Text>
+                <Text className="font-sora text-[12.5px] text-onSurfaceVariant">Customize Report Graph</Text>
               </View>
 
               {/* Parameter 1: Chart Type */}
-              <Text style={styles.controlLabel}>Chart Representation</Text>
-              <View style={styles.selectorRow}>
+              <Text className="font-jakarta-bold text-[11px] text-outline mt-2 uppercase">Chart Representation</Text>
+              <View className="flex-row gap-1.5 my-1">
                 {(['line', 'area', 'bar'] as const).map(type => (
                   <TouchableOpacity
                     key={type}
                     onPress={() => setChartType(type)}
-                    style={[styles.selectorBtn, chartType === type && styles.selectorBtnActive]}
+                    className={`flex-1 border rounded-full py-2 items-center ${
+                      chartType === type ? 'bg-primary border-primary' : 'bg-[#F0F2F1] border-[#E0E2E0]'
+                    }`}
                   >
-                    <Text style={[styles.selectorBtnText, chartType === type && styles.selectorBtnTextActive]}>
+                    <Text className={`font-jakarta-bold text-[9.5px] ${
+                      chartType === type ? 'text-white' : 'text-primary'
+                    }`}>
                       {type.toUpperCase()}
                     </Text>
                   </TouchableOpacity>
@@ -348,8 +340,8 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
               </View>
 
               {/* Parameter 2: Theme Color */}
-              <Text style={styles.controlLabel}>Graph Highlight Palette</Text>
-              <View style={styles.selectorRow}>
+              <Text className="font-jakarta-bold text-[11px] text-outline mt-2 uppercase">Graph Highlight Palette</Text>
+              <View className="flex-row gap-1.5 my-1">
                 {(['teal', 'emerald', 'indigo', 'violet', 'rose'] as const).map(color => {
                   const hexColor = colorMap[color].hex;
                   const isActive = themeColor === color;
@@ -357,48 +349,51 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
                     <TouchableOpacity
                       key={color}
                       onPress={() => setThemeColor(color)}
-                      style={[
-                        styles.colorSwatchBtn, 
-                        { backgroundColor: hexColor },
-                        isActive && styles.colorSwatchActive
-                      ]}
+                      style={{ backgroundColor: hexColor }}
+                      className={`w-7 h-7 rounded-full border-2 ${
+                        isActive ? 'border-gold' : 'border-transparent'
+                      }`}
                     />
                   );
                 })}
               </View>
 
               {/* Parameter 3: Gridlines & Metric toggles */}
-              <View style={styles.toggleSectionRow}>
-                <View style={styles.toggleField}>
+              <View className="flex-row justify-between gap-3 my-1.5">
+                <View className="flex-1 flex-row items-center bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl px-2 py-1.5">
                   <Grid size={15} color={Theme.colors.outline} style={{ marginRight: 6 }} />
-                  <Text style={styles.toggleLabelText}>Grid Lines</Text>
+                  <Text className="font-jakarta text-[11.5px] text-onSurfaceVariant flex-1">Grid Lines</Text>
                   <Switch
                     value={showGrid}
                     onValueChange={setShowGrid}
-                    trackColor={{ true: Theme.colors.primary }}
+                    trackColor={{ false: '#D1D5DB', true: Theme.colors.primary }}
                   />
                 </View>
-                <View style={styles.toggleField}>
+                <View className="flex-1 flex-row items-center bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl px-2 py-1.5">
                   <BarChart2 size={15} color={Theme.colors.outline} style={{ marginRight: 6 }} />
-                  <Text style={styles.toggleLabelText}>Gross Sum</Text>
+                  <Text className="font-jakarta text-[11.5px] text-onSurfaceVariant flex-1">Gross Sum</Text>
                   <Switch
                     value={metric === 'gross'}
                     onValueChange={(val) => setMetric(val ? 'gross' : 'net')}
-                    trackColor={{ true: Theme.colors.primary }}
+                    trackColor={{ false: '#D1D5DB', true: Theme.colors.primary }}
                   />
                 </View>
               </View>
 
               {/* Parameter 4: Time Range Select */}
-              <Text style={styles.controlLabel}>Report Period Range</Text>
-              <View style={styles.selectorRow}>
+              <Text className="font-jakarta-bold text-[11px] text-outline mt-2 uppercase">Report Period Range</Text>
+              <View className="flex-row gap-1.5 my-1">
                 {([3, 6, 12] as const).map(range => (
                   <TouchableOpacity
                     key={range}
                     onPress={() => setTimeLimit(range)}
-                    style={[styles.selectorBtn, timeLimit === range && styles.selectorBtnActive]}
+                    className={`flex-1 border rounded-full py-2 items-center ${
+                      timeLimit === range ? 'bg-primary border-primary' : 'bg-[#F0F2F1] border-[#E0E2E0]'
+                    }`}
                   >
-                    <Text style={[styles.selectorBtnText, timeLimit === range && styles.selectorBtnTextActive]}>
+                    <Text className={`font-jakarta-bold text-[9.5px] ${
+                      timeLimit === range ? 'text-white' : 'text-primary'
+                    }`}>
                       {`${range} MONTHS`}
                     </Text>
                   </TouchableOpacity>
@@ -407,34 +402,34 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
             </View>
 
             {/* Financial ledger statement */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+              <View className="flex-row items-center gap-2 mb-1">
                 <Wallet size={18} color={Theme.colors.primary} />
-                <Text style={styles.cardTitle}>Payout Summary Statement</Text>
+                <Text className="font-sora text-[15px] text-onSurface">Payout Summary Statement</Text>
               </View>
-              <Text style={styles.cardDesc}>Below is the breakdown of your consultation earnings:</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mb-1.5">Below is the breakdown of your consultation earnings:</Text>
 
-              <View style={styles.ledgerCard}>
-                <View style={styles.ledgerLine}>
-                  <Text style={styles.ledgerLabel}>Total Gross Earned (All Time)</Text>
-                  <Text style={styles.ledgerVal}>₹{totalEarned.toLocaleString('en-IN')}</Text>
+              <View className="bg-surface/50 rounded-2xl p-4 border border-[#E0E2E0] gap-2">
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-jakarta text-xs text-[#71787D]">Total Gross Earned (All Time)</Text>
+                  <Text className="font-jakarta-bold text-[12.5px] text-onSurface">₹{totalEarned.toLocaleString('en-IN')}</Text>
                 </View>
-                <View style={styles.ledgerLine}>
-                  <Text style={styles.ledgerLabel}>This Month Gross</Text>
-                  <Text style={styles.ledgerVal}>₹{monthEarned.toLocaleString('en-IN')}</Text>
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-jakarta text-xs text-[#71787D]">This Month Gross</Text>
+                  <Text className="font-jakarta-bold text-[12.5px] text-onSurface">₹{monthEarned.toLocaleString('en-IN')}</Text>
                 </View>
-                <View style={styles.ledgerLine}>
-                  <Text style={styles.ledgerLabel}>Platform Service Share (30%)</Text>
-                  <Text style={styles.ledgerVal}>- ₹{Math.round(monthEarned * 0.30).toLocaleString('en-IN')}</Text>
+                <View className="flex-row justify-between items-center">
+                  <Text className="font-jakarta text-xs text-[#71787D]">Platform Service Share (30%)</Text>
+                  <Text className="font-jakarta-bold text-[12.5px] text-onSurface">- ₹{Math.round(monthEarned * 0.30).toLocaleString('en-IN')}</Text>
                 </View>
-                <View style={[styles.ledgerLine, styles.ledgerTotalLine]}>
-                  <Text style={styles.ledgerTotalLabel}>Net Payout This Month</Text>
-                  <Text style={styles.ledgerTotalVal}>₹{netPayout.toLocaleString('en-IN')}</Text>
+                <View className="flex-row justify-between items-center border-t border-[#F0F2F1] pt-2 mt-0.5">
+                  <Text className="font-sora text-[13.5px] text-primary">Net Payout This Month</Text>
+                  <Text className="font-sora-bold text-[15px] text-primary">₹{netPayout.toLocaleString('en-IN')}</Text>
                 </View>
               </View>
 
-              <View style={styles.helpBox}>
-                <Text style={styles.helpText}>
+              <View className="mt-1">
+                <Text className="font-jakarta text-[11px] text-[#71787D] leading-4">
                   * Payouts are safely processed and automatically dispatched to your registered bank account on the 1st of every month.
                 </Text>
               </View>
@@ -442,21 +437,21 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
           </View>
         ) : (
           /* Subscription Required Barrier Overlay */
-          <View style={styles.barrierContainer}>
-            <View style={styles.lockBadge}>
+          <View className="bg-primary/5 border-[1.5px] border-primary/25 border-dashed rounded-3xl p-6 items-center shadow-sm">
+            <View className="w-11 h-11 rounded-full bg-primary/15 justify-center items-center mb-2">
               <Lock size={22} color={Theme.colors.primary} />
             </View>
-            <Text style={styles.barrierTitle}>Subscription Required</Text>
-            <Text style={styles.barrierDesc}>
+            <Text className="font-sora-bold text-lg text-primary text-center">Subscription Required</Text>
+            <Text className="font-jakarta text-[13px] text-onSurfaceVariant text-center leading-[18px] mt-1.5 px-2">
               As an independent therapist, you need an active subscription to access your schedule, bookings, and profile.
             </Text>
 
-            <View style={styles.barrierActions}>
+            <View className="w-full gap-2 mt-4">
               <TouchableOpacity
                 onPress={() => navigation.navigate('Plans')}
-                style={styles.viewPlansBtn}
+                className="bg-primary py-3 rounded-full items-center w-full"
               >
-                <Text style={styles.viewPlansText}>View Subscription Plans</Text>
+                <Text className="font-sora text-[13px] text-white">View Subscription Plans</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -465,358 +460,5 @@ export const TherapistEarningsScreen: React.FC<TherapistEarningsScreenProps> = (
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 80,
-    gap: Theme.spacing.md,
-  },
-  profileHeaderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 3,
-    gap: Theme.spacing.md,
-  },
-  avatarRingOuter: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary + '30',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarRingInner: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Theme.colors.primary + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarLetter: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-    fontWeight: '700',
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  headerRole: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    marginTop: 2,
-  },
-  headerSubtext: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 3,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Theme.spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    height: 90,
-  },
-  statVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.onSurface,
-    fontWeight: '700',
-  },
-  statLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: Theme.spacing.xs - 4,
-    textAlign: 'center',
-  },
-  actionContainer: {
-    gap: Theme.spacing.md,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: Theme.spacing.xs,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  cardDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginBottom: 6,
-  },
-  chartCanvasContainer: {
-    alignItems: 'center',
-    marginVertical: 10,
-    backgroundColor: Theme.colors.surfaceLow + '40',
-    borderRadius: Theme.radius.lg,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  tooltipPanel: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderColor: Theme.colors.surfaceHigh,
-    borderWidth: 1,
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-    marginVertical: 4,
-  },
-  tooltipTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 11.5,
-    color: Theme.colors.onSurfaceVariant,
-    textTransform: 'uppercase',
-  },
-  tooltipVal: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    marginTop: 2,
-  },
-  controlHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
-    paddingTop: 12,
-  },
-  controlSectionTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12.5,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  controlLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.outline,
-    marginTop: 8,
-    textTransform: 'uppercase',
-  },
-  selectorRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginVertical: 4,
-  },
-  selectorBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.full,
-    paddingVertical: 8,
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  selectorBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  selectorBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9.5,
-    color: Theme.colors.primary,
-  },
-  selectorBtnTextActive: {
-    color: '#FFF',
-  },
-  colorSwatchBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  colorSwatchActive: {
-    borderColor: Theme.colors.gold,
-  },
-  toggleSectionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-    marginVertical: 6,
-  },
-  toggleField: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-  toggleLabelText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.onSurfaceVariant,
-    flex: 1,
-  },
-  ledgerCard: {
-    backgroundColor: Theme.colors.background + '50',
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8,
-  },
-  ledgerLine: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ledgerLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-  },
-  ledgerVal: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.onSurface,
-  },
-  ledgerTotalLine: {
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceLow,
-    paddingTop: 8,
-    marginTop: 2,
-  },
-  ledgerTotalLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.primary,
-  },
-  ledgerTotalVal: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.primary,
-    fontWeight: '700',
-  },
-  helpBox: {
-    marginTop: 4,
-  },
-  helpText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    lineHeight: 15,
-  },
-  barrierContainer: {
-    backgroundColor: Theme.colors.primary + '06',
-    borderWidth: 1.5,
-    borderColor: Theme.colors.primary + '25',
-    borderStyle: 'dashed',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.lg,
-    alignItems: 'center',
-    textAlign: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-  lockBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Theme.colors.primary + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.sm,
-  },
-  barrierTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    fontWeight: '700',
-  },
-  barrierDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginTop: 6,
-    paddingHorizontal: 8,
-  },
-  barrierActions: {
-    width: '100%',
-    gap: 8,
-    marginTop: Theme.spacing.md,
-  },
-  viewPlansBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    width: '100%',
-  },
-  viewPlansText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-});
 
 export default TherapistEarningsScreen;

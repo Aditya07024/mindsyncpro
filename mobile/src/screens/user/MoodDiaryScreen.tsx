@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@clerk/clerk-expo';
 import Svg, { Path, Circle, Line, Text as SvgText } from 'react-native-svg';
-import { Sparkles, Calendar, Plus } from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { useStore } from '../../lib/store';
 import { AppHeader } from '../../components/AppHeader';
-import { SOSButton } from '../../components/SOSButton';
-import { CrisisOverlay } from '../../components/CrisisOverlay';
 
 interface MoodDiaryScreenProps {
   navigation: any;
 }
 
 function moodColor(score: number) {
-  // 1-3 = coral-red, 4-5 = amber, 6-7 = lime, 8-10 = teal-green
   if (score <= 3) return '#DE4E37';
   if (score <= 5) return '#E5963E';
   if (score <= 7) return '#7FB355';
@@ -33,7 +29,6 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
   });
   const storeFirstName = useStore(state => state.firstName);
   const firstName = profileData?.user?.fullName?.split(" ")[0] || user?.firstName || storeFirstName || 'Friend';
-  const [crisisOpen, setCrisisOpen] = useState(false);
 
   // Fetch mood logs
   const { data, isLoading, refetch } = useQuery({
@@ -97,8 +92,8 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
 
   // Chart layout math
   const screenWidth = Dimensions.get('window').width;
-  const paddingX = Theme.spacing.margin * 2;
-  const chartWidth = screenWidth - paddingX - 32; // card padding accounted
+  const paddingX = 32;
+  const chartWidth = screenWidth - paddingX - 32;
   const chartHeight = 150;
 
   // Build SVG path
@@ -123,7 +118,7 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
   const cellWidth = (screenWidth - paddingX - 32 - 9 * 5) / 10;
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName={firstName}
         role="user"
@@ -131,23 +126,23 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
         navigation={navigation}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160, gap: 16 }}>
         {/* Welcome Title */}
-        <View style={styles.titleSection}>
-          <Text style={styles.title}>Mood diary</Text>
-          <Text style={styles.subtitle}>Tap a day to see, slide to log today.</Text>
+        <View className="mb-1">
+          <Text className="font-sora-bold text-3xl text-[#191C1B]">Mood diary</Text>
+          <Text className="font-jakarta text-sm text-[#4E615D] mt-0.5">Tap a day to see, slide to log today.</Text>
         </View>
 
         {/* 1. Today's Mood Logger */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Today</Text>
+        <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+          <Text className="font-sora-semibold text-base text-[#191C1B] mb-2">Today</Text>
           {submitMoodMutation.isPending && (
-            <ActivityIndicator style={{ marginVertical: 10 }} color={Theme.colors.primary} />
+            <ActivityIndicator className="my-2.5" color="#0D564D" />
           )}
           
-          <View style={styles.gridContainer}>
+          <View className="gap-2">
             {/* Row 1: 1 - 5 */}
-            <View style={styles.buttonRow}>
+            <View className="flex-row justify-between gap-1.5">
               {[1, 2, 3, 4, 5].map((s) => {
                 const isActive = todayScore === s;
                 return (
@@ -155,19 +150,19 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
                     key={s}
                     disabled={submitMoodMutation.isPending}
                     onPress={() => submitMoodMutation.mutate(s)}
-                    style={[
-                      styles.moodBtn,
-                      isActive && { backgroundColor: moodColor(s) }
-                    ]}
+                    className={`flex-1 h-10 rounded-2xl justify-center items-center border border-[#DFEBE7] ${
+                      isActive ? '' : 'bg-[#F8FAF9]'
+                    }`}
+                    style={isActive ? { backgroundColor: moodColor(s) } : undefined}
                   >
-                    <Text style={[styles.moodBtnText, isActive && styles.activeText]}>{s}</Text>
+                    <Text className={`font-sora-semibold ${isActive ? 'text-white text-[15px]' : 'text-sm text-[#4E615D]'}`}>{s}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
             
             {/* Row 2: 6 - 10 */}
-            <View style={styles.buttonRow}>
+            <View className="flex-row justify-between gap-1.5">
               {[6, 7, 8, 9, 10].map((s) => {
                 const isActive = todayScore === s;
                 return (
@@ -175,12 +170,12 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
                     key={s}
                     disabled={submitMoodMutation.isPending}
                     onPress={() => submitMoodMutation.mutate(s)}
-                    style={[
-                      styles.moodBtn,
-                      isActive && { backgroundColor: moodColor(s) }
-                    ]}
+                    className={`flex-1 h-10 rounded-2xl justify-center items-center border border-[#DFEBE7] ${
+                      isActive ? '' : 'bg-[#F8FAF9]'
+                    }`}
+                    style={isActive ? { backgroundColor: moodColor(s) } : undefined}
                   >
-                    <Text style={[styles.moodBtnText, isActive && styles.activeText]}>{s}</Text>
+                    <Text className={`font-sora-semibold ${isActive ? 'text-white text-[15px]' : 'text-sm text-[#4E615D]'}`}>{s}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -189,35 +184,32 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
         </View>
 
         {/* 2. Last 30 Days Grid */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Last 30 days</Text>
-          <View style={styles.grid30}>
-            {days.map((d, index) => (
+        <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+          <Text className="font-sora-semibold text-base text-[#191C1B] mb-2">Last 30 days</Text>
+          <View className="flex-row flex-wrap gap-[5px] mt-1">
+            {days.map((d) => (
               <View
                 key={d.date}
-                style={[
-                  styles.gridCell,
-                  {
-                    width: cellWidth,
-                    height: cellWidth,
-                    backgroundColor: d.score ? moodColor(d.score) : '#E6E9E8'
-                  }
-                ]}
+                className="rounded-md aspect-square"
+                style={{
+                  width: cellWidth,
+                  height: cellWidth,
+                  backgroundColor: d.score ? moodColor(d.score) : '#E6E9E8'
+                }}
               />
             ))}
           </View>
         </View>
 
         {/* 3. Last 7 Days Graph */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Last 7 days</Text>
+        <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+          <Text className="font-sora-semibold text-base text-[#191C1B] mb-2">Last 7 days</Text>
           
-          <View style={styles.chartWrapper}>
+          <View className="mt-1">
             {isLoading ? (
-              <ActivityIndicator style={{ height: chartHeight }} color={Theme.colors.primary} />
+              <ActivityIndicator style={{ height: chartHeight }} color="#0D564D" />
             ) : (
               <Svg width={chartWidth} height={chartHeight}>
-                {/* Horizontal Guide Lines: Y values 1, 4, 7, 10 */}
                 {[1, 4, 7, 10].map((level) => {
                   const y = chartHeight - ((level - 1) / 9) * (chartHeight - 50) - 25;
                   return (
@@ -235,8 +227,8 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
                         x="10"
                         y={y + 4}
                         fontSize="10"
-                        fontFamily={Theme.fonts.bodyBold}
-                        fill={Theme.colors.textMuted}
+                        fontFamily="PlusJakartaSans_700Bold"
+                        fill="#717875"
                         textAnchor="middle"
                       >
                         {level}
@@ -245,7 +237,6 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
                   );
                 })}
 
-                {/* Drawn path line */}
                 {pathD ? (
                   <Path
                     d={pathD}
@@ -257,7 +248,6 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
                   />
                 ) : null}
 
-                {/* Highlight circles & score labels */}
                 {points.map((p, idx) => (
                   <React.Fragment key={idx}>
                     <Circle
@@ -272,7 +262,7 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
                       x={p.x}
                       y={p.y - 10}
                       fontSize="9"
-                      fontFamily={Theme.fonts.bodyBold}
+                      fontFamily="PlusJakartaSans_700Bold"
                       fill={moodColor(p.score)}
                       textAnchor="middle"
                     >
@@ -283,17 +273,14 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
               </Svg>
             )}
             
-            {/* Weekday Labels Row */}
-            <View style={styles.chartLabelRow}>
+            <View className="flex-row justify-between pl-[22px] mt-2">
               {last7.map((item, i) => {
                 const labelWidth = (chartWidth - 30) / 7;
                 return (
                   <Text
                     key={i}
-                    style={[
-                      styles.chartLabelText,
-                      { width: labelWidth, textAlign: 'center' }
-                    ]}
+                    className="font-jakarta-bold text-[11px] text-[#717875] text-center"
+                    style={{ width: labelWidth }}
                   >
                     {item.name}
                   </Text>
@@ -304,144 +291,16 @@ export const MoodDiaryScreen: React.FC<MoodDiaryScreenProps> = ({ navigation }) 
         </View>
 
         {/* 4. Pattern Insight Card */}
-        <View style={styles.patternCard}>
-          <View style={styles.patternHeader}>
-            <Sparkles size={14} color={Theme.colors.primary} />
-            <Text style={styles.patternLabel}>Pattern</Text>
+        <View className="rounded-3xl border-[1.5px] border-dashed border-primary/30 bg-primary/5 p-4 gap-1.5">
+          <View className="flex-row items-center gap-1.5">
+            <Sparkles size={14} color="#0D564D" />
+            <Text className="font-jakarta-bold text-[11px] text-primary tracking-wider uppercase">Pattern</Text>
           </View>
-          <Text style={styles.insightText}>{insight}</Text>
+          <Text className="font-sora-bold text-base text-primary leading-[22px]">{insight}</Text>
         </View>
       </ScrollView>
-
-      {/* SOS FAB and Crisis Overlays */}
-      {/* <SOSButton onPress={() => setCrisisOpen(true)} bottomOffset={20} /> */}
-      {/* <CrisisOverlay open={crisisOpen} onClose={() => setCrisisOpen(false)} /> */}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 160,
-    gap: Theme.spacing.md,
-  },
-  titleSection: {
-    marginBottom: Theme.spacing.xs,
-  },
-  title: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 28,
-    color: Theme.colors.onSurface,
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-    marginTop: 2,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  cardHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-    marginBottom: Theme.spacing.sm,
-  },
-  gridContainer: {
-    gap: 8,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 6,
-  },
-  moodBtn: {
-    flex: 1,
-    height: 40,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  moodBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  activeText: {
-    color: '#FFF',
-    fontSize: 15,
-  },
-  grid30: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
-    marginTop: 4,
-  },
-  gridCell: {
-    borderRadius: 6,
-    aspectRatio: 1,
-  },
-  chartWrapper: {
-    marginTop: 4,
-  },
-  chartLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingLeft: 22,
-    marginTop: 8,
-  },
-  chartLabelText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  patternCard: {
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: Theme.colors.primary + '30',
-    backgroundColor: Theme.colors.primary + '05',
-    padding: Theme.spacing.md,
-    gap: 6,
-  },
-  patternHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  patternLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.primary,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  insightText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: Theme.colors.primaryContainer,
-    fontWeight: 'bold',
-    lineHeight: 22,
-  },
-});
 
 export default MoodDiaryScreen;

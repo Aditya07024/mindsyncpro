@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
   ScrollView,
   TouchableOpacity,
@@ -17,7 +16,6 @@ import {
   BookOpen,
   X,
   ShieldAlert,
-  Smile,
   Lock
 } from 'lucide-react-native';
 import API from '../../lib/api';
@@ -65,7 +63,7 @@ export const OrgMembersScreen: React.FC<{ navigation?: any }> = ({ navigation })
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="BITS Wellness"
         role="org_admin"
@@ -73,103 +71,76 @@ export const OrgMembersScreen: React.FC<{ navigation?: any }> = ({ navigation })
       />
 
       {isSubLoading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={Theme.colors.primary} />
         </View>
       ) : !isSubscribed ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Theme.spacing.margin }}>
-          <View style={{
-            backgroundColor: '#FFF',
-            borderRadius: Theme.radius.xl,
-            padding: Theme.spacing.lg,
-            borderWidth: 1,
-            borderColor: Theme.colors.surfaceHigh,
-            alignItems: 'center',
-            shadowColor: '#2E6E65',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.03,
-            shadowRadius: 10,
-            elevation: 2,
-          }}>
-            <View style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: '#FFF2F2',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 16,
-              borderWidth: 1,
-              borderColor: '#FFCDD2',
-            }}>
+        <View className="flex-1 justify-center items-center p-5">
+          <View className="bg-white rounded-3xl p-6 border border-[#E0E2E0] items-center shadow-sm">
+            <View className="w-12 h-12 rounded-full bg-[#FFF2F2] justify-center items-center mb-4 border border-[#FFCDD2]">
               <Lock size={24} color={Theme.colors.primary} />
             </View>
-            <Text style={{ fontFamily: Theme.fonts.headline, fontSize: 18, color: Theme.colors.onSurface, textAlign: 'center', marginBottom: 8 }}>
+            <Text className="font-sora text-lg text-onSurface text-center mb-2">
               Corporate Plan Required
             </Text>
-            <Text style={{ fontFamily: Theme.fonts.body, fontSize: 13, color: Theme.colors.textMuted, textAlign: 'center', lineHeight: 18, paddingHorizontal: 16, marginBottom: 20 }}>
+            <Text className="font-jakarta text-[13px] text-[#71787D] text-center leading-[18px] px-4 mb-5">
               As an organization or wellness sponsor, you need an active subscription plan to activate employee wellness seats, link network practitioners, and track collective health metrics.
             </Text>
 
             <TouchableOpacity
               onPress={() => navigation.navigate('Plans', { role: 'org_admin' })}
-              style={{
-                backgroundColor: Theme.colors.primary,
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: Theme.radius.lg,
-              }}
+              className="bg-primary px-5 py-3 rounded-2xl"
             >
-              <Text style={{ fontFamily: Theme.fonts.bodyBold, fontSize: 13, color: '#FFF' }}>
+              <Text className="font-jakarta-bold text-[13px] text-white">
                 View Subscription Plans
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerSection}>
-            <Text style={styles.sectionHeader}>Verified Roster Directory</Text>
-            <Text style={styles.sectionDesc}>
+        <ScrollView contentContainerClassName="p-5 pb-16 gap-4">
+          <View className="gap-1">
+            <Text className="font-sora text-base text-onSurface">Verified Roster Directory</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] leading-4">
               View active subscription seats allocated. Standard data privacy restrictions filter individual journaling texts to protect anonymity.
             </Text>
           </View>
 
           {isListLoading ? (
-            <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 24 }} />
+            <ActivityIndicator color={Theme.colors.primary} className="mt-6" />
           ) : !membersData?.members || membersData.members.length === 0 ? (
-            <View style={styles.emptyContainer}>
+            <View className="items-center justify-center py-10 bg-white rounded-3xl border border-[#E0E2E0] gap-2">
               <Users size={40} color={Theme.colors.outline} />
-              <Text style={styles.emptyText}>No verified members found in your workspace.</Text>
+              <Text className="font-jakarta text-[13px] text-outline text-center px-5">No verified members found in your workspace.</Text>
             </View>
           ) : (
-            <View style={styles.listContainer}>
+            <View className="bg-white rounded-3xl border border-[#E0E2E0] overflow-hidden">
               {membersData.members.map((m: any) => (
                 <TouchableOpacity
                   key={m.id}
                   onPress={() => handleOpenMember(m)}
-                  style={styles.memberRow}
+                  className="flex-row items-center p-4 border-b border-[#E0E2E0]"
                 >
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>
+                  <View className="w-[38px] h-[38px] rounded-full bg-[#E6F4F1] items-center justify-center">
+                    <Text className="font-sora text-sm text-primary">
                       {m.name ? m.name.charAt(0).toUpperCase() : 'U'}
                     </Text>
                   </View>
 
-                  <View style={styles.memberInfo}>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.memberName}>{m.name || 'Unnamed Member'}</Text>
+                  <View className="flex-1 ml-3 gap-0.5">
+                    <View className="flex-row items-center gap-1.5">
+                      <Text className="font-sora text-sm text-onSurface">{m.name || 'Unnamed Member'}</Text>
                       {m.role === 'therapist' ? (
-                        <View style={styles.badgeTherapist}>
-                          <Text style={styles.badgeTherapistText}>Therapist</Text>
+                        <View className="bg-[#E6F4F1] px-1.5 py-0.5 rounded">
+                          <Text className="font-jakarta-bold text-[9px] text-primary">Therapist</Text>
                         </View>
                       ) : (
-                        <View style={styles.badgeEmployee}>
-                          <Text style={styles.badgeEmployeeText}>Employee</Text>
+                        <View className="bg-[#F3F4F6] px-1.5 py-0.5 rounded">
+                          <Text className="font-jakarta-bold text-[9px] text-outline">Employee</Text>
                         </View>
                       )}
                     </View>
-                    <Text style={styles.memberSub}>
+                    <Text className="font-jakarta text-[11px] text-[#71787D]">
                       {m.email || m.phoneMasked || 'No address'} · {m.department || 'General'}
                     </Text>
                   </View>
@@ -189,69 +160,69 @@ export const OrgMembersScreen: React.FC<{ navigation?: any }> = ({ navigation })
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View className="flex-1 bg-slate-900/40 justify-end">
+          <View className="bg-white rounded-t-[28px] max-h-[85%] pb-6">
             {/* Header */}
-            <View style={styles.modalHeader}>
+            <View className="flex-row justify-between items-center p-5 border-b border-[#E0E2E0]">
               <View>
-                <Text style={styles.modalTitle}>{selectedMember?.name || 'Member Details'}</Text>
-                <Text style={styles.modalSubtitle}>
+                <Text className="font-sora text-lg text-onSurface">{selectedMember?.name || 'Member Details'}</Text>
+                <Text className="font-jakarta text-xs text-outline mt-0.5">
                   {selectedMember?.role === 'therapist' ? 'Affiliated Provider' : 'Verified Employee'}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
+              <TouchableOpacity onPress={() => setModalVisible(false)} className="w-8 h-8 rounded-full bg-[#F0F2F1] items-center justify-center">
                 <X size={20} color={Theme.colors.onSurface} />
               </TouchableOpacity>
             </View>
 
             {isDetailLoading ? (
-              <View style={styles.loaderContainer}>
+              <View className="p-10 items-center gap-3">
                 <ActivityIndicator size="large" color={Theme.colors.primary} />
-                <Text style={styles.loaderText}>Fetching clinical engagement stats...</Text>
+                <Text className="font-jakarta text-[13px] text-outline">Fetching clinical engagement stats...</Text>
               </View>
             ) : detailData ? (
-              <ScrollView contentContainerStyle={styles.modalScroll}>
+              <ScrollView contentContainerClassName="p-5 gap-5">
                 {/* Micro Bento Grid Stats */}
-                <View style={styles.grid}>
-                  <View style={styles.gridCard}>
+                <View className="flex-row gap-2">
+                  <View className="flex-1 bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl p-3 items-center gap-1">
                     <TrendingUp size={20} color={Theme.colors.primary} />
-                    <Text style={styles.gridVal}>{detailData.wellness?.avgMood ?? '—'}</Text>
-                    <Text style={styles.gridLabel}>Avg Mood (10)</Text>
+                    <Text className="font-sora-bold text-[22px] text-onSurface mt-0.5">{detailData.wellness?.avgMood ?? '—'}</Text>
+                    <Text className="font-jakarta text-[10px] text-outline text-center">Avg Mood (10)</Text>
                   </View>
-                  <View style={styles.gridCard}>
+                  <View className="flex-1 bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl p-3 items-center gap-1">
                     <Calendar size={20} color={Theme.colors.secondary} />
-                    <Text style={styles.gridVal}>{detailData.wellness?.sessionCount ?? 0}</Text>
-                    <Text style={styles.gridLabel}>Clinical Sessions</Text>
+                    <Text className="font-sora-bold text-[22px] text-onSurface mt-0.5">{detailData.wellness?.sessionCount ?? 0}</Text>
+                    <Text className="font-jakarta text-[10px] text-outline text-center">Clinical Sessions</Text>
                   </View>
-                  <View style={styles.gridCard}>
+                  <View className="flex-1 bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl p-3 items-center gap-1">
                     <BookOpen size={20} color={Theme.colors.outline} />
-                    <Text style={styles.gridVal}>{detailData.wellness?.journalCount ?? 0}</Text>
-                    <Text style={styles.gridLabel}>Journals Logs</Text>
+                    <Text className="font-sora-bold text-[22px] text-onSurface mt-0.5">{detailData.wellness?.journalCount ?? 0}</Text>
+                    <Text className="font-jakarta text-[10px] text-outline text-center">Journals Logs</Text>
                   </View>
                 </View>
 
                 {/* Privacy Banner */}
-                <View style={styles.privacyBanner}>
+                <View className="flex-row bg-[#FFF8E1] border border-[#FFE082] rounded-2xl p-3 gap-2">
                   <ShieldAlert size={14} color="#856404" />
-                  <Text style={styles.privacyText}>
+                  <Text className="flex-1 font-jakarta text-[11px] text-[#856404] leading-[15px]">
                     Individual journal contents are fully encrypted for patient privacy. Only quantitative scores and high-level trends are visible.
                   </Text>
                 </View>
 
                 {/* Mood Check-ins */}
-                <View style={styles.moodSection}>
-                  <Text style={styles.sectionHeader}>Recent Mood Check-ins</Text>
+                <View className="gap-3">
+                  <Text className="font-sora text-base text-onSurface">Recent Mood Check-ins</Text>
                   {!detailData.wellness?.moodHistory || detailData.wellness.moodHistory.length === 0 ? (
-                    <Text style={styles.noHistoryText}>No mood check-ins logged recently.</Text>
+                    <Text className="font-jakarta text-xs text-[#71787D] text-center mt-2.5">No mood check-ins logged recently.</Text>
                   ) : (
                     detailData.wellness.moodHistory.slice(0, 5).map((m: any, i: number) => (
-                      <View key={i} style={styles.historyRow}>
-                        <View style={styles.emojiCircle}>
-                          <Text style={styles.emojiVal}>{getMoodEmoji(m.score)}</Text>
+                      <View key={i} className="flex-row items-center gap-3 py-2.5 border-b border-[#E0E2E0]">
+                        <View className="w-9 h-9 rounded-full bg-[#F0F2F1] items-center justify-center border border-[#E0E2E0]">
+                          <Text className="text-lg">{getMoodEmoji(m.score)}</Text>
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.historyNote}>{m.note || 'No note provided'}</Text>
-                          <Text style={styles.historyDate}>
+                        <View className="flex-1">
+                          <Text className="font-jakarta-medium text-[13px] text-onSurface">{m.note || 'No note provided'}</Text>
+                          <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">
                             {new Date(m.createdAt).toLocaleString(undefined, {
                               month: 'short',
                               day: 'numeric',
@@ -260,16 +231,16 @@ export const OrgMembersScreen: React.FC<{ navigation?: any }> = ({ navigation })
                             })}
                           </Text>
                         </View>
-                        <Text style={styles.historyScore}>{m.score}/10</Text>
+                        <Text className="font-sora text-sm text-primary">{m.score}/10</Text>
                       </View>
                     ))
                   )}
                 </View>
               </ScrollView>
             ) : (
-              <View style={styles.errorContainer}>
+              <View className="p-10 items-center gap-3">
                 <ShieldAlert size={36} color={Theme.colors.outline} />
-                <Text style={styles.errorText}>Could not load wellness logs for this member.</Text>
+                <Text className="font-jakarta text-[13px] text-outline text-center">Could not load wellness logs for this member.</Text>
               </View>
             )}
           </View>
@@ -278,270 +249,5 @@ export const OrgMembersScreen: React.FC<{ navigation?: any }> = ({ navigation })
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 60,
-    gap: Theme.spacing.md
-  },
-  headerSection: {
-    gap: 4
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline,
-    textAlign: 'center',
-    paddingHorizontal: 20
-  },
-  listContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    overflow: 'hidden'
-  },
-  memberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh
-  },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#E6F4F1',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  avatarText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.primary
-  },
-  memberInfo: {
-    flex: 1,
-    marginLeft: 12,
-    gap: 2
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6
-  },
-  memberName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface
-  },
-  memberSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted
-  },
-  badgeTherapist: {
-    backgroundColor: '#E6F4F1',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4
-  },
-  badgeTherapistText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.primary
-  },
-  badgeEmployee: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4
-  },
-  badgeEmployeeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.outline
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    justifyContent: 'flex-end'
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '85%',
-    paddingBottom: 24
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh
-  },
-  modalTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface
-  },
-  modalSubtitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.outline,
-    marginTop: 2
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Theme.colors.surfaceLow,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  modalScroll: {
-    padding: 20,
-    gap: 20
-  },
-  grid: {
-    flexDirection: 'row',
-    gap: 8
-  },
-  gridCard: {
-    flex: 1,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    alignItems: 'center',
-    gap: 4
-  },
-  gridVal: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 22,
-    color: Theme.colors.onSurface,
-    marginTop: 2
-  },
-  gridLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.outline,
-    textAlign: 'center'
-  },
-  privacyBanner: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF8E1',
-    borderWidth: 1,
-    borderColor: '#FFE082',
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    gap: 8
-  },
-  privacyText: {
-    flex: 1,
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: '#856404',
-    lineHeight: 15
-  },
-  moodSection: {
-    gap: 12
-  },
-  noHistoryText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    marginTop: 10
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh
-  },
-  emojiCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Theme.colors.surfaceLow,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh
-  },
-  emojiVal: {
-    fontSize: 18
-  },
-  historyNote: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.onSurface
-  },
-  historyDate: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 2
-  },
-  historyScore: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.primary
-  },
-  loaderContainer: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 12
-  },
-  loaderText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline
-  },
-  errorContainer: {
-    padding: 40,
-    alignItems: 'center',
-    gap: 12
-  },
-  errorText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline,
-    textAlign: 'center'
-  }
-});
 
 export default OrgMembersScreen;

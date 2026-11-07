@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { AlertCircle } from 'lucide-react-native';
-import { Theme } from '../theme';
 import { useTabBarVisibility } from '../context/TabBarVisibilityContext';
 
 interface SOSButtonProps {
@@ -35,31 +34,19 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onPress, bottomOffset = 90
   });
 
   return (
-    <Animated.View style={[styles.wrapper, { bottom: bottomOffset }, animatedStyle]}>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.button}>
+    <Animated.View
+      className="absolute right-5 z-[9999]"
+      style={[{ bottom: bottomOffset }, animatedStyle]}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        className="w-14 h-14 rounded-full bg-crisis justify-center items-center shadow-lg shadow-crisis/40 elevation-6"
+      >
         <AlertCircle size={28} color="#FFF" />
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    right: Theme.spacing.margin,
-    zIndex: 9999,
-  },
-  button: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Theme.colors.crisis,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Theme.colors.crisis,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-});
+export default SOSButton;

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -23,7 +22,6 @@ import {
   AlertTriangle,
 } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 
 // Safely lazy load Audio from expo-av to prevent ExponentAV crashes in Expo Go 57
 let ExpoAudio: any = null;
@@ -44,7 +42,7 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
   const sessionId = route.params?.sessionId;
 
   const [isMuted, setIsMuted] = useState(false);
-  const [activeSpeaker, setActiveSpeaker] = useState<string | null>(null);
+  const [activeSpeaker] = useState<string | null>(null);
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
 
@@ -253,6 +251,7 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
             playsInSilentModeIOS: true,
             staysActiveInBackground: true,
             shouldDuckAndroid: true,
+            playThroughEarpieceAndroid: false,
           });
         }
         if (ExpoAudio.Recording?.createAsync) {
@@ -272,79 +271,81 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
 
   if (isLoading) {
     return (
-      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
+      <View className="flex-1 bg-slate-900 justify-center items-center p-6" style={{ paddingTop: insets.top }}>
         <ActivityIndicator size="large" color="#2DD4BF" />
-        <Text style={styles.loadingText}>Connecting to Live Audio Room...</Text>
+        <Text className="font-jakarta-medium text-sm text-slate-400 mt-3">Connecting to Live Audio Room...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
-        <ShieldAlert size={44} color={Theme.colors.error} />
-        <Text style={styles.errorTitle}>Connection Failed</Text>
-        <Text style={styles.errorDesc}>{(error as any)?.message || 'Could not join live room.'}</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.retryBtn}>
-          <Text style={styles.retryBtnText}>Back to Sessions</Text>
+      <View className="flex-1 bg-slate-900 justify-center items-center p-6" style={{ paddingTop: insets.top }}>
+        <ShieldAlert size={44} color="#D32F2F" />
+        <Text className="font-sora-bold text-lg text-white mt-3">Connection Failed</Text>
+        <Text className="font-jakarta text-sm text-slate-400 text-center mt-1.5 mb-5">{(error as any)?.message || 'Could not join live room.'}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} className="bg-primary px-5 py-2.5 rounded-xl">
+          <Text className="font-jakarta-bold text-sm text-white">Back to Sessions</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View className="flex-1 bg-slate-900" style={{ paddingTop: Math.max(insets.top, 16) }}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleLeaveRoom} style={styles.backBtn}>
+      <View className="flex-row items-center px-4 py-3 border-b border-slate-800">
+        <TouchableOpacity onPress={handleLeaveRoom} className="p-2 rounded-lg bg-slate-800 mr-3">
           <ArrowLeft size={20} color="#FFF" />
         </TouchableOpacity>
-        <View style={styles.headerTitleBox}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{sessionTitle}</Text>
-          <View style={styles.liveIndicator}>
-            <View style={styles.redDot} />
-            <Text style={styles.liveText}>LIVE AUDIO</Text>
+        <View className="flex-1">
+          <Text className="font-sora-bold text-base text-white" numberOfLines={1}>{sessionTitle}</Text>
+          <View className="flex-row items-center mt-0.5">
+            <View className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5" />
+            <Text className="font-jakarta-bold text-[10px] text-red-500 tracking-wider">LIVE AUDIO</Text>
           </View>
         </View>
-        <View style={styles.privacyBadge}>
+        <View className="flex-row items-center bg-teal-400/10 px-2.5 py-1 rounded-xl gap-1">
           <Shield size={14} color="#2DD4BF" />
-          <Text style={styles.privacyText}>100% Anonymous</Text>
+          <Text className="font-jakarta-bold text-[11px] text-teal-400">100% Anonymous</Text>
         </View>
       </View>
 
       {/* Permission Warning Banner if mic permission was not granted */}
       {hasMicPermission === false && (
-        <View style={styles.permissionWarningBanner}>
+        <View className="flex-row items-center bg-amber-950 p-3 mx-4 mt-3 rounded-xl border border-amber-900 gap-2.5">
           <AlertTriangle size={20} color="#F59E0B" />
-          <View style={styles.permissionWarningTextContainer}>
-            <Text style={styles.permissionWarningTitle}>Microphone Access Required</Text>
-            <Text style={styles.permissionWarningSub}>
+          <View className="flex-1">
+            <Text className="font-jakarta-bold text-[13px] text-amber-200">Microphone Access Required</Text>
+            <Text className="font-jakarta text-[11px] text-amber-500 mt-0.5">
               {permissionError || 'Enable microphone permission to speak in this live room.'}
             </Text>
           </View>
-          <TouchableOpacity onPress={requestMicPermissionManually} style={styles.grantBtn}>
-            <Text style={styles.grantBtnText}>Enable</Text>
+          <TouchableOpacity onPress={requestMicPermissionManually} className="bg-amber-500 px-3 py-1.5 rounded-lg">
+            <Text className="font-jakarta-bold text-xs text-slate-900">Enable</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-4 pb-28">
         {/* Active Audio Grid */}
-        <Text style={styles.sectionTitle}>Connected Room Participants ({admittedUsers.length + 1})</Text>
+        <Text className="font-sora-bold text-[15px] text-slate-200 mb-4">Connected Room Participants ({admittedUsers.length + 1})</Text>
 
-        <View style={styles.participantsGrid}>
+        <View className="flex-row flex-wrap gap-3">
           {/* Host Card */}
-          <View style={[styles.participantCard, styles.hostCard, activeSpeaker === 'host' && styles.speakingCard]}>
-            <View style={styles.avatarCircleHost}>
-              <Text style={styles.avatarEmoji}>🧑‍⚕️</Text>
+          <View className={`w-[48%] bg-[#0F2926] rounded-2xl p-4 items-center border-2 border-teal-600 ${
+            activeSpeaker === 'host' ? 'border-teal-400' : ''
+          }`}>
+            <View className="w-[52px] h-[52px] rounded-full bg-primary justify-center items-center mb-2.5">
+              <Text className="text-2xl">🧑‍⚕️</Text>
             </View>
-            <Text style={styles.participantName}>{session?.counselorName || 'Counselor Host'}</Text>
-            <View style={styles.hostBadge}>
-              <Text style={styles.hostBadgeText}>HOST COUNSELLOR</Text>
+            <Text className="font-jakarta-bold text-[13px] text-white text-center mb-1">{session?.counselorName || 'Counselor Host'}</Text>
+            <View className="bg-teal-400/20 px-2 py-0.5 rounded-lg mb-2">
+              <Text className="font-jakarta-bold text-[9px] text-teal-400">HOST COUNSELLOR</Text>
             </View>
-            <View style={styles.audioMeter}>
+            <View className="flex-row items-center gap-1 mt-1">
               <Volume2 size={14} color="#2DD4BF" />
-              <Text style={styles.audioStateText}>Speaking</Text>
+              <Text className="font-jakarta-medium text-[11px] text-teal-400">Speaking</Text>
             </View>
           </View>
 
@@ -354,29 +355,31 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
             const isSpeaking = activeSpeaker === u.userId || (isMe && !isMuted);
 
             return (
-              <View key={u.userId || idx} style={[styles.participantCard, isSpeaking && styles.speakingCard]}>
-                <View style={styles.avatarCircleUser}>
-                  <Text style={styles.avatarLetter}>
+              <View key={u.userId || idx} className={`w-[48%] bg-slate-800 rounded-2xl p-4 items-center border-2 border-transparent ${
+                isSpeaking ? 'border-teal-400' : ''
+              }`}>
+                <View className="w-[52px] h-[52px] rounded-full bg-slate-700 justify-center items-center mb-2.5">
+                  <Text className="font-sora-bold text-[22px] text-white">
                     {(u.anonymousName || `User ${idx + 1}`)[0].toUpperCase()}
                   </Text>
                 </View>
 
-                <Text style={styles.participantName} numberOfLines={1}>
+                <Text className="font-jakarta-bold text-[13px] text-white text-center mb-1" numberOfLines={1}>
                   {u.anonymousName || `Participant ${idx + 1}`} {isMe ? '(You)' : ''}
                 </Text>
 
-                <View style={styles.userRoleBadge}>
-                  <Text style={styles.userRoleText}>PARTICIPANT</Text>
+                <View className="bg-slate-700 px-2 py-0.5 rounded-lg mb-2">
+                  <Text className="font-jakarta-bold text-[9px] text-slate-400">PARTICIPANT</Text>
                 </View>
 
                 {isMe && (
-                  <View style={styles.audioMeter}>
+                  <View className="flex-row items-center gap-1 mt-1">
                     {isMuted ? (
                       <MicOff size={14} color="#EF4444" />
                     ) : (
                       <Mic size={14} color="#2DD4BF" />
                     )}
-                    <Text style={[styles.audioStateText, isMuted && { color: '#EF4444' }]}>
+                    <Text className={`font-jakarta-medium text-[11px] ${isMuted ? 'text-red-500' : 'text-teal-400'}`}>
                       {isMuted ? 'Muted' : 'Live Mic'}
                     </Text>
                   </View>
@@ -385,10 +388,10 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
                 {isCounselor && !isMe ? (
                   <TouchableOpacity
                     onPress={() => blockUserMutation.mutate(u.userId)}
-                    style={styles.kickBtn}
+                    className="flex-row items-center gap-1 bg-red-500/10 px-2 py-1 rounded-md mt-2"
                   >
                     <UserX size={12} color="#EF4444" />
-                    <Text style={styles.kickBtnText}>Block</Text>
+                    <Text className="font-jakarta-bold text-[10px] text-red-500">Block</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -398,23 +401,23 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
 
         {/* Host Waiting Queue Controls */}
         {isCounselor && waitingQueue.length > 0 ? (
-          <View style={styles.queueContainer}>
-            <Text style={styles.queueHeader}>Waiting Room Queue ({waitingQueue.length})</Text>
+          <View className="mt-6 bg-slate-800 rounded-2xl p-4">
+            <Text className="font-sora-bold text-sm text-white mb-3">Waiting Room Queue ({waitingQueue.length})</Text>
             {waitingQueue.map((item: any, i: number) => (
-              <View key={item.userId || i} style={styles.queueItem}>
-                <Text style={styles.queueName}>{item.anonymousName || `User ${i + 1}`}</Text>
-                <View style={styles.queueBtns}>
+              <View key={item.userId || i} className="flex-row items-center justify-between py-2 border-b border-slate-700">
+                <Text className="font-jakarta-medium text-[13px] text-slate-300">{item.anonymousName || `User ${i + 1}`}</Text>
+                <View className="flex-row items-center gap-2">
                   <TouchableOpacity
                     onPress={() => approveUserMutation.mutate({ targetUserId: item.userId, action: 'approve' })}
-                    style={styles.admitBtn}
+                    className="bg-teal-600 px-3 py-1.5 rounded-lg"
                   >
-                    <Text style={styles.admitText}>Admit</Text>
+                    <Text className="font-jakarta-bold text-[11px] text-white">Admit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => blockUserMutation.mutate(item.userId)}
-                    style={styles.rejectBtn}
+                    className="bg-red-600 px-3 py-1.5 rounded-lg"
                   >
-                    <Text style={styles.rejectText}>Block</Text>
+                    <Text className="font-jakarta-bold text-[11px] text-white">Block</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -424,364 +427,24 @@ export const GroupAudioRoomScreen: React.FC<GroupAudioRoomScreenProps> = ({ navi
       </ScrollView>
 
       {/* Floating Control Bar */}
-      <View style={[styles.controlsBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <View className="absolute bottom-0 left-0 right-0 bg-slate-800 flex-row justify-evenly items-center pt-3 border-t border-slate-700" style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
         <TouchableOpacity
           onPress={toggleMute}
-          style={[styles.controlBtn, isMuted ? styles.mutedBtn : styles.unmutedBtn]}
+          className={`flex-row items-center gap-2 px-6 py-3 rounded-full ${
+            isMuted ? 'bg-slate-600' : 'bg-teal-600'
+          }`}
         >
           {isMuted ? <MicOff size={22} color="#FFF" /> : <Mic size={22} color="#FFF" />}
-          <Text style={styles.controlBtnText}>{isMuted ? 'Unmute' : 'Mute'}</Text>
+          <Text className="font-jakarta-bold text-[13px] text-white">{isMuted ? 'Unmute' : 'Mute'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleLeaveRoom} style={[styles.controlBtn, styles.leaveBtn]}>
+        <TouchableOpacity onPress={handleLeaveRoom} className="flex-row items-center gap-2 px-6 py-3 rounded-full bg-red-500">
           <PhoneOff size={22} color="#FFF" />
-          <Text style={styles.controlBtnText}>Leave Room</Text>
+          <Text className="font-jakarta-bold text-[13px] text-white">Leave Room</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-  },
-  centerContainer: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  loadingText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: '#94A3B8',
-    marginTop: 12,
-  },
-  errorTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: '#FFF',
-    marginTop: 12,
-  },
-  errorDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginTop: 6,
-    marginBottom: 20,
-  },
-  retryBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  retryBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: '#FFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-  },
-  backBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#1E293B',
-    marginRight: 12,
-  },
-  headerTitleBox: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: '#FFF',
-  },
-  liveIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  redDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#EF4444',
-    marginRight: 6,
-  },
-  liveText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: '#EF4444',
-    letterSpacing: 0.5,
-  },
-  privacyBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(45, 212, 191, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    gap: 4,
-  },
-  privacyText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: '#2DD4BF',
-  },
-  permissionWarningBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#451A03',
-    padding: 12,
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#78350F',
-    gap: 10,
-  },
-  permissionWarningTextContainer: {
-    flex: 1,
-  },
-  permissionWarningTitle: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: '#FDE68A',
-  },
-  permissionWarningSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: '#F59E0B',
-    marginTop: 2,
-  },
-  grantBtn: {
-    backgroundColor: '#F59E0B',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  grantBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: '#0F172A',
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  sectionTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 15,
-    color: '#E2E8F0',
-    marginBottom: 16,
-  },
-  participantsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  participantCard: {
-    width: '48%',
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  hostCard: {
-    backgroundColor: '#0F2926',
-    borderColor: '#0D9488',
-  },
-  speakingCard: {
-    borderColor: '#2DD4BF',
-    shadowColor: '#2DD4BF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  avatarCircleHost: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#0D564D',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  avatarCircleUser: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#334155',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  avatarEmoji: {
-    fontSize: 24,
-  },
-  avatarLetter: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 22,
-    color: '#FFF',
-  },
-  participantName: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  hostBadge: {
-    backgroundColor: 'rgba(45, 212, 191, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  hostBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#2DD4BF',
-  },
-  userRoleBadge: {
-    backgroundColor: '#334155',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  userRoleText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#94A3B8',
-  },
-  audioMeter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  audioStateText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11,
-    color: '#2DD4BF',
-  },
-  kickBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 8,
-  },
-  kickBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: '#EF4444',
-  },
-  queueContainer: {
-    marginTop: 24,
-    backgroundColor: '#1E293B',
-    borderRadius: 16,
-    padding: 16,
-  },
-  queueHeader: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 14,
-    color: '#FFF',
-    marginBottom: 12,
-  },
-  queueItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
-  },
-  queueName: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: '#CBD5E1',
-  },
-  queueBtns: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  admitBtn: {
-    backgroundColor: '#0D9488',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  admitText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: '#FFF',
-  },
-  rejectBtn: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  rejectText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: '#FFF',
-  },
-  controlsBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#1E293B',
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-  },
-  controlBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  unmutedBtn: {
-    backgroundColor: '#0D9488',
-  },
-  mutedBtn: {
-    backgroundColor: '#475569',
-  },
-  leaveBtn: {
-    backgroundColor: '#EF4444',
-  },
-  controlBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: '#FFF',
-  },
-});
 
 export default GroupAudioRoomScreen;

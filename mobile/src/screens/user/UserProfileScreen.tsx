@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
-  ScrollView,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
@@ -32,7 +30,6 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -201,15 +198,15 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
 
   if (meLoading && !dbUser.fullName) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={Theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading Profile...</Text>
+      <View className="flex-1 justify-center items-center bg-slate-50">
+        <ActivityIndicator size="large" color="#0D564D" />
+        <Text className="font-jakarta-medium text-sm text-slate-500 mt-2.5">Loading Profile...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-slate-50">
       <AppHeader
         userFirstName={displayName.split(' ')[0]}
         role={dbUser.role || 'user'}
@@ -217,88 +214,88 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
       />
 
       <Animated.ScrollView 
-        contentContainerStyle={styles.scrollContent} 
+        contentContainerStyle={{ padding: 16, paddingBottom: 110 }} 
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        {/* Static User Profile Card (No modal popup on avatar) */}
-        <View style={styles.userCard}>
-          <View style={styles.avatarCircle}>
+        {/* Static User Profile Card */}
+        <View className="flex-row items-center bg-white rounded-2xl p-4 mb-4 border border-slate-200 shadow-sm">
+          <View className="w-14 h-14 rounded-full bg-primary justify-center items-center mr-3.5 overflow-hidden">
             {finalAvatarUrl ? (
-              <Image source={{ uri: finalAvatarUrl }} style={styles.avatarImage} />
+              <Image source={{ uri: finalAvatarUrl }} className="w-14 h-14 rounded-full" />
             ) : (
-              <Text style={styles.avatarText}>
+              <Text className="font-sora-bold text-2xl text-white">
                 {displayName.charAt(0).toUpperCase()}
               </Text>
             )}
           </View>
 
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{displayName}</Text>
-            <Text style={styles.userEmail}>{displayContact}</Text>
-            <View style={styles.badgeRow}>
+          <View className="flex-1">
+            <Text className="font-sora-bold text-lg text-slate-900">{displayName}</Text>
+            <Text className="font-jakarta text-[13px] text-slate-500 mt-0.5">{displayContact}</Text>
+            <View className="flex-row items-center mt-1.5">
               {isStudentVerified ? (
-                <View style={[styles.roleBadge, styles.studentBadge]}>
+                <View className="flex-row items-center bg-teal-100 px-2 py-0.5 rounded-full gap-1">
                   <GraduationCap size={12} color="#0D9488" />
-                  <Text style={styles.studentBadgeText}>Verified Student</Text>
+                  <Text className="font-jakarta-bold text-[11px] text-teal-700">Verified Student</Text>
                 </View>
               ) : (
-                <View style={styles.roleBadge}>
-                  <ShieldCheck size={12} color={Theme.colors.primary} />
-                  <Text style={styles.roleBadgeText}>{tierDisplay}</Text>
+                <View className="flex-row items-center bg-teal-50 px-2 py-0.5 rounded-full gap-1">
+                  <ShieldCheck size={12} color="#0D564D" />
+                  <Text className="font-jakarta-bold text-[11px] text-primary">{tierDisplay}</Text>
                 </View>
               )}
             </View>
           </View>
         </View>
 
-        {/* 🎁 Referral & Free Credits Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
+        {/* Referral & Free Credits Card */}
+        <View className="bg-white rounded-2xl p-4 mb-4 border border-slate-200">
+          <View className="flex-row items-center gap-2 mb-3">
             <Gift size={20} color="#0D9488" />
-            <Text style={styles.cardTitle}>Referral Program & Free Credits</Text>
+            <Text className="font-sora-bold text-base text-slate-900">Referral Program & Free Credits</Text>
           </View>
 
-          <View style={styles.creditsBanner}>
+          <View className="flex-row items-center bg-amber-50 p-3 rounded-xl mb-4 border border-amber-200 gap-2.5">
             <Sparkles size={20} color="#D97706" />
-            <View style={styles.creditsTextContainer}>
-              <Text style={styles.creditsTitle}>
+            <View className="flex-1">
+              <Text className="font-sora-bold text-sm text-amber-900">
                 {freeSessionCredits} Free Session{freeSessionCredits === 1 ? '' : 's'} Available
               </Text>
-              <Text style={styles.creditsSub}>
+              <Text className="font-jakarta text-xs text-amber-700 mt-0.5">
                 Use your free session credits when booking counseling sessions with qualified therapists!
               </Text>
             </View>
           </View>
 
           {/* Unique Referral Code */}
-          <Text style={styles.inputLabel}>Your Unique Referral Code</Text>
-          <View style={styles.referralCodeBox}>
-            <Text style={styles.referralCodeText}>{referralCode}</Text>
+          <Text className="font-jakarta-bold text-xs text-slate-600 mb-1.5 uppercase">Your Unique Referral Code</Text>
+          <View className="flex-row items-center justify-between bg-slate-100 rounded-xl px-3.5 py-2.5 border border-dashed border-slate-300 mb-2">
+            <Text className="font-sora-bold text-lg text-primary tracking-wider">{referralCode}</Text>
 
-            <View style={styles.referralActions}>
-              <TouchableOpacity onPress={handleCopyCode} style={styles.iconBtn}>
-                <Copy size={18} color={Theme.colors.primary} />
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity onPress={handleCopyCode} className="p-2 rounded-lg bg-slate-200">
+                <Copy size={18} color="#0D564D" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleShareReferral} style={[styles.iconBtn, styles.shareBtn]}>
+              <TouchableOpacity onPress={handleShareReferral} className="p-2 rounded-lg bg-primary">
                 <Share2 size={18} color="#FFF" />
               </TouchableOpacity>
             </View>
           </View>
 
-          <Text style={styles.referralDesc}>
+          <Text className="font-jakarta text-xs text-slate-500 mb-4 leading-[18px]">
             Share your code with friends! When they register or apply your code,{' '}
-            <Text style={{ fontWeight: '700' }}>both of you earn 1 Free Session Credit.</Text>
+            <Text className="font-bold">both of you earn 1 Free Session Credit.</Text>
           </Text>
 
-          {/* Apply Friend's Code (renders if not applied yet) */}
+          {/* Apply Friend's Code */}
           {dbUser && !dbUser.referredBy ? (
-            <View style={styles.applySection}>
-              <Text style={styles.inputLabel}>Have a Friend's Referral Code?</Text>
-              <View style={styles.applyRow}>
+            <View className="border-t border-slate-100 pt-3.5">
+              <Text className="font-jakarta-bold text-xs text-slate-600 mb-1.5 uppercase">Have a Friend's Referral Code?</Text>
+              <View className="flex-row items-center gap-2">
                 <TextInput
-                  style={styles.codeTextInput}
+                  className="flex-1 h-11 bg-slate-50 border border-slate-300 rounded-xl px-3 font-jakarta-bold text-sm text-slate-900"
                   placeholder="Enter referral code (e.g. MMTP-1A2B)"
                   placeholderTextColor="#94A3B8"
                   value={friendCode}
@@ -306,24 +303,21 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
                   autoCapitalize="characters"
                 />
                 <TouchableOpacity
-                  style={[
-                    styles.applyBtn,
-                    (!friendCode.trim() || applyReferralMutation.isPending) && styles.btnDisabled,
-                  ]}
+                  className={`h-11 px-4.5 bg-primary rounded-xl justify-center items-center ${(!friendCode.trim() || applyReferralMutation.isPending) ? 'opacity-50' : ''}`}
                   disabled={!friendCode.trim() || applyReferralMutation.isPending}
                   onPress={handleApplyFriendCode}
                 >
                   {applyReferralMutation.isPending ? (
                     <ActivityIndicator size="small" color="#FFF" />
                   ) : (
-                    <Text style={styles.applyBtnText}>Apply</Text>
+                    <Text className="font-jakarta-bold text-sm text-white">Apply</Text>
                   )}
                 </TouchableOpacity>
               </View>
             </View>
           ) : dbUser?.referredBy ? (
-            <View style={{ marginTop: 14, padding: 12, backgroundColor: '#F0FDF4', borderRadius: 12, borderWidth: 1, borderColor: '#BBF7D0' }}>
-              <Text style={{ fontSize: 13, color: '#166534', fontWeight: '600' }}>
+            <View className="mt-3.5 p-3 bg-green-50 rounded-xl border border-green-200">
+              <Text className="text-[13px] text-green-800 font-semibold">
                 ✓ Referral code applied ({dbUser.referredBy}). You earned 1 Free Session Credit!
               </Text>
             </View>
@@ -331,419 +325,120 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation
         </View>
 
         {/* Account Services & Plans */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeaderTitle}>Account & Membership</Text>
+        <View className="bg-white rounded-2xl p-4 mb-4 border border-slate-200">
+          <Text className="font-sora-bold text-sm text-slate-900 mb-3">Account & Membership</Text>
 
           {/* View Plans Button */}
           <TouchableOpacity
-            style={styles.menuItem}
+            className="flex-row items-center justify-between py-3 border-b border-slate-100"
             onPress={() => navigation.navigate('Plans')}
           >
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBg, { backgroundColor: '#FEF3C7' }]}>
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-xl justify-center items-center bg-amber-100">
                 <Star size={18} color="#D97706" />
               </View>
-              <Text style={styles.menuText}>View Membership Plans & Pricing</Text>
+              <Text className="font-jakarta-medium text-sm text-slate-800">View Membership Plans & Pricing</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            className="flex-row items-center justify-between py-3 border-b border-slate-100"
             onPress={() => navigation.navigate('Wallet')}
           >
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBg, { backgroundColor: '#EEF2FF' }]}>
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-xl justify-center items-center bg-indigo-50">
                 <Wallet size={18} color="#4F46E5" />
               </View>
-              <Text style={styles.menuText}>My Wallet & Payments</Text>
+              <Text className="font-jakarta-medium text-sm text-slate-800">My Wallet & Payments</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            className="flex-row items-center justify-between py-3 border-b border-slate-100"
             onPress={() => navigation.navigate('Reports')}
           >
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBg, { backgroundColor: '#ECFDF5' }]}>
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-xl justify-center items-center bg-emerald-50">
                 <FileText size={18} color="#059669" />
               </View>
-              <Text style={styles.menuText}>Wellness & Clinical Reports</Text>
+              <Text className="font-jakarta-medium text-sm text-slate-800">Wellness & Clinical Reports</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            className="flex-row items-center justify-between py-3 border-b border-slate-100"
             onPress={() => navigation.navigate('MoodDiary')}
           >
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBg, { backgroundColor: '#FFF7ED' }]}>
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-xl justify-center items-center bg-orange-50">
                 <Smile size={18} color="#EA580C" />
               </View>
-              <Text style={styles.menuText}>Mood Tracker & Reflections</Text>
+              <Text className="font-jakarta-medium text-sm text-slate-800">Mood Tracker & Reflections</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.menuItem}
+            className="flex-row items-center justify-between py-3"
             onPress={() => navigation.navigate('GroupSessions')}
           >
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBg, { backgroundColor: '#F0FDF4' }]}>
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-xl justify-center items-center bg-emerald-50">
                 <Mic size={18} color="#16A34A" />
               </View>
-              <Text style={styles.menuText}>Live Group Audio Sessions</Text>
+              <Text className="font-jakarta-medium text-sm text-slate-800">Live Group Audio Sessions</Text>
             </View>
             <ChevronRight size={18} color="#94A3B8" />
           </TouchableOpacity>
         </View>
 
         {/* Preferences */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeaderTitle}>Preferences</Text>
+        <View className="bg-white rounded-2xl p-4 mb-4 border border-slate-200">
+          <Text className="font-sora-bold text-sm text-slate-900 mb-3">Preferences</Text>
 
-          <View style={styles.settingRow}>
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBg, { backgroundColor: '#F1F5F9' }]}>
+          <View className="flex-row items-center justify-between py-1">
+            <View className="flex-row items-center gap-3">
+              <View className="w-9 h-9 rounded-xl justify-center items-center bg-slate-100">
                 <Bell size={18} color="#475569" />
               </View>
-              <Text style={styles.menuText}>Push Notifications</Text>
+              <Text className="font-jakarta-medium text-sm text-slate-800">Push Notifications</Text>
             </View>
             <Switch
               value={notificationsEnabled}
               onValueChange={handleNotificationToggle}
-              trackColor={{ false: '#CBD5E1', true: Theme.colors.primary }}
+              trackColor={{ false: '#CBD5E1', true: '#0D564D' }}
             />
           </View>
         </View>
 
         {/* Action Buttons: Sign Out & Delete Account */}
-        <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+        <View className="gap-2.5 mb-4">
+          <TouchableOpacity 
+            className="flex-row items-center justify-center bg-slate-100 border border-slate-300 rounded-2xl py-3.5 gap-2" 
+            onPress={handleSignOut}
+          >
             <LogOut size={18} color="#475569" />
-            <Text style={styles.signOutText}>Sign Out</Text>
+            <Text className="font-jakarta-bold text-sm text-slate-600">Sign Out</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.deleteAccountBtn} onPress={handleDeleteAccount}>
+          <TouchableOpacity 
+            className="flex-row items-center justify-center bg-red-50 border border-red-200 rounded-2xl py-3.5 gap-2" 
+            onPress={handleDeleteAccount}
+          >
             <Trash2 size={18} color="#DC2626" />
-            <Text style={styles.deleteAccountText}>Delete Account</Text>
+            <Text className="font-jakarta-bold text-sm text-red-600">Delete Account</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.footerVersion}>MyMindTherapyFriend v1.0.1 · Encrypted & Confidential</Text>
+        <Text className="font-jakarta text-[11px] text-slate-400 text-center mb-3">
+          MyMindTherapyFriend v1.0.1 · Encrypted & Confidential
+        </Text>
       </Animated.ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-  },
-  loadingText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 10,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 110,
-  },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  avatarCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  avatarText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 24,
-    color: '#FFF',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: '#0F172A',
-  },
-  userEmail: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0FDFA',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    gap: 4,
-  },
-  roleBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.primary,
-  },
-  studentBadge: {
-    backgroundColor: '#CCFBF1',
-  },
-  studentBadgeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: '#0D9488',
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: '#0F172A',
-  },
-  creditsBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    gap: 10,
-  },
-  creditsTextContainer: {
-    flex: 1,
-  },
-  creditsTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 14,
-    color: '#92400E',
-  },
-  creditsSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#B45309',
-    marginTop: 2,
-  },
-  inputLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: '#475569',
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  referralCodeBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderStyle: 'dashed',
-    marginBottom: 8,
-  },
-  referralCodeText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-    letterSpacing: 1,
-  },
-  referralActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  iconBtn: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#E2E8F0',
-  },
-  shareBtn: {
-    backgroundColor: Theme.colors.primary,
-  },
-  referralDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#64748B',
-    marginBottom: 16,
-    lineHeight: 18,
-  },
-  applySection: {
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 14,
-  },
-  applyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  codeTextInput: {
-    flex: 1,
-    height: 44,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: '#0F172A',
-  },
-  applyBtn: {
-    height: 44,
-    paddingHorizontal: 18,
-    backgroundColor: Theme.colors.primary,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  applyBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: '#FFF',
-  },
-  sectionHeaderTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 14,
-    color: '#0F172A',
-    marginBottom: 12,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  menuIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: '#1E293B',
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  actionButtonsContainer: {
-    gap: 10,
-    marginBottom: 16,
-  },
-  signOutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 14,
-    paddingVertical: 13,
-    gap: 8,
-  },
-  signOutText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: '#475569',
-  },
-  deleteAccountBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 14,
-    paddingVertical: 13,
-    gap: 8,
-  },
-  deleteAccountText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: '#DC2626',
-  },
-  footerVersion: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: '#94A3B8',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-});
 
 export default UserProfileScreen;

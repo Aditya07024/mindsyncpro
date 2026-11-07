@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
   StatusBar,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -19,7 +17,6 @@ import {
   AlertTriangle,
   Info,
   Check,
-  Trash2,
 } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
@@ -60,7 +57,6 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
 
   const handleMarkAsRead = async (id: string) => {
     try {
-      // Optimistically update UI
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, read: true } : n))
       );
@@ -72,7 +68,6 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
 
   const handleMarkAllRead = async () => {
     try {
-      // Optimistically update UI
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       await API.notification.markAllRead();
     } catch (err) {
@@ -82,30 +77,29 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
 
   const getIcon = (type: string, read: boolean) => {
     const size = 20;
-    const color = read ? Theme.colors.onSurfaceVariant : Theme.colors.primary;
 
     switch (type) {
       case 'booking':
         return (
-          <View style={[styles.iconWrapper, { backgroundColor: Theme.colors.primary + '15' }]}>
+          <View className="w-11 h-11 rounded-2xl justify-center items-center bg-primary/15">
             <Calendar size={size} color={Theme.colors.primary} />
           </View>
         );
       case 'approval':
         return (
-          <View style={[styles.iconWrapper, { backgroundColor: Theme.colors.secondary + '15' }]}>
+          <View className="w-11 h-11 rounded-2xl justify-center items-center bg-secondary/15">
             <CheckCircle size={size} color={Theme.colors.secondary} />
           </View>
         );
       case 'crisis_alert':
         return (
-          <View style={[styles.iconWrapper, { backgroundColor: Theme.colors.error + '15' }]}>
+          <View className="w-11 h-11 rounded-2xl justify-center items-center bg-crisis/15">
             <AlertTriangle size={size} color={Theme.colors.error} />
           </View>
         );
       default:
         return (
-          <View style={[styles.iconWrapper, { backgroundColor: Theme.colors.surfaceHigh }]}>
+          <View className="w-11 h-11 rounded-2xl justify-center items-center bg-[#E0E2E0]">
             <Info size={size} color={Theme.colors.onSurfaceVariant} />
           </View>
         );
@@ -128,28 +122,26 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
             handleMarkAsRead(item._id);
           }
         }}
-        style={[
-          styles.notificationCard,
-          !item.read && styles.unreadCard,
-        ]}
+        className={`rounded-3xl p-4 border shadow-sm ${
+          !item.read ? 'border-primary/30 bg-primary/5' : 'bg-white border-[#E0E2E0]'
+        }`}
       >
-        <View style={styles.cardHeader}>
+        <View className="flex-row gap-4">
           {getIcon(item.type, item.read)}
-          <View style={styles.contentContainer}>
-            <View style={styles.titleRow}>
+          <View className="flex-1 justify-center">
+            <View className="flex-row items-center justify-between mb-1">
               <Text
-                style={[
-                  styles.notificationTitle,
-                  !item.read && styles.unreadTitle,
-                ]}
+                className={`text-[15px] flex-1 ${
+                  !item.read ? 'text-onSurface font-sora-bold' : 'text-onSurfaceVariant font-sora'
+                }`}
                 numberOfLines={1}
               >
                 {item.title}
               </Text>
-              {!item.read && <View style={styles.unreadIndicatorDot} />}
+              {!item.read && <View className="w-2 h-2 rounded-full bg-primary ml-2" />}
             </View>
-            <Text style={styles.notificationBody}>{item.body}</Text>
-            <Text style={styles.timeText}>{timeFormatted}</Text>
+            <Text className="text-[13px] font-jakarta text-onSurfaceVariant leading-[18px] mb-1">{item.body}</Text>
+            <Text className="text-[11px] font-jakarta text-[#71787D]">{timeFormatted}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -159,22 +151,22 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
   const totalUnread = notifications.filter((n) => !n.read).length;
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView className="flex-1 bg-[#FAFAF9]" style={{ paddingTop: insets.top }}>
       <StatusBar barStyle="dark-content" />
       
       {/* Premium Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
+      <View className="flex-row items-center justify-between px-5 py-3 border-b border-[#E0E2E0] bg-white">
+        <View className="flex-row items-center gap-3">
           <TouchableOpacity
-            style={styles.backButton}
+            className="w-10 h-10 rounded-full bg-[#F0F2F1] justify-center items-center"
             onPress={() => navigation.goBack()}
           >
             <ArrowLeft size={22} color={Theme.colors.onSurface} />
           </TouchableOpacity>
           <View>
-            <Text style={styles.headerTitle}>Notifications</Text>
+            <Text className="text-xl font-sora-bold text-onSurface">Notifications</Text>
             {totalUnread > 0 && (
-              <Text style={styles.subtitleText}>{totalUnread} new alert{totalUnread > 1 ? 's' : ''}</Text>
+              <Text className="text-xs font-jakarta-bold text-primary -mt-0.5">{totalUnread} new alert{totalUnread > 1 ? 's' : ''}</Text>
             )}
           </View>
         </View>
@@ -182,27 +174,27 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
         {totalUnread > 0 && (
           <TouchableOpacity
             onPress={handleMarkAllRead}
-            style={styles.markAllBtn}
+            className="flex-row items-center gap-1 py-1.5 px-3 rounded-full bg-primary/10"
           >
             <Check size={16} color={Theme.colors.primary} />
-            <Text style={styles.markAllText}>Mark all read</Text>
+            <Text className="text-xs font-jakarta-bold text-primary">Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Main List Area */}
       {loading ? (
-        <View style={styles.centered}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={Theme.colors.primary} />
-          <Text style={styles.loadingText}>Gathering your inbox alerts...</Text>
+          <Text className="mt-3 font-jakarta text-[#71787D] text-sm">Gathering your inbox alerts...</Text>
         </View>
       ) : notifications.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconCircle}>
+        <View className="flex-1 justify-center items-center px-10">
+          <View className="w-20 h-20 rounded-full bg-primary/10 justify-center items-center mb-4">
             <Bell size={40} color={Theme.colors.primary} style={{ opacity: 0.6 }} />
           </View>
-          <Text style={styles.emptyTitle}>Your MyMindTherapyFriend is quiet</Text>
-          <Text style={styles.emptyDesc}>
+          <Text className="text-lg font-sora-bold text-onSurface mb-2">Your MyMindTherapyFriend is quiet</Text>
+          <Text className="text-[13px] font-jakarta text-[#71787D] text-center leading-5">
             All caught up! Dynamic alerts related to therapists, booking confirmations, subscription payments, and clinical updates will display here.
           </Text>
         </View>
@@ -216,176 +208,13 @@ export const NotificationInboxScreen: React.FC<{ navigation: any }> = ({ navigat
             setRefreshing(true);
             fetchNotifications();
           }}
-          contentContainerStyle={[styles.listContent, { paddingBottom: Math.max(insets.bottom, Theme.spacing.margin) }]}
+          contentContainerClassName="p-5 gap-3"
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) }}
           showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAF9', // Corporate warm elegant cream off-white
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Theme.spacing.margin,
-    paddingVertical: Theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-    backgroundColor: '#FFF',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.surfaceLow,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontFamily: Theme.fonts.display,
-    color: Theme.colors.onSurface,
-  },
-  subtitleText: {
-    fontSize: 12,
-    fontFamily: Theme.fonts.bodyBold,
-    color: Theme.colors.primary,
-    marginTop: -2,
-  },
-  markAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.primary + '12',
-  },
-  markAllText: {
-    fontSize: 12,
-    fontFamily: Theme.fonts.bodyBold,
-    color: Theme.colors.primary,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: Theme.spacing.sm,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.textMuted,
-    fontSize: 14,
-  },
-  listContent: {
-    padding: Theme.spacing.margin,
-    gap: Theme.spacing.sm,
-  },
-  notificationCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  unreadCard: {
-    borderColor: Theme.colors.primary + '30',
-    backgroundColor: Theme.colors.primary + '05', // Subtle brand backdrop for unread
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    gap: Theme.spacing.md,
-  },
-  iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  notificationTitle: {
-    fontSize: 15,
-    fontFamily: Theme.fonts.headline,
-    color: Theme.colors.onSurfaceVariant,
-    flex: 1,
-  },
-  unreadTitle: {
-    color: Theme.colors.onSurface,
-    fontFamily: Theme.fonts.display, // Bold-prominent weight for unread titles
-  },
-  unreadIndicatorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Theme.colors.primary,
-    marginLeft: 8,
-  },
-  notificationBody: {
-    fontSize: 13,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 18,
-    marginBottom: Theme.spacing.xs,
-  },
-  timeText: {
-    fontSize: 11,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.textMuted,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Theme.colors.primary + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.md,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontFamily: Theme.fonts.display,
-    color: Theme.colors.onSurface,
-    marginBottom: 8,
-  },
-  emptyDesc: {
-    fontSize: 13,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});
 
 export default NotificationInboxScreen;

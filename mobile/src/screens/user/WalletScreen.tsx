@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Wallet, Plus, ArrowUpRight, ArrowDownLeft, Calendar, ShieldCheck } from 'lucide-react-native';
+import { ArrowLeft, Wallet, Plus, ArrowUpRight, ArrowDownLeft, ShieldCheck } from 'lucide-react-native';
 import * as WebBrowser from 'expo-web-browser';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 
 interface WalletScreenProps {
   navigation: any;
@@ -23,9 +22,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     mutationFn: (amount: number) => API.payment.addWalletFunds(amount),
     onSuccess: async (data: any) => {
       if (data.shortUrl) {
-        // Open the Razorpay checkout page in an in-app web browser
         await WebBrowser.openBrowserAsync(data.shortUrl);
-        // After browser modal closes, refresh balance
         refetch();
         queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
       } else {
@@ -62,60 +59,63 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
   const transactions = walletData?.transactions ?? [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView className="flex-1 bg-surface" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 16 }}>
       {/* Header back button */}
-      <View style={styles.backRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <ArrowLeft size={20} color={Theme.colors.onSurface} />
+      <View className="flex-row items-center pt-12 gap-2.5">
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()} 
+          className="w-[38px] h-[38px] rounded-full bg-white justify-center items-center border border-[#DFEBE7]"
+        >
+          <ArrowLeft size={20} color="#191C1B" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Wallet</Text>
+        <Text className="font-sora-semibold text-lg text-[#191C1B]">My Wallet</Text>
       </View>
 
       {/* Balance Card */}
-      <View style={styles.balanceCard}>
-        <View style={styles.balanceHeader}>
-          <Text style={styles.balanceTitle}>TOTAL BALANCE</Text>
-          <View style={styles.secureBadge}>
+      <View className="bg-primary rounded-3xl p-4 gap-2 shadow-sm">
+        <View className="flex-row justify-between items-center">
+          <Text className="font-jakarta-bold text-[11px] text-white/70 tracking-widest">TOTAL BALANCE</Text>
+          <View className="flex-row items-center bg-white/15 px-2 py-0.5 rounded-full gap-1">
             <ShieldCheck size={12} color="#FFF" />
-            <Text style={styles.secureText}>Secure</Text>
+            <Text className="font-jakarta-bold text-[9px] text-white">Secure</Text>
           </View>
         </View>
         {walletLoading ? (
-          <ActivityIndicator color="#FFF" style={styles.loader} />
+          <ActivityIndicator color="#FFF" className="self-start my-2.5" />
         ) : (
-          <Text style={styles.balanceAmount}>₹{balance.toFixed(2)}</Text>
+          <Text className="font-sora-bold text-4xl text-white">₹{balance.toFixed(2)}</Text>
         )}
       </View>
 
       {/* Add Funds Panel */}
-      <View style={styles.addPanel}>
-        <Text style={styles.panelTitle}>Add Funds to Wallet</Text>
+      <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] gap-2.5">
+        <Text className="font-sora-semibold text-[15px] text-[#191C1B]">Add Funds to Wallet</Text>
         
         {/* Quick Amounts */}
-        <View style={styles.quickRow}>
+        <View className="flex-row justify-between gap-2">
           {[100, 250, 500, 1000].map((amt) => (
             <TouchableOpacity
               key={amt}
               disabled={addFundsMutation.isPending}
               onPress={() => handleAddFunds(amt)}
-              style={styles.quickBtn}
+              className="flex-1 h-[38px] rounded-2xl border border-[#DFEBE7] bg-[#F8FAF9] justify-center items-center"
             >
-              <Text style={styles.quickBtnText}>+ ₹{amt}</Text>
+              <Text className="font-jakarta-bold text-xs text-[#4E615D]">+ ₹{amt}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Custom Input */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.currencySymbol}>₹</Text>
+        <View className="flex-row items-center border border-[#DFEBE7] rounded-2xl bg-[#F8FAF9] px-3 h-12">
+          <Text className="font-sora-semibold text-base text-[#4E615D] mr-1.5">₹</Text>
           <TextInput
             placeholder="Enter custom amount"
-            placeholderTextColor={Theme.colors.outline}
+            placeholderTextColor="#A1A1AA"
             keyboardType="numeric"
             value={customAmount}
             onChangeText={setCustomAmount}
             editable={!addFundsMutation.isPending}
-            style={styles.textInput}
+            className="flex-1 text-sm font-jakarta text-[#191C1B]"
           />
           <TouchableOpacity
             disabled={addFundsMutation.isPending || !customAmount}
@@ -123,14 +123,14 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
               handleAddFunds(parseFloat(customAmount));
               setCustomAmount('');
             }}
-            style={[styles.addBtn, !customAmount && styles.disabledBtn]}
+            className={`flex-row items-center px-3.5 h-[34px] rounded-xl gap-1 ${!customAmount ? 'bg-slate-300' : 'bg-primary'}`}
           >
             {addFundsMutation.isPending ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
               <>
                 <Plus size={16} color="#FFF" />
-                <Text style={styles.addBtnText}>Add</Text>
+                <Text className="text-white font-sora-semibold text-xs">Add</Text>
               </>
             )}
           </TouchableOpacity>
@@ -138,55 +138,47 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
       </View>
 
       {/* Transaction History */}
-      <View style={styles.txContainer}>
-        <Text style={styles.txHeader}>Transaction History</Text>
+      <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] gap-4">
+        <Text className="font-sora-semibold text-[15px] text-[#191C1B]">Transaction History</Text>
 
         {walletLoading ? (
-          <View style={{ paddingVertical: 20 }}>
-            <ActivityIndicator color={Theme.colors.primary} />
+          <View className="py-5">
+            <ActivityIndicator color="#0D564D" />
           </View>
         ) : transactions.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Wallet size={32} color={Theme.colors.textMuted} />
-            <Text style={styles.emptyTitle}>No transactions found</Text>
-            <Text style={styles.emptyDesc}>Your transactions will appear here once you load or spend funds.</Text>
+          <View className="items-center py-6 gap-1.5">
+            <Wallet size={32} color="#717875" />
+            <Text className="font-sora-semibold text-sm text-[#191C1B]">No transactions found</Text>
+            <Text className="font-jakarta text-[11px] text-[#717875] text-center leading-4">
+              Your transactions will appear here once you load or spend funds.
+            </Text>
           </View>
         ) : (
-          <View style={styles.txList}>
+          <View className="gap-3">
             {transactions.map((tx: any) => {
               const isCredit = tx.type === 'credit';
               const isSuccess = tx.status === 'success';
 
               return (
-                <View key={tx._id || tx.id} style={styles.txItem}>
-                  <View style={styles.txLeft}>
-                    <View style={[styles.txIconBox, { backgroundColor: isCredit ? '#E8F5E9' : '#FFEBEE' }]}>
+                <View key={tx._id || tx.id} className="flex-row justify-between items-center pb-3 border-b border-slate-100">
+                  <View className="flex-row items-center gap-2 flex-1">
+                    <View className={`w-9 h-9 rounded-full justify-center items-center ${isCredit ? 'bg-green-100' : 'bg-red-100'}`}>
                       {isCredit ? (
                         <ArrowDownLeft size={18} color="#2E7D32" />
                       ) : (
                         <ArrowUpRight size={18} color="#C62828" />
                       )}
                     </View>
-                    <View style={styles.txInfo}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <Text style={styles.txPurpose}>{getPurposeLabel(tx.purpose)}</Text>
-                        <View style={[
-                          styles.statusBadge, 
-                          { 
-                            backgroundColor: isSuccess ? '#E8F5E9' : tx.status === 'pending' ? '#FFF8E1' : '#FFEBEE' 
-                          }
-                        ]}>
-                          <Text style={[
-                            styles.statusText,
-                            { 
-                              color: isSuccess ? '#2E7D32' : tx.status === 'pending' ? '#F57F17' : '#C62828'
-                            }
-                          ]}>
+                    <View className="flex-1 gap-0.5">
+                      <View className="flex-row items-center gap-1.5 flex-wrap">
+                        <Text className="font-jakarta-bold text-[13px] text-[#191C1B]">{getPurposeLabel(tx.purpose)}</Text>
+                        <View className={`px-1.5 py-0.5 rounded ${isSuccess ? 'bg-green-100' : tx.status === 'pending' ? 'bg-amber-100' : 'bg-red-100'}`}>
+                          <Text className={`font-jakarta-bold text-[8px] ${isSuccess ? 'text-green-800' : tx.status === 'pending' ? 'text-amber-800' : 'text-red-800'}`}>
                             {tx.status.toUpperCase()}
                           </Text>
                         </View>
                       </View>
-                      <Text style={styles.txDate}>
+                      <Text className="font-jakarta text-[10px] text-[#717875]">
                         {new Date(tx.createdAt).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
@@ -197,7 +189,7 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
                       </Text>
                     </View>
                   </View>
-                  <Text style={[styles.txAmount, { color: isCredit ? '#2E7D32' : '#C62828' }]}>
+                  <Text className={`font-sora-bold text-sm ${isCredit ? 'text-green-700' : 'text-red-700'}`}>
                     {isCredit ? '+' : '-'} ₹{tx.amount.toFixed(2)}
                   </Text>
                 </View>
@@ -209,238 +201,5 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ navigation }) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    padding: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xl,
-    gap: Theme.spacing.md,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    gap: Theme.spacing.sm,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  balanceCard: {
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    gap: 8,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 15,
-    elevation: 4,
-  },
-  balanceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  balanceTitle: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 1,
-  },
-  secureBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Theme.radius.full,
-    gap: 4,
-  },
-  secureText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#FFF',
-  },
-  balanceAmount: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 36,
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  loader: {
-    alignSelf: 'flex-start',
-    marginVertical: 10,
-  },
-  addPanel: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: Theme.spacing.sm,
-  },
-  panelTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  quickRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  quickBtn: {
-    flex: 1,
-    height: 38,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    backgroundColor: Theme.colors.surfaceLow,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-    paddingHorizontal: 12,
-    height: 48,
-  },
-  currencySymbol: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurfaceVariant,
-    marginRight: 6,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 14,
-    height: 34,
-    borderRadius: Theme.radius.md,
-    gap: 4,
-  },
-  disabledBtn: {
-    backgroundColor: Theme.colors.outlineVariant,
-  },
-  addBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-  },
-  txContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: Theme.spacing.md,
-  },
-  txHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.lg,
-    gap: 6,
-  },
-  emptyTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  emptyDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  txList: {
-    gap: 12,
-  },
-  txItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  txLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.xs,
-    flex: 1,
-  },
-  txIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  txInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  txPurpose: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  statusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: Theme.radius.sm,
-  },
-  statusText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 8,
-  },
-  txDate: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-  txAmount: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-});
 
 export default WalletScreen;

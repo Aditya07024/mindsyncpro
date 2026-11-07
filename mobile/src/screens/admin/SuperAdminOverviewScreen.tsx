@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldAlert, ShieldCheck, DollarSign, Users, Activity, Heart, ArrowUpRight } from 'lucide-react-native';
+import { ShieldAlert, ShieldCheck, DollarSign, Users, Activity, Heart } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 import { StatCard } from '../../components/StatCard';
 
@@ -57,7 +56,7 @@ export const SuperAdminOverviewScreen: React.FC<{ navigation?: any }> = ({ navig
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="Super Admin"
         role="super_admin"
@@ -65,39 +64,39 @@ export const SuperAdminOverviewScreen: React.FC<{ navigation?: any }> = ({ navig
       />
 
       {isLoading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color={Theme.colors.error} />
-          <Text style={styles.loaderText}>Analyzing platform stats...</Text>
+        <View className="flex-1 justify-center items-center gap-3">
+          <ActivityIndicator size="large" color="#D32F2F" />
+          <Text className="font-jakarta text-[13px] text-stone-500">Analyzing platform stats...</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerClassName="p-4 pb-20 gap-4">
           {/* Header Description */}
-          <View style={styles.headerSection}>
-            <Text style={styles.sectionHeader}>Supercontrol Overview</Text>
-            <Text style={styles.sectionDesc}>Real-time system health metrics, MRR statistics, and safety alerts.</Text>
+          <View className="gap-1">
+            <Text className="font-sora-bold text-base text-stone-900">Supercontrol Overview</Text>
+            <Text className="font-jakarta text-xs text-stone-500 leading-4">Real-time system health metrics, MRR statistics, and safety alerts.</Text>
           </View>
 
           {/* 2x2 Stats Bento Grid */}
-          <View style={styles.statsGrid}>
-            <View style={styles.statsRow}>
+          <View className="gap-3">
+            <View className="flex-row gap-3">
               <StatCard
                 title="Monthly Recurring Revenue"
                 value={`₹${mrr}`}
                 trend={14}
                 trendLabel="vs last month"
-                icon={<DollarSign size={18} color={Theme.colors.primary} />}
-                color={Theme.colors.primary}
+                icon={<DollarSign size={18} color="#0D564D" />}
+                color="#0D564D"
               />
               <StatCard
                 title="Total Seekers"
                 value={userCount.toString()}
                 trend={8}
                 trendLabel="active accounts"
-                icon={<Users size={18} color={Theme.colors.secondary} />}
-                color={Theme.colors.secondary}
+                icon={<Users size={18} color="#9D4223" />}
+                color="#9D4223"
               />
             </View>
-            <View style={styles.statsRow}>
+            <View className="flex-row gap-3">
               <StatCard
                 title="Verified Organizations"
                 value={activeOrgsCount.toString()}
@@ -118,37 +117,37 @@ export const SuperAdminOverviewScreen: React.FC<{ navigation?: any }> = ({ navig
           </View>
 
           {/* Active Crisis Alerts Flags */}
-          <View style={[styles.card, styles.crisisCard]}>
-            <View style={styles.crisisHead}>
-              <ShieldAlert size={18} color={Theme.colors.error} />
-              <Text style={[styles.sectionHeader, styles.crisisText]}>Active Crisis Alert Flags</Text>
+          <View className="bg-white rounded-2xl p-4 border-2 border-red-200 shadow-sm gap-2">
+            <View className="flex-row items-center gap-1.5 mb-1">
+              <ShieldAlert size={18} color="#D32F2F" />
+              <Text className="font-sora-bold text-base text-crisis">Active Crisis Alert Flags</Text>
             </View>
-            <Text style={styles.sectionDesc}>
+            <Text className="font-jakarta text-xs text-stone-500 mt-0.5 leading-4 mb-2">
               These journal keyword triggers require immediate attention or verification:
             </Text>
 
-            <View style={styles.list}>
+            <View className="gap-2 mt-1">
               {crisisFlags.map(flag => (
-                <View key={flag._id} style={styles.crisisItem}>
-                  <View style={styles.crisisMetaRow}>
-                    <Text style={styles.crisisUser}>{flag.userId.name}</Text>
-                    <View style={styles.keywordBadge}>
-                      <Text style={styles.keywordText}>TRIGGER: {flag.keyword.toUpperCase()}</Text>
+                <View key={flag._id} className="bg-red-50/50 border border-red-200 rounded-xl p-3 gap-2">
+                  <View className="flex-row justify-between items-center">
+                    <Text className="font-sora-bold text-sm text-stone-900">{flag.userId.name}</Text>
+                    <View className="bg-crisis px-1.5 py-0.5 rounded">
+                      <Text className="font-jakarta-bold text-[9px] text-white">TRIGGER: {flag.keyword.toUpperCase()}</Text>
                     </View>
                   </View>
-                  <Text style={styles.contextText}>"{flag.context}"</Text>
+                  <Text className="font-jakarta text-xs text-stone-600 leading-4 italic">"{flag.context}"</Text>
                   
                   <TouchableOpacity 
                     onPress={() => handleResolveFlag(flag._id, flag.userId.name)}
-                    style={styles.resolveBtn}
+                    className="flex-row items-center justify-center gap-1 bg-crisis py-2 rounded-full"
                   >
                     <ShieldCheck size={14} color="#FFF" />
-                    <Text style={styles.resolveBtnText}>Mark Outreach Resolved</Text>
+                    <Text className="text-white font-jakarta-bold text-[11px]">Mark Outreach Resolved</Text>
                   </TouchableOpacity>
                 </View>
               ))}
               {crisisFlags.length === 0 && (
-                <Text style={styles.emptyText}>Zero active crisis flags. Healthy environment.</Text>
+                <Text className="font-jakarta text-[13px] text-stone-400 text-center py-2">Zero active crisis flags. Healthy environment.</Text>
               )}
             </View>
           </View>
@@ -157,135 +156,5 @@ export const SuperAdminOverviewScreen: React.FC<{ navigation?: any }> = ({ navig
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 80,
-    gap: Theme.spacing.md,
-  },
-  headerSection: {
-    gap: 4
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16
-  },
-  statsGrid: {
-    gap: Theme.spacing.sm,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  crisisCard: {
-    borderColor: Theme.colors.errorContainer,
-    borderWidth: 1.5,
-  },
-  crisisHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  crisisText: {
-    color: Theme.colors.error,
-  },
-  list: {
-    gap: Theme.spacing.sm,
-    marginTop: Theme.spacing.xs,
-  },
-  crisisItem: {
-    backgroundColor: Theme.colors.errorContainer + '10',
-    borderWidth: 1,
-    borderColor: Theme.colors.errorContainer + '30',
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.sm,
-    gap: 8,
-  },
-  crisisMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  crisisUser: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  keywordBadge: {
-    backgroundColor: Theme.colors.error,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Theme.radius.sm,
-  },
-  keywordText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: '#FFF',
-  },
-  contextText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-    lineHeight: 16,
-    fontStyle: 'italic',
-  },
-  resolveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    backgroundColor: Theme.colors.error,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  resolveBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: Theme.spacing.xs,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loaderText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline,
-  }
-});
 
 export default SuperAdminOverviewScreen;

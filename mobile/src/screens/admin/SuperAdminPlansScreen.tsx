@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, Switch, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Switch, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, Trash2, Edit3, Plus, ShieldCheck, X, CheckSquare, Square } from 'lucide-react-native';
+import { Trash2, Edit3, Plus, ShieldCheck, X } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 
 interface PlanData {
@@ -183,80 +182,80 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="Super Admin"
         role="super_admin"
         navigation={navigation}
       />
 
-      <View style={styles.content}>
+      <View className="flex-1 p-4 gap-4">
         {/* Header Title */}
-        <View style={styles.headerRow}>
-          <View style={styles.headerSection}>
-            <Text style={styles.sectionHeader}>Customize Subscription Plans</Text>
-            <Text style={styles.sectionDesc}>Create plan tiers, set prices, and configure feature activations.</Text>
+        <View className="flex-row justify-between items-center">
+          <View className="flex-1 gap-1">
+            <Text className="font-sora-bold text-base text-stone-900">Customize Subscription Plans</Text>
+            <Text className="font-jakarta text-xs text-stone-500 leading-4">Create plan tiers, set prices, and configure feature activations.</Text>
           </View>
-          <TouchableOpacity onPress={() => openEditModal()} style={styles.addBtn}>
+          <TouchableOpacity onPress={() => openEditModal()} className="w-10 h-10 rounded-full bg-primary justify-center items-center ml-3">
             <Plus size={16} color="#FFF" />
           </TouchableOpacity>
         </View>
 
         {isLoading ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={Theme.colors.primary} />
-            <Text style={styles.loadingText}>Fetching available plan packages...</Text>
+          <View className="flex-1 justify-center items-center gap-3">
+            <ActivityIndicator size="large" color="#0D564D" />
+            <Text className="font-jakarta text-[12.5px] text-stone-500">Fetching available plan packages...</Text>
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.listScroll}>
+          <ScrollView contentContainerClassName="gap-4 pb-20">
             {plans.map((plan: PlanData) => {
               const activeFeaturesCount = Object.values(plan.config || {}).filter(Boolean).length;
               return (
-                <View key={plan._id || plan.id} style={styles.planCard}>
-                  <View style={styles.planHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.planTitle}>{plan.name}</Text>
-                      <Text style={styles.planAudienceBadge}>
+                <View key={plan._id || plan.id} className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-3">
+                  <View className="flex-row justify-between items-center">
+                    <View className="flex-1">
+                      <Text className="font-sora-bold text-base text-stone-900">{plan.name}</Text>
+                      <Text className="font-jakarta-bold text-[9.5px] text-primary mt-0.5">
                         TARGET: {plan.audience.toUpperCase()}
                       </Text>
                     </View>
-                    <Text style={styles.planPriceText}>₹{plan.price} / {plan.durationMonths || 1} mo</Text>
+                    <Text className="font-sora-bold text-lg text-stone-900">₹{plan.price} / {plan.durationMonths || 1} mo</Text>
                   </View>
 
                   {/* Bullet features */}
-                  <View style={styles.bulletsBox}>
+                  <View className="gap-1.5 pl-1">
                     {(plan.features || []).map((feat, idx) => (
-                      <View key={idx} style={styles.bulletRow}>
-                        <View style={styles.bulletDot} />
-                        <Text style={styles.bulletText}>{feat}</Text>
+                      <View key={idx} className="flex-row items-center gap-1.5">
+                        <View className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <Text className="font-jakarta text-xs text-stone-600">{feat}</Text>
                       </View>
                     ))}
                   </View>
 
                   {/* Dynamic Configurations Toggles Active Count */}
-                  <View style={styles.configBadge}>
-                    <ShieldCheck size={12} color={Theme.colors.primary} />
-                    <Text style={styles.configBadgeText}>
+                  <View className="flex-row items-center bg-primary/10 px-2 py-1.5 rounded-md gap-1.5 self-start">
+                    <ShieldCheck size={12} color="#0D564D" />
+                    <Text className="font-jakarta-medium text-[11px] text-primary">
                       {activeFeaturesCount} portal features activated
                     </Text>
                   </View>
 
                   {/* Controls */}
-                  <View style={styles.planActions}>
+                  <View className="flex-row justify-end gap-2 border-t border-stone-100 pt-2.5 mt-0.5">
                     <TouchableOpacity
                       onPress={() => handleDeletePlan(plan)}
-                      style={[styles.ctrlBtn, styles.ctrlDelete]}
+                      className="flex-row items-center gap-1 border border-red-200 px-3 py-2 rounded-xl"
                     >
-                      <Trash2 size={14} color={Theme.colors.error} />
-                      <Text style={styles.ctrlDeleteText}>Delete</Text>
+                      <Trash2 size={14} color="#D32F2F" />
+                      <Text className="font-jakarta-medium text-[11.5px] text-crisis">Delete</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       onPress={() => openEditModal(plan)}
-                      style={styles.ctrlBtn}
+                      className="flex-row items-center gap-1 border border-stone-200 px-3 py-2 rounded-xl"
                     >
-                      <Edit3 size={14} color={Theme.colors.primary} />
-                      <Text style={styles.ctrlEditText}>Modify Plan</Text>
+                      <Edit3 size={14} color="#0D564D" />
+                      <Text className="font-jakarta-medium text-[11.5px] text-primary">Modify Plan</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -273,68 +272,66 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View className="flex-1 bg-black/40 justify-end">
+          <View className="bg-white rounded-t-3xl max-h-[90%] pb-6">
             {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+            <View className="flex-row justify-between items-center p-5 border-b border-stone-100">
+              <Text className="font-sora-bold text-lg text-stone-900">
                 {isEditing ? 'Modify Plan Tier' : 'Create Custom Tier'}
               </Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                <X size={20} color={Theme.colors.onSurface} />
+              <TouchableOpacity onPress={() => setModalVisible(false)} className="w-8 h-8 rounded-full bg-stone-100 items-center justify-center">
+                <X size={20} color="#1C1917" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={styles.modalScroll}>
+            <ScrollView contentContainerClassName="p-5 gap-4">
               {/* Input details */}
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Plan Title</Text>
+              <View className="gap-1.5">
+                <Text className="font-sora-bold text-[13px] text-stone-900">Plan Title</Text>
                 <TextInput
                   placeholder="e.g. Corporate Standard"
                   value={planName}
                   onChangeText={setPlanName}
-                  style={styles.formInput}
+                  className="h-12 border border-stone-200 rounded-xl px-3 text-[13.5px] text-stone-900 font-jakarta bg-stone-50"
                 />
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Monthly Billing Price (INR)</Text>
+              <View className="gap-1.5">
+                <Text className="font-sora-bold text-[13px] text-stone-900">Monthly Billing Price (INR)</Text>
                 <TextInput
                   placeholder="e.g. 499"
                   keyboardType="numeric"
                   value={planPrice}
                   onChangeText={setPlanPrice}
-                  style={styles.formInput}
+                  className="h-12 border border-stone-200 rounded-xl px-3 text-[13.5px] text-stone-900 font-jakarta bg-stone-50"
                 />
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Plan Validity (in months)</Text>
+              <View className="gap-1.5">
+                <Text className="font-sora-bold text-[13px] text-stone-900">Plan Validity (in months)</Text>
                 <TextInput
                   placeholder="e.g. 1, 3, 6, 12"
                   keyboardType="numeric"
                   value={planDuration}
                   onChangeText={setPlanDuration}
-                  style={styles.formInput}
+                  className="h-12 border border-stone-200 rounded-xl px-3 text-[13.5px] text-stone-900 font-jakarta bg-stone-50"
                 />
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Target Audience Portal</Text>
-                <View style={styles.audienceSelector}>
-                  {['user', 'therapist', 'organization'].map((aud) => (
+              <View className="gap-1.5">
+                <Text className="font-sora-bold text-[13px] text-stone-900">Target Audience Portal</Text>
+                <View className="flex-row gap-1.5">
+                  {(['user', 'therapist', 'organization'] as const).map((aud) => (
                     <TouchableOpacity
                       key={aud}
-                      onPress={() => setPlanAudience(aud as any)}
-                      style={[
-                        styles.audienceBtn,
-                        planAudience === aud && styles.audienceBtnActive
-                      ]}
+                      onPress={() => setPlanAudience(aud)}
+                      className={`flex-1 border border-stone-200 rounded-xl py-2.5 items-center ${
+                        planAudience === aud ? 'bg-primary border-primary' : ''
+                      }`}
                     >
-                      <Text style={[
-                        styles.audienceBtnText,
-                        planAudience === aud && styles.audienceBtnTextActive
-                      ]}>
+                      <Text className={`font-jakarta-bold text-[11px] ${
+                        planAudience === aud ? 'text-white' : 'text-primary'
+                      }`}>
                         {aud.toUpperCase()}
                       </Text>
                     </TouchableOpacity>
@@ -343,97 +340,97 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
               </View>
 
               {/* Dynamic Feature Checklist Gates */}
-              <View style={styles.gateSection}>
-                <Text style={styles.gateSectionHeader}>Dynamic Capability Gates</Text>
-                <Text style={styles.gateSectionDesc}>Select which core features this plan unlocks:</Text>
+              <View className="gap-1.5 border-t border-stone-100 pt-3">
+                <Text className="font-sora-bold text-[13.5px] text-primary">Dynamic Capability Gates</Text>
+                <Text className="font-jakarta text-[11px] text-stone-500 mb-1.5">Select which core features this plan unlocks:</Text>
 
-                <View style={styles.gateOptions}>
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>Employee Roster Sync & Whitelist</Text>
+                <View className="gap-2.5">
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">Employee Roster Sync & Whitelist</Text>
                     <Switch
                       value={enableRosterManagement}
                       onValueChange={setEnableRosterManagement}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
 
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>External Therapist Affiliations</Text>
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">External Therapist Affiliations</Text>
                     <Switch
                       value={enableTherapistAffiliation}
                       onValueChange={setEnableTherapistAffiliation}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
 
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>Collective Burnout Analytics</Text>
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">Collective Burnout Analytics</Text>
                     <Switch
                       value={enableAnalytics}
                       onValueChange={setEnableAnalytics}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
 
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>Unlimited CBT Journaling logs</Text>
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">Unlimited CBT Journaling logs</Text>
                     <Switch
                       value={enableJournaling}
                       onValueChange={setEnableJournaling}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
 
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>Manas AI Counselor Chats</Text>
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">Manas AI Counselor Chats</Text>
                     <Switch
                       value={enableChat}
                       onValueChange={setEnableChat}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
 
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>Calendar Availability Slots Control</Text>
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">Calendar Availability Slots Control</Text>
                     <Switch
                       value={enableScheduling}
                       onValueChange={setEnableScheduling}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
 
-                  <View style={styles.gateRow}>
-                    <Text style={styles.gateLabel}>Direct Booking Logs & earnings</Text>
+                  <View className="flex-row justify-between items-center bg-stone-50 px-2.5 py-2 rounded-xl">
+                    <Text className="font-jakarta-medium text-xs text-stone-700">Direct Booking Logs & earnings</Text>
                     <Switch
                       value={enableBookings}
                       onValueChange={setEnableBookings}
-                      trackColor={{ true: Theme.colors.primary }}
+                      trackColor={{ true: '#0D564D' }}
                     />
                   </View>
                 </View>
               </View>
 
               {/* Marketing bullets */}
-              <View style={styles.bulletsSection}>
-                <Text style={styles.formLabel}>Marketing Bullet Points</Text>
-                <View style={styles.bulletInputRow}>
+              <View className="gap-1.5 border-t border-stone-100 pt-3">
+                <Text className="font-sora-bold text-[13px] text-stone-900">Marketing Bullet Points</Text>
+                <View className="flex-row gap-2">
                   <TextInput
                     placeholder="e.g. Dedicated wellness coach support"
                     value={newFeatureText}
                     onChangeText={setNewFeatureText}
-                    style={[styles.formInput, { flex: 1 }]}
+                    className="flex-1 h-12 border border-stone-200 rounded-xl px-3 text-[13.5px] text-stone-900 font-jakarta bg-stone-50"
                   />
-                  <TouchableOpacity onPress={addFeature} style={styles.bulletAddBtn}>
-                    <Text style={styles.bulletAddText}>Add</Text>
+                  <TouchableOpacity onPress={addFeature} className="bg-primary px-4 h-12 rounded-xl justify-center items-center">
+                    <Text className="font-jakarta-bold text-[12.5px] text-white">Add</Text>
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.bulletsList}>
+                <View className="flex-row flex-wrap gap-1.5 mt-1.5">
                   {planFeatures.map((feat, i) => (
-                    <View key={i} style={styles.featPill}>
-                      <Text style={styles.featPillText}>{feat}</Text>
+                    <View key={i} className="flex-row items-center gap-1.5 bg-stone-50 border border-stone-200 px-2.5 py-1.5 rounded-full">
+                      <Text className="font-jakarta text-[11px] text-stone-800">{feat}</Text>
                       <TouchableOpacity onPress={() => removeFeature(i)}>
-                        <X size={12} color={Theme.colors.outline} />
+                        <X size={12} color="#78716C" />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -444,12 +441,12 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
               <TouchableOpacity
                 onPress={handleSavePlan}
                 disabled={saveLoading}
-                style={styles.saveBtn}
+                className="bg-primary py-3.5 rounded-xl items-center mt-2.5"
               >
                 {saveLoading ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.saveBtnText}>Save Plan Configuration</Text>
+                  <Text className="font-jakarta-bold text-[13.5px] text-white">Save Plan Configuration</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -459,334 +456,5 @@ export const SuperAdminPlansScreen: React.FC<{ navigation?: any }> = ({ navigati
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: Theme.spacing.margin,
-    gap: Theme.spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerSection: {
-    flex: 1,
-    gap: 4,
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16
-  },
-  addBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
-  },
-  listScroll: {
-    gap: Theme.spacing.md,
-    paddingBottom: 80,
-  },
-  planCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: 12,
-  },
-  planHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  planTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  planAudienceBadge: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9.5,
-    color: Theme.colors.primary,
-    marginTop: 2,
-  },
-  planPriceText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-    fontWeight: '700',
-  },
-  bulletsBox: {
-    gap: 6,
-    paddingLeft: 4,
-  },
-  bulletRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  bulletDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Theme.colors.primary,
-  },
-  bulletText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  configBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.primary + '10',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    gap: 6,
-    alignSelf: 'flex-start',
-  },
-  configBadgeText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11,
-    color: Theme.colors.primary,
-  },
-  planActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
-    paddingTop: 10,
-    marginTop: 2,
-  },
-  ctrlBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.lg,
-  },
-  ctrlDelete: {
-    borderColor: '#FFCDD2',
-  },
-  ctrlDeleteText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11.5,
-    color: Theme.colors.error,
-  },
-  ctrlEditText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 11.5,
-    color: Theme.colors.primary,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.outline,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '90%',
-    paddingBottom: 24,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-  },
-  modalTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Theme.colors.surfaceLow,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalScroll: {
-    padding: 20,
-    gap: 16,
-  },
-  formGroup: {
-    gap: 6,
-  },
-  formLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  formInput: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    fontSize: 13.5,
-    color: Theme.colors.onSurface,
-    fontFamily: Theme.fonts.body,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  audienceSelector: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  audienceBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  audienceBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  audienceBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.primary,
-  },
-  audienceBtnTextActive: {
-    color: '#FFF',
-  },
-  gateSection: {
-    gap: 6,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
-    paddingTop: 12,
-  },
-  gateSectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.primary,
-  },
-  gateSectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginBottom: 6,
-  },
-  gateOptions: {
-    gap: 10,
-  },
-  gateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.lg,
-  },
-  gateLabel: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  bulletsSection: {
-    gap: 6,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
-    paddingTop: 12,
-  },
-  bulletInputRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  bulletAddBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 16,
-    height: 48,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bulletAddText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: '#FFF',
-  },
-  bulletsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 6,
-  },
-  featPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: Theme.radius.full,
-  },
-  featPillText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.onSurface,
-  },
-  saveBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 14,
-    borderRadius: Theme.radius.lg,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13.5,
-    color: '#FFF',
-  },
-});
 
 export default SuperAdminPlansScreen;

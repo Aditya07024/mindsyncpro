@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Lock, CheckCircle, Award, Sparkles, Mail, CreditCard, RefreshCw, XCircle, Bell, BellOff, LogOut, Building } from 'lucide-react-native';
+import { User, CheckCircle, Award, Sparkles, Mail, CreditCard, RefreshCw, XCircle, Bell, BellOff, LogOut, Building } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
@@ -123,7 +123,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
     retry: false,
   });
 
-  const { data: subData, refetch: refetchSub } = useQuery({
+  const { data: subData } = useQuery({
     queryKey: ['subscription'],
     queryFn: () => API.subscription.get().catch(() => null),
     retry: false,
@@ -134,7 +134,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
     !!(userProfile?.tier && userProfile.tier !== 'free') || 
     !!(subData && subData.subscription?.status === 'active');
 
-  const { data: therapistStats, refetch: refetchStats } = useQuery({
+  const { data: therapistStats } = useQuery({
     queryKey: ['therapistStats'],
     queryFn: () => API.therapist.stats(),
     retry: false,
@@ -221,7 +221,7 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
   const therapistName = userProfile?.fullName || 'Therapist';
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName={therapistName.split(' ')[0]}
         role="therapist"
@@ -229,63 +229,63 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
         onUpgradePress={userProfile?.orgId ? undefined : () => navigation.navigate('Plans')}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerClassName="p-5 pb-20 gap-4">
         {/* Profile Card */}
-        <View style={styles.profileHeaderCard}>
-          <View style={styles.avatarRingOuter}>
-            <View style={styles.avatarRingInner}>
-              <Text style={styles.avatarLetter}>T</Text>
+        <View className="flex-row items-center bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm gap-4">
+          <View className="w-[66px] h-[66px] rounded-full border-2 border-primary/30 justify-center items-center">
+            <View className="w-[54px] h-[54px] rounded-full bg-primary/10 justify-center items-center">
+              <Text className="font-sora-bold text-2xl text-primary">T</Text>
             </View>
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>{therapistName}</Text>
-            <Text style={styles.headerRole}>Therapist</Text>
-            <Text style={styles.headerSubtext}>– · {totalSessionsCount} sessions</Text>
+          <View className="flex-1">
+            <Text className="font-sora text-lg text-onSurface">{therapistName}</Text>
+            <Text className="font-jakarta-medium text-[13px] text-primary mt-0.5">Therapist</Text>
+            <Text className="font-jakarta text-xs text-[#71787D] mt-0.5">– · {totalSessionsCount} sessions</Text>
           </View>
         </View>
 
         {/* 1. Verified Credentials Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
+        <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+          <View className="flex-row items-center gap-2 mb-1">
             <User size={18} color={Theme.colors.primary} />
-            <Text style={styles.cardTitle}>Professional Credentials</Text>
+            <Text className="font-sora text-[15px] text-onSurface">Professional Credentials</Text>
           </View>
-          <View style={styles.credentialDetails}>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoKey}>Qualification:</Text>
-              <Text style={styles.infoVal}>{userProfile?.therapistProfile?.qualification || 'PhD Clinical Psychology'}</Text>
+          <View className="gap-2 mt-1">
+            <View className="flex-row gap-2 py-0.5">
+              <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Qualification:</Text>
+              <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">{userProfile?.therapistProfile?.qualification || 'PhD Clinical Psychology'}</Text>
             </View>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoKey}>Clinic Suite:</Text>
-              <Text style={styles.infoVal}>{userProfile?.therapistProfile?.clinicDetails || 'MyMindTherapyFriend Executive Suite'}</Text>
+            <View className="flex-row gap-2 py-0.5">
+              <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Clinic Suite:</Text>
+              <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">{userProfile?.therapistProfile?.clinicDetails || 'MyMindTherapyFriend Executive Suite'}</Text>
             </View>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoKey}>Specializations:</Text>
-              <Text style={styles.infoVal}>
+            <View className="flex-row gap-2 py-0.5">
+              <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Specializations:</Text>
+              <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">
                 {userProfile?.therapistProfile?.specializations?.join(', ') || 'Anxiety, CBT Counseling, Burnout'}
               </Text>
             </View>
             {userProfile?.therapistProfile?.email ? (
-              <View style={styles.infoBox}>
-                <Text style={styles.infoKey}>Email:</Text>
-                <Text style={styles.infoVal}>{userProfile.therapistProfile.email}</Text>
+              <View className="flex-row gap-2 py-0.5">
+                <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Email:</Text>
+                <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">{userProfile.therapistProfile.email}</Text>
               </View>
             ) : null}
             {userProfile?.therapistProfile?.website ? (
-              <View style={styles.infoBox}>
-                <Text style={styles.infoKey}>Website:</Text>
-                <Text style={styles.infoVal}>{userProfile.therapistProfile.website}</Text>
+              <View className="flex-row gap-2 py-0.5">
+                <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Website:</Text>
+                <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">{userProfile.therapistProfile.website}</Text>
               </View>
             ) : null}
             {userProfile?.therapistProfile?.phone ? (
-              <View style={styles.infoBox}>
-                <Text style={styles.infoKey}>Phone:</Text>
-                <Text style={styles.infoVal}>{userProfile.therapistProfile.phone}</Text>
+              <View className="flex-row gap-2 py-0.5">
+                <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Phone:</Text>
+                <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">{userProfile.therapistProfile.phone}</Text>
               </View>
             ) : null}
-            <View style={styles.infoBox}>
-              <Text style={styles.infoKey}>Collaborative:</Text>
-              <Text style={styles.infoVal}>
+            <View className="flex-row gap-2 py-0.5">
+              <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Collaborative:</Text>
+              <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">
                 {userProfile?.therapistProfile?.openToCollaboration ? 'Yes (Open to requests)' : 'No (Private)'}
               </Text>
             </View>
@@ -294,123 +294,112 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
 
         {/* Organization Affiliation Card */}
         {userProfile?.orgId ? (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
+          <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+            <View className="flex-row items-center gap-2 mb-1">
               <Building size={18} color={Theme.colors.primary} />
-              <Text style={styles.cardTitle}>Organization Affiliation</Text>
+              <Text className="font-sora text-[15px] text-onSurface">Organization Affiliation</Text>
             </View>
-            <View style={styles.credentialDetails}>
-              <View style={styles.infoBox}>
-                <Text style={styles.infoKey}>Affiliation:</Text>
-                <Text style={styles.infoVal}>Active Corporate / Academic Linkage</Text>
+            <View className="gap-2 mt-1">
+              <View className="flex-row gap-2 py-0.5">
+                <Text className="font-jakarta-bold text-[12.5px] text-onSurface w-[100px]">Affiliation:</Text>
+                <Text className="font-jakarta text-[12.5px] text-[#71787D] flex-1">Active Corporate / Academic Linkage</Text>
               </View>
               <TouchableOpacity
                 onPress={handleLeaveOrg}
-                style={[styles.saveBtn, { backgroundColor: Theme.colors.error, marginTop: 8 }]}
+                className="bg-crisis py-3 rounded-full items-center mt-2 shadow-sm"
               >
-                <Text style={styles.saveBtnText}>Leave Organization</Text>
+                <Text className="font-sora text-[13px] text-white">Leave Organization</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : null}
 
         {/* Profile Editor Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
+        <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+          <View className="flex-row items-center gap-2 mb-1">
             <Sparkles size={18} color={Theme.colors.primary} />
-            <Text style={styles.cardTitle}>Profile Editor</Text>
+            <Text className="font-sora text-[15px] text-onSurface">Profile Editor</Text>
           </View>
 
-          <View style={styles.formContainer}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Intro Video URL (YouTube/Vimeo)</Text>
+          <View className="gap-3 mt-1.5">
+            <View className="gap-1.5">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Intro Video URL (YouTube/Vimeo)</Text>
               <TextInput
                 value={introVideoUrl}
                 onChangeText={setIntroVideoUrl}
                 placeholder="https://youtube.com/watch?v=..."
                 placeholderTextColor={Theme.colors.textMuted}
-                style={styles.textInput}
+                className="font-jakarta text-[13px] text-onSurface border border-[#E0E2E0] rounded-2xl px-3 py-2.5 bg-[#F0F2F1]"
                 autoCapitalize="none"
               />
             </View>
 
-            {/* <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Session Fee (₹) (Limits: 500 - 5000)</Text>
-              <TextInput
-                value={sessionFee}
-                onChangeText={setSessionFee}
-                placeholder="1500"
-                placeholderTextColor={Theme.colors.textMuted}
-                style={styles.textInput}
-                keyboardType="numeric"
-              />
-            </View> */}
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Specialisations (comma separated)</Text>
+            <View className="gap-1.5">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Specialisations (comma separated)</Text>
               <TextInput
                 value={specializations}
                 onChangeText={setSpecializations}
                 placeholder="Anxiety, CBT Counseling, Burnout, ADHD"
                 placeholderTextColor={Theme.colors.textMuted}
-                style={styles.textInput}
+                className="font-jakarta text-[13px] text-onSurface border border-[#E0E2E0] rounded-2xl px-3 py-2.5 bg-[#F0F2F1]"
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Bio & Approach</Text>
+            <View className="gap-1.5">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Bio & Approach</Text>
               <TextInput
                 value={bio}
                 onChangeText={setBio}
                 placeholder="Describe your clinical expertise and therapeutic approaches..."
                 placeholderTextColor={Theme.colors.textMuted}
-                style={[styles.textInput, styles.textArea]}
+                className="font-jakarta text-[13px] text-onSurface border border-[#E0E2E0] rounded-2xl px-3 py-2.5 bg-[#F0F2F1] h-20"
                 multiline
                 numberOfLines={4}
+                textAlignVertical="top"
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Personal Email</Text>
+            <View className="gap-1.5">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Personal Email</Text>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
                 placeholder="email@example.com"
                 placeholderTextColor={Theme.colors.textMuted}
-                style={styles.textInput}
+                className="font-jakarta text-[13px] text-onSurface border border-[#E0E2E0] rounded-2xl px-3 py-2.5 bg-[#F0F2F1]"
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Website URL</Text>
+            <View className="gap-1.5">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Website URL</Text>
               <TextInput
                 value={website}
                 onChangeText={setWebsite}
                 placeholder="https://yourwebsite.com"
                 placeholderTextColor={Theme.colors.textMuted}
-                style={styles.textInput}
+                className="font-jakarta text-[13px] text-onSurface border border-[#E0E2E0] rounded-2xl px-3 py-2.5 bg-[#F0F2F1]"
                 autoCapitalize="none"
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
+            <View className="gap-1.5">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Phone Number</Text>
               <TextInput
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="+1234567890"
                 placeholderTextColor={Theme.colors.textMuted}
-                style={styles.textInput}
+                className="font-jakarta text-[13px] text-onSurface border border-[#E0E2E0] rounded-2xl px-3 py-2.5 bg-[#F0F2F1]"
                 keyboardType="phone-pad"
               />
             </View>
 
-            <View style={styles.switchGroup}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabel}>Open to Organization Collaboration</Text>
-                <Text style={{ fontSize: 11, color: Theme.colors.textMuted, marginTop: 2 }}>
+            <View className="flex-row items-center justify-between py-3 border-t border-[#E0E2E0] mt-2">
+              <View className="flex-1">
+                <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Open to Organization Collaboration</Text>
+                <Text className="text-[11px] font-jakarta text-[#71787D] mt-0.5">
                   Allow companies & organizations to send you affiliation requests
                 </Text>
               </View>
@@ -425,40 +414,40 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
             <TouchableOpacity
               onPress={handleSaveProfile}
               disabled={saveLoading}
-              style={styles.saveBtn}
+              className="bg-primary py-3 rounded-full items-center mt-1.5 shadow-sm"
             >
               {saveLoading ? (
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
-                <Text style={styles.saveBtnText}>Save Profile</Text>
+                <Text className="font-sora text-[13px] text-white">Save Profile</Text>
               )}
             </TouchableOpacity>
           </View>
         </View>
 
         {/* My Plan Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
+        <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+          <View className="flex-row items-center gap-2 mb-1">
             <CreditCard size={18} color={Theme.colors.primary} />
-            <Text style={styles.cardTitle}>My Plan</Text>
+            <Text className="font-sora text-[15px] text-onSurface">My Plan</Text>
           </View>
 
           {/* Current plan info */}
-          <View style={styles.planStatusRow}>
+          <View className="flex-row items-center justify-between mb-3">
             {isSubscribed ? (
-              <View style={styles.planActiveBadge}>
+              <View className="flex-row items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/30">
                 <CheckCircle size={14} color={Theme.colors.primary} />
-                <Text style={styles.planActiveText}>
+                <Text className="font-jakarta-bold text-[12.5px] text-primary">
                   {subData?.subscription?.plan || 'Active Plan'}
                 </Text>
               </View>
             ) : (
-              <View style={styles.planFreeBadge}>
-                <Text style={styles.planFreeText}>Free Plan</Text>
+              <View className="bg-[#F0F2F1] px-3 py-1.5 rounded-full border border-[#E0E2E0]">
+                <Text className="font-jakarta-bold text-[12.5px] text-[#71787D]">Free Plan</Text>
               </View>
             )}
             {subData?.subscription?.endDate ? (
-              <Text style={styles.planExpiry}>
+              <Text className="font-jakarta text-[11px] text-[#71787D]">
                 Renews {new Date(subData.subscription.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </Text>
             ) : null}
@@ -468,59 +457,59 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
           {!isSubscribed && (
             <TouchableOpacity
               onPress={() => navigation.navigate('Plans')}
-              style={styles.upgradeBtn}
+              className="flex-row items-center justify-center gap-1.5 bg-primary py-3 rounded-full mb-2.5"
             >
               <Award size={15} color="#FFF" />
-              <Text style={styles.upgradeBtnText}>Upgrade Plan</Text>
+              <Text className="font-sora text-[13px] text-white">Upgrade Plan</Text>
             </TouchableOpacity>
           )}
 
           {/* Sync + Cancel row */}
-          <View style={styles.planActionRow}>
+          <View className="flex-row gap-2.5 mt-1">
             <TouchableOpacity
               onPress={handleSyncPlan}
               disabled={syncLoading}
-              style={styles.planSyncBtn}
+              className="flex-1 flex-row items-center justify-center gap-1.5 border-[1.5px] border-primary/50 py-2.5 rounded-full bg-primary/10"
             >
               {syncLoading ? (
                 <ActivityIndicator size="small" color={Theme.colors.primary} />
               ) : (
                 <RefreshCw size={14} color={Theme.colors.primary} />
               )}
-              <Text style={styles.planSyncText}>Sync Status</Text>
+              <Text className="font-jakarta-bold text-xs text-primary">Sync Status</Text>
             </TouchableOpacity>
 
             {isSubscribed && (
               <TouchableOpacity
                 onPress={handleCancelPlan}
                 disabled={cancelLoading}
-                style={styles.planCancelBtn}
+                className="flex-1 flex-row items-center justify-center gap-1.5 border-[1.5px] border-crisis/40 py-2.5 rounded-full bg-crisis/10"
               >
                 {cancelLoading ? (
                   <ActivityIndicator size="small" color={Theme.colors.error} />
                 ) : (
                   <XCircle size={14} color={Theme.colors.error} />
                 )}
-                <Text style={styles.planCancelText}>Cancel Plan</Text>
+                <Text className="font-jakarta-bold text-xs text-crisis">Cancel Plan</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {/* Notifications Toggle Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
+        <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+          <View className="flex-row items-center gap-2 mb-1">
             {notificationsEnabled ? (
               <Bell size={18} color={Theme.colors.primary} />
             ) : (
               <BellOff size={18} color={Theme.colors.outline} />
             )}
-            <Text style={styles.cardTitle}>Booking Notifications</Text>
+            <Text className="font-sora text-[15px] text-onSurface">Booking Notifications</Text>
           </View>
-          <View style={styles.switchGroup}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>Allow Booking Alerts</Text>
-              <Text style={{ fontSize: 11, color: Theme.colors.textMuted, marginTop: 2 }}>
+          <View className="flex-row items-center justify-between py-3 border-t border-[#E0E2E0] mt-2">
+            <View className="flex-1">
+              <Text className="font-jakarta-bold text-xs text-onSurfaceVariant">Allow Booking Alerts</Text>
+              <Text className="text-[11px] font-jakarta text-[#71787D] mt-0.5">
                 Get notified instantly when a client books a session with you
               </Text>
             </View>
@@ -534,462 +523,48 @@ export const TherapistProfileScreen: React.FC<TherapistProfileScreenProps> = ({ 
         </View>
 
         {/* Sign Out */}
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
+        <TouchableOpacity onPress={handleSignOut} className="flex-row items-center justify-center gap-2 border-[1.5px] border-crisis/40 py-3.5 rounded-full bg-crisis/5">
           <LogOut size={16} color={Theme.colors.error} />
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Text className="font-sora text-[13.5px] text-crisis">Sign Out</Text>
         </TouchableOpacity>
 
         {/* Invitations Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
+        <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1 shadow-sm">
+          <View className="flex-row items-center gap-2 mb-1">
             <Mail size={18} color={Theme.colors.primary} />
-            <Text style={styles.cardTitle}>Organization Affiliation Invitations</Text>
+            <Text className="font-sora text-[15px] text-onSurface">Organization Affiliation Invitations</Text>
           </View>
 
           {invitationsData && invitationsData.length > 0 ? (
             invitationsData.map((invite: any) => (
-              <View key={invite._id} style={styles.inviteRow}>
-                <View style={styles.inviteInfo}>
-                  <Text style={styles.inviteOrg}>{invite.orgName || 'BITS Pilani Wellness'}</Text>
-                  <Text style={styles.inviteRoleText}>Affiliated Provider Invitation</Text>
+              <View key={invite._id} className="flex-row justify-between items-center py-2 border-b border-[#F0F2F1]">
+                <View className="flex-1">
+                  <Text className="font-sora text-[13px] text-onSurface">{invite.orgName || 'BITS Pilani Wellness'}</Text>
+                  <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">Affiliated Provider Invitation</Text>
                 </View>
-                <View style={styles.inviteButtons}>
+                <View className="flex-row gap-1.5">
                   <TouchableOpacity
                     onPress={() => handleInviteAction(invite._id, invite.orgName, 'decline')}
-                    style={styles.inviteDecline}
+                    className="border border-[#E0E2E0] px-2 py-1 rounded-full"
                   >
-                    <Text style={styles.inviteDeclineText}>Decline</Text>
+                    <Text className="text-onSurfaceVariant font-jakarta-bold text-[10.5px]">Decline</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleInviteAction(invite._id, invite.orgName, 'accept')}
-                    style={styles.inviteAccept}
+                    className="bg-primary px-2 py-1 rounded-full"
                   >
-                    <Text style={styles.inviteAcceptText}>Accept</Text>
+                    <Text className="text-white font-jakarta-bold text-[10.5px]">Accept</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No pending organization invitations.</Text>
+            <Text className="font-jakarta text-[12.5px] text-[#71787D] py-2">No pending organization invitations.</Text>
           )}
         </View>
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 80,
-    gap: Theme.spacing.md,
-  },
-  profileHeaderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 12,
-    elevation: 3,
-    gap: Theme.spacing.md,
-  },
-  avatarRingOuter: {
-    width: 66,
-    height: 66,
-    borderRadius: 33,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary + '30',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarRingInner: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: Theme.colors.primary + '12',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarLetter: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-    fontWeight: '700',
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  headerRole: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    marginTop: 2,
-  },
-  headerSubtext: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 3,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: Theme.spacing.xs,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  credentialDetails: {
-    gap: 8,
-    marginTop: 4,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 2,
-  },
-  infoKey: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.onSurface,
-    width: 100,
-  },
-  infoVal: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-    flex: 1,
-  },
-  activeSubCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-    backgroundColor: Theme.colors.primary + '08',
-    padding: Theme.spacing.md,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '20',
-    marginTop: 4,
-  },
-  subCol: {
-    flex: 1,
-  },
-  subStatusTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.primary,
-  },
-  subStatusDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  expiredSubCard: {
-    backgroundColor: Theme.colors.error + '04',
-    padding: Theme.spacing.md,
-    borderRadius: Theme.radius.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.error + '12',
-    marginTop: 4,
-    gap: 8,
-  },
-  lockRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  expiredSubTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.error,
-  },
-  expiredSubDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-    lineHeight: 17,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  viewPlansBtn: {
-    flex: 1,
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 10,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-  },
-  viewPlansText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12.5,
-    color: '#FFF',
-  },
-  demoActivateBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '40',
-    backgroundColor: '#FFF',
-    paddingVertical: 10,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-  },
-  demoActivateText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12.5,
-    color: Theme.colors.primary,
-  },
-  inviteRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-  },
-  inviteInfo: {
-    flex: 1,
-  },
-  inviteOrg: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  inviteRoleText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-  inviteButtons: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  inviteDecline: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  inviteDeclineText: {
-    color: Theme.colors.onSurfaceVariant,
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10.5,
-  },
-  inviteAccept: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  inviteAcceptText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10.5,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-    paddingVertical: 8,
-  },
-  formContainer: {
-    gap: 12,
-    marginTop: 6,
-  },
-  inputGroup: {
-    gap: 5,
-  },
-  inputLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  textInput: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  saveBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    marginTop: 6,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  saveBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  switchGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceHigh,
-    marginTop: 8,
-  },
-  planStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  planActiveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Theme.colors.primary + '12',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '30',
-  },
-  planActiveText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.primary,
-  },
-  planFreeBadge: {
-    backgroundColor: Theme.colors.surfaceLow,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  planFreeText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-  },
-  planExpiry: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  upgradeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.full,
-    marginBottom: 10,
-  },
-  upgradeBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  planActionRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  planSyncBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1.5,
-    borderColor: Theme.colors.primary + '50',
-    paddingVertical: 10,
-    borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.primary + '08',
-  },
-  planSyncText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  planCancelBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1.5,
-    borderColor: Theme.colors.error + '40',
-    paddingVertical: 10,
-    borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.error + '08',
-  },
-  planCancelText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.error,
-  },
-  signOutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: Theme.colors.error + '40',
-    paddingVertical: 13,
-    borderRadius: Theme.radius.full,
-    backgroundColor: Theme.colors.error + '06',
-  },
-  signOutText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: Theme.colors.error,
-  },
-});
 
 export default TherapistProfileScreen;

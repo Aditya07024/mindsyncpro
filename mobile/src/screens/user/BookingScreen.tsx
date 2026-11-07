@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar as CalendarIcon, Clock, CreditCard, ChevronRight, Gift, Sparkles, Check } from 'lucide-react-native';
+import { Calendar as CalendarIcon, Clock, CreditCard, ChevronRight, Gift, Check } from 'lucide-react-native';
 import API from '../../lib/api';
-
-import { Theme } from '../../theme';
 import { TherapistData } from '../../components/TherapistCard';
 
 const formatSlotDisplay = (slot: string) => {
@@ -115,128 +113,123 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
     return slotTime > now;
   });
 
-    const handleBooking = async () => {
-      if (!selectedSlot) {
-        Alert.alert('Slot Required', 'Please select an hour slot to book your session.');
+  const handleBooking = async () => {
+    if (!selectedSlot) {
+      Alert.alert('Slot Required', 'Please select an hour slot to book your session.');
+      return;
+    }
+
+    const [hours, minutes] = selectedSlot.split(':');
+    const dateTime = new Date(selectedDate);
+    dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+    console.log("[Booking] Initiating booking for slot:", dateTime.toISOString(), "with therapist:", therapistId);
+    setLoading(true);
+    try {
+      // 1. Create booking in backend
+      const bookingPayload = {
+        therapistId: therapistId,
+        slot: dateTime.toISOString(),
+      };
+      console.log("[Booking] Sending booking payload:", JSON.stringify(bookingPayload));
+      const bookingRes = await API.booking.create(bookingPayload);
+      console.log("[Booking] Booking response received:", JSON.stringify(bookingRes, null, 2));
+
+      const bookingId = bookingRes?.booking?.id || bookingRes?.booking?._id || bookingRes?.id || bookingRes?._id;
+      console.log("[Booking] Resolved bookingId:", bookingId);
+
+      if (!bookingId) {
+        console.error("[Booking] Error: No bookingId resolved!");
+        throw new Error("Could not retrieve secure booking ID.");
+      }
+
+      // Check if booking is free
+      const isFreeOrPaid = bookingRes?.booking?.payment?.paid || bookingRes?.booking?.payment?.amount === 0 || bookingRes?.booking?.status === 'confirmed';
+      if (isFreeOrPaid) {
+        setLoading(false);
+        queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+        queryClient.invalidateQueries({ queryKey: ['userDashboardStats'] });
+        queryClient.invalidateQueries({ queryKey: ['userBookings'] });
+        const successMsg = bookingRes?.booking?.usedFreeReferralCredit || hasFreeCredit
+          ? 'Your booking has been confirmed for free using your referral session credit! 🎉'
+          : 'Your booking has been confirmed successfully under your benefits.';
+        Alert.alert('Session Confirmed! 🎉', successMsg);
+        navigation.replace('UserTabs', { screen: 'Bookings' });
         return;
       }
 
-      const [hours, minutes] = selectedSlot.split(':');
-      const dateTime = new Date(selectedDate);
-      dateTime.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+      // 2. Initiate Razorpay Payment Link
+      console.log("[Booking] Initiating payment link for bookingId:", bookingId);
+      const paymentRes = await API.payment.initiate({ bookingId });
+      console.log("[Booking] Payment link response received:", JSON.stringify(paymentRes, null, 2));
+      const shortUrl = paymentRes?.shortUrl;
+      console.log("[Booking] Extracted shortUrl:", shortUrl);
 
-      console.log("[Booking] Initiating booking for slot:", dateTime.toISOString(), "with therapist:", therapistId);
-      setLoading(true);
+      if (!shortUrl) {
+        console.error("[Booking] Error: No shortUrl found in payment link response!");
+        throw new Error("Could not retrieve secure payment URL from Razorpay.");
+      }
+
+      // 3. Open Razorpay hosted page
+      setLoading(false);
+      console.log("[Booking] Launching browser for shortUrl:", shortUrl);
+      await WebBrowser.openBrowserAsync(shortUrl);
+
+      // 4. After browser closes, verify & confirm booking
       try {
-        // 1. Create booking in backend
-        const bookingPayload = {
-          therapistId: therapistId,
-          slot: dateTime.toISOString(),
-        };
-        console.log("[Booking] Sending booking payload:", JSON.stringify(bookingPayload));
-        const bookingRes = await API.booking.create(bookingPayload);
-        console.log("[Booking] Booking response received:", JSON.stringify(bookingRes, null, 2));
+        setLoading(true);
+        console.log("[Booking] Checking payment status...");
+        const statusRes = await API.payment.status(bookingId);
+        console.log("[Booking] Payment status response:", JSON.stringify(statusRes, null, 2));
 
-        const bookingId = bookingRes?.booking?.id || bookingRes?.booking?._id || bookingRes?.id || bookingRes?._id;
-        console.log("[Booking] Resolved bookingId:", bookingId);
-
-        if (!bookingId) {
-          console.error("[Booking] Error: No bookingId resolved!");
-          throw new Error("Could not retrieve secure booking ID.");
-        }
-
-        // Check if booking is free (covered by referral credits, organization benefits, or active plan)
-        const isFreeOrPaid = bookingRes?.booking?.payment?.paid || bookingRes?.booking?.payment?.amount === 0 || bookingRes?.booking?.status === 'confirmed';
-        if (isFreeOrPaid) {
-          setLoading(false);
-          queryClient.invalidateQueries({ queryKey: ['userProfile'] });
-          queryClient.invalidateQueries({ queryKey: ['userDashboardStats'] });
-          queryClient.invalidateQueries({ queryKey: ['userBookings'] });
-          const successMsg = bookingRes?.booking?.usedFreeReferralCredit || hasFreeCredit
-            ? 'Your booking has been confirmed for free using your referral session credit! 🎉'
-            : 'Your booking has been confirmed successfully under your benefits.';
-          Alert.alert('Session Confirmed! 🎉', successMsg);
+        if (statusRes?.paid) {
+          Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
           navigation.replace('UserTabs', { screen: 'Bookings' });
-          return;
-        }
-
-        // 2. Initiate Razorpay Payment Link (returns short_url — hosted Razorpay page)
-        console.log("[Booking] Initiating payment link for bookingId:", bookingId);
-        const paymentRes = await API.payment.initiate({ bookingId });
-        console.log("[Booking] Payment link response received:", JSON.stringify(paymentRes, null, 2));
-        const shortUrl = paymentRes?.shortUrl;
-        console.log("[Booking] Extracted shortUrl:", shortUrl);
-
-        if (!shortUrl) {
-          console.error("[Booking] Error: No shortUrl found in payment link response!");
-          throw new Error("Could not retrieve secure payment URL from Razorpay.");
-        }
-
-        // 3. Open Razorpay hosted page directly in the browser (NO Alert wrapper — avoids async-in-Alert bug)
-        setLoading(false);
-        console.log("[Booking] Launching browser for shortUrl:", shortUrl);
-        await WebBrowser.openBrowserAsync(shortUrl);
-
-        // 4. After browser closes, verify & confirm booking
-        try {
-          setLoading(true);
-          console.log("[Booking] Checking payment status...");
-          const statusRes = await API.payment.status(bookingId);
-          console.log("[Booking] Payment status response:", JSON.stringify(statusRes, null, 2));
-
-          if (statusRes?.paid) {
-            Alert.alert('Session Confirmed!', 'Your booking has been confirmed successfully.');
-            navigation.replace('UserTabs', { screen: 'Bookings' });
-          } else {
-            Alert.alert(
-              'Payment Pending',
-              'We could not verify your payment. Please complete the payment to confirm your booking.',
-              [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
-            );
-          }
-        } catch (verifyErr) {
-          // Booking status check failed
-          console.warn("[Booking] Payment status check failed:", verifyErr);
+        } else {
           Alert.alert(
-            'Booking Registered',
-            'Your payment status is being verified. Please check the Bookings tab for updates.',
+            'Payment Pending',
+            'We could not verify your payment. Please complete the payment to confirm your booking.',
             [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
           );
-        } finally {
-          setLoading(false);
         }
-
-      } catch (err: any) {
-        console.error("[Booking] Booking flow failed with error:", err);
-        if (err instanceof Error) {
-          console.error("[Booking] Error details:", err.name, "|", err.message, "|", err.stack);
-        }
+      } catch (verifyErr) {
+        console.warn("[Booking] Payment status check failed:", verifyErr);
         Alert.alert(
-          'Payment Error',
-          err?.message || 'Could not initiate payment. Please check your connection and try again.',
-          [{ text: 'OK' }]
+          'Booking Registered',
+          'Your payment status is being verified. Please check the Bookings tab for updates.',
+          [{ text: 'OK', onPress: () => navigation.replace('UserTabs', { screen: 'Bookings' }) }]
         );
       } finally {
         setLoading(false);
       }
-    };
 
+    } catch (err: any) {
+      console.error("[Booking] Booking flow failed with error:", err);
+      Alert.alert(
+        'Payment Error',
+        err?.message || 'Could not initiate payment. Please check your connection and try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Book Appointment</Text>
-        <Text style={styles.subtitle}>With {therapist?.name}</Text>
+    <ScrollView className="flex-1 bg-surface" contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 16 }}>
+      <View className="pt-10 mb-1">
+        <Text className="font-sora-bold text-2xl text-primary">Book Appointment</Text>
+        <Text className="font-jakarta-medium text-sm text-[#4E615D] mt-0.5">With {therapist?.name}</Text>
       </View>
 
-      {/* Date Picker Picker */}
-      <View style={styles.section}>
-        <View style={styles.secTitleRow}>
-          <CalendarIcon size={16} color={Theme.colors.primary} />
-          <Text style={styles.secTitle}>Select Date</Text>
+      {/* Date Picker */}
+      <View className="gap-2.5">
+        <View className="flex-row items-center gap-1.5">
+          <CalendarIcon size={16} color="#0D564D" />
+          <Text className="font-sora-semibold text-[15px] text-[#191C1B]">Select Date</Text>
         </View>
         
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dateRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
           {days.map(d => {
             const active = selectedDate === d.dateStr;
             return (
@@ -246,13 +239,10 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
                   setSelectedDate(d.dateStr);
                   setSelectedSlot('');
                 }}
-                style={[
-                  styles.dateBtn,
-                  active && styles.dateBtnActive
-                ]}
+                className={`w-[60px] h-[70px] rounded-2xl justify-center items-center mr-2 gap-1 border ${active ? 'bg-primary border-primary' : 'bg-white border-[#DFEBE7]'}`}
               >
-                <Text style={[styles.dayName, active && styles.textWhite]}>{d.dayName}</Text>
-                <Text style={[styles.dayNum, active && styles.textWhite]}>{d.dayNum}</Text>
+                <Text className={`font-jakarta text-[11px] ${active ? 'text-white' : 'text-[#717875]'}`}>{d.dayName}</Text>
+                <Text className={`font-sora-bold text-base ${active ? 'text-white' : 'text-[#191C1B]'}`}>{d.dayNum}</Text>
               </TouchableOpacity>
             );
           })}
@@ -260,28 +250,27 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
       </View>
 
       {/* Time Slot Picker */}
-      <View style={styles.section}>
-        <View style={styles.secTitleRow}>
-          <Clock size={16} color={Theme.colors.primary} />
-          <Text style={styles.secTitle}>Select Hour</Text>
+      <View className="gap-2.5">
+        <View className="flex-row items-center gap-1.5">
+          <Clock size={16} color="#0D564D" />
+          <Text className="font-sora-semibold text-[15px] text-[#191C1B]">Select Hour</Text>
         </View>
 
         {slotsLoading ? (
-          <ActivityIndicator size="small" color={Theme.colors.primary} />
+          <ActivityIndicator size="small" color="#0D564D" />
         ) : (
-          <View style={styles.slotsGrid}>
+          <View className="flex-row flex-wrap gap-2">
             {slots.map((s: string) => {
               const active = selectedSlot === s;
               return (
                 <TouchableOpacity
                   key={s}
                   onPress={() => setSelectedSlot(s)}
-                  style={[
-                    styles.slotBtn,
-                    active && styles.slotBtnActive
-                  ]}
+                  className={`w-[31%] rounded-2xl py-2.5 items-center border ${active ? 'bg-primary border-primary' : 'bg-white border-[#DFEBE7]'}`}
                 >
-                  <Text style={[styles.slotText, active && styles.textWhite]}>{formatSlotDisplay(s)}</Text>
+                  <Text className={`font-jakarta-medium text-xs ${active ? 'text-white' : 'text-[#191C1B]'}`}>
+                    {formatSlotDisplay(s)}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -289,16 +278,16 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
         )}
       </View>
 
-      {/* Referral / Promo Code Section if not free yet and has not applied referral code */}
+      {/* Referral / Promo Code Section */}
       {!hasFreeCredit && !dbUser?.referredBy && (
-        <View style={styles.promoCard}>
-          <View style={styles.promoHeader}>
-            <Gift size={16} color={Theme.colors.primary} />
-            <Text style={styles.promoTitle}>Have a Referral Code?</Text>
+        <View className="bg-teal-50/70 rounded-3xl p-4 border border-teal-200 gap-2">
+          <View className="flex-row items-center gap-1.5">
+            <Gift size={16} color="#0D564D" />
+            <Text className="font-sora-semibold text-sm text-teal-800">Have a Referral Code?</Text>
           </View>
-          <View style={styles.promoRow}>
+          <View className="flex-row gap-2">
             <TextInput
-              style={styles.promoInput}
+              className="flex-1 h-[42px] bg-white border border-teal-200 rounded-2xl px-3 font-jakarta-medium text-[13px] text-slate-900"
               placeholder="e.g. MMTP-1A2B"
               placeholderTextColor="#94A3B8"
               value={referralInput}
@@ -306,55 +295,55 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
               autoCapitalize="characters"
             />
             <TouchableOpacity
-              style={[styles.promoApplyBtn, (!referralInput.trim() || applyRefMutation.isPending) && styles.promoBtnDisabled]}
+              className={`bg-primary px-4 rounded-2xl justify-center items-center ${(!referralInput.trim() || applyRefMutation.isPending) ? 'opacity-50' : ''}`}
               disabled={!referralInput.trim() || applyRefMutation.isPending}
               onPress={() => applyRefMutation.mutate(referralInput.trim())}
             >
               {applyRefMutation.isPending ? (
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
-                <Text style={styles.promoApplyText}>Apply</Text>
+                <Text className="text-white font-jakarta-bold text-[13px]">Apply</Text>
               )}
             </TouchableOpacity>
           </View>
-          <Text style={styles.promoHint}>Enter a friend's code to make this session 100% free!</Text>
+          <Text className="font-jakarta text-[11px] text-teal-700">Enter a friend's code to make this session 100% free!</Text>
         </View>
       )}
 
       {/* Free Session Active Banner */}
       {hasFreeCredit && (
-        <View style={styles.freeCreditBanner}>
-          <View style={styles.freeCreditHeader}>
+        <View className="bg-emerald-50 rounded-3xl p-4 border-[1.5px] border-emerald-300 gap-1">
+          <View className="flex-row items-center gap-1.5">
             <Gift size={18} color="#047857" />
-            <Text style={styles.freeCreditTitle}>Free Session Credit Active 🎉</Text>
+            <Text className="font-sora-semibold text-[15px] text-emerald-900">Free Session Credit Active 🎉</Text>
           </View>
-          <Text style={styles.freeCreditSub}>
+          <Text className="font-jakarta text-xs text-emerald-700">
             Your referral/membership credit has been applied. This session will be 100% free!
           </Text>
         </View>
       )}
 
       {/* Total panel */}
-      <View style={styles.totalCard}>
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Hourly Session</Text>
-          <Text style={styles.totalPrice}>₹{rawFee}</Text>
+      <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] gap-2">
+        <View className="flex-row justify-between items-center">
+          <Text className="font-jakarta text-[13px] text-[#4E615D]">Hourly Session</Text>
+          <Text className="font-jakarta-bold text-sm text-[#191C1B]">₹{rawFee}</Text>
         </View>
         {hasFreeCredit ? (
-          <View style={styles.totalRow}>
-            <Text style={[styles.totalLabel, { color: '#047857', fontWeight: '600' }]}>Free Session Credit (100% OFF)</Text>
-            <Text style={[styles.totalPrice, { color: '#047857', fontWeight: '700' }]}>-₹{rawFee}</Text>
+          <View className="flex-row justify-between items-center">
+            <Text className="font-jakarta text-[13px] text-emerald-700 font-semibold">Free Session Credit (100% OFF)</Text>
+            <Text className="font-jakarta-bold text-sm text-emerald-700 font-bold">-₹{rawFee}</Text>
           </View>
         ) : (
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Platform Fee</Text>
-            <Text style={styles.totalPrice}>₹0</Text>
+          <View className="flex-row justify-between items-center">
+            <Text className="font-jakarta text-[13px] text-[#4E615D]">Platform Fee</Text>
+            <Text className="font-jakarta-bold text-sm text-[#191C1B]">₹0</Text>
           </View>
         )}
-        <View style={styles.divider} />
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabelBold}>Total Amount</Text>
-          <Text style={[styles.totalPriceBold, hasFreeCredit && { color: '#047857' }]}>
+        <View className="h-[1px] bg-slate-100 my-1" />
+        <View className="flex-row justify-between items-center">
+          <Text className="font-sora-semibold text-[15px] text-[#191C1B]">Total Amount</Text>
+          <Text className={`font-sora-bold text-lg ${hasFreeCredit ? 'text-emerald-700' : 'text-secondary'}`}>
             {hasFreeCredit ? '₹0 (FREE)' : `₹${totalFee}`}
           </Text>
         </View>
@@ -364,7 +353,7 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
       <TouchableOpacity 
         onPress={handleBooking} 
         disabled={loading}
-        style={[styles.payBtn, hasFreeCredit && { backgroundColor: '#059669' }]}
+        className={`flex-row h-[52px] rounded-full justify-center items-center gap-2 ${hasFreeCredit ? 'bg-emerald-600' : 'bg-primary'}`}
       >
         {loading ? (
           <ActivityIndicator color="#FFF" />
@@ -375,7 +364,7 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
             ) : (
               <CreditCard size={18} color="#FFF" />
             )}
-            <Text style={styles.payBtnText}>
+            <Text className="text-white font-sora-semibold text-sm">
               {hasFreeCredit ? 'Confirm Free Session' : 'Proceed to Checkout'}
             </Text>
             <ChevronRight size={16} color="#FFF" />
@@ -386,227 +375,4 @@ export const BookingScreen: React.FC<BookingScreenProps> = ({ navigation, route 
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    padding: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xl,
-    gap: Theme.spacing.md,
-  },
-  header: {
-    paddingTop: 40,
-    marginBottom: Theme.spacing.xs,
-  },
-  title: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 24,
-    color: Theme.colors.primary,
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-    marginTop: 2,
-  },
-  section: {
-    gap: Theme.spacing.sm,
-  },
-  secTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  secTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  dateRow: {
-    flexDirection: 'row',
-  },
-  dateBtn: {
-    width: 60,
-    height: 70,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-    gap: 4,
-  },
-  dateBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  dayName: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  dayNum: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  slotsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Theme.spacing.xs,
-  },
-  slotBtn: {
-    width: '31%',
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingVertical: Theme.spacing.sm,
-    alignItems: 'center',
-  },
-  slotBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  slotText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-  },
-  promoCard: {
-    backgroundColor: '#F0FDFA',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: '#99F6E4',
-    gap: 8,
-  },
-  promoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  promoTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: '#0F766E',
-  },
-  promoRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  promoInput: {
-    flex: 1,
-    height: 42,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#99F6E4',
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    fontSize: 13,
-    fontFamily: Theme.fonts.bodyMedium,
-    color: '#0F172A',
-  },
-  promoApplyBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 16,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  promoBtnDisabled: {
-    opacity: 0.5,
-  },
-  promoApplyText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-  },
-  promoHint: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: '#0D9488',
-  },
-  freeCreditBanner: {
-    backgroundColor: '#ECFDF5',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1.5,
-    borderColor: '#6EE7B7',
-    gap: 4,
-  },
-  freeCreditHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  freeCreditTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: '#065F46',
-  },
-  freeCreditSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#047857',
-  },
-  totalCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 8,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  totalPrice: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: Theme.colors.onSurface,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Theme.colors.surfaceLow,
-    marginVertical: 4,
-  },
-  totalLabelBold: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.onSurface,
-  },
-  totalPriceBold: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.secondary,
-  },
-  payBtn: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.primary,
-    height: 52,
-    borderRadius: Theme.radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  payBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-  },
-  textWhite: {
-    color: '#FFF',
-  },
-});
 export default BookingScreen;

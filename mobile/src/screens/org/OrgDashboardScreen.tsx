@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
   ScrollView,
   TextInput,
@@ -31,50 +30,21 @@ import { StatCard } from '../../components/StatCard';
 import { getNotificationsPreference, handleNotificationToggle } from '../../lib/pushNotifications';
 
 const LockedFeatureOverlay: React.FC<{ title: string; description: string; navigation: any }> = ({ title, description, navigation }) => (
-  <View style={{
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: Theme.radius.xl,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    zIndex: 10,
-  }}>
-    <View style={{
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: '#FFF2F2',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: '#FFCDD2',
-    }}>
+  <View className="absolute inset-0 bg-white/95 rounded-3xl justify-center items-center p-4 border border-[#E0E2E0] z-10">
+    <View className="w-10 h-10 rounded-full bg-[#FFF2F2] justify-center items-center mb-2 border border-[#FFCDD2]">
       <Lock size={18} color={Theme.colors.primary} />
     </View>
-    <Text style={{ fontFamily: Theme.fonts.headline, fontSize: 14, color: Theme.colors.onSurface, textAlign: 'center', marginBottom: 4 }}>
+    <Text className="font-sora text-sm text-onSurface text-center mb-1">
       {title}
     </Text>
-    <Text style={{ fontFamily: Theme.fonts.body, fontSize: 11, color: Theme.colors.textMuted, textAlign: 'center', lineHeight: 14, paddingHorizontal: 12, marginBottom: 12 }}>
+    <Text className="font-jakarta text-[11px] text-[#71787D] text-center leading-3.5 px-3 mb-3">
       {description}
     </Text>
     <TouchableOpacity
       onPress={() => navigation.navigate('Plans', { role: 'org_admin' })}
-      style={{
-        backgroundColor: Theme.colors.primary,
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: Theme.radius.lg,
-      }}
+      className="bg-primary px-3.5 py-2 rounded-2xl"
     >
-      <Text style={{ fontFamily: Theme.fonts.bodyBold, fontSize: 11, color: '#FFF' }}>
+      <Text className="font-jakarta-bold text-[11px] text-white">
         Upgrade to Activate
       </Text>
     </TouchableOpacity>
@@ -162,7 +132,6 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
   const activeMembers = metrics?.activeUsers ?? 0;
   const totalRegistered = metrics?.totalUsers ?? 0;
   const engagementRate = metrics?.engagement ?? 0;
-  const crisisAlerts = metrics?.crisisAlerts ?? 0;
 
   const seatsUsed = totalRegistered;
   const seatsTotal = orgInfoData?.organization?.seats || 100;
@@ -171,7 +140,7 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
   const departments = statsData?.departments || [];
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="BITS Wellness"
         role="org_admin"
@@ -179,37 +148,37 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
       />
 
       {isStatsLoading || isOrgLoading || isSubLoading ? (
-        <View style={styles.loaderContainer}>
+        <View className="flex-1 justify-center items-center gap-3">
           <ActivityIndicator size="large" color={Theme.colors.primary} />
-          <Text style={styles.loaderText}>Fetching workplace metrics from database...</Text>
+          <Text className="font-jakarta text-[13px] text-[#71787D]">Fetching workplace metrics from database...</Text>
         </View>
       ) : !isSubscribed ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: Theme.spacing.margin }}>
-          <View style={styles.barrierContainer}>
-            <View style={styles.lockBadge}>
+        <View className="flex-1 justify-center items-center p-5">
+          <View className="bg-white rounded-3xl p-6 border border-[#E0E2E0] items-center shadow-sm mt-5">
+            <View className="w-12 h-12 rounded-full bg-[#FFF2F2] justify-center items-center mb-4 border border-[#FFCDD2]">
               <Lock size={22} color={Theme.colors.primary} />
             </View>
-            <Text style={styles.barrierTitle}>Corporate Plan Required</Text>
-            <Text style={styles.barrierDesc}>
+            <Text className="font-sora text-lg text-onSurface text-center mb-2">Corporate Plan Required</Text>
+            <Text className="font-jakarta text-[13px] text-[#71787D] text-center leading-[18px] px-4 mb-5">
               As an organization or wellness sponsor, you need an active subscription plan to activate employee wellness seats, link network practitioners, and track collective health metrics.
             </Text>
 
-            <View style={styles.barrierActions}>
+            <View className="w-full items-center">
               <TouchableOpacity
                 onPress={() => navigation.navigate('Plans', { role: 'org_admin' })}
-                style={styles.viewPlansBtn}
+                className="bg-primary px-5 py-3 rounded-2xl"
               >
-                <Text style={styles.viewPlansText}>View Subscription Plans</Text>
+                <Text className="font-jakarta-bold text-[13px] text-white">View Subscription Plans</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerClassName="p-5 pb-16 gap-4">
           {/* Notification Toggle Card */}
-          <View style={styles.notificationCard}>
-            <View style={styles.notificationLeft}>
-              <View style={[styles.notificationIconBox, notificationsEnabled ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+          <View className="flex-row items-center justify-between bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm mb-1">
+            <View className="flex-row items-center gap-3">
+              <View className={`w-[38px] h-[38px] rounded-full justify-center items-center ${notificationsEnabled ? 'bg-primary/10' : 'bg-[#F0F2F1]'}`}>
                 {notificationsEnabled ? (
                   <Bell size={18} color={Theme.colors.primary} />
                 ) : (
@@ -217,8 +186,8 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
                 )}
               </View>
               <View>
-                <Text style={styles.notificationTitle}>Alerts & Notifications</Text>
-                <Text style={styles.notificationDesc}>
+                <Text className="font-sora text-[14.5px] text-onSurface">Alerts & Notifications</Text>
+                <Text className="font-jakarta text-[11.5px] text-[#71787D] mt-0.5">
                   {notificationsEnabled ? 'Instant updates are turned on' : 'Notifications are paused'}
                 </Text>
               </View>
@@ -233,14 +202,14 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
 
           {/* Verification Status Warning if pending */}
           {orgInfoData?.organization?.verificationStatus === 'pending' && (
-            <View style={[styles.notificationCard, { backgroundColor: '#FFFDF5', borderColor: '#FDE68A' }]}>
-              <View style={styles.notificationLeft}>
-                <View style={[styles.notificationIconBox, { backgroundColor: '#FEF3C7' }]}>
+            <View className="flex-row items-center justify-between bg-[#FFFDF5] rounded-3xl p-4 border border-[#FDE68A] shadow-sm mb-1">
+              <View className="flex-row items-center gap-3">
+                <View className="w-[38px] h-[38px] rounded-full justify-center items-center bg-[#FEF3C7]">
                   <Clock size={18} color="#B45309" />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.notificationTitle, { color: '#92400E' }]}>Application Under Review</Text>
-                  <Text style={[styles.notificationDesc, { color: '#B45309' }]}>
+                <View className="flex-1">
+                  <Text className="font-sora text-[14.5px] text-[#92400E]">Application Under Review</Text>
+                  <Text className="font-jakarta text-[11.5px] text-[#B45309] mt-0.5">
                     Your organization domain & verification documents are under review by MyMindSync admin.
                   </Text>
                 </View>
@@ -249,14 +218,14 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
           )}
 
           {/* Member Therapy Fee Policy Toggle Card */}
-          <View style={styles.notificationCard}>
-            <View style={styles.notificationLeft}>
-              <View style={[styles.notificationIconBox, coverMemberFees ? styles.notificationActiveIcon : styles.notificationInactiveIcon]}>
+          <View className="flex-row items-center justify-between bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm mb-1">
+            <View className="flex-row items-center gap-3 flex-1">
+              <View className={`w-[38px] h-[38px] rounded-full justify-center items-center ${coverMemberFees ? 'bg-primary/10' : 'bg-[#F0F2F1]'}`}>
                 <Heart size={18} color={coverMemberFees ? Theme.colors.primary : Theme.colors.outline} />
               </View>
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={styles.notificationTitle}>Cover Member Therapy Fees</Text>
-                <Text style={styles.notificationDesc}>
+              <View className="flex-1 pr-2">
+                <Text className="font-sora text-[14.5px] text-onSurface">Cover Member Therapy Fees</Text>
+                <Text className="font-jakarta text-[11.5px] text-[#71787D] mt-0.5">
                   {coverMemberFees ? 'Free appointments for members with linked therapists' : 'Members pay standard fees for therapists'}
                 </Text>
               </View>
@@ -270,8 +239,8 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
           </View>
 
           {/* Bento Grid Stats */}
-          <View style={{ position: 'relative' }}>
-            <View style={styles.statsGrid}>
+          <View className="relative">
+            <View className="flex-row gap-2">
               <StatCard
                 title="Team Wellness Index"
                 value={`${avgTeamMood} / 10`}
@@ -299,26 +268,26 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
           </View>
 
           {/* Seat Allocation tracker & Invite Form */}
-          <View style={{ position: 'relative' }}>
-            <View style={styles.card}>
-              <Text style={styles.sectionHeader}>Seat Allocation Tracker</Text>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>
-                  <Text style={styles.boldText}>{seatsUsed}</Text> of {seatsTotal} Corporate Seats Filled
+          <View className="relative">
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm">
+              <Text className="font-sora text-base text-onSurface">Seat Allocation Tracker</Text>
+              <View className="flex-row justify-between items-baseline mt-1 mb-1.5">
+                <Text className="font-jakarta text-[13px] text-onSurfaceVariant">
+                  <Text className="font-sora text-onSurface">{seatsUsed}</Text> of {seatsTotal} Corporate Seats Filled
                 </Text>
-                <Text style={styles.progressPercent}>{fillPercent}%</Text>
+                <Text className="font-sora-bold text-sm text-primary">{fillPercent}%</Text>
               </View>
-              <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: `${Math.min(fillPercent, 100)}%` }]} />
+              <View className="h-2 bg-[#F0F2F1] rounded-full overflow-hidden">
+                <View className="h-full bg-primary" style={{ width: `${Math.min(fillPercent, 100)}%` }} />
               </View>
             </View>
 
             {/* Invite Member Form */}
-            <View style={[styles.card, { marginTop: Theme.spacing.sm }]}>
-              <Text style={styles.sectionHeader}>Allocate Seats & Invite Members</Text>
-              <Text style={styles.sectionDesc}>Enter an institutional or company email to allocate a subscription seat:</Text>
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm mt-2">
+              <Text className="font-sora text-base text-onSurface">Allocate Seats & Invite Members</Text>
+              <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 leading-4 mb-3">Enter an institutional or company email to allocate a subscription seat:</Text>
               
-              <View style={styles.inviteForm}>
+              <View className="flex-row gap-2 mt-1">
                 <TextInput
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -326,12 +295,12 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
                   placeholderTextColor={Theme.colors.outline}
                   value={email}
                   onChangeText={setEmail}
-                  style={styles.inviteInput}
+                  className="flex-1 h-12 border border-[#E0E2E0] rounded-2xl px-3 text-sm font-jakarta text-onSurface bg-[#F0F2F1]"
                 />
                 <TouchableOpacity 
                   onPress={handleSendInvite} 
                   disabled={loading}
-                  style={styles.inviteBtn}
+                  className="w-12 h-12 rounded-2xl bg-primary justify-center items-center"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FFF" />
@@ -351,41 +320,41 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
           </View>
 
           {/* Department breakdown Index */}
-          <View style={{ position: 'relative' }}>
-            <View style={styles.card}>
-              <View style={styles.chartHeader}>
+          <View className="relative">
+            <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] shadow-sm">
+              <View className="flex-row items-center gap-1.5 mb-1">
                 <Building size={18} color={Theme.colors.primary} />
-                <Text style={styles.sectionHeader}>Institutional Department Wellness</Text>
+                <Text className="font-sora text-base text-onSurface">Institutional Department Wellness</Text>
               </View>
-              <Text style={styles.sectionDesc}>
+              <Text className="font-jakarta text-xs text-[#71787D] mt-0.5 leading-4 mb-3">
                 Real-time wellness averages aggregated across corporate division registers:
               </Text>
 
               {departments.length === 0 ? (
-                <View style={styles.emptyContainer}>
+                <View className="items-center py-5 gap-1.5">
                   <HelpCircle size={28} color={Theme.colors.outline} />
-                  <Text style={styles.emptyText}>No department logs recorded yet.</Text>
+                  <Text className="font-jakarta text-xs text-[#71787D]">No department logs recorded yet.</Text>
                 </View>
               ) : (
-                <View style={styles.departmentsList}>
+                <View className="gap-2.5 mt-1">
                   {departments.map((dept: any) => (
-                    <View key={dept.id} style={styles.deptCard}>
-                      <View style={styles.deptMainRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.deptName}>{dept.name}</Text>
-                          <Text style={styles.deptSub}>
+                    <View key={dept.id} className="bg-[#F0F2F1] border border-[#E0E2E0] rounded-2xl p-3 gap-1.5">
+                      <View className="flex-row justify-between items-center">
+                        <View className="flex-1">
+                          <Text className="font-sora text-sm text-onSurface">{dept.name}</Text>
+                          <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">
                             {dept.members} Member(s) · {dept.sessions} Session(s)
                           </Text>
                         </View>
-                        <View style={styles.moodBadge}>
-                          <Text style={styles.moodBadgeVal}>{dept.avgMood} / 10</Text>
+                        <View className="bg-[#E6F4F1] px-2 py-1 rounded-md">
+                          <Text className="font-jakarta-bold text-xs text-primary">{dept.avgMood} / 10</Text>
                         </View>
                       </View>
 
                       {dept.burnoutRisk && (
-                        <View style={styles.burnoutAlert}>
+                        <View className="flex-row items-center bg-[#FFEBEE] border border-[#FFCDD2] px-2 py-1.5 rounded-md gap-1.5 mt-0.5">
                           <ShieldAlert size={12} color="#D32F2F" />
-                          <Text style={styles.burnoutText}>Warning: Low Mood (Burnout Risk)</Text>
+                          <Text className="font-jakarta-bold text-[10px] text-crisis">Warning: Low Mood (Burnout Risk)</Text>
                         </View>
                       )}
                     </View>
@@ -406,286 +375,5 @@ export const OrgDashboardScreen: React.FC<{ navigation?: any }> = ({ navigation 
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12
-  },
-  loaderText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.outline
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 60,
-    gap: Theme.spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-    lineHeight: 16,
-    marginBottom: Theme.spacing.sm,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginTop: Theme.spacing.xs,
-    marginBottom: 6,
-  },
-  progressLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  boldText: {
-    fontFamily: Theme.fonts.headline,
-    color: Theme.colors.onSurface,
-  },
-  progressPercent: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 14,
-    color: Theme.colors.primary,
-  },
-  progressBarBg: {
-    height: 8,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: Theme.colors.primary,
-  },
-  inviteForm: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  inviteInput: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  inviteBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    gap: 6
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.outline
-  },
-  departmentsList: {
-    gap: 10,
-    marginTop: Theme.spacing.xs,
-  },
-  deptCard: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: 12,
-    gap: 6
-  },
-  deptMainRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  deptName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurface
-  },
-  deptSub: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.outline,
-    marginTop: 2
-  },
-  moodBadge: {
-    backgroundColor: '#E6F4F1',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6
-  },
-  moodBadgeVal: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.primary
-  },
-  burnoutAlert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFEBEE',
-    borderWidth: 1,
-    borderColor: '#FFCDD2',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    gap: 6,
-    marginTop: 2
-  },
-  burnoutText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: '#D32F2F'
-  },
-  barrierContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    alignItems: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    marginTop: 20,
-  },
-  lockBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#FFF2F2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FFCDD2',
-  },
-  barrierTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  barrierDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 16,
-    marginBottom: 20,
-  },
-  barrierActions: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  viewPlansBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: Theme.radius.lg,
-  },
-  viewPlansText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  notificationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    marginBottom: Theme.spacing.xs,
-  },
-  notificationLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  notificationIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationActiveIcon: {
-    backgroundColor: Theme.colors.primary + '12',
-  },
-  notificationInactiveIcon: {
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  notificationTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14.5,
-    color: Theme.colors.onSurface,
-  },
-  notificationDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11.5,
-    color: Theme.colors.textMuted,
-    marginTop: 1,
-  },
-});
 
 export default OrgDashboardScreen;

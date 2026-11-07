@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { User, Briefcase, Award, ShieldAlert, ChevronRight } from 'lucide-react-native';
-import { Theme } from '../../theme';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { User, Briefcase, Award, ChevronRight } from 'lucide-react-native';
 import { PasswordModal } from '../../components/PasswordModal';
 
 interface LoginScreenProps {
@@ -28,33 +27,38 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Designed For Every Mind</Text>
-        <Text style={styles.subtitle}>{"One Platform.\nMultiple Wellness Experiences."}</Text>
-        <Text style={styles.description}>
+    <ScrollView 
+      className="flex-1 bg-surface" 
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16, paddingTop: 42, paddingBottom: 52 }}
+    >
+      <View className="items-center mb-4 text-center">
+        <Text className="font-sora-bold text-2xl text-primary text-center mb-1">Designed For Every Mind</Text>
+        <Text className="font-sora text-lg text-[#191C1B] text-center mb-2 leading-6">{"One Platform.\nMultiple Wellness Experiences."}</Text>
+        <Text className="font-jakarta text-[13px] text-[#4E615D] text-center leading-[18px] px-1">
           Whether you need emotional support, therapy tools, organisation wellness insights, or platform administration — MyMindTherapyFriend adapts to your role beautifully.
         </Text>
       </View>
 
-      <View style={styles.cardList}>
+      <View className="gap-2.5 mt-1">
         {/* User Card */}
         {!hideUser && (
           <TouchableOpacity 
             onPress={() => handleRoleSelect('user')} 
-            style={styles.card}
+            className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm"
             activeOpacity={0.9}
           >
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconCircle, { backgroundColor: Theme.colors.primaryContainer + '15' }]}>
-                <User size={22} color={Theme.colors.primaryContainer} />
+            <View className="flex-row items-center gap-2.5 mb-1.5">
+              <View className="w-10 h-10 rounded-2xl justify-center items-center bg-primary/10">
+                <User size={22} color="#0D564D" />
               </View>
-              <Text style={styles.cardName}>For Patient/User</Text>
+              <Text className="font-sora-semibold text-base text-[#191C1B] flex-1">For Patient/User</Text>
             </View>
-            <Text style={styles.cardDesc}>For people: Chat with AI, use mood tools, and book real therapists</Text>
-            <View style={styles.enterPortalBtn}>
-              <Text style={styles.enterPortalText}>Enter Portal</Text>
-              <ChevronRight size={14} color={Theme.colors.primary} />
+            <Text className="font-jakarta text-[12.5px] text-[#717875] leading-[17px] pl-1">
+              For people: Chat with AI, use mood tools, and book real therapists
+            </Text>
+            <View className="flex-row items-center gap-1 bg-primary/10 py-1.5 px-3 rounded-full self-end mt-1">
+              <Text className="font-sora-semibold text-xs text-primary">Enter Portal</Text>
+              <ChevronRight size={14} color="#0D564D" />
             </View>
           </TouchableOpacity>
         )}
@@ -62,59 +66,44 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
         {/* Therapist Card */}
         <TouchableOpacity 
           onPress={() => handleRoleSelect('therapist')} 
-          style={styles.card}
+          className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm"
           activeOpacity={0.9}
         >
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: Theme.colors.secondaryContainer + '20' }]}>
-              <Briefcase size={22} color={Theme.colors.secondary} />
+          <View className="flex-row items-center gap-2.5 mb-1.5">
+            <View className="w-10 h-10 rounded-2xl justify-center items-center bg-secondary/15">
+              <Briefcase size={22} color="#9D4223" />
             </View>
-            <Text style={styles.cardName}>Sign in for Therapist</Text>
+            <Text className="font-sora-semibold text-base text-[#191C1B] flex-1">Sign in for Therapist</Text>
           </View>
-          <Text style={styles.cardDesc}>Sign in for therapists: Manage client bookings, read notes, and do video calls</Text>
-          <View style={[styles.enterPortalBtn, styles.therapistEnterPortalBtn]}>
-            <Text style={[styles.enterPortalText, styles.therapistEnterPortalText]}>Enter Portal</Text>
-            <ChevronRight size={14} color={Theme.colors.secondary} />
+          <Text className="font-jakarta text-[12.5px] text-[#717875] leading-[17px] pl-1">
+            Sign in for therapists: Manage client bookings, read notes, and do video calls
+          </Text>
+          <View className="flex-row items-center gap-1 bg-secondary/15 py-1.5 px-3 rounded-full self-end mt-1">
+            <Text className="font-sora-semibold text-xs text-secondary">Enter Portal</Text>
+            <ChevronRight size={14} color="#9D4223" />
           </View>
         </TouchableOpacity>
 
         {/* Org Admin Card */}
         <TouchableOpacity 
           onPress={() => handleRoleSelect('org_admin')} 
-          style={styles.card}
+          className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm"
           activeOpacity={0.9}
         >
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: Theme.colors.gold + '20' }]}>
-              <Award size={22} color={Theme.colors.tertiary} />
+          <View className="flex-row items-center gap-2.5 mb-1.5">
+            <View className="w-10 h-10 rounded-2xl justify-center items-center bg-amber-500/15">
+              <Award size={22} color="#D97706" />
             </View>
-            <Text style={styles.cardName}>Organisation Admin</Text>
+            <Text className="font-sora-semibold text-base text-[#191C1B] flex-1">Organisation Admin</Text>
           </View>
-          <Text style={styles.cardDesc}>Anonymous team wellness analytics, seat management</Text>
-          <View style={[styles.enterPortalBtn, styles.orgEnterPortalBtn]}>
-            <Text style={[styles.enterPortalText, styles.orgEnterPortalText]}>Enter Portal</Text>
-            <ChevronRight size={14} color={Theme.colors.gold} />
+          <Text className="font-jakarta text-[12.5px] text-[#717875] leading-[17px] pl-1">
+            Anonymous team wellness analytics, seat management
+          </Text>
+          <View className="flex-row items-center gap-1 bg-amber-500/15 py-1.5 px-3 rounded-full self-end mt-1">
+            <Text className="font-sora-semibold text-xs text-amber-700">Enter Portal</Text>
+            <ChevronRight size={14} color="#D97706" />
           </View>
         </TouchableOpacity>
-
-        {/* Super Admin Card */}
-        {/* <TouchableOpacity 
-          onPress={() => handleRoleSelect('super_admin')} 
-          style={[styles.card, styles.adminCard]}
-          activeOpacity={0.9}
-        >
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: Theme.colors.errorContainer + '30' }]}>
-              <ShieldAlert size={22} color={Theme.colors.error} />
-            </View>
-            <Text style={[styles.cardName, styles.adminText]}>Super Admin</Text>
-          </View>
-          <Text style={styles.cardDesc}>Ops dashboard, therapist verification, platform analytics</Text>
-          <View style={[styles.enterPortalBtn, styles.adminEnterPortalBtn]}>
-            <Text style={[styles.enterPortalText, styles.adminEnterPortalText]}>Enter Portal</Text>
-            <ChevronRight size={14} color={Theme.colors.error} />
-          </View>
-        </TouchableOpacity> */}
       </View>
 
       <PasswordModal
@@ -125,130 +114,5 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation, route }) =
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: Theme.spacing.margin,
-    paddingTop: Theme.spacing.xl + 10,
-    paddingBottom: Theme.spacing.xl + 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Theme.spacing.md,
-    textAlign: 'center',
-  },
-  title: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.xs,
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.sm,
-    lineHeight: 24,
-  },
-  description: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: Theme.spacing.xs,
-  },
-  cardList: {
-    gap: Theme.spacing.sm,
-    marginTop: Theme.spacing.xs,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  adminCard: {
-    borderColor: Theme.colors.errorContainer,
-    borderWidth: 1.5,
-  },
-  adminText: {
-    color: Theme.colors.error,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-    marginBottom: 6,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: Theme.radius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-    flex: 1,
-  },
-  cardDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: Theme.colors.textMuted,
-    lineHeight: 17,
-    paddingLeft: 4,
-  },
-  enterPortalBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Theme.colors.primary + '12',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: Theme.radius.full,
-    alignSelf: 'flex-end',
-    marginTop: Theme.spacing.xs,
-  },
-  enterPortalText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 12,
-    color: Theme.colors.primary,
-  },
-  therapistEnterPortalBtn: {
-    backgroundColor: Theme.colors.secondary + '12',
-  },
-  therapistEnterPortalText: {
-    color: Theme.colors.secondary,
-  },
-  orgEnterPortalBtn: {
-    backgroundColor: Theme.colors.gold + '15',
-  },
-  orgEnterPortalText: {
-    color: Theme.colors.tertiary,
-  },
-  adminEnterPortalBtn: {
-    backgroundColor: Theme.colors.error + '12',
-  },
-  adminEnterPortalText: {
-    color: Theme.colors.error,
-  },
-});
 
 export default LoginScreen;

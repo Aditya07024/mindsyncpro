@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, Modal, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator, Modal, ScrollView } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Video, Calendar, Clock, XCircle, ShieldAlert, Pill } from 'lucide-react-native';
+import { Video, Calendar, Clock, Pill } from 'lucide-react-native';
 import * as WebBrowser from 'expo-web-browser';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 
 interface Booking {
   id?: string;
@@ -40,7 +39,7 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [selectedPrescription, setSelectedPrescription] = useState<Booking['prescription'] | null>(null);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
-  // Query booked sessions (auto-refreshes every 5 minutes from backend)
+  // Query booked sessions
   const { data: bookingsList, isLoading } = useQuery({
     queryKey: ['userBookings'],
     queryFn: () => API.booking.getUserBookings(),
@@ -68,22 +67,9 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
       queryClient.invalidateQueries({ queryKey: ['userBookings'] });
     },
     onError: () => {
-      // Simulate cancel in offline mode
       Alert.alert('Session Cancelled', 'Booking updated successfully.');
     }
   });
-
-  const handleCancel = (id: string) => {
-    if (!id) return;
-    Alert.alert(
-      'Cancel Session',
-      'Are you sure you want to cancel this therapy session? Refund policies will apply.',
-      [
-        { text: 'No', style: 'cancel' },
-        { text: 'Yes, Cancel', style: 'destructive', onPress: () => cancelMutation.mutate(id) }
-      ]
-    );
-  };
 
   const handleLaunchVideo = (booking: Booking) => {
     const bookingId = booking.id || booking._id;
@@ -96,65 +82,63 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
   const pastBookings = bookings.filter(b => b.status === 'cancelled' || b.status === 'completed');
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Sessions</Text>
-        <Text style={styles.subtitle}>Manage your upcoming and past therapy sessions</Text>
+    <View className="flex-1 bg-surface">
+      <View className="px-4 pt-12 pb-2 bg-white border-b border-slate-100">
+        <Text className="font-sora-bold text-2xl text-primary">Your Sessions</Text>
+        <Text className="font-jakarta text-[13px] text-[#4E615D] mt-0.5">Manage your upcoming and past therapy sessions</Text>
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabRow}>
+      <View className="flex-row bg-white border-b border-slate-100">
         <TouchableOpacity 
           onPress={() => setActiveTab('upcoming')}
-          style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
+          className={`flex-1 py-3.5 items-center border-b-2 ${activeTab === 'upcoming' ? 'border-primary' : 'border-transparent'}`}
         >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>Upcoming</Text>
+          <Text className={`font-jakarta-bold text-[13px] ${activeTab === 'upcoming' ? 'text-primary' : 'text-slate-400'}`}>Upcoming</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setActiveTab('past')}
-          style={[styles.tab, activeTab === 'past' && styles.tabActive]}
+          className={`flex-1 py-3.5 items-center border-b-2 ${activeTab === 'past' ? 'border-primary' : 'border-transparent'}`}
         >
-          <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>History</Text>
+          <Text className={`font-jakarta-bold text-[13px] ${activeTab === 'past' ? 'text-primary' : 'text-slate-400'}`}>History</Text>
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
-        <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
+        <ActivityIndicator size="large" color="#0D564D" className="mt-8" />
       ) : (
         <Animated.FlatList
           data={activeTab === 'upcoming' ? upcomingBookings : pastBookings}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           keyExtractor={item => item.id || item._id || Math.random().toString()}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 110 }}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.cardHead}>
-                <View style={styles.cardHeadLeft}>
-                  <Text style={styles.therapistName} numberOfLines={1}>
+            <View className="bg-white rounded-3xl p-4 border border-[#DFEBE7] shadow-sm">
+              <View className="flex-row justify-between items-start">
+                <View className="flex-1 mr-1.5">
+                  <Text className="font-sora-semibold text-base text-[#191C1B]" numberOfLines={1}>
                     {item.therapistName || (typeof item.therapistId === 'object' ? item.therapistId?.name : '') || 'Vetted Therapist'}
                   </Text>
-                  <View style={styles.timeRow}>
-                    <Calendar size={14} color={Theme.colors.textMuted} />
-                    <Text style={styles.timeText}>{item.slot}</Text>
+                  <View className="flex-row items-center gap-1 mt-1">
+                    <Calendar size={14} color="#717875" />
+                    <Text className="font-jakarta text-xs text-slate-500">{item.slot}</Text>
                   </View>
                 </View>
-                <View style={[
-                  styles.statusBadge,
-                  item.status === 'confirmed' || item.status === 'completed' ? styles.badgeConfirmed :
-                  item.status === 'pending_payment' ? styles.badgePendingPayment :
-                  styles.badgePending
-                ]}>
+                <View className={`px-2 py-0.5 rounded self-start flex-shrink max-w-[45%] ${
+                  item.status === 'confirmed' || item.status === 'completed' ? 'bg-emerald-500/10' :
+                  item.status === 'pending_payment' ? 'bg-amber-500/10' :
+                  'bg-slate-100'
+                }`}>
                   <Text
                     numberOfLines={1}
                     adjustsFontSizeToFit
                     minimumFontScale={0.8}
-                    style={[
-                      styles.statusText,
-                      item.status === 'confirmed' || item.status === 'completed' ? styles.textConfirmed :
-                      item.status === 'pending_payment' ? styles.textPendingPayment :
-                      styles.textPending
-                    ]}
+                    className={`font-jakarta-bold text-[9px] tracking-tight ${
+                      item.status === 'confirmed' || item.status === 'completed' ? 'text-emerald-600' :
+                      item.status === 'pending_payment' ? 'text-amber-800' :
+                      'text-slate-400'
+                    }`}
                   >
                     {item.status === 'pending_payment' ? 'PAYMENT PENDING' : item.status.toUpperCase()}
                   </Text>
@@ -162,7 +146,7 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
               </View>
 
               {activeTab === 'upcoming' && (
-                <View style={styles.cardActions}>
+                <View className="flex-row justify-end items-center gap-2.5 border-t border-slate-100 pt-2.5 mt-2.5">
                   {item.status === 'pending_payment' ? (
                     <TouchableOpacity 
                       onPress={async () => {
@@ -202,9 +186,9 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
                           Alert.alert('Error', err.message || 'Could not initiate payment.');
                         }
                       }}
-                      style={[styles.videoBtn, { backgroundColor: '#E65100' }]}
+                      className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-amber-800"
                     >
-                      <Text style={styles.videoBtnText}>Complete Payment</Text>
+                      <Text className="text-white font-jakarta-bold text-xs">Complete Payment</Text>
                     </TouchableOpacity>
                   ) : (() => {
                     const slotTime = new Date(item.slot).getTime();
@@ -214,8 +198,8 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
 
                     if (isExpired) {
                       return (
-                        <View style={[styles.videoBtn, { backgroundColor: Theme.colors.surfaceHigh }]}>
-                          <Text style={[styles.videoBtnText, { color: Theme.colors.textMuted }]}>Session Completed</Text>
+                        <View className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-slate-200">
+                          <Text className="font-jakarta-bold text-xs text-slate-500">Session Completed</Text>
                         </View>
                       );
                     }
@@ -224,10 +208,10 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
                       return (
                         <TouchableOpacity 
                           onPress={() => Alert.alert('Session Scheduled', `Your meeting window opens at the scheduled time (${item.slot}) and stays open for 1 hour.`)}
-                          style={[styles.videoBtn, { backgroundColor: Theme.colors.secondary + '40' }]}
+                          className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-amber-100"
                         >
-                          <Clock size={16} color={Theme.colors.onSurface} />
-                          <Text style={[styles.videoBtnText, { color: Theme.colors.onSurface }]}>Session Scheduled</Text>
+                          <Clock size={16} color="#191C1B" />
+                          <Text className="font-jakarta-bold text-xs text-[#191C1B]">Session Scheduled</Text>
                         </TouchableOpacity>
                       );
                     }
@@ -235,10 +219,10 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
                     return (
                       <TouchableOpacity 
                         onPress={() => handleLaunchVideo(item)}
-                        style={[styles.videoBtn, { backgroundColor: Theme.colors.primary }]}
+                        className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-primary"
                       >
                         <Video size={16} color="#FFF" />
-                        <Text style={styles.videoBtnText}>Join Video Session</Text>
+                        <Text className="text-white font-jakarta-bold text-xs">Join Video Session</Text>
                       </TouchableOpacity>
                     );
                   })()}
@@ -246,24 +230,24 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
               )}
 
               {(activeTab === 'past' || item.status === 'completed') && item.prescription && (item.prescription.notes || (item.prescription.medicines && item.prescription.medicines.length > 0)) && (
-                <View style={styles.cardActions}>
+                <View className="flex-row justify-end items-center gap-2.5 border-t border-slate-100 pt-2.5 mt-2.5">
                   <TouchableOpacity 
                     onPress={() => {
                       setSelectedPrescription(item.prescription);
                       setShowPrescriptionModal(true);
                     }}
-                    style={[styles.videoBtn, { backgroundColor: Theme.colors.secondary }]}
+                    className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-secondary"
                   >
-                    <Pill size={16} color="#FFF" style={{ marginRight: 4 }} />
-                    <Text style={styles.videoBtnText}>View Prescription</Text>
+                    <Pill size={16} color="#FFF" className="mr-1" />
+                    <Text className="text-white font-jakarta-bold text-xs">View Prescription</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </View>
           )}
           ListEmptyComponent={
-            <View style={styles.emptyView}>
-              <Text style={styles.emptyText}>No appointments listed here.</Text>
+            <View className="items-center pt-8">
+              <Text className="font-jakarta text-sm text-[#717875]">No appointments listed here.</Text>
             </View>
           }
         />
@@ -276,40 +260,40 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
         animationType="slide"
         onRequestClose={() => setShowPrescriptionModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Session Prescription</Text>
-              <TouchableOpacity onPress={() => setShowPrescriptionModal(false)} style={styles.closeBtn}>
-                <Text style={styles.closeBtnText}>Close</Text>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-3xl max-h-[80%] p-6">
+            <View className="flex-row justify-between items-center border-b border-slate-100 pb-2 mb-4">
+              <Text className="font-sora-bold text-lg text-primary">Session Prescription</Text>
+              <TouchableOpacity onPress={() => setShowPrescriptionModal(false)} className="py-1 px-2">
+                <Text className="font-jakarta-bold text-sm text-primary">Close</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.modalBody}>
+            <ScrollView className="mb-6">
               {selectedPrescription?.medicines && selectedPrescription.medicines.length > 0 ? (
                 selectedPrescription.medicines.map((med, index) => (
-                  <View key={index} style={styles.medCard}>
-                    <Text style={styles.medName}>{med.name}</Text>
-                    <View style={styles.medDetailRow}>
-                      <Text style={styles.medDetailLabel}>Dosage:</Text>
-                      <Text style={styles.medDetailVal}>{med.dosage}</Text>
+                  <View key={index} className="bg-slate-50 rounded-xl p-3.5 mb-2.5 border border-slate-200">
+                    <Text className="font-sora-semibold text-[15px] text-primary mb-1">{med.name}</Text>
+                    <View className="flex-row mb-0.5">
+                      <Text className="font-jakarta-medium text-[13px] text-slate-500 w-[90px]">Dosage:</Text>
+                      <Text className="font-jakarta text-[13px] text-[#191C1B]">{med.dosage}</Text>
                     </View>
-                    <View style={styles.medDetailRow}>
-                      <Text style={styles.medDetailLabel}>Frequency:</Text>
-                      <Text style={styles.medDetailVal}>{med.frequency}</Text>
+                    <View className="flex-row mb-0.5">
+                      <Text className="font-jakarta-medium text-[13px] text-slate-500 w-[90px]">Frequency:</Text>
+                      <Text className="font-jakarta text-[13px] text-[#191C1B]">{med.frequency}</Text>
                     </View>
-                    <View style={styles.medDetailRow}>
-                      <Text style={styles.medDetailLabel}>Duration:</Text>
-                      <Text style={styles.medDetailVal}>{med.duration}</Text>
+                    <View className="flex-row mb-0.5">
+                      <Text className="font-jakarta-medium text-[13px] text-slate-500 w-[90px]">Duration:</Text>
+                      <Text className="font-jakarta text-[13px] text-[#191C1B]">{med.duration}</Text>
                     </View>
                   </View>
                 ))
               ) : (
-                <Text style={styles.noMedsText}>No specific medicines prescribed.</Text>
+                <Text className="font-jakarta text-[13px] text-slate-500 text-center my-4">No specific medicines prescribed.</Text>
               )}
               {selectedPrescription?.notes ? (
-                <View style={styles.notesSection}>
-                  <Text style={styles.notesTitle}>Therapist's Notes / Instructions</Text>
-                  <Text style={styles.notesText}>{selectedPrescription.notes}</Text>
+                <View className="mt-4 p-3.5 bg-amber-50 rounded-xl border border-amber-200">
+                  <Text className="font-sora-semibold text-sm text-amber-800 mb-1">Therapist's Notes / Instructions</Text>
+                  <Text className="font-jakarta text-[13px] text-amber-950 leading-[18px]">{selectedPrescription.notes}</Text>
                 </View>
               ) : null}
             </ScrollView>
@@ -320,270 +304,4 @@ export const UserBookingsScreen: React.FC<{ navigation: any }> = ({ navigation }
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: Theme.spacing.margin,
-    paddingTop: 50,
-    paddingBottom: Theme.spacing.sm,
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-  },
-  title: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 24,
-    color: Theme.colors.primary,
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    marginTop: 2,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: Theme.colors.primary,
-  },
-  tabText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-  },
-  tabTextActive: {
-    color: Theme.colors.primary,
-  },
-  listContent: {
-    padding: Theme.spacing.margin,
-    gap: Theme.spacing.sm,
-  },
-  loader: {
-    marginTop: Theme.spacing.xl,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  cardHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  therapistName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  timeText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-  },
-  cardHeadLeft: {
-    flex: 1,
-    marginRight: 6,
-  },
-  statusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: Theme.radius.sm,
-    alignSelf: 'flex-start',
-    flexShrink: 1,
-    maxWidth: '45%',
-  },
-  badgeConfirmed: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  badgePending: {
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  statusText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    letterSpacing: 0.2,
-  },
-  textConfirmed: {
-    color: '#4CAF50',
-  },
-  textPending: {
-    color: Theme.colors.outline,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.surfaceLow,
-    paddingTop: Theme.spacing.sm,
-    marginTop: Theme.spacing.sm,
-  },
-  cancelBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: Theme.colors.errorContainer,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  cancelBtnText: {
-    color: Theme.colors.error,
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-  },
-  videoBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: Theme.radius.full,
-  },
-  videoBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-  },
-  emptyView: {
-    alignItems: 'center',
-    paddingTop: Theme.spacing.xl,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.textMuted,
-  },
-  badgePendingPayment: {
-    backgroundColor: 'rgba(230, 81, 0, 0.1)',
-  },
-  textPendingPayment: {
-    color: '#E65100',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: Theme.radius.xl,
-    borderTopRightRadius: Theme.radius.xl,
-    maxHeight: '80%',
-    padding: Theme.spacing.lg,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceLow,
-    paddingBottom: Theme.spacing.sm,
-    marginBottom: Theme.spacing.md,
-  },
-  modalTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 18,
-    color: Theme.colors.primary,
-  },
-  closeBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  closeBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 14,
-    color: Theme.colors.primary,
-  },
-  modalBody: {
-    marginBottom: Theme.spacing.lg,
-  },
-  medCard: {
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.md,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  medName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: Theme.colors.primary,
-    marginBottom: Theme.spacing.xs,
-  },
-  medDetailRow: {
-    flexDirection: 'row',
-    marginBottom: 2,
-  },
-  medDetailLabel: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-    width: 90,
-  },
-  medDetailVal: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  noMedsText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    marginVertical: Theme.spacing.md,
-  },
-  notesSection: {
-    marginTop: Theme.spacing.md,
-    padding: Theme.spacing.md,
-    backgroundColor: '#FFF8E1',
-    borderRadius: Theme.radius.md,
-    borderWidth: 1,
-    borderColor: '#FFE082',
-  },
-  notesTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: '#F57F17',
-    marginBottom: Theme.spacing.xs,
-  },
-  notesText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: '#5D4037',
-    lineHeight: 18,
-  },
-});
 export default UserBookingsScreen;

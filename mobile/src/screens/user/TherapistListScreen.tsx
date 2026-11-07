@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
-  FlatList,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -11,9 +9,8 @@ import {
   Modal,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Search, SlidersHorizontal, Star, X, ShieldCheck } from 'lucide-react-native';
+import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { TherapistCard, TherapistData } from '../../components/TherapistCard';
 import { IntroVideoPlayer } from '../../components/IntroVideoPlayer';
 
@@ -46,7 +43,6 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
     'Others',
   ];
   const languageFilters = ['All', 'English', 'Hindi', 'Spanish', 'French'];
-  const genderFilters = ['All', 'Male', 'Female', 'Other'];
 
   // Query backend therapists
   const { data: remoteTherapists, isLoading } = useQuery({
@@ -93,60 +89,60 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
   });
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       {/* Marketplace Search Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Find Your Counsellor</Text>
-        <Text style={styles.subtitle}>Book private sessions with vetted human professionals</Text>
+      <View className="bg-white px-4 pt-12 pb-2 border-b border-slate-100">
+        <Text className="font-sora-bold text-2xl text-primary">Find Your Counsellor</Text>
+        <Text className="font-jakarta text-[13px] text-[#4E615D] mt-0.5">Book private sessions with vetted human professionals</Text>
 
         {/* Input Bar */}
-        <View style={styles.searchBar}>
-          <Search size={18} color={Theme.colors.outline} />
+        <View className="flex-row items-center border border-[#DFEBE7] rounded-full px-3 h-12 bg-white mt-2 gap-2">
+          <Search size={18} color="#717875" />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search specialties, names, languages…"
-            placeholderTextColor={Theme.colors.outline}
-            style={styles.searchInput}
+            placeholderTextColor="#A1A1AA"
+            className="flex-1 text-sm font-jakarta text-[#191C1B]"
           />
           <TouchableOpacity
-            style={styles.filterBtn}
+            className="w-8 h-8 justify-center items-center"
             onPress={() => setShowFilters(!showFilters)}
           >
-            <SlidersHorizontal size={18} color={Theme.colors.primary} />
+            <SlidersHorizontal size={18} color="#0D564D" />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Specialty Filter Chips Row */}
       {showFilters && (
-        <View style={styles.filtersWrapper}>
-          <View style={styles.advancedFilters}>
+        <View className="bg-white pb-2.5 border-b border-slate-200">
+          <View className="px-4 py-2 gap-2">
             <TextInput
               placeholder="Filter by city (e.g. Mumbai)"
               placeholderTextColor="#94A3B8"
               value={city}
               onChangeText={setCity}
-              style={styles.filterInput}
+              className="h-[42px] border border-[#DFEBE7] rounded-xl px-3 bg-slate-50 text-[#191C1B] text-[13px]"
             />
             <TextInput
               placeholder="Filter by state (e.g. Maharashtra)"
               placeholderTextColor="#94A3B8"
               value={state}
               onChangeText={setState}
-              style={styles.filterInput}
+              className="h-[42px] border border-[#DFEBE7] rounded-xl px-3 bg-slate-50 text-[#191C1B] text-[13px]"
             />
           </View>
 
-          <View style={{ marginVertical: 4 }}>
+          <View className="my-1">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
               {languageFilters.map((language) => (
                 <TouchableOpacity
                   key={language}
                   onPress={() => setSelectedLanguage(language)}
-                  style={[styles.chip, selectedLanguage === language && styles.chipActive]}
+                  className={`px-3.5 py-1.5 rounded-full border ${selectedLanguage === language ? 'bg-primary border-primary' : 'bg-slate-100 border-slate-200'}`}
                 >
-                  <Text style={[styles.chipText, selectedLanguage === language && styles.chipTextActive]}>
+                  <Text className={`font-jakarta-medium text-xs ${selectedLanguage === language ? 'text-white' : 'text-slate-600'}`}>
                     {language}
                   </Text>
                 </TouchableOpacity>
@@ -154,15 +150,15 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
             </ScrollView>
           </View>
 
-          <View style={{ marginVertical: 4 }}>
+          <View className="my-1">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 6 }}>
               {specialtyFilters.map((filter) => (
                 <TouchableOpacity
                   key={filter}
                   onPress={() => setSelectedSpecialty(filter)}
-                  style={[styles.chip, selectedSpecialty === filter && styles.chipActive]}
+                  className={`px-3.5 py-1.5 rounded-full border ${selectedSpecialty === filter ? 'bg-primary border-primary' : 'bg-slate-100 border-slate-200'}`}
                 >
-                  <Text style={[styles.chipText, selectedSpecialty === filter && styles.chipTextActive]}>
+                  <Text className={`font-jakarta-medium text-xs ${selectedSpecialty === filter ? 'text-white' : 'text-slate-600'}`}>
                     {filter}
                   </Text>
                 </TouchableOpacity>
@@ -174,7 +170,7 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
 
       {/* Therapist List */}
       {isLoading ? (
-        <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
+        <ActivityIndicator size="large" color="#0D564D" className="mt-8" />
       ) : (
         <Animated.FlatList
           data={filteredTherapists}
@@ -183,7 +179,7 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
           keyExtractor={(item: any, index) =>
             item?._id?.toString() || item?.id?.toString() || index.toString()
           }
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{ padding: 16, paddingBottom: 110 }}
           renderItem={({ item }) => (
             <TherapistCard
               therapist={item}
@@ -193,8 +189,8 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
             />
           )}
           ListEmptyComponent={
-            <View style={styles.emptyView}>
-              <Text style={styles.emptyText}>No practitioners matching your search query.</Text>
+            <View className="items-center pt-8">
+              <Text className="font-jakarta text-sm text-[#717875]">No practitioners matching your search query.</Text>
             </View>
           }
         />
@@ -209,32 +205,32 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
           onRequestClose={() => setSelectedTherapistForModal(null)}
         >
           <TouchableOpacity
-            style={styles.modalOverlay}
+            className="flex-1 bg-slate-900/75 justify-center items-center p-4"
             activeOpacity={1}
             onPress={() => setSelectedTherapistForModal(null)}
           >
             <TouchableOpacity
-              style={styles.modalCard}
+              className="w-[92%] h-[88%] max-w-[640px] bg-slate-900 rounded-3xl overflow-hidden shadow-2xl"
               activeOpacity={1}
             >
               {/* Modal Top Header */}
-              <View style={styles.modalHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modalName}>{selectedTherapistForModal.name}</Text>
-                  <Text style={styles.modalSubText}>
+              <View className="flex-row items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+                <View className="flex-1">
+                  <Text className="font-sora-bold text-base text-white">{selectedTherapistForModal.name}</Text>
+                  <Text className="font-jakarta text-xs text-slate-400 mt-0.5">
                     {selectedTherapistForModal.specialty || selectedTherapistForModal.specialties?.join(', ') || 'Counselor'}
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.closeBtnCircle}
+                  className="w-8 h-8 rounded-full bg-slate-700 justify-center items-center"
                   onPress={() => setSelectedTherapistForModal(null)}
                 >
-                  <X size={18} color="#0F172A" />
+                  <X size={18} color="#FFF" />
                 </TouchableOpacity>
               </View>
 
-              {/* Video Player Box inside Modal (Dedicated exclusively to video stream) */}
-              <View style={styles.modalVideoContainer}>
+              {/* Video Player Box inside Modal */}
+              <View className="flex-1 w-full bg-slate-900">
                 <IntroVideoPlayer
                   url={selectedTherapistForModal.introVideoUrl}
                   mode="modal"
@@ -249,210 +245,5 @@ export const TherapistListScreen: React.FC<TherapistListScreenProps> = ({ naviga
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  header: {
-    backgroundColor: '#FFF',
-    paddingHorizontal: Theme.spacing.margin,
-    paddingTop: 50,
-    paddingBottom: Theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-  },
-  title: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 24,
-    color: Theme.colors.primary,
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    marginTop: 2,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.full,
-    paddingHorizontal: 12,
-    height: 48,
-    backgroundColor: Theme.colors.surfaceLow,
-    marginTop: Theme.spacing.sm,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-  },
-  filterBtn: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filtersWrapper: {
-    backgroundColor: '#FFF',
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  advancedFilters: {
-    paddingHorizontal: Theme.spacing.margin,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  filterInput: {
-    height: 42,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#F8FAFC',
-    color: Theme.colors.onSurface,
-    fontSize: 13,
-  },
-  chip: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: Theme.radius.full,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  chipActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  chipText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 12,
-    color: '#475569',
-  },
-  chipTextActive: {
-    color: '#FFF',
-  },
-  listContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 110,
-  },
-  loader: {
-    marginTop: Theme.spacing.xl,
-  },
-  emptyView: {
-    alignItems: 'center',
-    paddingTop: Theme.spacing.xl,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.textMuted,
-  },
-  // Modal Popup Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  modalCard: {
-    width: '92%',
-    height: '88%',
-    maxWidth: 640,
-    backgroundColor: '#0F172A',
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 12,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#1E293B',
-    borderBottomWidth: 1,
-    borderBottomColor: '#334155',
-  },
-  modalName: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 16,
-    color: '#FFF',
-  },
-  modalSubText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 2,
-  },
-  closeBtnCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#334155',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalVideoContainer: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: '#0F172A',
-  },
-  modalContentBody: {
-    padding: 16,
-  },
-  modalBio: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: '#475569',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  modalActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  modalSecondaryBtn: {
-    flex: 1,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-  },
-  modalSecondaryBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: '#334155',
-  },
-  modalPrimaryBtn: {
-    flex: 1.2,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalPrimaryBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: '#FFF',
-  },
-});
 
 export default TherapistListScreen;

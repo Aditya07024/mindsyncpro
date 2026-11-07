@@ -1,10 +1,7 @@
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
 import { SignIn } from '@clerk/clerk-expo/web';
-import { Theme } from '../../theme';
-
-import API from '../../lib/api';
 import { routeSignedInUser } from '../../lib/roleRouter';
 
 interface ClerkAuthScreenProps {
@@ -18,7 +15,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
 
   const { isSignedIn } = useAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Save role so that when Google OAuth redirects back to the root URL (LandingScreen),
     // the LandingScreen knows where to route the user.
     if (role && typeof window !== 'undefined' && window.localStorage) {
@@ -26,7 +23,7 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
     }
   }, [role]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSignedIn) {
       routeSignedInUser(navigation, { role, upgradePlan });
     }
@@ -34,8 +31,8 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
 
   if (isSignedIn) {
     return (
-      <View style={styles.container}>
-        <Text style={{ fontFamily: Theme.fonts.body, color: Theme.colors.primary }}>
+      <View className="flex-1 bg-surface justify-center items-center p-4">
+        <Text className="font-jakarta text-primary">
           Authenticated! Redirecting to Dashboard...
         </Text>
       </View>
@@ -45,20 +42,10 @@ export const ClerkAuthScreen: React.FC<ClerkAuthScreenProps> = ({ navigation, ro
   // The prebuilt Clerk SignIn component handles everything automatically.
   // We use routing="virtual" so it doesn't conflict with React Navigation's pathing.
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface justify-center items-center p-4">
       <SignIn routing="virtual" />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.margin,
-  }
-});
 
 export default ClerkAuthScreen;

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { Theme } from '../theme';
 
@@ -28,43 +28,20 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ message = 'Gathe
   });
 
   return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.pulseCircle, animatedStyle]}>
-        <View style={styles.innerCircle} />
+    <View className="flex-1 justify-center items-center bg-background p-6">
+      <Animated.View
+        className="w-20 h-20 rounded-full justify-center items-center bg-primary/15"
+        style={animatedStyle}
+      >
+        <View className="w-10 h-10 rounded-full bg-primary" />
       </Animated.View>
-      {message && <Text style={styles.text}>{message}</Text>}
+      {message && (
+        <Text className="mt-6 text-base font-jakarta-medium text-on-surface-variant text-center">
+          {message}
+        </Text>
+      )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.background,
-    padding: Theme.spacing.md,
-  },
-  pulseCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Theme.colors.primary + '1A', // 10% opacity primary
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  innerCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Theme.colors.primary,
-  },
-  text: {
-    marginTop: Theme.spacing.md,
-    fontSize: 16,
-    fontFamily: Theme.fonts.bodyMedium,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
-});
 export default LoadingSpinner;

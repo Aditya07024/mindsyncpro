@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
 import { CheckCircle } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { PlanCard, PlanData } from '../../components/PlanCard';
 
 interface PlansScreenProps {
@@ -254,7 +253,7 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
       return;
     }
 
-    // Directly start upgrade — no Alert confirmation (Alert callbacks are broken on this device)
+    // Directly start upgrade — no Alert confirmation
     console.log('[handleSelectPlan] Calling doUpgrade directly for:', plan.name);
     doUpgrade(plan);
   };
@@ -262,22 +261,22 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
   // Corporate affiliate therapists are fully sponsored by their organizations
   if (role === 'therapist' && orgId) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <View style={styles.sponsoredCard}>
-          <CheckCircle size={48} color={Theme.colors.primary} style={styles.sponsoredIcon} />
-          <Text style={styles.sponsoredTitle}>Corporate Sponsored Workspace</Text>
-          <Text style={styles.sponsoredDesc}>
+      <View className="flex-1 bg-surface justify-center items-center p-4">
+        <View className="bg-white rounded-3xl p-6 items-center border border-[#DFEBE7] shadow-sm w-full max-w-[340px]">
+          <CheckCircle size={48} color="#0D564D" className="mb-4" />
+          <Text className="font-sora-bold text-xl text-primary text-center mb-2">Corporate Sponsored Workspace</Text>
+          <Text className="font-jakarta text-[13.5px] text-[#4E615D] text-center leading-5 mb-4">
             Your therapist profile is affiliated with an active organization. Subscription fees and premium seats are fully funded directly by your organization.
           </Text>
-          <Text style={styles.sponsoredSub}>
+          <Text className="font-jakarta-bold text-[12.5px] text-primary text-center mb-6">
             No individual subscription payment is required!
           </Text>
           
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={styles.backBtn}
+            className="bg-primary py-3 px-6 rounded-full w-full items-center"
           >
-            <Text style={styles.backBtnText}>Return to Dashboard</Text>
+            <Text className="font-sora-semibold text-[13.5px] text-white">Return to Dashboard</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -285,19 +284,21 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Simple, Transparent Pricing</Text>
-        <Text style={styles.subtitle}>Choose a tier aligned with your professional mental well-being goals.</Text>
+    <ScrollView className="flex-1 bg-surface" contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+      <View className="items-center mb-4">
+        <Text className="pt-6 font-sora-bold text-2xl text-primary">Simple, Transparent Pricing</Text>
+        <Text className="font-jakarta-medium text-sm text-[#4E615D] text-center mt-1 leading-5">
+          Choose a tier aligned with your professional mental well-being goals.
+        </Text>
       </View>
 
       {hasPendingSub && (
-        <View style={styles.pendingBanner}>
-          <Text style={styles.pendingTitle}>Payment Confirmation Pending</Text>
-          <Text style={styles.pendingDesc}>
+        <View className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4">
+          <Text className="font-sora-semibold text-[15px] text-amber-900 mb-1">Payment Confirmation Pending</Text>
+          <Text className="font-jakarta text-[12.5px] text-amber-800 leading-[18px] mb-4">
             You have a pending subscription for "{pendingPlanName}". If you already paid, sync status below. Otherwise, cancel it to try again or select another plan.
           </Text>
-          <View style={styles.pendingActions}>
+          <View className="flex-row gap-3">
             <TouchableOpacity 
               onPress={async () => {
                 console.log('[SyncStatus] Tapped');
@@ -315,9 +316,9 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
                   setCheckoutLoading(false);
                 }
               }}
-              style={[styles.actionBtn, styles.syncBtn]}
+              className="flex-1 h-[38px] rounded-lg justify-center items-center bg-amber-800"
             >
-              <Text style={styles.actionBtnText}>Sync Status</Text>
+              <Text className="font-sora-semibold text-[13px] text-white">Sync Status</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
@@ -325,10 +326,10 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
                 console.log('[CancelPending] Tapped — calling cancel directly');
                 doCancelPending();
               }}
-              style={[styles.actionBtn, styles.cancelBtn]}
+              className="flex-1 h-[38px] rounded-lg justify-center items-center bg-white border border-amber-200"
               disabled={cancellingPending}
             >
-              <Text style={[styles.actionBtnText, styles.cancelBtnText]}>
+              <Text className="font-sora-semibold text-[13px] text-amber-800">
                 {cancellingPending ? 'Cancelling...' : 'Cancel Pending'}
               </Text>
             </TouchableOpacity>
@@ -337,14 +338,14 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
       )}
 
       {(isLoading || (isSignedIn && isSubscriptionLoading)) && (
-        <ActivityIndicator size="large" color={Theme.colors.primary} style={styles.loader} />
+        <ActivityIndicator size="large" color="#0D564D" className="my-4" />
       )}
 
       {checkoutLoading && (
-        <ActivityIndicator size="large" color={Theme.colors.secondary} style={styles.loader} />
+        <ActivityIndicator size="large" color="#9D4223" className="my-4" />
       )}
 
-      <View style={styles.cardsWrapper}>
+      <View className="mt-1">
         {filteredPlans.length > 0 ? (
           filteredPlans.map((plan, idx) => {
             const isPlanActive = currentTier === plan.id || currentTier === plan._id || currentTier === plan.name;
@@ -363,170 +364,15 @@ export const PlansScreen: React.FC<PlansScreenProps> = ({ navigation }) => {
             );
           })
         ) : (
-          <View style={styles.emptyPlansCard}>
-            <Text style={styles.emptyPlansText}>No plans available for your role at this time.</Text>
+          <View className="bg-white rounded-3xl p-6 items-center border border-[#DFEBE7]">
+            <Text className="font-jakarta-medium text-[13.5px] text-[#4E615D] text-center">
+              No plans available for your role at this time.
+            </Text>
           </View>
         )}
       </View>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.margin,
-  },
-  content: {
-    padding: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xl,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: Theme.spacing.md,
-    textAlign: 'center',
-  },
-  title: {
-    paddingTop: Theme.spacing.lg,
-    fontFamily: Theme.fonts.display,
-    fontSize: 26,
-    color: Theme.colors.primary,
-  },
-  subtitle: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: Theme.spacing.xs - 2,
-    lineHeight: 20,
-  },
-  loader: {
-    marginVertical: Theme.spacing.md,
-  },
-  cardsWrapper: {
-    marginTop: Theme.spacing.xs,
-  },
-  sponsoredCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.lg,
-    alignItems: 'center',
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 4,
-    width: '100%',
-    maxWidth: 340,
-  },
-  sponsoredIcon: {
-    marginBottom: Theme.spacing.md,
-  },
-  sponsoredTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 20,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.sm,
-  },
-  sponsoredDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13.5,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: Theme.spacing.md,
-  },
-  sponsoredSub: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.lg,
-  },
-  backBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: Theme.spacing.lg,
-    borderRadius: Theme.radius.full,
-    width: '100%',
-    alignItems: 'center',
-  },
-  backBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13.5,
-    color: '#FFF',
-  },
-  emptyPlansCard: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  emptyPlansText: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13.5,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
-  pendingBanner: {
-    backgroundColor: '#FFF9E6',
-    borderWidth: 1,
-    borderColor: '#FFE0B2',
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
-  },
-  pendingTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-    color: '#E65100',
-    marginBottom: Theme.spacing.xs - 2,
-  },
-  pendingDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: '#EF6C00',
-    lineHeight: 18,
-    marginBottom: Theme.spacing.md,
-  },
-  pendingActions: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-  },
-  actionBtn: {
-    flex: 1,
-    height: 38,
-    borderRadius: Theme.radius.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  syncBtn: {
-    backgroundColor: '#E65100',
-  },
-  cancelBtn: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#FFE0B2',
-  },
-  actionBtnText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: '#FFF',
-  },
-  cancelBtnText: {
-    color: '#E65100',
-  },
-});
 
 export default PlansScreen;

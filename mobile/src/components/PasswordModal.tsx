@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Modal, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Lock, Eye, EyeOff } from 'lucide-react-native';
 import { Theme } from '../theme';
 import { API_URL } from '../lib/store';
@@ -53,22 +53,22 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
       visible={open}
       onRequestClose={onCancel}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.container}>
-          <View style={styles.lockIconContainer}>
+      <View className="flex-1 bg-black/75 justify-center items-center p-5">
+        <View className="w-full bg-white rounded-3xl p-6 items-center shadow-2xl elevation-10">
+          <View className="w-16 h-16 rounded-full bg-secondary-container/20 justify-center items-center mb-4">
             <Lock size={28} color={Theme.colors.secondary} />
           </View>
           
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.description}>{description}</Text>
+          <Text className="font-sora-bold text-xl text-on-surface text-center mb-2">{title}</Text>
+          <Text className="font-jakarta text-sm text-text-muted text-center mb-6 leading-5">{description}</Text>
 
-          <View style={styles.inputWrapper}>
+          <View className="w-full flex-row items-center border border-surface-high rounded-2xl bg-surface-low px-4 h-13 mb-6">
             <TextInput
               secureTextEntry={!showPassword}
               placeholder="Enter access code…"
               value={password}
               onChangeText={setPassword}
-              style={styles.input}
+              className="flex-1 font-jakarta-medium text-base text-on-surface py-2"
               placeholderTextColor={Theme.colors.outline}
               autoFocus
               onSubmitEditing={handleSubmit}
@@ -76,7 +76,7 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
             />
             <TouchableOpacity 
               onPress={() => setShowPassword(!showPassword)} 
-              style={styles.eyeBtn}
+              className="p-2"
             >
               {showPassword ? (
                 <EyeOff size={20} color={Theme.colors.outline} />
@@ -86,19 +86,25 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.btnRow}>
-            <TouchableOpacity onPress={onCancel} style={[styles.btn, styles.cancelBtn]} disabled={loading}>
-              <Text style={styles.cancelText}>Cancel</Text>
+          <View className="flex-row gap-3 w-full">
+            <TouchableOpacity
+              onPress={onCancel}
+              className="flex-1 h-12 justify-center items-center rounded-2xl bg-surface-low border border-surface-high"
+              disabled={loading}
+            >
+              <Text className="font-jakarta-bold text-sm text-on-surface-variant">Cancel</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               onPress={handleSubmit} 
               disabled={!password || loading}
-              style={[styles.btn, styles.submitBtn, (!password || loading) && styles.disabledBtn]}
+              className={`flex-1 h-12 justify-center items-center rounded-2xl bg-secondary ${
+                !password || loading ? 'opacity-50' : ''
+              }`}
             >
               {loading
                 ? <ActivityIndicator size="small" color="#FFF" />
-                : <Text style={styles.submitText}>Submit</Text>
+                : <Text className="font-sora-bold text-sm text-white">Submit</Text>
               }
             </TouchableOpacity>
           </View>
@@ -108,104 +114,4 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(26, 28, 28, 0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.margin,
-  },
-  container: {
-    width: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 15,
-    elevation: 10,
-  },
-  lockIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Theme.colors.secondaryContainer + '1A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.sm,
-  },
-  title: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 20,
-    color: Theme.colors.onSurface,
-    textAlign: 'center',
-    marginBottom: Theme.spacing.xs,
-  },
-  description: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: Theme.spacing.md,
-    paddingHorizontal: Theme.spacing.xs,
-  },
-  inputWrapper: {
-    width: '100%',
-    position: 'relative',
-    marginBottom: Theme.spacing.md,
-  },
-  input: {
-    width: '100%',
-    height: 52,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: Theme.spacing.sm,
-    fontSize: 16,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-    zIndex: 10,
-  },
-  btnRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.sm,
-    width: '100%',
-  },
-  btn: {
-    flex: 1,
-    height: 48,
-    borderRadius: Theme.radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cancelBtn: {
-    backgroundColor: Theme.colors.surfaceHigh,
-  },
-  cancelText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: Theme.colors.onSurfaceVariant,
-  },
-  submitBtn: {
-    backgroundColor: Theme.colors.primary,
-  },
-  disabledBtn: {
-    opacity: 0.5,
-  },
-  submitText: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: '#FFF',
-  },
-});
 export default PasswordModal;

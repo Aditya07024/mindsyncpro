@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
 import { ArrowLeft, Play, Pause, RefreshCw, Wind, Square, Hand, User, Zap, ChevronRight } from 'lucide-react-native';
 import { Theme } from '../../theme';
 
@@ -233,18 +233,18 @@ export const BreatheScreen: React.FC<BreatheScreenProps> = ({ navigation }) => {
   // Rendering selection list
   if (!activeExercise) {
     return (
-      <View style={styles.container}>
-        <View style={styles.backRow}>
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+      <View className="flex-1 bg-surface">
+        <View className="flex-row items-center pt-12 px-5 gap-2">
+          <TouchableOpacity onPress={handleBack} className="w-[38px] h-[38px] rounded-full bg-white justify-center items-center border border-[#E0E2E0]">
             <ArrowLeft size={20} color={Theme.colors.onSurface} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Breathe & Ground</Text>
+          <Text className="font-sora text-lg text-onSurface">Breathe & Ground</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.listContainer}>
-          <View style={styles.introHeader}>
-            <Text style={styles.introTitle}>Guided Exercises</Text>
-            <Text style={styles.introSubtitle}>Choose a practice to calm your mind and body.</Text>
+        <ScrollView contentContainerClassName="px-5 pt-3 pb-8 gap-3">
+          <View className="mb-1">
+            <Text className="font-sora-bold text-3xl text-primary">Guided Exercises</Text>
+            <Text className="font-jakarta text-sm text-[#71787D] mt-1">Choose a practice to calm your mind and body.</Text>
           </View>
 
           {EXERCISES.map((ex) => {
@@ -253,26 +253,24 @@ export const BreatheScreen: React.FC<BreatheScreenProps> = ({ navigation }) => {
               <TouchableOpacity
                 key={ex.id}
                 onPress={() => setActiveExercise(ex)}
-                style={[
-                  styles.exerciseCard,
-                  ex.emergency && styles.emergencyCard,
-                ]}
+                className={`flex-row items-center rounded-3xl p-4 border shadow-sm ${
+                  ex.emergency ? 'bg-[#FFF5F5] border-crisis/25' : 'bg-white border-[#E0E2E0]'
+                }`}
                 activeOpacity={0.8}
               >
                 <View
-                  style={[
-                    styles.iconCircle,
-                    ex.emergency ? styles.iconCircleEmergency : styles.iconCircleNormal,
-                  ]}
+                  className={`w-12 h-12 rounded-2xl justify-center items-center mr-4 ${
+                    ex.emergency ? 'bg-crisis' : 'bg-primary/10'
+                  }`}
                 >
                   <Icon size={22} color={ex.emergency ? '#FFF' : Theme.colors.primary} />
                 </View>
 
-                <View style={styles.cardInfo}>
-                  <Text style={[styles.cardTitle, ex.emergency && styles.emergencyText]}>
+                <View className="flex-1">
+                  <Text className={`font-sora text-base mb-1 ${ex.emergency ? 'text-crisis' : 'text-onSurface'}`}>
                     {ex.title}
                   </Text>
-                  <Text style={styles.cardDesc}>{ex.desc}</Text>
+                  <Text className="font-jakarta text-xs text-[#71787D] leading-4">{ex.desc}</Text>
                 </View>
 
                 <ChevronRight size={18} color={ex.emergency ? Theme.colors.error : Theme.colors.outline} />
@@ -294,75 +292,73 @@ export const BreatheScreen: React.FC<BreatheScreenProps> = ({ navigation }) => {
     : Theme.colors.secondaryContainer + '30';
 
   return (
-    <View style={styles.container}>
-      <View style={styles.backRow}>
-        <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+    <View className="flex-1 bg-surface">
+      <View className="flex-row items-center pt-12 px-5 gap-2">
+        <TouchableOpacity onPress={handleBack} className="w-[38px] h-[38px] rounded-full bg-white justify-center items-center border border-[#E0E2E0]">
           <ArrowLeft size={20} color={Theme.colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{activeExercise.title}</Text>
+        <Text className="font-sora text-lg text-onSurface">{activeExercise.title}</Text>
       </View>
 
-      <View style={styles.mainArea}>
+      <View className="flex-1 justify-center items-center px-5 gap-6">
         {!isDone ? (
           <>
-            <Text style={styles.cycleText}>
+            <Text className="font-jakarta-bold text-[13px] text-primary bg-primary/15 px-3 py-1 rounded-full">
               Cycle {cycle}/{activeExercise.cycles}
             </Text>
 
-            <View style={styles.circleContainer}>
+            <View className="w-60 h-60 justify-center items-center relative">
               <Animated.View
-                style={[
-                  styles.breathingOuterRing,
-                  {
-                    transform: [{ scale: circleScale }],
-                    backgroundColor: ringColor,
-                  },
-                ]}
+                className="absolute w-[100px] h-[100px] rounded-full"
+                style={{
+                  transform: [{ scale: circleScale }],
+                  backgroundColor: ringColor,
+                }}
               />
 
-              <View style={styles.breathingCenterBubble}>
-                <Text style={styles.timerText}>{secondsLeft}s</Text>
-                <Text style={styles.stateLabelText}>
+              <View className="w-[120px] h-[120px] rounded-full bg-white border-[1.5px] border-[#E0E2E0] justify-center items-center shadow-md">
+                <Text className="font-sora-bold text-3xl text-onSurface">{secondsLeft}s</Text>
+                <Text className="font-jakarta-bold text-[9px] text-[#71787D] tracking-wider mt-0.5 text-center">
                   {isPlaying ? currentPhase.label.toUpperCase() : 'PAUSED'}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.instructionCard}>
-              <Text style={styles.instructionTitle}>{currentPhase.label}</Text>
-              <Text style={styles.instructionDesc}>
+            <View className="items-center px-2">
+              <Text className="font-sora-bold text-2xl text-primary text-center">{currentPhase.label}</Text>
+              <Text className="font-jakarta text-[13px] text-onSurfaceVariant text-center mt-1.5 leading-[18px]">
                 {isPlaying ? 'Follow the pacing circle...' : 'Tap start to begin'}
               </Text>
             </View>
 
-            <View style={styles.controlRow}>
+            <View className="flex-row items-center gap-2">
               {isPlaying ? (
-                <TouchableOpacity onPress={handlePause} style={styles.pauseBtn}>
+                <TouchableOpacity onPress={handlePause} className="flex-row border-[1.5px] border-primary px-6 py-3.5 rounded-full items-center gap-2">
                   <Pause size={22} color={Theme.colors.primary} />
-                  <Text style={styles.pauseBtnText}>Pause</Text>
+                  <Text className="text-primary font-sora text-sm">Pause</Text>
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity onPress={handleStart} style={styles.startBtn}>
+                <TouchableOpacity onPress={handleStart} className="flex-row bg-primary px-6 py-3.5 rounded-full items-center gap-2">
                   <Play size={22} color="#FFF" fill="#FFF" />
-                  <Text style={styles.startBtnText}>Start Practice</Text>
+                  <Text className="text-white font-sora text-sm">Start Practice</Text>
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity onPress={handleReset} style={styles.resetBtn}>
+              <TouchableOpacity onPress={handleReset} className="w-12 h-12 rounded-full border border-[#E0E2E0] justify-center items-center bg-white">
                 <RefreshCw size={18} color={Theme.colors.outline} />
               </TouchableOpacity>
             </View>
           </>
         ) : (
-          <View style={styles.completeContainer}>
-            <View style={[styles.iconCircle, styles.iconCircleNormal, { width: 72, height: 72, borderRadius: 36, marginBottom: 20 }]}>
+          <View className="items-center px-4">
+            <View className="w-[72px] h-[72px] rounded-full bg-primary/10 justify-center items-center mb-5">
               <Wind size={36} color={Theme.colors.primary} />
             </View>
-            <Text style={styles.completeTitle}>Well done.</Text>
-            <Text style={styles.completeDesc}>Notice how your body and mind feel right now.</Text>
+            <Text className="font-sora-bold text-3xl text-primary text-center mb-2">Well done.</Text>
+            <Text className="font-jakarta text-[15px] text-[#71787D] text-center leading-[22px] mb-8">Notice how your body and mind feel right now.</Text>
             
-            <TouchableOpacity onPress={handleBack} style={styles.completeBtn}>
-              <Text style={styles.completeBtnText}>Close Practice</Text>
+            <TouchableOpacity onPress={handleBack} className="bg-primary px-8 py-4 rounded-full">
+              <Text className="text-white font-sora text-[15px]">Close Practice</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -370,253 +366,5 @@ export const BreatheScreen: React.FC<BreatheScreenProps> = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingHorizontal: Theme.spacing.margin,
-    gap: Theme.spacing.sm,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  listContainer: {
-    paddingHorizontal: Theme.spacing.margin,
-    paddingTop: Theme.spacing.md,
-    paddingBottom: Theme.spacing.xl,
-    gap: 12,
-  },
-  introHeader: {
-    marginBottom: Theme.spacing.xs,
-  },
-  introTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 28,
-    color: Theme.colors.primary,
-  },
-  introSubtitle: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 14,
-    color: Theme.colors.textMuted,
-    marginTop: 4,
-  },
-  exerciseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  emergencyCard: {
-    backgroundColor: '#FFF5F5',
-    borderColor: Theme.colors.error + '25',
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  iconCircleNormal: {
-    backgroundColor: Theme.colors.primary + '10',
-  },
-  iconCircleEmergency: {
-    backgroundColor: Theme.colors.error,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-    marginBottom: 4,
-  },
-  emergencyText: {
-    color: Theme.colors.error,
-  },
-  cardDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16,
-  },
-  mainArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.margin,
-    gap: Theme.spacing.lg,
-  },
-  cycleText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    backgroundColor: Theme.colors.primary + '15',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: Theme.radius.full,
-  },
-  circleContainer: {
-    width: 240,
-    height: 240,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  breathingOuterRing: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  breathingCenterBubble: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#FFF',
-    borderWidth: 1.5,
-    borderColor: Theme.colors.surfaceHigh,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  timerText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 28,
-    color: Theme.colors.onSurface,
-  },
-  stateLabelText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.textMuted,
-    letterSpacing: 0.5,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  instructionCard: {
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.sm,
-  },
-  instructionTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 22,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-  },
-  instructionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: 6,
-    lineHeight: 18,
-  },
-  controlRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.sm,
-  },
-  startBtn: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    gap: 8,
-  },
-  startBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-  },
-  pauseBtn: {
-    flexDirection: 'row',
-    borderWidth: 1.5,
-    borderColor: Theme.colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: Theme.radius.full,
-    alignItems: 'center',
-    gap: 8,
-  },
-  pauseBtnText: {
-    color: Theme.colors.primary,
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-  },
-  resetBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-  },
-  completeContainer: {
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.md,
-  },
-  completeTitle: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 28,
-    color: Theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  completeDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 15,
-    color: Theme.colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 32,
-  },
-  completeBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: Theme.radius.full,
-  },
-  completeBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 15,
-  },
-});
 
 export default BreatheScreen;

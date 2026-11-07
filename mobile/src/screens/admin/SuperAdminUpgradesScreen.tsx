@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ScrollView, Switch, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Switch, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, ShieldCheck, User, Building, Search, Calendar, ChevronRight, Zap } from 'lucide-react-native';
+import { User, Building, Search, Zap } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 
 export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
@@ -43,7 +42,7 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
   });
 
   // Fetch plans list
-  const { data: plansRes, isLoading: plansLoading } = useQuery({
+  const { data: plansRes } = useQuery({
     queryKey: ['plansList'],
     queryFn: () => API.plan.getAll(),
     retry: false,
@@ -181,72 +180,86 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader
         userFirstName="Super Admin"
         role="super_admin"
         navigation={navigation}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerClassName="p-4 pb-20 gap-4" keyboardShouldPersistTaps="handled">
         {/* Header section */}
-        <View style={styles.headerSection}>
-          <Text style={styles.sectionHeader}>Manual Subscription Upgrades</Text>
-          <Text style={styles.sectionDesc}>Directly override platform tiers or customize precise parameters for any user or organization.</Text>
+        <View className="gap-1">
+          <Text className="font-sora-bold text-base text-stone-900">Manual Subscription Upgrades</Text>
+          <Text className="font-jakarta text-xs text-stone-500 leading-4">Directly override platform tiers or customize precise parameters for any user or organization.</Text>
         </View>
 
         {/* 1. Target Type Toggle */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Select Recipient Category</Text>
-          <View style={styles.toggleRow}>
+        <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+          <Text className="font-sora-bold text-[13px] text-stone-900 mb-1">Select Recipient Category</Text>
+          <View className="flex-row gap-2">
             <TouchableOpacity
               onPress={() => { setTargetType('user'); setSelectedTargetId(''); }}
-              style={[styles.toggleBtn, targetType === 'user' && styles.toggleBtnActive]}
+              className={`flex-1 flex-row items-center justify-center gap-1.5 border rounded-xl py-2.5 ${
+                targetType === 'user' ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+              }`}
             >
-              <User size={16} color={targetType === 'user' ? '#FFF' : Theme.colors.primary} />
-              <Text style={[styles.toggleBtnText, targetType === 'user' && styles.toggleBtnTextActive]}>Seeker / Therapist</Text>
+              <User size={16} color={targetType === 'user' ? '#FFF' : '#0D564D'} />
+              <Text className={`font-jakarta-bold text-[11px] ${
+                targetType === 'user' ? 'text-white' : 'text-primary'
+              }`}>Seeker / Therapist</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => { setTargetType('organization'); setSelectedTargetId(''); }}
-              style={[styles.toggleBtn, targetType === 'organization' && styles.toggleBtnActive]}
+              className={`flex-1 flex-row items-center justify-center gap-1.5 border rounded-xl py-2.5 ${
+                targetType === 'organization' ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+              }`}
             >
-              <Building size={16} color={targetType === 'organization' ? '#FFF' : Theme.colors.primary} />
-              <Text style={[styles.toggleBtnText, targetType === 'organization' && styles.toggleBtnTextActive]}>Organization</Text>
+              <Building size={16} color={targetType === 'organization' ? '#FFF' : '#0D564D'} />
+              <Text className={`font-jakarta-bold text-[11px] ${
+                targetType === 'organization' ? 'text-white' : 'text-primary'
+              }`}>Organization</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* 2. Choose Target List */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Find Target Account</Text>
-          <View style={styles.searchBar}>
-            <Search size={16} color={Theme.colors.outline} />
+        <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+          <Text className="font-sora-bold text-[13px] text-stone-900 mb-1">Find Target Account</Text>
+          <View className="flex-row items-center bg-stone-50 border border-stone-200 rounded-xl px-3 h-11 gap-2">
+            <Search size={16} color="#78716C" />
             <TextInput
               placeholder={`Search by name, email or mobile...`}
-              placeholderTextColor={Theme.colors.outline}
+              placeholderTextColor="#78716C"
               value={searchQuery}
               onChangeText={setSearchQuery}
-              style={styles.searchInput}
+              className="flex-1 text-[13px] text-stone-900 font-jakarta"
             />
           </View>
 
           {targetsLoading ? (
-            <ActivityIndicator size="small" color={Theme.colors.primary} style={{ marginVertical: 12 }} />
+            <ActivityIndicator size="small" color="#0D564D" className="my-3" />
           ) : (
-            <View style={styles.targetsList}>
+            <View className="gap-2 mt-1">
               {targetType === 'user' ? (
                 filteredUsers.slice(0, 10).map((u: any) => (
                   <TouchableOpacity
                     key={u.id}
                     onPress={() => setSelectedTargetId(u.id)}
-                    style={[styles.targetItem, selectedTargetId === u.id && styles.targetItemActive]}
+                    className={`flex-row items-center border rounded-xl p-2.5 ${
+                      selectedTargetId === u.id ? 'bg-primary/10 border-primary' : 'bg-stone-50 border-stone-200'
+                    }`}
                   >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.targetName, selectedTargetId === u.id && styles.targetTextActive]}>{u.name}</Text>
-                      <Text style={styles.targetMeta}>{u.phone || 'No phone'} · Role: {u.role}</Text>
+                    <View className="flex-1">
+                      <Text className={`font-sora-bold text-[13px] ${
+                        selectedTargetId === u.id ? 'text-primary' : 'text-stone-900'
+                      }`}>{u.name}</Text>
+                      <Text className="font-jakarta text-[10.5px] text-stone-500 mt-0.5">{u.phone || 'No phone'} · Role: {u.role}</Text>
                     </View>
-                    <Text style={styles.tierBadge}>{(u.tier || 'free').toUpperCase()}</Text>
+                    <Text className="font-jakarta-bold text-[9px] px-1.5 py-0.5 rounded bg-white border border-stone-200 text-stone-500 overflow-hidden">
+                      {(u.tier || 'free').toUpperCase()}
+                    </Text>
                   </TouchableOpacity>
                 ))
               ) : (
@@ -254,117 +267,139 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
                   <TouchableOpacity
                     key={o.id}
                     onPress={() => setSelectedTargetId(o.id)}
-                    style={[styles.targetItem, selectedTargetId === o.id && styles.targetItemActive]}
+                    className={`flex-row items-center border rounded-xl p-2.5 ${
+                      selectedTargetId === o.id ? 'bg-primary/10 border-primary' : 'bg-stone-50 border-stone-200'
+                    }`}
                   >
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.targetName, selectedTargetId === o.id && styles.targetTextActive]}>{o.name}</Text>
-                      <Text style={styles.targetMeta}>{o.email || 'No email'}</Text>
+                    <View className="flex-1">
+                      <Text className={`font-sora-bold text-[13px] ${
+                        selectedTargetId === o.id ? 'text-primary' : 'text-stone-900'
+                      }`}>{o.name}</Text>
+                      <Text className="font-jakarta text-[10.5px] text-stone-500 mt-0.5">{o.email || 'No email'}</Text>
                     </View>
-                    <Text style={styles.tierBadge}>{(o.status || 'pending').toUpperCase()}</Text>
+                    <Text className="font-jakarta-bold text-[9px] px-1.5 py-0.5 rounded bg-white border border-stone-200 text-stone-500 overflow-hidden">
+                      {(o.status || 'pending').toUpperCase()}
+                    </Text>
                   </TouchableOpacity>
                 ))
               )}
               {((targetType === 'user' ? filteredUsers : filteredOrgs).length === 0) && (
-                <Text style={styles.emptyText}>No matching accounts found.</Text>
+                <Text className="font-jakarta text-xs text-stone-500 text-center py-3">No matching accounts found.</Text>
               )}
             </View>
           )}
         </View>
 
         {/* 3. Choose Plan */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Select Subscription Plan Preset</Text>
-          <View style={styles.presetOptions}>
+        <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+          <Text className="font-sora-bold text-[13px] text-stone-900 mb-1">Select Subscription Plan Preset</Text>
+          <View className="flex-row flex-wrap gap-1.5">
             <TouchableOpacity
               onPress={() => selectPlanPreset('mann_shanti')}
-              style={[styles.presetBtn, planId === 'mann_shanti' && styles.presetBtnActive]}
+              className={`border rounded-full px-3 py-1.5 ${
+                planId === 'mann_shanti' ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+              }`}
             >
-              <Text style={[styles.presetBtnText, planId === 'mann_shanti' && styles.presetBtnTextActive]}>Mann Shanti</Text>
+              <Text className={`font-jakarta-bold text-[10.5px] ${
+                planId === 'mann_shanti' ? 'text-white' : 'text-primary'
+              }`}>Mann Shanti</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => selectPlanPreset('apna_therapist')}
-              style={[styles.presetBtn, planId === 'apna_therapist' && styles.presetBtnActive]}
+              className={`border rounded-full px-3 py-1.5 ${
+                planId === 'apna_therapist' ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+              }`}
             >
-              <Text style={[styles.presetBtnText, planId === 'apna_therapist' && styles.presetBtnTextActive]}>Apna Therapist</Text>
+              <Text className={`font-jakarta-bold text-[10.5px] ${
+                planId === 'apna_therapist' ? 'text-white' : 'text-primary'
+              }`}>Apna Therapist</Text>
             </TouchableOpacity>
 
             {plans.map((p: any) => (
               <TouchableOpacity
                 key={p._id}
                 onPress={() => selectPlanPreset(p._id)}
-                style={[styles.presetBtn, planId === p._id && styles.presetBtnActive]}
+                className={`border rounded-full px-3 py-1.5 ${
+                  planId === p._id ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+                }`}
               >
-                <Text style={[styles.presetBtnText, planId === p._id && styles.presetBtnTextActive]}>{p.name}</Text>
+                <Text className={`font-jakarta-bold text-[10.5px] ${
+                  planId === p._id ? 'text-white' : 'text-primary'
+                }`}>{p.name}</Text>
               </TouchableOpacity>
             ))}
 
             <TouchableOpacity
               onPress={() => selectPlanPreset('custom')}
-              style={[styles.presetBtn, planId === 'custom' && styles.presetBtnActive]}
+              className={`border rounded-full px-3 py-1.5 ${
+                planId === 'custom' ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+              }`}
             >
-              <Text style={[styles.presetBtnText, planId === 'custom' && styles.presetBtnTextActive]}>🛠 Custom Config</Text>
+              <Text className={`font-jakarta-bold text-[10.5px] ${
+                planId === 'custom' ? 'text-white' : 'text-primary'
+              }`}>🛠 Custom Config</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* 4. Custom Configuration Feature Gates */}
         {planId === 'custom' && (
-          <View style={styles.card}>
-            <Text style={styles.cardHeader}>Customize Config Parameters</Text>
-            <View style={{ gap: 8 }}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Custom Plan Title</Text>
+          <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+            <Text className="font-sora-bold text-[13px] text-stone-900 mb-1">Customize Config Parameters</Text>
+            <View className="gap-2">
+              <View className="gap-1 mb-1">
+                <Text className="font-jakarta-bold text-[11.5px] text-stone-900">Custom Plan Title</Text>
                 <TextInput
                   value={planName}
                   onChangeText={setPlanName}
                   placeholder="e.g. Special VIP Plan"
-                  style={styles.textInput}
+                  className="h-10 border border-stone-200 rounded-xl px-2.5 text-[13px] text-stone-900 bg-stone-50 font-jakarta"
                 />
               </View>
 
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Unlimited daily message limit (Manas AI)</Text>
+              <View className="flex-row justify-between items-center bg-stone-50 p-2 rounded-xl">
+                <Text className="font-jakarta text-xs text-stone-700 flex-1 mr-2">Unlimited daily message limit (Manas AI)</Text>
                 <Switch
                   value={customConfig.dailyChatLimit === null}
                   onValueChange={(val) => setCustomConfig(prev => ({ ...prev, dailyChatLimit: val ? null : 300 }))}
-                  trackColor={{ true: Theme.colors.primary }}
+                  trackColor={{ true: '#0D564D' }}
                 />
               </View>
 
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Priority therapist booking access</Text>
+              <View className="flex-row justify-between items-center bg-stone-50 p-2 rounded-xl">
+                <Text className="font-jakarta text-xs text-stone-700 flex-1 mr-2">Priority therapist booking access</Text>
                 <Switch
                   value={customConfig.hasPriorityBooking}
                   onValueChange={(val) => setCustomConfig(prev => ({ ...prev, hasPriorityBooking: val }))}
-                  trackColor={{ true: Theme.colors.primary }}
+                  trackColor={{ true: '#0D564D' }}
                 />
               </View>
 
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Unlimited CBT journaling logs</Text>
+              <View className="flex-row justify-between items-center bg-stone-50 p-2 rounded-xl">
+                <Text className="font-jakarta text-xs text-stone-700 flex-1 mr-2">Unlimited CBT journaling logs</Text>
                 <Switch
                   value={customConfig.hasUnlimitedJournal}
                   onValueChange={(val) => setCustomConfig(prev => ({ ...prev, hasUnlimitedJournal: val }))}
-                  trackColor={{ true: Theme.colors.primary }}
+                  trackColor={{ true: '#0D564D' }}
                 />
               </View>
 
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Enable Corporate Analytics module</Text>
+              <View className="flex-row justify-between items-center bg-stone-50 p-2 rounded-xl">
+                <Text className="font-jakarta text-xs text-stone-700 flex-1 mr-2">Enable Corporate Analytics module</Text>
                 <Switch
                   value={customConfig.enableAnalytics}
                   onValueChange={(val) => setCustomConfig(prev => ({ ...prev, enableAnalytics: val }))}
-                  trackColor={{ true: Theme.colors.primary }}
+                  trackColor={{ true: '#0D564D' }}
                 />
               </View>
 
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>Enable Organization Roster controls</Text>
+              <View className="flex-row justify-between items-center bg-stone-50 p-2 rounded-xl">
+                <Text className="font-jakarta text-xs text-stone-700 flex-1 mr-2">Enable Organization Roster controls</Text>
                 <Switch
                   value={customConfig.enableRosterManagement}
                   onValueChange={(val) => setCustomConfig(prev => ({ ...prev, enableRosterManagement: val }))}
-                  trackColor={{ true: Theme.colors.primary }}
+                  trackColor={{ true: '#0D564D' }}
                 />
               </View>
             </View>
@@ -372,16 +407,20 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
         )}
 
         {/* 5. Upgrade Duration */}
-        <View style={styles.card}>
-          <Text style={styles.cardHeader}>Set Duration Period</Text>
-          <View style={styles.durationRow}>
+        <View className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm gap-2">
+          <Text className="font-sora-bold text-[13px] text-stone-900 mb-1">Set Duration Period</Text>
+          <View className="flex-row gap-1.5">
             {(['1m', '6m', '1y', 'lifetime'] as const).map((d) => (
               <TouchableOpacity
                 key={d}
                 onPress={() => setDuration(d)}
-                style={[styles.durationBtn, duration === d && styles.durationBtnActive]}
+                className={`flex-1 border rounded-xl py-2 items-center ${
+                  duration === d ? 'bg-primary border-primary' : 'bg-stone-50 border-stone-200'
+                }`}
               >
-                <Text style={[styles.durationText, duration === d && styles.durationTextActive]}>
+                <Text className={`font-jakarta-bold text-[11px] ${
+                  duration === d ? 'text-white' : 'text-primary'
+                }`}>
                   {d === '1m' ? '1 Month' : d === '6m' ? '6 Mon' : d === '1y' ? '1 Year' : 'Lifetime'}
                 </Text>
               </TouchableOpacity>
@@ -390,20 +429,20 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
         </View>
 
         {/* 6. Preview & Save */}
-        <View style={styles.previewBox}>
-          <Text style={styles.previewTitle}>Upgrade Summary</Text>
-          <View style={styles.previewGrid}>
-            <View style={styles.previewItem}>
-              <Text style={styles.previewLabel}>RECIPIENT</Text>
-              <Text style={styles.previewValue}>{getSelectedTargetName()}</Text>
+        <View className="bg-primary/5 border-2 border-primary/20 rounded-2xl p-4 gap-3 mt-1.5">
+          <Text className="font-sora-bold text-[13px] text-primary uppercase tracking-wide">Upgrade Summary</Text>
+          <View className="gap-2">
+            <View className="flex-row justify-between items-center">
+              <Text className="font-jakarta-bold text-[9.5px] text-stone-500">RECIPIENT</Text>
+              <Text className="font-jakarta-bold text-xs text-stone-900">{getSelectedTargetName()}</Text>
             </View>
-            <View style={styles.previewItem}>
-              <Text style={styles.previewLabel}>ASSIGNED PLAN</Text>
-              <Text style={styles.previewValue}>{planId ? (planId === 'custom' ? planName : planId.toUpperCase()) : 'Not Selected'}</Text>
+            <View className="flex-row justify-between items-center">
+              <Text className="font-jakarta-bold text-[9.5px] text-stone-500">ASSIGNED PLAN</Text>
+              <Text className="font-jakarta-bold text-xs text-stone-900">{planId ? (planId === 'custom' ? planName : planId.toUpperCase()) : 'Not Selected'}</Text>
             </View>
-            <View style={styles.previewItem}>
-              <Text style={styles.previewLabel}>DURATION</Text>
-              <Text style={styles.previewValue}>
+            <View className="flex-row justify-between items-center">
+              <Text className="font-jakarta-bold text-[9.5px] text-stone-500">DURATION</Text>
+              <Text className="font-jakarta-bold text-xs text-stone-900">
                 {duration === '1m' && '30 Days'}
                 {duration === '6m' && '180 Days'}
                 {duration === '1y' && '365 Days'}
@@ -415,14 +454,14 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
           <TouchableOpacity
             onPress={handleApplyUpgrade}
             disabled={upgradeMutation.isPending}
-            style={styles.applyBtn}
+            className="bg-primary rounded-xl py-3 items-center justify-center shadow-md mt-1"
           >
             {upgradeMutation.isPending ? (
               <ActivityIndicator color="#FFF" />
             ) : (
-              <View style={styles.applyBtnContent}>
+              <View className="flex-row items-center justify-center gap-1.5">
                 <Zap size={16} color="#FFF" />
-                <Text style={styles.applyBtnText}>APPLY MANUAL OVERRIDE</Text>
+                <Text className="font-jakarta-bold text-xs text-white tracking-wide">APPLY MANUAL OVERRIDE</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -431,288 +470,5 @@ export const SuperAdminUpgradesScreen: React.FC<{ navigation?: any }> = ({ navig
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  scrollContent: {
-    padding: Theme.spacing.margin,
-    paddingBottom: 80,
-    gap: Theme.spacing.md,
-  },
-  headerSection: {
-    gap: 4,
-  },
-  sectionHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  sectionDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: Theme.spacing.sm,
-  },
-  cardHeader: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    marginBottom: 4,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  toggleBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingVertical: 10,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  toggleBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  toggleBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.primary,
-  },
-  toggleBtnTextActive: {
-    color: '#FFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 12,
-    height: 44,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    fontFamily: Theme.fonts.body,
-  },
-  targetsList: {
-    gap: 8,
-    marginTop: 4,
-  },
-  targetItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: 10,
-  },
-  targetItemActive: {
-    backgroundColor: Theme.colors.primary + '10',
-    borderColor: Theme.colors.primary,
-  },
-  targetName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  targetTextActive: {
-    color: Theme.colors.primary,
-  },
-  targetMeta: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10.5,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-  },
-  tierBadge: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    color: Theme.colors.outline,
-    overflow: 'hidden',
-  },
-  presetOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  presetBtn: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  presetBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  presetBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10.5,
-    color: Theme.colors.primary,
-  },
-  presetBtnTextActive: {
-    color: '#FFF',
-  },
-  durationRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  durationBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    backgroundColor: Theme.colors.surfaceLow,
-    borderRadius: Theme.radius.lg,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  durationBtnActive: {
-    backgroundColor: Theme.colors.primary,
-    borderColor: Theme.colors.primary,
-  },
-  durationText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11,
-    color: Theme.colors.primary,
-  },
-  durationTextActive: {
-    color: '#FFF',
-  },
-  inputGroup: {
-    gap: 4,
-    marginBottom: 4,
-  },
-  inputLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 11.5,
-    color: Theme.colors.onSurface,
-  },
-  textInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    paddingHorizontal: 10,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-    backgroundColor: Theme.colors.surfaceLow,
-    fontFamily: Theme.fonts.body,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.surfaceLow,
-    padding: 8,
-    borderRadius: Theme.radius.lg,
-  },
-  switchLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.onSurfaceVariant,
-    flex: 1,
-  },
-  previewBox: {
-    backgroundColor: Theme.colors.primary + '08',
-    borderColor: Theme.colors.primary + '20',
-    borderWidth: 1.5,
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    gap: 12,
-    marginTop: 6,
-  },
-  previewTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  previewGrid: {
-    gap: 8,
-  },
-  previewItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  previewLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9.5,
-    color: Theme.colors.outline,
-  },
-  previewValue: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: Theme.colors.onSurface,
-  },
-  applyBtn: {
-    backgroundColor: Theme.colors.primary,
-    borderRadius: Theme.radius.lg,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
-    marginTop: 4,
-  },
-  applyBtnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  applyBtnText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12,
-    color: '#FFF',
-    letterSpacing: 0.5,
-  },
-  emptyText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.outline,
-    textAlign: 'center',
-    paddingVertical: 12,
-  },
-});
 
 export default SuperAdminUpgradesScreen;

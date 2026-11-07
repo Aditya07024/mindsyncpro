@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import {
-  View, StyleSheet, Text, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity,
   Alert, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Wallet, TrendingUp, DollarSign, ChevronDown, ChevronUp, CheckCircle, Banknote } from 'lucide-react-native';
+import { Wallet, TrendingUp, DollarSign, ChevronDown, ChevronUp, Banknote } from 'lucide-react-native';
 import API from '../../lib/api';
-import { Theme } from '../../theme';
 import { AppHeader } from '../../components/AppHeader';
 
 interface SuperAdminEarningsScreenProps { navigation?: any; }
@@ -15,7 +14,7 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [search] = useState('');
 
   const { data: therapistData, isLoading } = useQuery({
     queryKey: ['admin-therapist-earnings'],
@@ -57,40 +56,42 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-surface">
       <AppHeader userFirstName="Admin" role="super_admin" navigation={navigation} />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Theme.colors.primary} />}
+        contentContainerClassName="p-4 pb-20 gap-4"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0D564D" />}
       >
-        <Text style={styles.pageTitle}>Booking Earnings</Text>
-        <Text style={styles.pageDesc}>Per-therapist booking revenue — tap a card to see individual bookings</Text>
+        <View>
+          <Text className="font-sora-bold text-[22px] text-stone-900">Booking Earnings</Text>
+          <Text className="font-jakarta text-xs text-stone-500 mt-0.5">Per-therapist booking revenue — tap a card to see individual bookings</Text>
+        </View>
 
         {/* Platform-wide totals */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { borderColor: '#3b82f630' }]}>
+        <View className="flex-row gap-2">
+          <View className="flex-1 bg-white rounded-2xl p-3 border border-blue-200 items-center gap-1 shadow-sm">
             <DollarSign size={18} color="#3b82f6" />
-            <Text style={[styles.statVal, { color: '#3b82f6' }]}>₹{totalGross.toLocaleString('en-IN')}</Text>
-            <Text style={styles.statLabel}>Total Gross</Text>
-            <Text style={styles.statSub}>{totalSessions} paid sessions</Text>
+            <Text className="font-sora-bold text-[15px] text-blue-500 mt-0.5">₹{totalGross.toLocaleString('en-IN')}</Text>
+            <Text className="font-jakarta-bold text-[10px] text-stone-500 text-center">Total Gross</Text>
+            <Text className="font-jakarta text-[9px] text-stone-400 text-center">{totalSessions} paid sessions</Text>
           </View>
-          <View style={[styles.statCard, { borderColor: '#ef444430' }]}>
+          <View className="flex-1 bg-white rounded-2xl p-3 border border-red-200 items-center gap-1 shadow-sm">
             <Wallet size={18} color="#ef4444" />
-            <Text style={[styles.statVal, { color: '#ef4444' }]}>₹{totalCommission.toLocaleString('en-IN')}</Text>
-            <Text style={styles.statLabel}>Platform (30%)</Text>
-            <Text style={styles.statSub}>Commission retained</Text>
+            <Text className="font-sora-bold text-[15px] text-red-500 mt-0.5">₹{totalCommission.toLocaleString('en-IN')}</Text>
+            <Text className="font-jakarta-bold text-[10px] text-stone-500 text-center">Platform (30%)</Text>
+            <Text className="font-jakarta text-[9px] text-stone-400 text-center">Commission retained</Text>
           </View>
-          <View style={[styles.statCard, { borderColor: '#10b98130' }]}>
+          <View className="flex-1 bg-white rounded-2xl p-3 border border-emerald-200 items-center gap-1 shadow-sm">
             <TrendingUp size={18} color="#10b981" />
-            <Text style={[styles.statVal, { color: '#10b981' }]}>₹{totalPayout.toLocaleString('en-IN')}</Text>
-            <Text style={styles.statLabel}>Payout Due (70%)</Text>
-            <Text style={styles.statSub}>To therapists</Text>
+            <Text className="font-sora-bold text-[15px] text-emerald-500 mt-0.5">₹{totalPayout.toLocaleString('en-IN')}</Text>
+            <Text className="font-jakarta-bold text-[10px] text-stone-500 text-center">Payout Due (70%)</Text>
+            <Text className="font-jakarta text-[9px] text-stone-400 text-center">To therapists</Text>
           </View>
         </View>
 
         {/* Loading state */}
-        {isLoading && <ActivityIndicator color={Theme.colors.primary} style={{ marginTop: 32 }} />}
+        {isLoading && <ActivityIndicator color="#0D564D" className="mt-8" />}
 
         {/* Per-therapist cards */}
         {!isLoading && therapists.map((t: any) => {
@@ -98,46 +99,46 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
           const bookings: any[] = t.bookingDetails ?? [];
 
           return (
-            <View key={String(t.id)} style={styles.therapistCard}>
+            <View key={String(t.id)} className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm">
               {/* Summary row */}
               <TouchableOpacity
                 onPress={() => setExpandedId(isExpanded ? null : String(t.id))}
-                style={styles.cardHeader}
+                className="flex-row items-center gap-3 p-4"
                 activeOpacity={0.7}
               >
-                <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarText}>{t.name?.charAt(0) ?? 'T'}</Text>
+                <View className="w-10 h-10 rounded-full bg-primary/10 items-center justify-center">
+                  <Text className="font-sora-bold text-base text-primary">{t.name?.charAt(0) ?? 'T'}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.therapistName}>{t.name}</Text>
-                  <Text style={styles.therapistSub}>{t.email || 'No email'} · {t.sessionsGiven} paid sessions</Text>
-                  <Text style={styles.upiText}>
+                <View className="flex-1">
+                  <Text className="font-sora-bold text-sm text-stone-900">{t.name}</Text>
+                  <Text className="font-jakarta text-[11px] text-stone-500 mt-0.5">{t.email || 'No email'} · {t.sessionsGiven} paid sessions</Text>
+                  <Text className="font-jakarta text-[10px] text-emerald-600 mt-0.5">
                     UPI: {t.upiId || t.upi || t.paymentDetails?.upiId || 'Not Provided'}
                   </Text>
                 </View>
-                {isExpanded ? <ChevronUp size={18} color={Theme.colors.textMuted} /> : <ChevronDown size={18} color={Theme.colors.textMuted} />}
+                {isExpanded ? <ChevronUp size={18} color="#78716C" /> : <ChevronDown size={18} color="#78716C" />}
               </TouchableOpacity>
 
               {/* Earnings row */}
-              <View style={styles.earningsRow}>
-                <View style={styles.earningItem}>
-                  <Text style={styles.earningLabel}>Gross</Text>
-                  <Text style={styles.earningValWhite}>₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</Text>
+              <View className="flex-row border-t border-stone-100 py-2.5 px-4">
+                <View className="flex-1 items-center">
+                  <Text className="font-jakarta text-[10px] text-stone-500">Gross</Text>
+                  <Text className="font-sora-bold text-[13px] text-stone-900 mt-0.5">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</Text>
                 </View>
-                <View style={styles.earningDivider} />
-                <View style={styles.earningItem}>
-                  <Text style={styles.earningLabel}>Fee (30%)</Text>
-                  <Text style={[styles.earningValWhite, { color: '#ef4444' }]}>-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</Text>
+                <View className="w-px bg-stone-100" />
+                <View className="flex-1 items-center">
+                  <Text className="font-jakarta text-[10px] text-stone-500">Fee (30%)</Text>
+                  <Text className="font-sora-bold text-[13px] text-red-500 mt-0.5">-₹{(t.platformCommission ?? 0).toLocaleString('en-IN')}</Text>
                 </View>
-                <View style={styles.earningDivider} />
-                <View style={styles.earningItem}>
-                  <Text style={styles.earningLabel}>Payout</Text>
-                  <Text style={[styles.earningValWhite, { color: '#10b981' }]}>₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</Text>
+                <View className="w-px bg-stone-100" />
+                <View className="flex-1 items-center">
+                  <Text className="font-jakarta text-[10px] text-stone-500">Payout</Text>
+                  <Text className="font-sora-bold text-[13px] text-emerald-500 mt-0.5">₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</Text>
                 </View>
               </View>
-              <View style={styles.upiContainer}>
-                <Text style={styles.upiLabel}>Payout UPI ID</Text>
-                <Text style={styles.upiValue}>
+              <View className="mx-4 mb-2.5 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                <Text className="font-jakarta-bold text-[10px] text-emerald-800">Payout UPI ID</Text>
+                <Text className="font-sora-bold text-xs text-emerald-700 mt-0.5">
                   {t.upiId || t.upi || t.paymentDetails?.upiId || 'Not Provided'}
                 </Text>
               </View>
@@ -145,48 +146,46 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
               {/* Mark paid button */}
               {(t.totalPayout ?? 0) > 0 && (
                 <TouchableOpacity
-                  style={styles.markPaidBtn}
+                  className="flex-row items-center gap-1.5 mx-4 mb-3 bg-emerald-50 border border-emerald-200 py-2 px-3.5 rounded-full self-start"
                   onPress={() => handleMarkPaid(String(t.id), t.name, t.grossEarnings)}
                 >
                   <Banknote size={14} color="#10b981" />
-                  <Text style={styles.markPaidText}>Mark Paid</Text>
+                  <Text className="font-jakarta-bold text-xs text-emerald-600">Mark Paid</Text>
                 </TouchableOpacity>
               )}
 
               {/* Expanded booking list */}
               {isExpanded && (
-                <View style={styles.bookingList}>
-                  <Text style={styles.bookingListTitle}>All Bookings ({bookings.length})</Text>
+                <View className="border-t border-stone-100 p-4">
+                  <Text className="font-sora-bold text-xs text-stone-500 mb-2">All Bookings ({bookings.length})</Text>
                   {bookings.length === 0 ? (
-                    <Text style={styles.emptyText}>No bookings yet.</Text>
+                    <Text className="font-jakarta text-[13px] text-stone-400 text-center py-4">No bookings yet.</Text>
                   ) : (
                     bookings.map((b: any) => {
                       const isEarned = b.status === 'completed' || (b.status === 'confirmed' && b.paid);
                       return (
-                        <View key={String(b.id)} style={styles.bookingRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.bookingId}>#{String(b.id).slice(-6)}</Text>
-                            <Text style={styles.bookingDate}>
+                        <View key={String(b.id)} className="flex-row items-center py-2.5 border-b border-stone-100">
+                          <View className="flex-1">
+                            <Text className="font-mono text-[11px] text-stone-400">#{String(b.id).slice(-6)}</Text>
+                            <Text className="font-jakarta text-[11px] text-stone-500 mt-0.5">
                               {b.date ? new Date(b.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                             </Text>
                           </View>
-                          <View style={styles.bookingRight}>
-                            <Text style={styles.bookingFee}>₹{(b.fee ?? 0).toLocaleString('en-IN')}</Text>
-                            <View style={[styles.statusBadge, {
-                              backgroundColor:
-                                b.status === 'completed' ? '#dbeafe' :
-                                b.status === 'confirmed' ? '#dcfce7' :
-                                b.status === 'cancelled' ? '#fee2e2' : '#f1f5f9'
-                            }]}>
-                              <Text style={[styles.statusText, {
-                                color:
-                                  b.status === 'completed' ? '#1d4ed8' :
-                                  b.status === 'confirmed' ? '#15803d' :
-                                  b.status === 'cancelled' ? '#dc2626' : '#64748b'
-                              }]}>{b.status.toUpperCase()}</Text>
+                          <View className="items-end gap-1">
+                            <Text className="font-jakarta-bold text-[13px] text-stone-900">₹{(b.fee ?? 0).toLocaleString('en-IN')}</Text>
+                            <View className={`px-2 py-0.5 rounded-full ${
+                              b.status === 'completed' ? 'bg-blue-100' :
+                              b.status === 'confirmed' ? 'bg-green-100' :
+                              b.status === 'cancelled' ? 'bg-red-100' : 'bg-stone-100'
+                            }`}>
+                              <Text className={`font-jakarta-bold text-[9px] ${
+                                b.status === 'completed' ? 'text-blue-700' :
+                                b.status === 'confirmed' ? 'text-green-700' :
+                                b.status === 'cancelled' ? 'text-red-600' : 'text-stone-500'
+                              }`}>{b.status.toUpperCase()}</Text>
                             </View>
                             {isEarned && (
-                              <Text style={styles.bookingPayout}>₹{Math.round((b.fee ?? 0) * 0.7).toLocaleString('en-IN')}</Text>
+                              <Text className="font-jakarta-bold text-[11px] text-emerald-600">₹{Math.round((b.fee ?? 0) * 0.7).toLocaleString('en-IN')}</Text>
                             )}
                           </View>
                         </View>
@@ -195,10 +194,10 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
                   )}
                   {/* Booking totals footer */}
                   {bookings.length > 0 && (
-                    <View style={styles.bookingFooter}>
-                      <Text style={styles.bookingFooterLabel}>Total ({t.sessionsGiven} paid)</Text>
-                      <Text style={styles.bookingFooterGross}>₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</Text>
-                      <Text style={styles.bookingFooterPayout}>→ ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</Text>
+                    <View className="flex-row items-center justify-between mt-2.5 pt-2.5 border-t-2 border-stone-200">
+                      <Text className="font-sora-bold text-xs text-stone-900 flex-1">Total ({t.sessionsGiven} paid)</Text>
+                      <Text className="font-sora-bold text-[13px] text-stone-900">₹{(t.grossEarnings ?? 0).toLocaleString('en-IN')}</Text>
+                      <Text className="font-sora-bold text-[13px] text-emerald-600 ml-2">→ ₹{(t.totalPayout ?? 0).toLocaleString('en-IN')}</Text>
                     </View>
                   )}
                 </View>
@@ -208,111 +207,11 @@ export const SuperAdminEarningsScreen: React.FC<SuperAdminEarningsScreenProps> =
         })}
 
         {!isLoading && therapists.length === 0 && (
-          <Text style={styles.emptyText}>No therapists with bookings found.</Text>
+          <Text className="font-jakarta text-[13px] text-stone-400 text-center py-4">No therapists with bookings found.</Text>
         )}
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
-  scrollContent: { padding: Theme.spacing.margin, paddingBottom: 80, gap: Theme.spacing.md },
-  pageTitle: { fontFamily: Theme.fonts.display, fontSize: 22, fontWeight: '800', color: Theme.colors.onSurface },
-  pageDesc: { fontFamily: Theme.fonts.body, fontSize: 12, color: Theme.colors.textMuted, marginTop: 2 },
-
-  statsGrid: { flexDirection: 'row', gap: Theme.spacing.sm },
-  statCard: {
-    flex: 1, backgroundColor: '#FFF', borderRadius: Theme.radius.xl, padding: 12,
-    borderWidth: 1.5, alignItems: 'center', gap: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
-  statVal: { fontFamily: Theme.fonts.display, fontSize: 15, fontWeight: '800', color: Theme.colors.onSurface, marginTop: 2 },
-  statLabel: { fontFamily: Theme.fonts.bodyBold, fontSize: 10, color: Theme.colors.textMuted, textAlign: 'center' },
-  statSub: { fontFamily: Theme.fonts.body, fontSize: 9, color: Theme.colors.outline, textAlign: 'center' },
-
-  therapistCard: {
-    backgroundColor: '#FFF', borderRadius: Theme.radius.xl, borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: Theme.spacing.md },
-  avatarCircle: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Theme.colors.primaryContainer + '20',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  avatarText: { fontFamily: Theme.fonts.display, fontSize: 16, fontWeight: '800', color: Theme.colors.primary },
-  therapistName: { fontFamily: Theme.fonts.headline, fontSize: 14, color: Theme.colors.onSurface },
-  therapistSub: { fontFamily: Theme.fonts.body, fontSize: 11, color: Theme.colors.textMuted, marginTop: 1 },
-
-  earningsRow: {
-    flexDirection: 'row', borderTopWidth: 1, borderTopColor: Theme.colors.surfaceLow,
-    paddingVertical: 10, paddingHorizontal: Theme.spacing.md,
-  },
-  earningItem: { flex: 1, alignItems: 'center' },
-  earningDivider: { width: 1, backgroundColor: Theme.colors.surfaceLow },
-  earningLabel: { fontFamily: Theme.fonts.body, fontSize: 10, color: Theme.colors.textMuted },
-  earningValWhite: { fontFamily: Theme.fonts.display, fontSize: 13, fontWeight: '700', color: Theme.colors.onSurface, marginTop: 2 },
-
-  markPaidBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, margin: 12, marginTop: 0,
-    backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0',
-    paddingVertical: 8, paddingHorizontal: 14, borderRadius: Theme.radius.full, alignSelf: 'flex-start',
-  },
-  markPaidText: { fontFamily: Theme.fonts.bodyBold, fontSize: 12, color: '#10b981' },
-
-  bookingList: { borderTopWidth: 1, borderTopColor: Theme.colors.surfaceLow, padding: Theme.spacing.md, gap: 0 },
-  bookingListTitle: { fontFamily: Theme.fonts.headline, fontSize: 12, color: Theme.colors.textMuted, marginBottom: 8 },
-
-  bookingRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 9,
-    borderBottomWidth: 1, borderBottomColor: Theme.colors.surfaceLow,
-  },
-  bookingId: { fontFamily: 'monospace', fontSize: 11, color: Theme.colors.outline },
-  bookingDate: { fontFamily: Theme.fonts.body, fontSize: 11, color: Theme.colors.textMuted, marginTop: 2 },
-  bookingRight: { alignItems: 'flex-end', gap: 3 },
-  bookingFee: { fontFamily: Theme.fonts.bodyBold, fontSize: 13, color: Theme.colors.onSurface },
-  statusBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99 },
-  statusText: { fontFamily: Theme.fonts.bodyBold, fontSize: 9 },
-  bookingPayout: { fontFamily: Theme.fonts.bodyBold, fontSize: 11, color: '#10b981' },
-
-  bookingFooter: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginTop: 10, paddingTop: 10, borderTopWidth: 1.5, borderTopColor: Theme.colors.surfaceHigh,
-  },
-  bookingFooterLabel: { fontFamily: Theme.fonts.headline, fontSize: 12, color: Theme.colors.onSurface, flex: 1 },
-  bookingFooterGross: { fontFamily: Theme.fonts.display, fontSize: 13, fontWeight: '700', color: Theme.colors.onSurface },
-  bookingFooterPayout: { fontFamily: Theme.fonts.display, fontSize: 13, fontWeight: '700', color: '#10b981', marginLeft: 8 },
-
-  upiText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: '#10b981',
-    marginTop: 3,
-  },
-  upiContainer: {
-    marginHorizontal: Theme.spacing.md,
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: '#ecfdf5',
-    borderWidth: 1,
-    borderColor: '#a7f3d0',
-  },
-  upiLabel: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: '#065f46',
-  },
-  upiValue: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 12,
-    color: '#047857',
-    marginTop: 2,
-  },
-
-  emptyText: { fontFamily: Theme.fonts.body, fontSize: 13, color: Theme.colors.textMuted, textAlign: 'center', paddingVertical: 16 },
-});
 
 export default SuperAdminEarningsScreen;

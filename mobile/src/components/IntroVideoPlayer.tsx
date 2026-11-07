@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Platform } from 'react-native';
 import { Play } from 'lucide-react-native';
 import { parseVideoUrl } from '../lib/video';
-import { Theme } from '../theme';
 
 // Lazily require react-native-webview on native platforms only to avoid web crash
 let WebView: any = null;
@@ -37,9 +36,6 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
   const hasVideo = !!url && parsed.type !== 'unknown' && !!parsed.embedUrl && !hasError;
   const isCard = mode === 'card';
 
-  // In card mode (therapist list cards):
-  // Show high-res static thumbnail/avatar preview.
-  // Clicking the "🎥 Click here to see introduction of counselor" button pill opens the video modal!
   if (isCard) {
     let thumbnailUrl = avatarUrl;
     if (parsed.type === 'youtube' && parsed.id) {
@@ -47,29 +43,28 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     }
 
     return (
-      <View style={[styles.videoContainer, style]}>
+      <View className="w-full h-full bg-slate-900 relative overflow-hidden" style={style}>
         {thumbnailUrl ? (
-          <Image source={{ uri: thumbnailUrl }} style={styles.avatarImage} />
+          <Image source={{ uri: thumbnailUrl }} className="w-full h-full" resizeMode="cover" />
         ) : (
-          <View style={styles.fallbackContainer}>
-            <View style={styles.initialCircle}>
-              <Text style={styles.initialText}>
+          <View className="w-full h-full bg-primary justify-center items-center">
+            <View className="w-15 h-15 rounded-full bg-white/20 justify-center items-center border-2 border-white">
+              <Text className="text-white text-2xl font-sora-bold">
                 {fallbackName ? fallbackName.charAt(0).toUpperCase() : 'C'}
               </Text>
             </View>
           </View>
         )}
 
-        {/* Video CTA Overlay Button: ONLY clicking this button triggers the video popup modal */}
         {hasVideo && (
-          <View style={styles.playOverlay} pointerEvents="box-none">
+          <View className="absolute inset-0 bg-slate-900/35 justify-center items-center px-3" pointerEvents="box-none">
             <TouchableOpacity
               onPress={onVideoPress}
               activeOpacity={0.8}
-              style={styles.seeIntroPill}
+              className="flex-row items-center gap-1.5 bg-primary px-4 py-7 rounded-3xl border border-white/40 shadow-lg elevation-6 max-w-[92%]"
             >
-              <Play size={14} color="#FFF" fill="#FFF" style={{ marginRight: 4 }} />
-              <Text style={styles.seeIntroText}>
+              <Play size={14} color="#FFF" fill="#FFF" />
+              <Text className="text-white text-xs font-jakarta-bold tracking-wide text-center">
                 Click here to see introduction of counselor
               </Text>
             </TouchableOpacity>
@@ -79,15 +74,14 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     );
   }
 
-  // Fallback avatar/placeholder if no valid video URL or player error in modal mode
   if (!hasVideo) {
     return (
-      <View style={[styles.fallbackContainer, style]}>
+      <View className="w-full h-full bg-primary justify-center items-center" style={style}>
         {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          <Image source={{ uri: avatarUrl }} className="w-full h-full" resizeMode="cover" />
         ) : (
-          <View style={styles.initialCircle}>
-            <Text style={styles.initialText}>
+          <View className="w-15 h-15 rounded-full bg-white/20 justify-center items-center border-2 border-white">
+            <Text className="text-white text-2xl font-sora-bold">
               {fallbackName ? fallbackName.charAt(0).toUpperCase() : 'C'}
             </Text>
           </View>
@@ -96,7 +90,6 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     );
   }
 
-  // Active Video Player Mode (Modal & Therapist Detail Screen)
   let webUri = parsed.embedUrl;
   let htmlContent: string | null = null;
 
@@ -122,11 +115,10 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     `;
   }
 
-  // React Native Web Embed
   if (Platform.OS === 'web') {
     if (htmlContent) {
       return (
-        <View style={[styles.videoContainer, style]}>
+        <View className="w-full h-full bg-slate-900 relative overflow-hidden" style={style}>
           <iframe
             srcDoc={htmlContent}
             style={{ width: '100%', height: '100%', border: 0 } as any}
@@ -137,7 +129,7 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
       );
     }
     return (
-      <View style={[styles.videoContainer, style]}>
+      <View className="w-full h-full bg-slate-900 relative overflow-hidden" style={style}>
         <iframe
           src={webUri}
           style={{ width: '100%', height: '100%', border: 0 } as any}
@@ -148,14 +140,13 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     );
   }
 
-  // Native iOS & Android WebView Player
   if (WebView) {
     const webViewSource = htmlContent ? { html: htmlContent } : { uri: webUri };
     return (
-      <View style={[styles.videoContainer, style]}>
+      <View className="w-full h-full bg-slate-900 relative overflow-hidden" style={style}>
         <WebView
           source={webViewSource}
-          style={styles.fullMedia}
+          className="w-full h-full"
           javaScriptEnabled={true}
           domStorageEnabled={true}
           allowsInlineMediaPlayback={true}
@@ -167,14 +158,13 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
     );
   }
 
-  // Fallback if WebView is not available
   return (
-    <View style={[styles.fallbackContainer, style]}>
+    <View className="w-full h-full bg-primary justify-center items-center" style={style}>
       {avatarUrl ? (
-        <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+        <Image source={{ uri: avatarUrl }} className="w-full h-full" resizeMode="cover" />
       ) : (
-        <View style={styles.initialCircle}>
-          <Text style={styles.initialText}>
+        <View className="w-15 h-15 rounded-full bg-white/20 justify-center items-center border-2 border-white">
+          <Text className="text-white text-2xl font-sora-bold">
             {fallbackName ? fallbackName.charAt(0).toUpperCase() : 'C'}
           </Text>
         </View>
@@ -183,74 +173,4 @@ export const IntroVideoPlayer: React.FC<IntroVideoPlayerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  videoContainer: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#0F172A',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  fullMedia: {
-    width: '100%',
-    height: '100%',
-  },
-  fallbackContainer: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#0D564D',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  initialCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFF',
-  },
-  initialText: {
-    color: '#FFF',
-    fontSize: 26,
-    fontWeight: 'bold',
-  },
-  playOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-  },
-  seeIntroPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#0D564D',
-    paddingHorizontal: 16,
-    paddingVertical: 30,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
-    maxWidth: '92%',
-  },
-  seeIntroText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontFamily: Theme.fonts.bodyBold,
-    letterSpacing: 0.2,
-    textAlign: 'center',
-  },
-});
+export default IntroVideoPlayer;

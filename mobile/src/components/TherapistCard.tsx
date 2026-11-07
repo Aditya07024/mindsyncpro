@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Star, ShieldCheck, Clock, MessageCircle, MapPin } from 'lucide-react-native';
-import { Theme } from '../theme';
 import { IntroVideoPlayer } from './IntroVideoPlayer';
 
 export interface TherapistData {
@@ -54,9 +53,13 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({
   const locationText = therapist.location || (therapist.city ? `${therapist.city}${therapist.state ? `, ${therapist.state}` : ''}` : 'Online');
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.92} style={styles.card}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.92}
+      className="bg-white rounded-2xl border border-slate-200 mb-4 overflow-hidden shadow-sm"
+    >
       {/* Top Video Header */}
-      <View style={styles.videoHeader}>
+      <View className="w-full h-[180px] bg-slate-900 relative">
         <IntroVideoPlayer
           url={therapist.introVideoUrl}
           mode="card"
@@ -65,24 +68,24 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({
           onVideoPress={onVideoPress}
         />
         {/* Rating Floating Badge */}
-        <View style={styles.floatingRating} pointerEvents="none">
+        <View className="absolute top-2.5 right-2.5 bg-white/95 px-2 py-1 rounded-full flex-row items-center gap-1 shadow-sm" pointerEvents="none">
           <Star size={13} color="#F59E0B" fill="#F59E0B" />
-          <Text style={styles.floatingRatingText}>{ratingVal}</Text>
+          <Text className="text-xs font-bold text-slate-900">{ratingVal}</Text>
         </View>
       </View>
 
       {/* Card Content Body */}
-      <View style={styles.body}>
+      <View className="p-3.5">
         {/* Name & Verification */}
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.nameText} numberOfLines={1}>
+        <View className="flex-row items-center justify-between mb-1">
+          <View className="flex-1">
+            <Text className="text-lg font-sora-bold text-slate-900" numberOfLines={1}>
               {therapist.name}
             </Text>
             {therapist.verified && (
-              <View style={styles.verifiedBadge}>
+              <View className="flex-row items-center gap-1 mt-0.5 bg-sky-100 self-start px-2 py-0.5 rounded-full">
                 <ShieldCheck size={11} color="#0284C7" />
-                <Text style={styles.verifiedText}>Counsellor Verified</Text>
+                <Text className="text-[10px] font-semibold text-sky-700">Counsellor Verified</Text>
               </View>
             )}
           </View>
@@ -90,231 +93,71 @@ export const TherapistCard: React.FC<TherapistCardProps> = ({
 
         {/* Bio Snippet */}
         {therapist.bio ? (
-          <Text style={styles.bioText} numberOfLines={2}>
+          <Text className="text-[13px] text-slate-600 leading-[18px] my-1.5" numberOfLines={2}>
             {therapist.bio}
           </Text>
         ) : (
-          <Text style={styles.bioText} numberOfLines={2}>
+          <Text className="text-[13px] text-slate-600 leading-[18px] my-1.5" numberOfLines={2}>
             Experienced compassionate counselor offering evidence-based therapy and guidance.
           </Text>
         )}
 
         {/* Specialization Chips */}
-        <View style={styles.specsRow}>
+        <View className="flex-row flex-wrap gap-1.5 my-1.5">
           {specsList.slice(0, 3).map((spec, idx) => (
-            <View key={idx} style={styles.specChip}>
-              <Text style={styles.specChipText}>{spec}</Text>
+            <View key={idx} className="bg-slate-100 px-2.5 py-1 rounded-full">
+              <Text className="text-[11px] font-medium text-slate-700">{spec}</Text>
             </View>
           ))}
         </View>
 
         {/* Meta Info Row: Experience/Sessions, Language, Location */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
+        <View className="flex-row items-center justify-between py-2 my-1 border-t border-b border-slate-100">
+          <View className="flex-row items-center gap-1">
             <Clock size={13} color="#64748B" />
-            <Text style={styles.metaText}>
+            <Text className="text-xs text-slate-500">
               {therapist.sessionCount ? `${therapist.sessionCount} sessions` : `${therapist.experience || 3}+ yrs exp`}
             </Text>
           </View>
 
-          <View style={styles.metaItem}>
+          <View className="flex-row items-center gap-1">
             <MessageCircle size={13} color="#64748B" />
-            <Text style={styles.metaText}>{languagesList[0]}</Text>
+            <Text className="text-xs text-slate-500">{languagesList[0]}</Text>
           </View>
 
-          <View style={styles.metaItem}>
+          <View className="flex-row items-center gap-1">
             <MapPin size={13} color="#64748B" />
-            <Text style={styles.metaText} numberOfLines={1}>{locationText}</Text>
+            <Text className="text-xs text-slate-500" numberOfLines={1}>{locationText}</Text>
           </View>
         </View>
 
         {/* Footer: Fee / Coverage & CTA Button */}
-        <View style={styles.footerRow}>
-          <View style={styles.priceContainer}>
+        <View className="flex-row items-center justify-between mt-2">
+          <View className="justify-center">
             {isOrgCovered ? (
               <View>
-                <Text style={styles.freeOrgBadge}>FREE (Org Covered)</Text>
-                {orgName && <Text style={styles.orgSubText}>{orgName}</Text>}
+                <Text className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  FREE (Org Covered)
+                </Text>
+                {orgName && <Text className="text-[10px] text-slate-500 mt-0.5">{orgName}</Text>}
               </View>
             ) : (
               <View>
-                <Text style={styles.priceAmount}>₹{feeVal}</Text>
-                <Text style={styles.pricePeriod}>per 45 min session</Text>
+                <Text className="text-lg font-sora-bold text-slate-900">₹{feeVal}</Text>
+                <Text className="text-[10px] text-slate-500 -mt-0.5">per 45 min session</Text>
               </View>
             )}
           </View>
 
           <TouchableOpacity
             onPress={onBookPress || onPress}
-            style={styles.bookButton}
+            className="bg-primary px-4 py-2.5 rounded-xl"
             activeOpacity={0.8}
           >
-            <Text style={styles.bookButtonText}>Book Session</Text>
+            <Text className="text-white text-[13px] font-sora-bold">Book Session</Text>
           </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
-    overflow: 'hidden',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  videoHeader: {
-    width: '100%',
-    height: 180,
-    backgroundColor: '#0F172A',
-    position: 'relative',
-  },
-  floatingRating: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  floatingRatingText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  body: {
-    padding: 14,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  nameText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-    backgroundColor: '#E0F2FE',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  verifiedText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#0369A1',
-  },
-  bioText: {
-    fontSize: 13,
-    color: '#475569',
-    lineHeight: 18,
-    marginVertical: 6,
-  },
-  specsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginVertical: 6,
-  },
-  specChip: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 14,
-  },
-  specChipText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#334155',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    marginVertical: 4,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metaText: {
-    fontSize: 12,
-    color: '#64748B',
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  priceContainer: {
-    justifyContent: 'center',
-  },
-  priceAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  pricePeriod: {
-    fontSize: 10,
-    color: '#64748B',
-    marginTop: -2,
-  },
-  freeOrgBadge: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#059669',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  orgSubText: {
-    fontSize: 10,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  bookButton: {
-    backgroundColor: '#0D564D',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  bookButtonText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-});

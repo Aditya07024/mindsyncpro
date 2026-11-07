@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, useWindowDimensions } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import { Send, AlertTriangle, Sparkles } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Theme } from '../../theme';
 import { useStore, FREE_DAILY_LIMIT } from '../../lib/store';
 import { ManasAvatar } from '../../components/ManasAvatar';
 import { CrisisOverlay } from '../../components/CrisisOverlay';
@@ -68,7 +67,6 @@ export const ChatScreen: React.FC = () => {
               .filter((m: Message) => m.timestamp >= fifteenDaysAgo && !m.content.includes("I'm having trouble responding right now"));
             setMessages(mapped);
           } else {
-            // Fallback to initial welcome message if no history exists yet
             setMessages([
               {
                 id: 'initial',
@@ -81,7 +79,6 @@ export const ChatScreen: React.FC = () => {
         } catch (err) {
           console.warn("Failed to fetch conversation history:", err);
           const resolvedFirstName = useStore.getState().firstName || 'friend';
-          // Fallback to welcome message on error
           setMessages([
             {
               id: 'initial',
@@ -96,10 +93,6 @@ export const ChatScreen: React.FC = () => {
       };
 
       loadHistory();
-      
-      return () => {
-        // Optional cleanup on unfocus
-      };
     }, [])
   );
 
@@ -118,7 +111,6 @@ export const ChatScreen: React.FC = () => {
     const text = input.trim();
     if (!text || streaming || limitHit) return;
 
-    // Detect immediate crisis keywords
     if (detectCrisis(text)) {
       setCrisis(true);
     }
@@ -143,26 +135,21 @@ export const ChatScreen: React.FC = () => {
     };
     setMessages(prev => [...prev, assistantPlaceholder]);
 
-    // Scroll to bottom immediately
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
 
     try {
-      // Fetch response using API module
       const res = await API.chat.sendMessage({ message: text });
-      
-      // Update subscription info
       API.subscription.get().then(setSubData).catch(() => null);
       
       let replyText = res?.reply || "I am here with you. Can you tell me more about that?";
       
-      // Simulate typing animation character by character for a highly polished micro-interaction feel
       let index = 0;
       const interval = setInterval(() => {
         if (index < replyText.length) {
           setMessages(prev => prev.map(m => 
             m.id === placeholderId ? { ...m, content: replyText.substring(0, index + 1) } : m
           ));
-          index += 2; // print 2 chars at a time for smooth pacing
+          index += 2;
           scrollRef.current?.scrollToEnd({ animated: false });
         } else {
           clearInterval(interval);
@@ -172,7 +159,6 @@ export const ChatScreen: React.FC = () => {
 
     } catch (err) {
       console.warn("API Chat fetch error, using graceful local empathy responder:", err);
-      // Failsafe local response generator for offline or simulation stages
       const fallbackReplies = [
         "I hear you. That sounds like a heavy weight to carry. Let's breathe through it together.",
         "Take a slow breath. Whatever you are feeling right now is completely okay to feel. Tell me more.",
@@ -198,34 +184,31 @@ export const ChatScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={Theme.colors.primary} />
+      <View className="flex-1 bg-surface justify-center items-center">
+        <ActivityIndicator size="large" color="#0D564D" />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-surface">
       {/* Dynamic top bar */}
-      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.topBarLeft}>
+      <View 
+        className="flex-row justify-between items-center px-4 pb-2 bg-white border-b border-[#DFEBE7]" 
+        style={{ paddingTop: insets.top + 8 }}
+      >
+        <View className="flex-row items-center gap-2">
           <ManasAvatar size={34} />
           <View>
-            <Text style={styles.companionName}>Manas</Text>
-            <View style={styles.statusRow}>
-              <View style={styles.pulseDot} />
-              <Text style={styles.statusText}>AI companion · always here</Text>
+            <Text className="font-sora-semibold text-base text-[#191C1B]">Manas</Text>
+            <View className="flex-row items-center gap-1 mt-0.5">
+              <View className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <Text className="font-jakarta text-[11px] text-[#717875]">AI companion · always here</Text>
             </View>
           </View>
         </View>
-        <View style={[
-          styles.limitBadge,
-          limitHit ? styles.limitBadgeHit : styles.limitBadgeNormal
-        ]}>
-          <Text style={[
-            styles.limitText,
-            limitHit ? styles.limitTextHit : styles.limitTextNormal
-          ]}>
+        <View className={`px-2 py-0.5 rounded-full ${limitHit ? 'bg-red-100' : 'bg-primary/10'}`}>
+          <Text className={`font-jakarta-bold text-[10px] ${limitHit ? 'text-red-700' : 'text-primary'}`}>
             {isUnlimited ? 'Unlimited' : `${remaining} left`}
           </Text>
         </View>
@@ -233,41 +216,36 @@ export const ChatScreen: React.FC = () => {
 
       {/* Messages Feed */}
       <ScrollView
-  ref={scrollRef}
-  keyboardShouldPersistTaps="handled"
-  contentContainerStyle={styles.feedContent}
->
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, gap: 10 }}
+      >
         {messages.map(m => {
           const isUser = m.role === 'user';
           return (
             <View 
               key={m.id} 
-              style={[
-                styles.msgBubbleRow,
-                { maxWidth: maxBubbleWidth },
-                isUser ? styles.msgRowUser : styles.msgRowAssistant
-              ]}
+              className={`flex-row items-end gap-2 ${isUser ? 'self-end flex-row-reverse' : 'self-start'}`}
+              style={{ maxWidth: maxBubbleWidth }}
             >
               {!isUser && (
-                <View style={styles.avatarMini}>
+                <View className="w-6 h-6 rounded-full bg-primary justify-center items-center mb-0.5">
                   <Sparkles size={12} color="#FFF" />
                 </View>
               )}
-              <View style={[
-                styles.bubble,
-                isUser ? styles.bubbleUser : styles.bubbleAssistant
-              ]}>
+              <View className={`rounded-3xl p-3 flex-shrink shadow-sm ${
+                isUser ? 'bg-primary rounded-br-sm' : 'bg-white rounded-bl-sm border border-[#DFEBE7]'
+              }`}>
                 {m.content === '' && streaming ? (
-                  <View style={styles.typingBox}>
-                    <View style={styles.typingDot} />
-                    <View style={styles.typingDot} />
-                    <View style={styles.typingDot} />
+                  <View className="flex-row gap-1 px-2 py-1.5">
+                    <View className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                    <View className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                    <View className="w-1.5 h-1.5 rounded-full bg-primary/50" />
                   </View>
                 ) : (
-                  <Text style={[
-                    styles.bubbleText,
-                    isUser ? styles.textWhite : styles.textDark
-                  ]}>
+                  <Text className={`font-jakarta text-[15px] leading-[22px] flex-shrink ${
+                    isUser ? 'text-white' : 'text-[#191C1B]'
+                  }`}>
                     {m.content}
                   </Text>
                 )}
@@ -281,12 +259,12 @@ export const ChatScreen: React.FC = () => {
       <Animated.View style={[footerAnimatedStyle, { backgroundColor: 'transparent' }]} pointerEvents="box-none">
         {/* Limit Warning banner */}
         {limitHit && (
-          <View style={styles.limitWarning}>
-            <View style={styles.warningHead}>
-              <AlertTriangle size={16} color={Theme.colors.secondary} />
-              <Text style={styles.warningTitle}>Daily limit reached</Text>
+          <View className="bg-secondary/10 border border-secondary/25 rounded-2xl p-3 mx-4 mb-2">
+            <View className="flex-row items-center gap-1.5 mb-0.5">
+              <AlertTriangle size={16} color="#9D4223" />
+              <Text className="font-sora-semibold text-[13px] text-secondary">Daily limit reached</Text>
             </View>
-            <Text style={styles.warningDesc}>
+            <Text className="font-jakarta text-[11px] text-[#717875] leading-4">
               {dailyLimit <= 7
                 ? 'Come back tomorrow, or upgrade to Mann Shanti (₹199/mo) for 100 messages a day.'
                 : 'Come back tomorrow, or upgrade to Apna Therapist for unlimited messages.'}
@@ -295,14 +273,17 @@ export const ChatScreen: React.FC = () => {
         )}
 
         {/* Input container */}
-        <View style={[styles.inputArea, { paddingBottom: Math.max(insets.bottom, 8) + 80 }]}>
+        <View 
+          className="flex-row items-center gap-2 px-4 py-1 bg-transparent"
+          style={{ paddingBottom: Math.max(insets.bottom, 8) + 80 }}
+        >
           <TextInput
             value={input}
             onChangeText={setInput}
             editable={!streaming && !limitHit}
             placeholder={limitHit ? 'Daily limit reached' : 'Type what you feel…'}
-            placeholderTextColor={Theme.colors.outline}
-            style={styles.chatInput}
+            placeholderTextColor="#A1A1AA"
+            className="flex-1 h-[50px] rounded-full border-[1.5px] border-slate-200 px-4.5 text-sm font-jakarta text-[#191C1B] bg-white shadow-sm"
             onFocus={() => {
               requestAnimationFrame(() => {
                 scrollRef.current?.scrollToEnd({ animated: false });
@@ -312,10 +293,9 @@ export const ChatScreen: React.FC = () => {
           <TouchableOpacity
             onPress={handleSend}
             disabled={!input.trim() || streaming || limitHit}
-            style={[
-              styles.sendBtn,
-              (!input.trim() || streaming || limitHit) && styles.sendBtnDisabled
-            ]}
+            className={`w-[50px] h-[50px] rounded-full bg-primary justify-center items-center shadow-md ${
+              (!input.trim() || streaming || limitHit) ? 'opacity-40' : ''
+            }`}
           >
             <Send size={18} color="#FFF" />
           </TouchableOpacity>
@@ -327,211 +307,4 @@ export const ChatScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xs,
-    backgroundColor: Theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.surfaceHigh,
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.xs,
-  },
-  companionName: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 1,
-  },
-  pulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#4CAF50',
-  },
-  statusText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-  },
-  limitBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Theme.radius.full,
-  },
-  limitBadgeNormal: {
-    backgroundColor: Theme.colors.primary + '15',
-  },
-  limitBadgeHit: {
-    backgroundColor: Theme.colors.errorContainer,
-  },
-  limitText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-  },
-  limitTextNormal: {
-    color: Theme.colors.primary,
-  },
-  limitTextHit: {
-    color: Theme.colors.onErrorContainer,
-  },
-  feed: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  feedContent: {
-    paddingHorizontal: Theme.spacing.margin,
-    paddingVertical: Theme.spacing.md,
-    gap: Theme.spacing.sm,
-  },
-  msgBubbleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-    maxWidth: '80%',
-  },
-  msgRowUser: {
-    alignSelf: 'flex-end',
-    flexDirection: 'row-reverse',
-  },
-  msgRowAssistant: {
-    alignSelf: 'flex-start',
-  },
-  avatarMini: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  bubble: {
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.sm,
-    flexShrink: 1,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  bubbleUser: {
-    backgroundColor: Theme.colors.primary,
-    borderBottomRightRadius: 4,
-  },
-  bubbleAssistant: {
-    backgroundColor: Theme.colors.surface,
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  bubbleText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 15,
-    lineHeight: 22,
-    flexShrink: 1,
-  },
-  textWhite: {
-    color: '#FFF',
-  },
-  textDark: {
-    color: Theme.colors.onSurface,
-  },
-  typingBox: {
-    flexDirection: 'row',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-  typingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Theme.colors.primary + '80',
-  },
-  limitWarning: {
-    backgroundColor: Theme.colors.secondaryContainer + '10',
-    borderWidth: 1,
-    borderColor: Theme.colors.secondaryContainer + '40',
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.sm,
-    marginHorizontal: Theme.spacing.margin,
-    marginBottom: Theme.spacing.xs,
-  },
-  warningHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
-  warningTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.secondary,
-  },
-  warningDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    lineHeight: 16,
-  },
-  inputArea: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: Theme.spacing.margin,
-    paddingVertical: 4,
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-  },
-  chatInput: {
-    flex: 1,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 18,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  sendBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  sendBtnDisabled: {
-    opacity: 0.4,
-  },
-});
 export default ChatScreen;

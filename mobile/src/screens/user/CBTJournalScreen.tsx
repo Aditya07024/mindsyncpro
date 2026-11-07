@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import { ArrowLeft, BookOpen, Sparkles, Check, AlertTriangle } from 'lucide-react-native';
 import API from '../../lib/api';
 import { Theme } from '../../theme';
@@ -129,32 +129,31 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
     }
   };
 
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView className="flex-1 bg-surface" contentContainerClassName="p-5 pb-8 gap-4">
       {/* Header back button */}
-      <View style={styles.backRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <View className="flex-row items-center pt-12 gap-2">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="w-[38px] h-[38px] rounded-full bg-white justify-center items-center border border-[#E0E2E0]">
           <ArrowLeft size={20} color={Theme.colors.onSurface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thought Journal</Text>
+        <Text className="font-sora text-lg text-onSurface">Thought Journal</Text>
       </View>
 
       {/* Intro info box */}
-      <View style={styles.infoBox}>
+      <View className="flex-row items-center bg-[#0D564D10] p-3 rounded-2xl gap-2">
         <Sparkles size={16} color={Theme.colors.primary} />
-        <Text style={styles.infoText}>
+        <Text className="font-jakarta text-xs text-primary flex-1 leading-4">
           Use cognitive restructuring to challenge distressing automated thoughts and reframe them logically.
         </Text>
       </View>
 
       {/* Limit warning banner */}
       {limitHit && (
-        <View style={styles.limitBanner}>
+        <View className="flex-row items-start bg-[#FDF2F2] border border-[#F8D7DA] p-4 rounded-2xl gap-3">
           <AlertTriangle size={18} color="#DE4E37" style={{ marginTop: 2 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.limitBannerTitle}>Weekly Limit Reached</Text>
-            <Text style={styles.limitBannerText}>
+          <View className="flex-1">
+            <Text className="font-sora-bold text-sm text-[#842029]">Weekly Limit Reached</Text>
+            <Text className="font-jakarta text-xs text-[#842029] leading-4 mt-0.5">
               You've used your {weekEntries} / 3 free journal entries for this week. Please upgrade to unlock unlimited journaling and AI insights.
             </Text>
           </View>
@@ -162,16 +161,16 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
       )}
 
       {/* Today Prompt Section */}
-      <View style={styles.promptCard}>
-        <Text style={styles.promptSub}>TODAY'S PROMPT</Text>
-        <Text style={styles.promptTitle}>{todayPrompt}</Text>
+      <View className="bg-white border border-[#E0E2E0] rounded-3xl p-4 gap-1">
+        <Text className="font-jakarta-bold text-[9px] text-primary tracking-wider">TODAY'S PROMPT</Text>
+        <Text className="font-sora text-base text-onSurface">{todayPrompt}</Text>
       </View>
 
       {/* Step 1: Situation */}
-      <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 1</Text>
-        <Text style={styles.secTitle}>The Situation</Text>
-        <Text style={styles.secDesc}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1.5">
+        <Text className="font-jakarta-bold text-[10px] text-secondary tracking-wider">STEP 1</Text>
+        <Text className="font-sora text-base text-onSurface">The Situation</Text>
+        <Text className="font-jakarta text-xs text-[#71787D] leading-4 mb-1">
           What happened? Describe the trigger event objectively.
         </Text>
         <TextInput
@@ -182,15 +181,16 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           editable={!limitHit}
           placeholder={limitHit ? "Journaling is locked" : "e.g. 'Receiving a brief feedback email from my project supervisor...'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 60 }, limitHit && { opacity: 0.6 }]}
+          className={`border border-[#E0E2E0] rounded-2xl bg-[#F0F2F1] p-3 text-sm font-jakarta text-onSurface h-[60px] ${limitHit ? 'opacity-60' : ''}`}
+          textAlignVertical="top"
         />
       </View>
 
       {/* Step 2: Automated Negative Thought */}
-      <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 2</Text>
-        <Text style={styles.secTitle}>Automated Negative Thought</Text>
-        <Text style={styles.secDesc}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1.5">
+        <Text className="font-jakarta-bold text-[10px] text-secondary tracking-wider">STEP 2</Text>
+        <Text className="font-sora text-base text-onSurface">Automated Negative Thought</Text>
+        <Text className="font-jakarta text-xs text-[#71787D] leading-4 mb-1">
           What absolute, distressing thought went through your mind?
         </Text>
         <TextInput
@@ -201,19 +201,20 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           editable={!limitHit}
           placeholder={limitHit ? "Journaling is locked" : "e.g. 'I will stumble during this team presentation, and everyone will think I am incompetent…'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 75 }, limitHit && { opacity: 0.6 }]}
+          className={`border border-[#E0E2E0] rounded-2xl bg-[#F0F2F1] p-3 text-sm font-jakarta text-onSurface h-[75px] ${limitHit ? 'opacity-60' : ''}`}
+          textAlignVertical="top"
         />
       </View>
 
       {/* Step 3: Cognitive Distortions */}
-      <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 3</Text>
-        <Text style={styles.secTitle}>Identify Cognitive Distortions</Text>
-        <Text style={styles.secDesc}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1.5">
+        <Text className="font-jakarta-bold text-[10px] text-secondary tracking-wider">STEP 3</Text>
+        <Text className="font-sora text-base text-onSurface">Identify Cognitive Distortions</Text>
+        <Text className="font-jakarta text-xs text-[#71787D] leading-4 mb-1">
           Which emotional traps or biases are active in this thought? (Select multiple)
         </Text>
 
-        <View style={styles.distortionsGrid}>
+        <View className="gap-2 mt-1">
           {distortionsList.map(dist => {
             const active = selectedDistortions.includes(dist.id);
             return (
@@ -221,18 +222,16 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
                 key={dist.id}
                 disabled={limitHit}
                 onPress={() => handleToggleDistortion(dist.id)}
-                style={[
-                  styles.distCard,
-                  active && styles.distCardActive,
-                  limitHit && { opacity: 0.6 }
-                ]}
+                className={`flex-row justify-between items-center border rounded-2xl p-3 ${
+                  active ? 'border-primary border-[1.5px] bg-primary/5' : 'border-[#E0E2E0] bg-[#F0F2F1]'
+                } ${limitHit ? 'opacity-60' : ''}`}
               >
-                <View style={styles.distCardLeft}>
-                  <Text style={styles.distLabel}>{dist.label}</Text>
-                  <Text style={styles.distDesc}>{dist.desc}</Text>
+                <View className="flex-1 mr-2">
+                  <Text className="font-sora text-[13px] text-onSurface">{dist.label}</Text>
+                  <Text className="font-jakarta text-[11px] text-[#71787D] mt-0.5">{dist.desc}</Text>
                 </View>
                 {active && (
-                  <View style={styles.checkIndicator}>
+                  <View className="w-[18px] h-[18px] rounded-full bg-primary justify-center items-center">
                     <Check size={12} color="#FFF" />
                   </View>
                 )}
@@ -243,10 +242,10 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
       </View>
 
       {/* Step 4: Emotional Feeling */}
-      <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 4</Text>
-        <Text style={styles.secTitle}>Emotional Feeling</Text>
-        <Text style={styles.secDesc}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1.5">
+        <Text className="font-jakarta-bold text-[10px] text-secondary tracking-wider">STEP 4</Text>
+        <Text className="font-sora text-base text-onSurface">Emotional Feeling</Text>
+        <Text className="font-jakarta text-xs text-[#71787D] leading-4 mb-1">
           What emotion did you experience, and how intensely?
         </Text>
         <TextInput
@@ -255,15 +254,15 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           editable={!limitHit}
           placeholder={limitHit ? "Journaling is locked" : "e.g. 'Anxious and insecure (8/10)'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, limitHit && { opacity: 0.6 }]}
+          className={`border border-[#E0E2E0] rounded-2xl bg-[#F0F2F1] p-3 text-sm font-jakarta text-onSurface ${limitHit ? 'opacity-60' : ''}`}
         />
       </View>
 
       {/* Step 5: Logical Reframing */}
-      <View style={styles.section}>
-        <Text style={styles.secNum}>STEP 5</Text>
-        <Text style={styles.secTitle}>Objective Fact-Based Reframe</Text>
-        <Text style={styles.secDesc}>
+      <View className="bg-white rounded-3xl p-4 border border-[#E0E2E0] gap-1.5">
+        <Text className="font-jakarta-bold text-[10px] text-secondary tracking-wider">STEP 5</Text>
+        <Text className="font-sora text-base text-onSurface">Objective Fact-Based Reframe</Text>
+        <Text className="font-jakarta text-xs text-[#71787D] leading-4 mb-1">
           Now challenge that thought. What would a supportive, neutral observer say is the realistic truth?
         </Text>
         <TextInput
@@ -274,7 +273,8 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
           editable={!limitHit}
           placeholder={limitHit ? "Journaling is locked" : "e.g. 'I may feel nervous, but I have prepared my slides thoroughly. Stumbling slightly is normal, and it does not make me incompetent.'"}
           placeholderTextColor={Theme.colors.outline}
-          style={[styles.textInput, { height: 75 }, limitHit && { opacity: 0.6 }]}
+          className={`border border-[#E0E2E0] rounded-2xl bg-[#F0F2F1] p-3 text-sm font-jakarta text-onSurface h-[75px] ${limitHit ? 'opacity-60' : ''}`}
+          textAlignVertical="top"
         />
       </View>
 
@@ -282,23 +282,23 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
       {limitHit ? (
         <TouchableOpacity 
           onPress={() => navigation.navigate('Plans')} 
-          style={[styles.saveBtn, { backgroundColor: Theme.colors.secondary }]}
+          className="flex-row bg-secondary h-[52px] rounded-full justify-center items-center gap-2"
         >
           <Sparkles size={18} color="#FFF" />
-          <Text style={styles.saveBtnText}>Upgrade to Unlimited Journaling</Text>
+          <Text className="text-white font-sora text-sm">Upgrade to Unlimited Journaling</Text>
         </TouchableOpacity>
       ) : (
         <TouchableOpacity 
           onPress={handleSave} 
           disabled={loading || checkingLimit}
-          style={styles.saveBtn}
+          className="flex-row bg-primary h-[52px] rounded-full justify-center items-center gap-2"
         >
           {loading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <>
               <BookOpen size={18} color="#FFF" />
-              <Text style={styles.saveBtnText}>Record Thought Sheet</Text>
+              <Text className="text-white font-sora text-sm">Record Thought Sheet</Text>
             </>
           )}
         </TouchableOpacity>
@@ -307,186 +307,4 @@ export const CBTJournalScreen: React.FC<CBTJournalScreenProps> = ({ navigation }
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-  },
-  content: {
-    padding: Theme.spacing.margin,
-    paddingBottom: Theme.spacing.xl,
-    gap: Theme.spacing.md,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    gap: Theme.spacing.sm,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-  },
-  headerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 18,
-    color: Theme.colors.onSurface,
-  },
-  infoBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Theme.colors.primary + '10',
-    padding: Theme.spacing.sm,
-    borderRadius: Theme.radius.lg,
-    gap: 8,
-  },
-  infoText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.primaryContainer,
-    flex: 1,
-    lineHeight: 16,
-  },
-  promptCard: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    gap: 4,
-  },
-  promptSub: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 9,
-    color: Theme.colors.primary,
-    letterSpacing: 0.5,
-  },
-  promptTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  section: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    gap: 6,
-  },
-  secNum: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-    color: Theme.colors.secondary,
-    letterSpacing: 0.5,
-  },
-  secTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 16,
-    color: Theme.colors.onSurface,
-  },
-  secDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: Theme.colors.textMuted,
-    lineHeight: 16,
-    marginBottom: 4,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    backgroundColor: Theme.colors.surfaceLow,
-    padding: 12,
-    fontSize: 14,
-    fontFamily: Theme.fonts.body,
-    color: Theme.colors.onSurface,
-    textAlignVertical: 'top',
-  },
-  distortionsGrid: {
-    gap: 8,
-    marginTop: 4,
-  },
-  distCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    borderRadius: Theme.radius.lg,
-    padding: Theme.spacing.sm,
-    backgroundColor: Theme.colors.surfaceLow,
-  },
-  distCardActive: {
-    borderColor: Theme.colors.primary,
-    borderWidth: 1.5,
-    backgroundColor: Theme.colors.primary + '05',
-  },
-  distCardLeft: {
-    flex: 1,
-    marginRight: Theme.spacing.xs,
-  },
-  distLabel: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 13,
-    color: Theme.colors.onSurface,
-  },
-  distDesc: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 11,
-    color: Theme.colors.textMuted,
-    marginTop: 2,
-  },
-  checkIndicator: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: Theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveBtn: {
-    flexDirection: 'row',
-    backgroundColor: Theme.colors.primary,
-    height: 52,
-    borderRadius: Theme.radius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  saveBtnText: {
-    color: '#FFF',
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-  },
-  limitBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FDF2F2',
-    borderColor: '#F8D7DA',
-    borderWidth: 1,
-    padding: Theme.spacing.md,
-    borderRadius: Theme.radius.lg,
-    gap: 12,
-  },
-  limitBannerTitle: {
-    fontFamily: Theme.fonts.headline,
-    fontSize: 14,
-    color: '#842029',
-    fontWeight: 'bold',
-  },
-  limitBannerText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12,
-    color: '#842029',
-    lineHeight: 16,
-    marginTop: 2,
-  },
-});
 export default CBTJournalScreen;

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ImageBackground,
   TouchableOpacity,
   Linking,
@@ -100,22 +99,22 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
           'rgba(15, 23, 42, 0.98)',
         ]}
         locations={[0, 0.45, 1]}
-        style={styles.cardGradient}
+        className="p-4.5 min-h-[180px] justify-end"
       >
         {/* Badge Row */}
-        <View style={styles.badgeRow}>
-          <View style={styles.badgePill}>
+        <View className="mb-2 flex-row">
+          <View className="flex-row items-center gap-1 bg-[#2DD4BF]/20 border border-[#2DD4BF]/40 px-2 py-0.5 rounded-full">
             <Sparkles size={11} color="#2DD4BF" />
-            <Text style={styles.badgeText}>{badgeLabel.toUpperCase()}</Text>
+            <Text className="text-[10px] font-sora-bold text-[#2DD4BF] tracking-wider">{badgeLabel.toUpperCase()}</Text>
           </View>
         </View>
 
         {/* Title */}
-        {b.title ? <Text style={styles.titleText}>{b.title}</Text> : null}
+        {b.title ? <Text className="font-sora-bold text-lg text-white mb-1.5 leading-6">{b.title}</Text> : null}
 
         {/* Description */}
         {b.description ? (
-          <Text style={styles.descText} numberOfLines={3}>
+          <Text className="font-jakarta text-xs text-slate-300 leading-4.5 mb-3" numberOfLines={3}>
             {b.description}
           </Text>
         ) : null}
@@ -124,10 +123,10 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
         {buttonLabel ? (
           <TouchableOpacity
             onPress={() => handlePressAd(link)}
-            style={styles.ctaButton}
+            className="flex-row items-center self-start gap-1 bg-[#2DD4BF] px-4 py-2 rounded-full mt-1 shadow-sm shadow-[#2DD4BF]/30"
             activeOpacity={0.8}
           >
-            <Text style={styles.ctaButtonText}>{buttonLabel}</Text>
+            <Text className="font-sora-bold text-xs text-slate-900">{buttonLabel}</Text>
             <ChevronRight size={16} color="#0F172A" />
           </TouchableOpacity>
         ) : null}
@@ -144,18 +143,19 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
         key={b._id || b.title}
         activeOpacity={0.92}
         onPress={() => link && handlePressAd(link)}
-        style={[styles.cardWrapper, isCarousel ? { width: CARD_WIDTH } : styles.fullWidthCard]}
+        className="rounded-3xl overflow-hidden border border-[#2DD4BF]/30 shadow-md min-h-[180px]"
+        style={isCarousel ? { width: CARD_WIDTH } : { width: '100%' }}
       >
         {poster ? (
           <ImageBackground
             source={{ uri: poster }}
             resizeMode="cover"
-            style={styles.backgroundContainer}
+            className="w-full min-h-[180px] bg-slate-900"
           >
             {renderCardContent(b)}
           </ImageBackground>
         ) : (
-          <View style={styles.backgroundContainer}>
+          <View className="w-full min-h-[180px] bg-slate-900">
             {renderCardContent(b)}
           </View>
         )}
@@ -163,18 +163,16 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
     );
   };
 
-  // If only 1 banner, render directly without horizontal ScrollView to prevent horizontal scrolling
   if (activeBanners.length === 1) {
     return (
-      <View style={styles.outerContainer}>
+      <View className="my-3.5 w-full">
         {renderSingleCard(activeBanners[0], false)}
       </View>
     );
   }
 
-  // If multiple banners, render snap-to-interval carousel
   return (
-    <View style={styles.outerContainer}>
+    <View className="my-3.5 w-full">
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -182,140 +180,24 @@ export const AdBannerCarousel: React.FC<AdBannerCarouselProps> = ({ target, navi
         scrollEventThrottle={16}
         snapToInterval={CARD_WIDTH + 12}
         decelerationRate="fast"
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingRight: 20, gap: 12 }}
       >
         {activeBanners.map((b: any) => renderSingleCard(b, true))}
       </ScrollView>
 
       {/* Pagination Dot Indicator */}
-      <View style={styles.paginationContainer}>
+      <View className="flex-row justify-center items-center gap-1.5 mt-2.5">
         {activeBanners.map((_: any, idx: number) => (
           <View
             key={idx}
-            style={[
-              styles.paginationDot,
-              idx === activeIndex && styles.paginationDotActive,
-            ]}
+            className={`h-1.5 rounded-full transition-all ${
+              idx === activeIndex ? 'w-4 bg-[#2DD4BF]' : 'w-1.5 bg-slate-400/40'
+            }`}
           />
         ))}
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  outerContainer: {
-    marginVertical: 14,
-    width: '100%',
-  },
-  scrollContent: {
-    paddingRight: Theme.spacing.margin,
-    gap: 12,
-  },
-  fullWidthCard: {
-    width: '100%',
-  },
-  cardWrapper: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(45, 212, 191, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
-    minHeight: 180,
-  },
-  backgroundContainer: {
-    width: '100%',
-    minHeight: 180,
-    backgroundColor: '#0F172A',
-  },
-  cardGradient: {
-    padding: 18,
-    minHeight: 180,
-    justifyContent: 'flex-end',
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  badgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(45, 212, 191, 0.4)',
-  },
-  badgeText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 10,
-    color: '#2DD4BF',
-    letterSpacing: 0.8,
-  },
-  titleText: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 17,
-    color: '#FFFFFF',
-    lineHeight: 23,
-    marginBottom: 6,
-    textShadowColor: 'rgba(0, 0, 0, 0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  descText: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 12.5,
-    color: '#F1F5F9',
-    lineHeight: 18,
-    marginBottom: 14,
-    textShadowColor: 'rgba(0, 0, 0, 0.85)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    backgroundColor: '#2DD4BF',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 14,
-    shadowColor: '#2DD4BF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  ctaButtonText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 12.5,
-    color: '#0F172A',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 6,
-  },
-  paginationDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#475569',
-  },
-  paginationDotActive: {
-    width: 18,
-    backgroundColor: '#2DD4BF',
-  },
-});
 
 export default AdBannerCarousel;

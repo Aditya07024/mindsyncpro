@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -13,8 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import { useStore } from '../../lib/store';
-import { Theme } from '../../theme';
-import { ArrowRight, Check, GraduationCap, School, User, Upload, CheckCircle2 } from 'lucide-react-native';
+import { Check, GraduationCap, School, User, Upload, CheckCircle2 } from 'lucide-react-native';
 import API from '../../lib/api';
 
 interface OnboardingScreenProps {
@@ -121,23 +119,23 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
   };
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, 20) }]}>
-      <View style={styles.header}>
-        <Text style={styles.appTitle}>Apna Dil Kholo</Text>
-        <Text style={styles.appSubtitle}>A safe space, just for you.</Text>
+    <View className="flex-1 bg-[#FAFAF9]" style={{ paddingTop: Math.max(insets.top, 20) }}>
+      <View className="px-5 mb-2.5">
+        <Text className="font-sora-bold text-[26px] text-primary">Apna Dil Kholo</Text>
+        <Text className="font-jakarta-medium text-sm text-[#6F7977] mt-0.5">A safe space, just for you.</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
         {step === 1 && (
-          <View style={styles.card}>
-            <Text style={styles.stepTitle}>What should I call you?</Text>
-            <Text style={styles.stepDesc}>Enter your name to begin personalizing your wellness journey.</Text>
+          <View className="bg-white rounded-3xl p-6 border border-[#E8E8E7] shadow-sm">
+            <Text className="font-sora-bold text-xl text-[#1A1C1C] mb-1.5">What should I call you?</Text>
+            <Text className="font-jakarta text-[13px] text-[#6F7977] mb-4">Enter your name to begin personalizing your wellness journey.</Text>
 
             <TextInput
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Your first name…"
-              style={styles.nameInput}
+              className="bg-[#F9F9F8] border border-[#E8E8E7] rounded-2xl px-4 py-3.5 font-jakarta text-base text-[#1A1C1C] mb-5"
               placeholderTextColor="#A1A1AA"
               autoFocus
             />
@@ -145,89 +143,89 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             <TouchableOpacity
               disabled={!firstName.trim()}
               onPress={() => setStep(2)}
-              style={[styles.btnPrimary, !firstName.trim() && styles.btnDisabled]}
+              className={`bg-primary rounded-2xl py-3.5 items-center justify-center ${!firstName.trim() ? 'opacity-50' : ''}`}
             >
-              <Text style={styles.btnPrimaryText}>Continue →</Text>
+              <Text className="font-sora-semibold text-[15px] text-white">Continue →</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {step === 2 && (
-          <View style={styles.card}>
-            <Text style={styles.stepTitle}>Select Your Category</Text>
-            <Text style={styles.stepDesc}>Counseling session fees are tailored per category:</Text>
+          <View className="bg-white rounded-3xl p-6 border border-[#E8E8E7] shadow-sm">
+            <Text className="font-sora-bold text-xl text-[#1A1C1C] mb-1.5">Select Your Category</Text>
+            <Text className="font-jakarta text-[13px] text-[#6F7977] mb-4">Counseling session fees are tailored per category:</Text>
 
             {/* Category Cards */}
-            <View style={styles.categoryGroup}>
+            <View className="gap-2.5 mb-4">
               <TouchableOpacity
                 onPress={() => setUserCategory('school_student')}
-                style={[styles.catCard, userCategory === 'school_student' && styles.catCardActive]}
+                className={`flex-row items-center bg-[#F9F9F8] border-[1.5px] rounded-2xl p-3.5 ${userCategory === 'school_student' ? 'bg-[#E6F4F1] border-primary' : 'border-[#E8E8E7]'}`}
               >
-                <View style={[styles.catIconBox, userCategory === 'school_student' && styles.catIconActive]}>
+                <View className={`w-[38px] h-[38px] rounded-xl justify-center items-center mr-3 ${userCategory === 'school_student' ? 'bg-primary' : 'bg-[#E8E8E7]'}`}>
                   <School size={20} color={userCategory === 'school_student' ? '#FFF' : '#0D564D'} />
                 </View>
-                <View style={styles.catTextFlex}>
-                  <Text style={styles.catTitle}>School Student</Text>
-                  <Text style={styles.catSub}>Special student pricing & verified care</Text>
+                <View className="flex-1">
+                  <Text className="font-sora-semibold text-sm text-[#1A1C1C]">School Student</Text>
+                  <Text className="font-jakarta text-[11px] text-[#6F7977] mt-0.5">Special student pricing & verified care</Text>
                 </View>
                 {userCategory === 'school_student' && <Check size={18} color="#0D564D" />}
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => setUserCategory('college_student')}
-                style={[styles.catCard, userCategory === 'college_student' && styles.catCardActive]}
+                className={`flex-row items-center bg-[#F9F9F8] border-[1.5px] rounded-2xl p-3.5 ${userCategory === 'college_student' ? 'bg-[#E6F4F1] border-primary' : 'border-[#E8E8E7]'}`}
               >
-                <View style={[styles.catIconBox, userCategory === 'college_student' && styles.catIconActive]}>
+                <View className={`w-[38px] h-[38px] rounded-xl justify-center items-center mr-3 ${userCategory === 'college_student' ? 'bg-primary' : 'bg-[#E8E8E7]'}`}>
                   <GraduationCap size={20} color={userCategory === 'college_student' ? '#FFF' : '#0D564D'} />
                 </View>
-                <View style={styles.catTextFlex}>
-                  <Text style={styles.catTitle}>College Student</Text>
-                  <Text style={styles.catSub}>Higher education student pricing</Text>
+                <View className="flex-1">
+                  <Text className="font-sora-semibold text-sm text-[#1A1C1C]">College Student</Text>
+                  <Text className="font-jakarta text-[11px] text-[#6F7977] mt-0.5">Higher education student pricing</Text>
                 </View>
                 {userCategory === 'college_student' && <Check size={18} color="#0D564D" />}
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => setUserCategory('regular')}
-                style={[styles.catCard, userCategory === 'regular' && styles.catCardActive]}
+                className={`flex-row items-center bg-[#F9F9F8] border-[1.5px] rounded-2xl p-3.5 ${userCategory === 'regular' ? 'bg-[#E6F4F1] border-primary' : 'border-[#E8E8E7]'}`}
               >
-                <View style={[styles.catIconBox, userCategory === 'regular' && styles.catIconActive]}>
+                <View className={`w-[38px] h-[38px] rounded-xl justify-center items-center mr-3 ${userCategory === 'regular' ? 'bg-primary' : 'bg-[#E8E8E7]'}`}>
                   <User size={20} color={userCategory === 'regular' ? '#FFF' : '#0D564D'} />
                 </View>
-                <View style={styles.catTextFlex}>
-                  <Text style={styles.catTitle}>Regular Person / Adult</Text>
-                  <Text style={styles.catSub}>Standard adult therapy care</Text>
+                <View className="flex-1">
+                  <Text className="font-sora-semibold text-sm text-[#1A1C1C]">Regular Person / Adult</Text>
+                  <Text className="font-jakarta text-[11px] text-[#6F7977] mt-0.5">Standard adult therapy care</Text>
                 </View>
                 {userCategory === 'regular' && <Check size={18} color="#0D564D" />}
               </TouchableOpacity>
             </View>
 
             {/* Phone & Referral */}
-            <Text style={styles.fieldLabel}>Phone Number (Optional)</Text>
+            <Text className="font-sora-semibold text-[11px] text-[#6F7977] uppercase mt-3 mb-1.5">Phone Number (Optional)</Text>
             <TextInput
               value={phone}
               onChangeText={setPhone}
               placeholder="+91 9876543210"
               keyboardType="phone-pad"
-              style={styles.input}
+              className="bg-[#F9F9F8] border border-[#E8E8E7] rounded-xl px-3.5 py-2.5 font-jakarta text-[13px] text-[#1A1C1C]"
               placeholderTextColor="#A1A1AA"
             />
 
-            <Text style={styles.fieldLabel}>Referral Code (Optional)</Text>
+            <Text className="font-sora-semibold text-[11px] text-[#6F7977] uppercase mt-3 mb-1.5">Referral Code (Optional)</Text>
             <TextInput
               value={referralCode}
               onChangeText={v => setReferralCode(v.toUpperCase())}
               placeholder="e.g. MMTP-A1B2C3"
-              style={[styles.input, { fontFamily: 'Sora_600SemiBold' }]}
+              className="bg-[#F9F9F8] border border-[#E8E8E7] rounded-xl px-3.5 py-2.5 font-sora-semibold text-[13px] text-[#1A1C1C]"
               placeholderTextColor="#A1A1AA"
               autoCapitalize="characters"
             />
-            <Text style={styles.hintText}>Get 1 Free Counseling Session when using a valid referral code.</Text>
+            <Text className="font-jakarta text-[10px] text-[#6F7977] mt-1">Get 1 Free Counseling Session when using a valid referral code.</Text>
 
             {/* Student ID Upload Block */}
             {(userCategory === 'school_student' || userCategory === 'college_student') && (
-              <View style={styles.studentBox}>
-                <Text style={styles.fieldLabel}>School / College Name *</Text>
+              <View className="bg-[#E6F4F1] rounded-2xl p-3.5 mt-3.5 border border-[#BFE3DC]">
+                <Text className="font-sora-semibold text-[11px] text-[#6F7977] uppercase mb-1.5">School / College Name *</Text>
                 <TouchableOpacity
                   onPress={() => {
                     Alert.alert(
@@ -252,9 +250,9 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
                       ]
                     );
                   }}
-                  style={styles.selectBtn}
+                  className="bg-white border border-[#BFE3DC] rounded-xl px-3.5 py-3"
                 >
-                  <Text style={styles.selectBtnText}>
+                  <Text className="font-jakarta-medium text-[13px] text-[#1A1C1C]">
                     {selectedSchoolOption
                       ? selectedSchoolOption === 'other'
                         ? '➕ Other (Custom)'
@@ -271,19 +269,19 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
                       setSchoolCollegeName(v);
                     }}
                     placeholder="Enter your School / College Name..."
-                    style={[styles.input, { marginTop: 8 }]}
+                    className="bg-[#F9F9F8] border border-[#E8E8E7] rounded-xl px-3.5 py-2.5 font-jakarta text-[13px] text-[#1A1C1C] mt-2"
                     placeholderTextColor="#A1A1AA"
                   />
                 )}
 
-                <Text style={[styles.fieldLabel, { marginTop: 12 }]}>Upload Student ID Card Photo *</Text>
+                <Text className="font-sora-semibold text-[11px] text-[#6F7977] uppercase mt-3 mb-1.5">Upload Student ID Card Photo *</Text>
                 <TouchableOpacity
                   onPress={handlePickStudentIdCard}
                   disabled={uploadingIdCard}
-                  style={styles.uploadBtn}
+                  className="flex-row items-center justify-center bg-white border border-dashed border-primary rounded-xl py-3 px-3.5"
                 >
-                  <Upload size={18} color="#0D564D" style={{ marginRight: 6 }} />
-                  <Text style={styles.uploadBtnText}>
+                  <Upload size={18} color="#0D564D" className="mr-1.5" />
+                  <Text className="font-sora-semibold text-xs text-primary">
                     {uploadingIdCard
                       ? 'Uploading ID Card...'
                       : studentIdCardUrl
@@ -293,11 +291,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
                 </TouchableOpacity>
 
                 {studentIdCardUrl ? (
-                  <View style={styles.previewBox}>
-                    <Image source={{ uri: studentIdCardUrl }} style={styles.previewImage} />
-                    <View style={styles.verifiedBadge}>
-                      <CheckCircle2 size={12} color="#FFF" style={{ marginRight: 4 }} />
-                      <Text style={styles.verifiedText}>Uploaded ✓ (Pending Admin Verification)</Text>
+                  <View className="mt-2.5 rounded-xl overflow-hidden border border-[#BFE3DC] relative">
+                    <Image source={{ uri: studentIdCardUrl }} className="w-full h-[140px]" resizeMode="cover" />
+                    <View className="absolute bottom-2 right-2 bg-emerald-600 flex-row items-center px-2 py-1 rounded-full">
+                      <CheckCircle2 size={12} color="#FFF" className="mr-1" />
+                      <Text className="font-sora-bold text-[9px] text-white">Uploaded ✓ (Pending Admin Verification)</Text>
                     </View>
                   </View>
                 ) : null}
@@ -307,12 +305,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
             <TouchableOpacity
               disabled={loading}
               onPress={finishOnboarding}
-              style={[styles.btnPrimary, { marginTop: 24 }]}
+              className="bg-primary rounded-2xl py-3.5 items-center justify-center mt-6"
             >
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={styles.btnPrimaryText}>Go to Dashboard →</Text>
+                <Text className="font-sora-semibold text-[15px] text-white">Go to Dashboard →</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -321,216 +319,5 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FAFAF9',
-  },
-  header: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  appTitle: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 26,
-    color: '#0D564D',
-  },
-  appSubtitle: {
-    fontFamily: 'PlusJakartaSans_500Medium',
-    fontSize: 14,
-    color: '#6F7977',
-    marginTop: 2,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  stepTitle: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 20,
-    color: '#1A1C1C',
-    marginBottom: 6,
-  },
-  stepDesc: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 13,
-    color: '#6F7977',
-    marginBottom: 16,
-  },
-  nameInput: {
-    backgroundColor: '#F9F9F8',
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 16,
-    color: '#1A1C1C',
-    marginBottom: 20,
-  },
-  categoryGroup: {
-    gap: 10,
-    marginBottom: 16,
-  },
-  catCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9F9F8',
-    borderWidth: 1.5,
-    borderColor: '#E8E8E7',
-    borderRadius: 16,
-    padding: 14,
-  },
-  catCardActive: {
-    backgroundColor: '#E6F4F1',
-    borderColor: '#0D564D',
-  },
-  catIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#E8E8E7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  catIconActive: {
-    backgroundColor: '#0D564D',
-  },
-  catTextFlex: {
-    flex: 1,
-  },
-  catTitle: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 14,
-    color: '#1A1C1C',
-  },
-  catSub: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 11,
-    color: '#6F7977',
-    marginTop: 2,
-  },
-  fieldLabel: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 11,
-    color: '#6F7977',
-    textTransform: 'uppercase',
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: '#F9F9F8',
-    borderWidth: 1,
-    borderColor: '#E8E8E7',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 13,
-    color: '#1A1C1C',
-  },
-  hintText: {
-    fontFamily: 'PlusJakartaSans_400Regular',
-    fontSize: 10,
-    color: '#6F7977',
-    marginTop: 4,
-  },
-  studentBox: {
-    backgroundColor: '#E6F4F1',
-    borderRadius: 16,
-    padding: 14,
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: '#BFE3DC',
-  },
-  selectBtn: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#BFE3DC',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  selectBtnText: {
-    fontFamily: 'PlusJakartaSans_500Medium',
-    fontSize: 13,
-    color: '#1A1C1C',
-  },
-  uploadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#0D564D',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-  },
-  uploadBtnText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 12,
-    color: '#0D564D',
-  },
-  previewBox: {
-    marginTop: 10,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#BFE3DC',
-  },
-  previewImage: {
-    width: '100%',
-    height: 140,
-    resizeMode: 'cover',
-  },
-  verifiedBadge: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: '#059669',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 99,
-  },
-  verifiedText: {
-    fontFamily: 'Sora_700Bold',
-    fontSize: 9,
-    color: '#FFFFFF',
-  },
-  btnPrimary: {
-    backgroundColor: '#0D564D',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnDisabled: {
-    opacity: 0.5,
-  },
-  btnPrimaryText: {
-    fontFamily: 'Sora_600SemiBold',
-    fontSize: 15,
-    color: '#FFFFFF',
-  },
-});
 
 export default OnboardingScreen;

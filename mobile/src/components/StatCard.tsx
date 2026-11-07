@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import { TrendingUp, TrendingDown } from 'lucide-react-native';
 import { Theme } from '../theme';
 
@@ -23,102 +23,43 @@ export const StatCard: React.FC<StatCardProps> = ({
   const isPositive = trend && trend >= 0;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.title} numberOfLines={1}>
+    <View className="bg-white rounded-2xl p-5 border border-surface-high flex-1 min-w-[140px] shadow-sm">
+      <View className="flex-row justify-between items-center mb-2 gap-2">
+        <Text className="font-jakarta-medium text-[13px] text-on-surface-variant flex-1" numberOfLines={1}>
           {title}
         </Text>
-        <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
+        <View className="w-8 h-8 rounded-lg justify-center items-center" style={{ backgroundColor: color + '15' }}>
           {icon}
         </View>
       </View>
 
-      <Text style={styles.value} numberOfLines={1}>
+      <Text className="font-sora-bold text-2xl text-on-surface mb-1.5" numberOfLines={1}>
         {value}
       </Text>
 
       {trend !== undefined && (
-        <View style={styles.trendRow}>
-          <View style={[styles.trendBadge, { backgroundColor: isPositive ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)' }]}>
+        <View className="flex-row items-center gap-1.5 flex-wrap">
+          <View
+            className="flex-row items-center gap-0.5 px-1.5 py-0.5 rounded"
+            style={{ backgroundColor: isPositive ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)' }}
+          >
             {isPositive ? (
               <TrendingUp size={12} color="#4CAF50" />
             ) : (
               <TrendingDown size={12} color="#F44336" />
             )}
-            <Text style={[styles.trendText, { color: isPositive ? '#4CAF50' : '#F44336' }]}>
+            <Text
+              className="font-jakarta-bold text-[10px]"
+              style={{ color: isPositive ? '#4CAF50' : '#F44336' }}
+            >
               {isPositive ? `+${trend}%` : `${trend}%`}
             </Text>
           </View>
-          {trendLabel && <Text style={styles.trendLabel}>{trendLabel}</Text>}
+          {trendLabel && <Text className="font-jakarta text-[10px] text-text-muted">{trendLabel}</Text>}
         </View>
       )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: Theme.radius.xl,
-    padding: Theme.spacing.sm + 4,
-    borderWidth: 1,
-    borderColor: Theme.colors.surfaceHigh,
-    flex: 1,
-    minWidth: 140,
-    shadowColor: '#2E6E65',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Theme.spacing.xs,
-    gap: Theme.spacing.xs,
-  },
-  title: {
-    fontFamily: Theme.fonts.bodyMedium,
-    fontSize: 13,
-    color: Theme.colors.onSurfaceVariant,
-    flex: 1,
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: Theme.radius.default,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  value: {
-    fontFamily: Theme.fonts.display,
-    fontSize: 24,
-    color: Theme.colors.onSurface,
-    marginBottom: Theme.spacing.xs - 2,
-  },
-  trendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  trendBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Theme.radius.sm,
-  },
-  trendText: {
-    fontFamily: Theme.fonts.bodyBold,
-    fontSize: 10,
-  },
-  trendLabel: {
-    fontFamily: Theme.fonts.body,
-    fontSize: 10,
-    color: Theme.colors.textMuted,
-  },
-});
 export default StatCard;
